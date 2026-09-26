@@ -8,7 +8,7 @@ through `@repo/api-client` and reads the design model from `@repo/design`.
 
 ```
 src/
-  routes/                 TanStack file routes: config and a thin component, no markup
+  routes/                 TanStack file routes, grouped by who may see them (below)
   features/<feature>/     everything one product feature owns
     ui/
       views/              one per screen a route renders
@@ -27,6 +27,32 @@ src/
 ```
 
 A feature has only the folders it needs; there are no empty ones.
+
+## Routes are grouped by who may see them
+
+```
+routes/
+  __root.tsx
+  _guest/                 signed-out pages
+    route.tsx             beforeLoad: a signed-in visitor goes on to ?redirect or /
+    sign-in.tsx, sign-up.tsx, forgot-password.tsx
+  _app/                   the signed-in app
+    route.tsx             beforeLoad: a guest goes to /sign-in?redirect=…; renders AppLayout
+    index.tsx, settings/security.tsx
+  (email-links)/          pages opened from an email, signed in or not
+    reset-password.tsx, verify-email.tsx, confirm-email-change.tsx
+```
+
+- A folder starting with `_` is a **pathless layout**: its `route.tsx` wraps
+  every route inside it with a guard and a layout, and adds nothing to the URL.
+  This is what `(group)/layout.tsx` is in Next.js.
+- A folder in parentheses is a **group**: it only organises files and changes
+  neither the URL nor the component tree. `(email-links)` is one on purpose,
+  because a link from an email must open whether or not the reader is signed
+  in.
+- A guard lives once, in the layout, never repeated in the routes under it.
+- `tsr generate` rewrites the id in `createFileRoute(...)` to match the file's
+  place, so moving a route is `git mv` and a regenerate.
 
 ## Routes render a view and nothing else
 

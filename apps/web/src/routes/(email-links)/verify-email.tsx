@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { validateTokenSearch, VerifyEmailView } from "@/features/auth";
 
-export const Route = createFileRoute("/verify-email")({
+export const Route = createFileRoute("/(email-links)/verify-email")({
   validateSearch: validateTokenSearch,
   component: VerifyEmailRoute,
 });
