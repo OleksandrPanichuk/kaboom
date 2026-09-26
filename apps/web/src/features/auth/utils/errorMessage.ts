@@ -7,6 +7,10 @@ const MESSAGES: Readonly<Record<string, string>> = {
   CAPTCHA_REQUIRED: "Complete the captcha to continue.",
   CAPTCHA_FAILED: "The captcha check failed. Try again.",
   CAPTCHA_CHALLENGE_REQUIRED: "The captcha needs one more check. Try again.",
+  INVALID_TOKEN: "This link is not valid. Ask for a new one.",
+  TOKEN_EXPIRED: "This link has expired. Ask for a new one.",
+  PASSWORD_NOT_SET:
+    "This account signs in with Google or GitHub and has no password yet.",
 };
 
 export const errorMessage = (error: unknown): string => {
