@@ -12,9 +12,19 @@ export const workerKind = defineNodeKind({
   replicable: false,
   distribution: "by-share",
   props: z.strictObject({
-    replicas: count(2),
-    capacityMsgPerReplica: rate(100),
-    processingMs: millis(50),
+    replicas: count(2, {
+      title: "Replicas",
+      description: "Consumers running in parallel",
+    }),
+    capacityMsgPerReplica: rate(100, {
+      title: "Capacity per replica",
+      description: "Messages one consumer processes per second",
+      unit: "msg/s",
+    }),
+    processingMs: millis(50, {
+      title: "Processing time",
+      description: "Time to handle one message",
+    }),
     autoscale: Autoscale,
   }),
 });

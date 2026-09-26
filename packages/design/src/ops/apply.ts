@@ -57,7 +57,7 @@ const parseNodeProps = (
     );
   }
 
-  return result.data as DesignNode["props"];
+  return result.data!;
 };
 
 const parseEdgeProps = (

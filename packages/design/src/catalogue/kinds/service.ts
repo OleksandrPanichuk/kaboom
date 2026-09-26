@@ -1,7 +1,7 @@
 import z from "zod";
 
 import { defineNodeKind } from "../define-node-kind";
-import { Autoscale, count, millis, rate } from "./shared";
+import { Autoscale, baseLatency, count, rate, toggle } from "./shared";
 
 export const serviceKind = defineNodeKind({
   kind: "service",
@@ -12,10 +12,19 @@ export const serviceKind = defineNodeKind({
   replicable: false,
   distribution: "by-share",
   props: z.strictObject({
-    replicas: count(2),
-    capacityRpsPerReplica: rate(500),
-    baseLatencyMs: millis(20),
-    stateless: z.boolean().default(true),
+    replicas: count(2, {
+      title: "Replicas",
+      description: "Instances running behind the same name",
+    }),
+    capacityRpsPerReplica: rate(500, {
+      title: "Capacity per replica",
+      description: "Requests one instance handles before it saturates",
+    }),
+    baseLatencyMs: baseLatency(20),
+    stateless: toggle(true, {
+      title: "Stateless",
+      description: "Any replica can serve any request",
+    }),
     autoscale: Autoscale,
   }),
 });

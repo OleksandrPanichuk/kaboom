@@ -26,7 +26,10 @@ describe("createNode", () => {
       groupId: null,
       notes: "",
       props: {
-        capacityRps: 1_000,
+        readCapacityRps: 5_000,
+        writeCapacityRps: 1_000,
+        storageGb: 500,
+        recordSizeKb: 1,
         baseLatencyMs: 5,
         failover: "none",
         shards: 1,
