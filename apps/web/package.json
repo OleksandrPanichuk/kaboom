@@ -10,7 +10,8 @@
     "generate": "tsr generate",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "test": "bun test --pass-with-no-tests"
+    "test": "bun test --pass-with-no-tests",
+    "ui:add": "bun scripts/add-ui-component.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

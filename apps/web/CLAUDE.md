@@ -21,7 +21,7 @@ src/
     typedefs/
     index.ts              what other features and routes may import
   components/             app-wide components that belong to no feature
-  components/ui/          shadcn components, as the CLI writes them
+  components/ui/          shadcn components, added with `bun run ui:add`
   lib/                    the API client, the query client, cn
   styles/
 ```
@@ -80,10 +80,30 @@ DesignCanvas/
 - One component per file, exported by name; no default exports, except where
   a tool requires one.
 
-`components/ui/` is the exception: shadcn writes kebab-case files
-(`button.tsx`), and they stay as the CLI writes them so `shadcn add` and
-updates keep working. Wrap a shadcn component in a PascalCase component when a
-feature needs a variant of it, rather than editing it in place.
+### shadcn components
+
+`components/ui/` follows the same rule: `Button.tsx`, `Field.tsx`,
+`hooks/useMobile.ts`. The shadcn CLI cannot be told how to name files, so a
+component is never added with `shadcn add` directly:
+
+```sh
+bun run ui:add input label field
+bun run ui:add button --overwrite
+```
+
+`ui:add` runs `shadcn add`, then renames what it wrote to the convention
+(`use-*.ts` hooks to `useCamelCase.ts`), rewrites every import whose casing no
+longer matches the file on disk (including the ones shadcn components make to
+each other, such as `Field` importing `Label`), and runs `eslint --fix` over
+`components/` and `hooks/`.
+
+- A tracked file is renamed with `git mv`. macOS is case-insensitive and git
+  runs there with `core.ignorecase`, so a plain rename from `button.tsx` to
+  `Button.tsx` would leave the index on the old name and break the import on
+  Linux.
+- A shadcn component is ours once added: it is linted like any other file and
+  edited in place when it needs to be. Re-adding with `--overwrite` replaces
+  such edits, so review the diff when updating one.
 
 ## Naming
 
