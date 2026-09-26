@@ -50,6 +50,7 @@ services:
       target: dev
     environment:
       - API_URL=http://api:8080
+      - VITE_USE_POLLING=true
     ports:
       - "3000:3000"
     depends_on:

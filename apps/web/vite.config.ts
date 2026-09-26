@@ -6,6 +6,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8080";
+const USE_POLLING = process.env.VITE_USE_POLLING === "true";
 
 export default defineConfig({
   plugins: [
@@ -19,6 +20,7 @@ export default defineConfig({
   server: {
     port: 3000,
     strictPort: true,
+    watch: USE_POLLING ? { usePolling: true, interval: 200 } : undefined,
     proxy: {
       "/api": { target: API_URL, changeOrigin: false },
     },

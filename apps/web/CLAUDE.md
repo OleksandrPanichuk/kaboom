@@ -101,6 +101,12 @@ each other, such as `Field` importing `Label`), and runs `eslint --fix` over
   runs there with `core.ignorecase`, so a plain rename from `button.tsx` to
   `Button.tsx` would leave the index on the old name and break the import on
   Linux.
+- To style another element as a shadcn component, such as a link that looks
+  like a button, pass the variants through `cn`:
+  `className={cn(buttonVariants({ variant: "outline" }))}`. The base classes
+  and a variant set the same property (`border-transparent` and
+  `border-border`), and only `cn` resolves that; without it the CSS order
+  decides, and the variant silently loses.
 - A shadcn component is ours once added: it is linted like any other file and
   edited in place when it needs to be. Re-adding with `--overwrite` replaces
   such edits, so review the diff when updating one.

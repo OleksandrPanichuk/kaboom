@@ -1,6 +1,16 @@
 import type { AuthSearch } from "../typedefs/auth.typedefs";
 
+const text = (value: unknown): string | undefined =>
+  typeof value === "string" && value !== "" ? value : undefined;
+
 export const validateAuthSearch = (
   search: Record<string, unknown>,
-): AuthSearch =>
-  typeof search.redirect === "string" ? { redirect: search.redirect } : {};
+): AuthSearch => {
+  const redirect = text(search.redirect);
+  const error = text(search.error);
+
+  return {
+    ...(redirect ? { redirect } : {}),
+    ...(error ? { error } : {}),
+  };
+};
