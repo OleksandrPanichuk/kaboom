@@ -1,6 +1,8 @@
 import { MAX_GROUPS, MAX_NODES } from "@repo/design";
 import { t } from "elysia";
 
+import { DESIGN_REVISION_AUTHORS } from "@/db";
+
 const COORDINATE = { minimum: -1_000_000, maximum: 1_000_000 };
 
 export const DesignLayoutModel = t.Record(
@@ -37,6 +39,23 @@ export const AppliedDesignOpsModel = t.Object({
   graphHash: t.String(),
 });
 export type AppliedDesignOpsModel = typeof AppliedDesignOpsModel.static;
+
+export const DesignRevisionSummaryModel = t.Object({
+  number: t.Integer(),
+  author: t.UnionEnum(DESIGN_REVISION_AUTHORS),
+  opCount: t.Integer(),
+  graphHash: t.String(),
+  createdAt: t.String({ format: "date-time" }),
+});
+export type DesignRevisionSummaryModel =
+  typeof DesignRevisionSummaryModel.static;
+
+export const DesignRevisionModel = t.Object({
+  ...DesignRevisionSummaryModel.properties,
+  ops: t.Array(t.Unknown()),
+  graph: t.Unknown(),
+});
+export type DesignRevisionModel = typeof DesignRevisionModel.static;
 
 export const DesignMessageModel = t.Object({
   message: t.String(),

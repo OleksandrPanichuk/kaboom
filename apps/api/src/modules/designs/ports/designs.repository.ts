@@ -40,6 +40,8 @@ export abstract class DesignsRepository extends Repository {
     ownerId: string,
   ): Promise<DesignEntity | null>;
 
+  public abstract existsOwned(id: string, ownerId: string): Promise<boolean>;
+
   public abstract updateOwned(
     id: string,
     ownerId: string,

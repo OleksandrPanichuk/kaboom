@@ -12,6 +12,14 @@ export {
 } from "./delete-design";
 export { GetDesignUseCase, type GetDesignUseCaseOptions } from "./get-design";
 export {
+  GetDesignRevisionUseCase,
+  type GetDesignRevisionUseCaseOptions,
+} from "./get-design-revision";
+export {
+  ListDesignRevisionsUseCase,
+  type ListDesignRevisionsUseCaseOptions,
+} from "./list-design-revisions";
+export {
   ListDesignsUseCase,
   type ListDesignsUseCaseOptions,
 } from "./list-designs";

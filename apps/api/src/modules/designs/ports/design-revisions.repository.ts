@@ -1,5 +1,6 @@
 import type { DesignGraph, DesignOp } from "@repo/design";
 
+import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
 import type { DesignRevisionAuthor } from "@/db";
 
@@ -19,4 +20,14 @@ export abstract class DesignRevisionsRepository extends Repository {
   public abstract insert(
     data: CreateDesignRevisionData,
   ): Promise<DesignRevisionEntity>;
+
+  public abstract list(
+    designId: string,
+    page: PageRequest,
+  ): Promise<Page<DesignRevisionEntity>>;
+
+  public abstract listThrough(
+    designId: string,
+    number: number,
+  ): Promise<DesignRevisionEntity[]>;
 }
