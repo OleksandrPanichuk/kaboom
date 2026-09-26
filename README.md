@@ -10,6 +10,8 @@ generated from the API's own routes.
 ### Apps
 
 + `apps/api` — the Elysia HTTP API
++ `apps/web` — the React app (Vite, TanStack Router, shadcn/ui); see
+  [`apps/web/CLAUDE.md`](apps/web/CLAUDE.md)
 
 ### Packages
 
@@ -58,6 +60,7 @@ make up
 
 | Service | URL | Notes |
 | --- | --- | --- |
+| Web | <http://localhost:3000> | Vite with hot reload; proxies `/api` to the API |
 | API | <http://localhost:8080> | routes are served under `/api` |
 | OpenAPI | <http://localhost:8080/api/openapi> | generated from the route definitions |
 | Mailpit | <http://localhost:8025> | catches every outbound email in development |
