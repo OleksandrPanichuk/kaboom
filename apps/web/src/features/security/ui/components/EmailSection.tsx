@@ -15,6 +15,7 @@ export function EmailSection({ hasPassword }: EmailSectionProps) {
     <SettingsSection
       title="Email"
       description="Where we send links, and what you sign in with."
+      icon={Mail}
     >
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="min-w-0 font-medium break-all">{user.email}</span>
@@ -26,3 +27,4 @@ export function EmailSection({ hasPassword }: EmailSectionProps) {
     </SettingsSection>
   );
 }
+import { Mail } from "lucide-react";

@@ -1,4 +1,5 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { Link2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/Field";
@@ -40,11 +41,12 @@ export function ConnectedAccountsSection({
     <SettingsSection
       title="Connected accounts"
       description="Sign in with these as well as, or instead of, a password."
+      icon={Link2}
     >
       {linkError ? (
         <FieldError>{oauthErrorMessage(linkError)}</FieldError>
       ) : null}
-      <ul className="flex flex-col divide-y rounded-lg border">
+      <ul className="flex flex-col divide-y overflow-hidden rounded-xl border bg-zinc-50/60">
         {PROVIDERS.map(({ provider, type, label, icon }) => {
           const Icon = icon;
           const account = accounts.find((candidate) => candidate.type === type);
@@ -52,7 +54,7 @@ export function ConnectedAccountsSection({
           return (
             <li
               key={provider}
-              className="flex items-center justify-between gap-4 p-3"
+              className="flex items-center justify-between gap-4 p-3.5 sm:px-4"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <Icon className="size-5 shrink-0" />

@@ -11,6 +11,7 @@ export function PasswordSection({ hasPassword }: PasswordSectionProps) {
     <SettingsSection
       title="Password"
       description="Changing it signs out every other device."
+      icon={KeyRound}
     >
       <ChangePasswordForm />
     </SettingsSection>
@@ -18,8 +19,10 @@ export function PasswordSection({ hasPassword }: PasswordSectionProps) {
     <SettingsSection
       title="Password"
       description="You sign in with Google or GitHub. Add a password to sign in with your email as well."
+      icon={KeyRound}
     >
       <SetPasswordForm />
     </SettingsSection>
   );
 }
+import { KeyRound } from "lucide-react";

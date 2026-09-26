@@ -26,7 +26,7 @@ export function SignUpView({ redirect, onSignedUp }: SignUpViewProps) {
       }
     >
       <SignUpForm onSignedUp={onSignedUp} />
-      <FieldSeparator>or</FieldSeparator>
+      <FieldSeparator className="my-6">or</FieldSeparator>
       <OAuthButtons redirect={redirect} />
     </AuthLayout>
   );

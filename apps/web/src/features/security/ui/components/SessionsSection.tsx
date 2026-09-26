@@ -1,4 +1,5 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { MonitorSmartphone } from "lucide-react";
 
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -30,12 +31,13 @@ export function SessionsSection() {
     <SettingsSection
       title="Where you are signed in"
       description="Sign out of a device you no longer use or do not recognise."
+      icon={MonitorSmartphone}
     >
-      <ul className="flex flex-col divide-y rounded-lg border">
+      <ul className="flex flex-col divide-y overflow-hidden rounded-xl border bg-zinc-50/60">
         {sessions.map((session) => (
           <li
             key={session.id}
-            className="flex items-center justify-between gap-4 p-3"
+            className="flex items-center justify-between gap-4 p-3.5 sm:px-4"
           >
             <div className="flex min-w-0 flex-col">
               <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
