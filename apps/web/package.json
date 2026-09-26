@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "generate": "tsr generate",
+    "barrels": "bun scripts/generate-barrels.ts",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "test": "bun test --pass-with-no-tests",
