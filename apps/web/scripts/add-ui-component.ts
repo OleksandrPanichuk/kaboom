@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { readdir, readFile, rename, writeFile } from "node:fs/promises";
 import { basename, dirname, extname, join, relative, resolve } from "node:path";
 
@@ -155,7 +156,10 @@ const main = async (): Promise<void> => {
 
   const renamed = await renameToConvention();
   const touched = await fixImportCasing();
-  const formatted = [...RENAMED_DIRS, ...touched];
+  const formatted = [
+    ...RENAMED_DIRS.filter((dir) => existsSync(dir)),
+    ...touched,
+  ];
 
   await $`bunx eslint --fix --no-warn-ignored ${formatted}`
     .cwd(ROOT)
