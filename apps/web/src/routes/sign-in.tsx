@@ -18,12 +18,13 @@ export const Route = createFileRoute("/sign-in")({
 });
 
 function SignInRoute() {
-  const { redirect: target } = Route.useSearch();
+  const { redirect: target, error } = Route.useSearch();
   const navigate = Route.useNavigate();
 
   return (
     <SignInView
       redirect={target}
+      oauthError={error}
       onSignedIn={() => void navigate({ href: safeRedirect(target) })}
     />
   );

@@ -1,5 +1,8 @@
 import { Link } from "@tanstack/react-router";
 
+import { FieldSeparator } from "@/components/ui/Field";
+
+import { OAuthButtons } from "../components/OAuthButtons";
 import { SignUpForm } from "../components/SignUpForm";
 import { AuthLayout } from "../layouts/AuthLayout";
 
@@ -23,6 +26,8 @@ export function SignUpView({ redirect, onSignedUp }: SignUpViewProps) {
       }
     >
       <SignUpForm onSignedUp={onSignedUp} />
+      <FieldSeparator>or</FieldSeparator>
+      <OAuthButtons redirect={redirect} />
     </AuthLayout>
   );
 }
