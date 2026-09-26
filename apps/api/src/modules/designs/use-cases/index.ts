@@ -24,6 +24,10 @@ export {
   type ListDesignsUseCaseOptions,
 } from "./list-designs";
 export {
+  SaveDesignLayoutUseCase,
+  type SaveDesignLayoutUseCaseOptions,
+} from "./save-design-layout";
+export {
   UpdateDesignUseCase,
   type UpdateDesignUseCaseOptions,
 } from "./update-design";
