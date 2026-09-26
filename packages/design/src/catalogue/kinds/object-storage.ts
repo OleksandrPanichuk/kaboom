@@ -1,7 +1,7 @@
 import z from "zod";
 
 import { defineNodeKind } from "../define-node-kind";
-import { millis, rate } from "./shared";
+import { baseLatency, kilobytes, rate } from "./shared";
 
 export const objectStorageKind = defineNodeKind({
   kind: "object-storage",
@@ -12,7 +12,19 @@ export const objectStorageKind = defineNodeKind({
   replicable: false,
   distribution: "by-share",
   props: z.strictObject({
-    capacityRps: rate(5_000),
-    baseLatencyMs: millis(50),
+    readCapacityRps: rate(5_500, {
+      title: "Read capacity",
+      description: "Reads per second per key prefix",
+    }),
+    writeCapacityRps: rate(3_500, {
+      title: "Write capacity",
+      description: "Writes per second per key prefix",
+    }),
+    objectSizeKb: kilobytes(512, {
+      title: "Object size",
+      description: "Average size of one stored object",
+      advanced: true,
+    }),
+    baseLatencyMs: baseLatency(50),
   }),
 });
