@@ -42,3 +42,6 @@ yarn-error.log*
 
 # Generated API client (produced by `bun run generate`)
 packages/api-client/src/generated
+
+# TanStack Router route tree (produced by `bun run generate`)
+apps/web/src/routeTree.gen.ts

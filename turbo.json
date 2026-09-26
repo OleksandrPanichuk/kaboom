@@ -26,7 +26,10 @@
       "dependsOn": [
         "generate"
       ],
-      "persistent": true
+      "persistent": true,
+      "env": [
+        "API_URL"
+      ]
     },
     "generate": {
       "cache": false,
