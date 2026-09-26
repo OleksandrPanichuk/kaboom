@@ -1,26 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
-
-import { Button } from "@/components/ui/Button";
-
-import { healthQuery } from "../../api/home.queries";
+import { ProfileNameForm, useCurrentUser } from "@/features/auth";
 
 export function HomeView() {
-  const health = useQuery(healthQuery);
+  const user = useCurrentUser();
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-4 p-10">
-      <h1 className="text-3xl font-semibold tracking-tight">Kaboom</h1>
-      <p className="text-muted-foreground">
-        API:{" "}
-        {health.isPending
-          ? "checking…"
-          : health.isError
-            ? "unreachable"
-            : `${health.data.status} (${health.data.environment})`}
-      </p>
-      <div>
-        <Button onClick={() => void health.refetch()}>Check again</Button>
+    <main className="mx-auto flex max-w-xl flex-col gap-8 p-10">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-semibold tracking-tight">
+          Hi, {user.name}
+        </h1>
+        <p className="text-muted-foreground">
+          Your designs and interviews will live here.
+        </p>
       </div>
+      <ProfileNameForm />
     </main>
   );
 }

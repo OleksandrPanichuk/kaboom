@@ -123,6 +123,12 @@ The roles are the API's own: `.typedefs.ts`, `.constants.ts`, `.helpers.ts`.
 - Across features, import from the feature's `index.ts`
   (`@/features/auth`), never from a file inside another feature.
 - Inside a feature, import by relative path.
+- Every folder of a feature has an `index.ts` that re-exports everything in
+  it, and the feature's `index.ts` re-exports its folders, so anything a
+  feature has (views, layouts, components, queries, mutations, hooks,
+  constants, types, utils) imports from `@/features/<feature>`. The barrels
+  are generated: run `bun run barrels` after adding, renaming or removing a
+  file under `features/`, and commit what it writes. Never edit one by hand.
 - `routes/` imports from features; features never import from `routes/`.
 
 ## Data
@@ -131,6 +137,12 @@ The roles are the API's own: `.typedefs.ts`, `.constants.ts`, `.helpers.ts`.
   `queryOptions` in the feature's `api/` folder and used by the route's
   `loader` (`ensureQueryData`) and the view (`useQuery`/`useSuspenseQuery`)
   alike, so both read one cache entry.
+- A mutation is declared once with `mutationOptions` in `api/`, and its own
+  callbacks keep the cache right (refetch the current user, clear on sign-out).
+  A component adds its reaction through `mutate(variables, { onSuccess })`,
+  which runs after them. Never `useMutation({ ...someMutation, onSuccess })`:
+  the spread replaces the declared callback instead of adding to it, and the
+  cache silently stops being updated.
 - Calls go through `api` from `@/lib/api`, which targets `/api` on the same
   origin; the Vite dev server proxies it to the API, so the session cookie and
   CSRF stay same-origin.
