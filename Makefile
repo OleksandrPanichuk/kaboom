@@ -1,5 +1,5 @@
 
-.PHONY: build test test-integration test-down logs migrate sh up up-db run-all add drop services down reset check generate gen db-generate db-migrate seed db-studio db-development db-shell
+.PHONY: build test test-integration test-down logs migrate sh up up-db run-all add drop services down reset check generate gen db-generate db-migrate seed db-studio db-development db-shell restart redis-cache-cli redis-queue-cli redis-sessions-cli
 
 OPTIONAL_SERVICES := bull_board drizzle_studio
 
@@ -123,3 +123,24 @@ db-development:
 
 db-shell:
 	docker compose exec -it db bash
+
+restart:
+ifndef s
+	$(error usage: make restart s=<service>, e.g. make restart s=api)
+endif
+	@project=$$(docker compose config --format json | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p' | head -1); \
+	running=$$(docker ps --filter "label=com.docker.compose.project=$$project" \
+		--format '{{.Label "com.docker.compose.service"}}'); \
+	profiles=$$(printf '%s\n%s\n' "$$running" '$(s)' \
+		| grep -Fx $(foreach svc,$(OPTIONAL_SERVICES),-e $(svc)) \
+		| sort -u | paste -sd, -); \
+	COMPOSE_PROFILES="$$profiles" docker compose restart $(s)
+
+redis-cache-cli:
+	docker compose exec -it cache redis-cli
+
+redis-queue-cli:
+	docker compose exec -it queue_redis redis-cli
+
+redis-sessions-cli:
+	docker compose exec -it sessions redis-cli

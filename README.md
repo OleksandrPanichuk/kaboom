@@ -87,6 +87,7 @@ default. Nothing depends on them, so they are pure opt-in:
 make add s=bull_board       # start one alongside whatever is already running
 make drop s=drizzle_studio  # stop and remove one
 make services               # list what is running
+make restart s=api          # restart one service, keeping the optional ones up
 make run-all                # everything, optional services included
 ```
 
@@ -210,6 +211,14 @@ Open a psql shell against the running container:
 
 ```sh
 make db-development
+```
+
+Open `redis-cli` inside one of the three Redis containers:
+
+```sh
+make redis-sessions-cli   # sessions and rate-limit counters
+make redis-queue-cli      # BullMQ jobs
+make redis-cache-cli      # the cache
 ```
 
 ## Common tasks
