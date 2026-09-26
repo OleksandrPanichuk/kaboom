@@ -37,7 +37,7 @@ export function SignInView({
         </FieldError>
       ) : null}
       <SignInForm onSignedIn={onSignedIn} />
-      <FieldSeparator>or</FieldSeparator>
+      <FieldSeparator className="my-6">or</FieldSeparator>
       <OAuthButtons redirect={redirect} />
     </AuthLayout>
   );

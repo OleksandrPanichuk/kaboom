@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -47,6 +48,7 @@ export function DeleteAccountSection({
     <SettingsSection
       title="Delete account"
       description="Your designs, interviews and reviews go with it. This cannot be undone."
+      icon={Trash2}
       tone="danger"
     >
       <form onSubmit={submit}>

@@ -53,7 +53,7 @@ export function CaptchaChallenge({ onSolved }: CaptchaChallengeProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 rounded-xl border bg-zinc-50/70 p-3">
       <FieldDescription>One more check before we continue.</FieldDescription>
       <div ref={container} />
       {failed ? (
