@@ -74,6 +74,20 @@
         "typescript": "6.0.3",
       },
     },
+    "packages/design": {
+      "name": "@repo/design",
+      "version": "0.0.0",
+      "dependencies": {
+        "zod": "^4.5.4",
+      },
+      "devDependencies": {
+        "@repo/eslint-config": "*",
+        "@repo/typescript-config": "*",
+        "@types/bun": "^1.4.2",
+        "eslint": "10.11.0",
+        "typescript": "6.0.3",
+      },
+    },
     "packages/eslint-config": {
       "name": "@repo/eslint-config",
       "version": "0.0.0",
@@ -334,6 +348,8 @@
     "@repo/api-client": ["@repo/api-client@workspace:packages/api-client"],
 
     "@repo/api-codegen": ["@repo/api-codegen@workspace:cli-tools/api-codegen"],
+
+    "@repo/design": ["@repo/design@workspace:packages/design"],
 
     "@repo/eslint-config": ["@repo/eslint-config@workspace:packages/eslint-config"],
 
