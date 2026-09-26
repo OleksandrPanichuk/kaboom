@@ -1,9 +1,8 @@
 import { Link } from "@tanstack/react-router";
 
 import { buttonVariants } from "@/components/ui/Button";
+import { errorMessage } from "@/features/auth/utils";
 import { cn } from "@/lib/utils";
-
-import { errorMessage } from "../../utils/errorMessage";
 
 interface TokenOutcomeProps {
   status: "idle" | "pending" | "success" | "error";

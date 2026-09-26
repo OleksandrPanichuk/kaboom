@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { useCurrentUser } from "@/features/auth";
+import { deleteAccountMutation } from "@/features/security/api";
+import { securityErrorMessage } from "@/features/security/utils";
 
-import { deleteAccountMutation } from "../../api/security.mutations";
-import { securityErrorMessage } from "../../utils/securityErrorMessage";
 import { SettingsSection } from "./SettingsSection";
 
 interface DeleteAccountSectionProps {

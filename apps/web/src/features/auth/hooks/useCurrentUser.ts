@@ -1,7 +1,7 @@
 import type { UserModel } from "@repo/api-client";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
-import { currentUserQuery } from "../api/auth.queries";
+import { currentUserQuery } from "@/features/auth/api";
 
 export const useCurrentUser = (): UserModel => {
   const { data } = useSuspenseQuery(currentUserQuery);

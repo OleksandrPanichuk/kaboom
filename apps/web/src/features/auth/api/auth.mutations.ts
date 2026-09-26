@@ -1,8 +1,8 @@
 import { mutationOptions } from "@tanstack/react-query";
 
+import { captchaHeaders } from "@/features/auth/utils";
 import { api, unwrap } from "@/lib/api";
 
-import { captchaHeaders } from "../utils/captcha";
 import { currentUserQuery } from "./auth.queries";
 
 export interface WithChallenge {

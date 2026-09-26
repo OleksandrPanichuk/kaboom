@@ -1,7 +1,6 @@
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
-
-import { PASSWORD_MIN_LENGTH } from "../../../constants/auth.constants";
+import { PASSWORD_MIN_LENGTH } from "@/features/auth/constants";
 
 interface PasswordFieldsProps {
   label?: string;

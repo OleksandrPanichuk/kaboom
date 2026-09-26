@@ -1,4 +1,4 @@
-import type { AuthSearch } from "../typedefs/auth.typedefs";
+import type { AuthSearch } from "@/features/auth/typedefs";
 
 const text = (value: unknown): string | undefined =>
   typeof value === "string" && value !== "" ? value : undefined;

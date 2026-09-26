@@ -167,7 +167,12 @@ The roles are the API's own: `.typedefs.ts`, `.constants.ts`, `.helpers.ts`.
 - `@/` is `src/`.
 - Across features, import from the feature's `index.ts`
   (`@/features/auth`), never from a file inside another feature.
-- Inside a feature, import by relative path.
+- Inside a feature, import another folder through its barrel by absolute
+  path (`@/features/auth/api`, `@/features/auth/ui/components`), never
+  with `../`. Only a sibling in the same folder is imported by relative path
+  (`./CaptchaChallenge`): going through its own folder's barrel would make that
+  barrel import itself, and a constant read during that cycle is still
+  undefined.
 - Every folder of a feature has an `index.ts` that re-exports everything in
   it, and the feature's `index.ts` re-exports its folders, so anything a
   feature has (views, layouts, components, queries, mutations, hooks,

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
-import { ResetPasswordForm } from "../components/ResetPasswordForm";
-import { AuthLayout } from "../layouts/AuthLayout";
+import { ResetPasswordForm } from "@/features/auth/ui/components";
+import { AuthLayout } from "@/features/auth/ui/layouts";
 
 interface ResetPasswordViewProps {
   token: string | undefined;

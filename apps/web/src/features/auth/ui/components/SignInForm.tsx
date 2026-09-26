@@ -10,10 +10,9 @@ import {
   FieldLabel,
 } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { signInMutation } from "@/features/auth/api";
+import { errorMessage, isChallengeRequired } from "@/features/auth/utils";
 
-import { signInMutation } from "../../api/auth.mutations";
-import { errorMessage } from "../../utils/errorMessage";
-import { isChallengeRequired } from "../../utils/isChallengeRequired";
 import { CaptchaChallenge } from "./CaptchaChallenge";
 
 interface SignInFormProps {

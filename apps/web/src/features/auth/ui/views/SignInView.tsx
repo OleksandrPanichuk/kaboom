@@ -1,11 +1,9 @@
 import { Link } from "@tanstack/react-router";
 
 import { FieldError, FieldSeparator } from "@/components/ui/Field";
-
-import { oauthErrorMessage } from "../../utils/oauthErrorMessage";
-import { OAuthButtons } from "../components/OAuthButtons";
-import { SignInForm } from "../components/SignInForm";
-import { AuthLayout } from "../layouts/AuthLayout";
+import { OAuthButtons, SignInForm } from "@/features/auth/ui/components";
+import { AuthLayout } from "@/features/auth/ui/layouts";
+import { oauthErrorMessage } from "@/features/auth/utils";
 
 interface SignInViewProps {
   redirect: string | undefined;

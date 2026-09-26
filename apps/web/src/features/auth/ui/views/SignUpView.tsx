@@ -1,10 +1,8 @@
 import { Link } from "@tanstack/react-router";
 
 import { FieldSeparator } from "@/components/ui/Field";
-
-import { OAuthButtons } from "../components/OAuthButtons";
-import { SignUpForm } from "../components/SignUpForm";
-import { AuthLayout } from "../layouts/AuthLayout";
+import { OAuthButtons, SignUpForm } from "@/features/auth/ui/components";
+import { AuthLayout } from "@/features/auth/ui/layouts";
 
 interface SignUpViewProps {
   redirect: string | undefined;

@@ -9,10 +9,9 @@ import {
   FieldLabel,
 } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
-
-import { updateProfileMutation } from "../../api/auth.mutations";
-import { useCurrentUser } from "../../hooks/useCurrentUser";
-import { errorMessage } from "../../utils/errorMessage";
+import { updateProfileMutation } from "@/features/auth/api";
+import { useCurrentUser } from "@/features/auth/hooks";
+import { errorMessage } from "@/features/auth/utils";
 
 export function ProfileNameForm() {
   const user = useCurrentUser();

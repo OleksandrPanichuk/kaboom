@@ -11,9 +11,8 @@ import {
 } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { PasswordFields, readPasswordPair } from "@/features/auth";
-
-import { changePasswordMutation } from "../../api/security.mutations";
-import { securityErrorMessage } from "../../utils/securityErrorMessage";
+import { changePasswordMutation } from "@/features/security/api";
+import { securityErrorMessage } from "@/features/security/utils";
 
 export function ChangePasswordForm() {
   const change = useMutation(changePasswordMutation);

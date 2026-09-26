@@ -4,10 +4,10 @@ import { type FormEvent, useState } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { FieldError, FieldGroup } from "@/components/ui/Field";
+import { resetPasswordMutation } from "@/features/auth/api";
+import { errorMessage } from "@/features/auth/utils";
 import { cn } from "@/lib/utils";
 
-import { resetPasswordMutation } from "../../api/auth.mutations";
-import { errorMessage } from "../../utils/errorMessage";
 import { PasswordFields, readPasswordPair } from "./PasswordFields";
 
 interface ResetPasswordFormProps {

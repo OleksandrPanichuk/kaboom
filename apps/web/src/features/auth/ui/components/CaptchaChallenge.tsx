@@ -1,8 +1,7 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { FieldDescription, FieldError } from "@/components/ui/Field";
-
-import { challengeSiteKey, loadRecaptcha } from "../../utils/captcha";
+import { challengeSiteKey, loadRecaptcha } from "@/features/auth/utils";
 
 interface CaptchaChallengeProps {
   onSolved: (token: string) => void;

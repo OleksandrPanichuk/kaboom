@@ -10,11 +10,10 @@ import {
   FieldLabel,
 } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { signUpMutation } from "@/features/auth/api";
+import { PASSWORD_MIN_LENGTH } from "@/features/auth/constants";
+import { errorMessage, isChallengeRequired } from "@/features/auth/utils";
 
-import { signUpMutation } from "../../api/auth.mutations";
-import { PASSWORD_MIN_LENGTH } from "../../constants/auth.constants";
-import { errorMessage } from "../../utils/errorMessage";
-import { isChallengeRequired } from "../../utils/isChallengeRequired";
 import { CaptchaChallenge } from "./CaptchaChallenge";
 
 interface SignUpFormProps {

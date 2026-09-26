@@ -4,9 +4,8 @@ import { type FormEvent, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FieldError, FieldGroup } from "@/components/ui/Field";
 import { PasswordFields, readPasswordPair } from "@/features/auth";
-
-import { setPasswordMutation } from "../../api/security.mutations";
-import { securityErrorMessage } from "../../utils/securityErrorMessage";
+import { setPasswordMutation } from "@/features/security/api";
+import { securityErrorMessage } from "@/features/security/utils";
 
 export function SetPasswordForm() {
   const set = useMutation(setPasswordMutation);

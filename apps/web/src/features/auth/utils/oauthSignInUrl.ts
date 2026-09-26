@@ -1,4 +1,5 @@
-import type { OAuthProvider } from "../typedefs/auth.typedefs";
+import type { OAuthProvider } from "@/features/auth/typedefs";
+
 import { safeRedirect } from "./safeRedirect";
 
 export const oauthSignInUrl = (

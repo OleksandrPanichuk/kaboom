@@ -1,8 +1,8 @@
 import { buttonVariants } from "@/components/ui/Button";
+import type { OAuthProvider } from "@/features/auth/typedefs";
+import { oauthSignInUrl } from "@/features/auth/utils";
 import { cn } from "@/lib/utils";
 
-import type { OAuthProvider } from "../../../typedefs/auth.typedefs";
-import { oauthSignInUrl } from "../../../utils/oauthSignInUrl";
 import { GitHubIcon } from "./GitHubIcon";
 import { GoogleIcon } from "./GoogleIcon";
 import { OAUTH_PROVIDERS } from "./OAuthButtons.constants";
