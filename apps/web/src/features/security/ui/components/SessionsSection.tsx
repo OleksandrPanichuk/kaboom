@@ -37,14 +37,14 @@ export function SessionsSection() {
             key={session.id}
             className="flex items-center justify-between gap-4 p-3"
           >
-            <div className="flex flex-col">
-              <span className="flex items-center gap-2 text-sm font-medium">
+            <div className="flex min-w-0 flex-col">
+              <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
                 {describeUserAgent(session.userAgent)}
                 {session.current ? (
                   <Badge variant="secondary">This device</Badge>
                 ) : null}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="truncate text-xs text-muted-foreground">
                 {[
                   formatIp(session.ip),
                   `since ${dateTime.format(new Date(session.createdAt))}`,
@@ -57,6 +57,7 @@ export function SessionsSection() {
               <Button
                 variant="ghost"
                 size="sm"
+                className="shrink-0"
                 disabled={revoke.isPending}
                 onClick={() => revoke.mutate(session.id)}
               >

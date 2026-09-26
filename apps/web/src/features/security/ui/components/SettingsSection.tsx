@@ -18,7 +18,7 @@ export function SettingsSection({
   return (
     <section
       className={cn(
-        "flex flex-col gap-4 rounded-xl border p-6",
+        "flex flex-col gap-4 rounded-xl border p-4 sm:p-6",
         tone === "danger" && "border-destructive/40",
       )}
     >

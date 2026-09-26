@@ -54,11 +54,11 @@ export function ConnectedAccountsSection({
               key={provider}
               className="flex items-center justify-between gap-4 p-3"
             >
-              <div className="flex items-center gap-3">
-                <Icon className="size-5" />
-                <div className="flex flex-col">
+              <div className="flex min-w-0 items-center gap-3">
+                <Icon className="size-5 shrink-0" />
+                <div className="flex min-w-0 flex-col">
                   <span className="text-sm font-medium">{label}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="truncate text-xs text-muted-foreground">
                     {account ? (account.email ?? "Connected") : "Not connected"}
                   </span>
                 </div>
@@ -67,6 +67,7 @@ export function ConnectedAccountsSection({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="shrink-0"
                   disabled={!account.canDisconnect || unlink.isPending}
                   title={
                     account.canDisconnect
@@ -79,6 +80,7 @@ export function ConnectedAccountsSection({
                 </Button>
               ) : (
                 <form
+                  className="shrink-0"
                   method="post"
                   action={`/api/auth/oauth/${provider}/link?redirectTo=${encodeURIComponent(RETURN_TO)}`}
                 >

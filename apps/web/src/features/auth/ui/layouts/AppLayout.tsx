@@ -19,12 +19,14 @@ export function AppLayout({ children, onSignedOut }: AppLayoutProps) {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="flex h-14 items-center justify-between border-b px-6">
+      <header className="flex h-14 items-center justify-between gap-4 border-b px-4 sm:px-6">
         <Link to="/" className="font-semibold tracking-tight">
           Kaboom
         </Link>
         <div className="flex items-center gap-3 text-sm">
-          <span className="text-muted-foreground">{user.name}</span>
+          <span className="hidden max-w-40 truncate text-muted-foreground sm:inline">
+            {user.name}
+          </span>
           <Link
             to="/settings/security"
             className="text-muted-foreground hover:text-foreground"

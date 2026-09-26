@@ -13,8 +13,8 @@ export function EmailVerificationBanner() {
   if (user.emailVerified) return null;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/50 px-6 py-2 text-sm">
-      <p>
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/50 px-4 py-2 text-sm sm:px-6">
+      <p className="min-w-0 break-words">
         {resend.isSuccess ? (
           <>
             A new link is on its way to{" "}

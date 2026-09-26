@@ -16,8 +16,8 @@ export function EmailSection({ hasPassword }: EmailSectionProps) {
       title="Email"
       description="Where we send links, and what you sign in with."
     >
-      <div className="flex items-center gap-2 text-sm">
-        <span className="font-medium">{user.email}</span>
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="min-w-0 font-medium break-all">{user.email}</span>
         <Badge variant={user.emailVerified ? "secondary" : "outline"}>
           {user.emailVerified ? "Verified" : "Not verified"}
         </Badge>

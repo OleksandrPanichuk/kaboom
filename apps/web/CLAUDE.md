@@ -137,6 +137,19 @@ each other, such as `Field` importing `Label`), and runs `eslint --fix` over
   edited in place when it needs to be. Re-adding with `--overwrite` replaces
   such edits, so review the diff when updating one.
 
+### Narrow screens
+
+Every screen works from 320px wide, and the page never scrolls sideways.
+
+- A row with text and an action beside it gives the text column `min-w-0`,
+  truncates or wraps the long part (`truncate`, or `break-all` for an email
+  that must stay whole), and gives the action `shrink-0`. Without `min-w-0` a
+  flex child refuses to shrink below its content, and a long email pushes the
+  button out of its card.
+- Page padding is smaller on phones: `px-4 py-6 sm:p-10`, cards `p-4 sm:p-6`.
+- Check a layout change at 375px and 320px in the browser before calling it
+  done.
+
 ## Naming
 
 | What | File | Example |
