@@ -21,21 +21,32 @@ export interface ApiClientOptions {
   fetch?: typeof globalThis.fetch;
 }
 
+type QueryValue = string | number | boolean | null | undefined;
+
+export type Query = Record<string, QueryValue | readonly QueryValue[]>;
+
 interface Operation {
   response: unknown;
   body?: unknown;
+  query?: unknown;
 }
+
+type OptionsArgs<Node extends Operation> = Node extends { query: infer Q }
+  ? object extends Q
+    ? [options?: RequestOptions & { query?: Q }]
+    : [options: RequestOptions & { query: Q }]
+  : [options?: RequestOptions];
 
 type OperationFn<Node extends Operation> = Node extends { body: infer Body }
   ? (
       body: Body,
-      options?: RequestOptions,
+      ...options: OptionsArgs<Node>
     ) => Promise<ApiResult<Node["response"]>>
-  : (options?: RequestOptions) => Promise<ApiResult<Node["response"]>>;
+  : (...options: OptionsArgs<Node>) => Promise<ApiResult<Node["response"]>>;
 
 type ApiBranch<Node> = { [Key in keyof Node]: ApiProxy<Node[Key]> };
 
-type ApiProxy<Node> = Node extends Operation
+export type ApiProxy<Node> = Node extends Operation
   ? OperationFn<Node>
   : Node extends (param: infer Param) => infer Next
     ? ((param: Param) => ApiProxy<Next>) & ApiBranch<Node>
@@ -97,6 +108,22 @@ const resolvePath = (trail: string[], params: string[]): string => {
   });
 };
 
+const serializeQuery = (query: Query | undefined): string => {
+  const search = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(query ?? {})) {
+    for (const item of [value].flat()) {
+      if (item === undefined || item === null) continue;
+
+      search.append(key, String(item));
+    }
+  }
+
+  const serialized = search.toString();
+
+  return serialized ? `?${serialized}` : "";
+};
+
 const send = async (
   options: ApiClientOptions,
   trail: string[],
@@ -106,11 +133,13 @@ const send = async (
   const method = trail[trail.length - 1]?.toUpperCase() ?? "GET";
   const hasBody = method !== "GET" && method !== "HEAD";
   const [first, second] = args as [unknown, RequestOptions | undefined];
-  const request = (hasBody ? second : (first as RequestOptions)) ?? {};
+  const request =
+    ((hasBody ? second : first) as
+      (RequestOptions & { query?: Query }) | undefined) ?? {};
   const fetcher = options.fetch ?? globalThis.fetch;
 
   const response = await fetcher(
-    `${options.url}${resolvePath(trail, params)}`,
+    `${options.url}${resolvePath(trail, params)}${serializeQuery(request.query)}`,
     {
       method,
       credentials: "include",

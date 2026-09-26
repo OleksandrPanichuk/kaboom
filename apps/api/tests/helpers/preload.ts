@@ -10,6 +10,7 @@ import type { MemoryErrorReporter } from "@/adapters/error-reporting/memory.erro
 import type { MemoryMailer } from "@/adapters/mail/memory.mailer";
 import type { MemoryMetrics } from "@/adapters/metrics/memory.metrics";
 import type { MemoryRateLimitStore } from "@/adapters/rate-limit/memory.rate-limit-store";
+import type { MemoryRealtime } from "@/adapters/realtime/memory.realtime";
 import { loadEnv, setEnv } from "@/configs";
 import { closeModules, createApp, startModules } from "@/core/app";
 import { make } from "@/core/registry";
@@ -21,6 +22,7 @@ import { CaptchaVerifier } from "@/platform/captcha";
 import { ErrorReporter } from "@/platform/error-reporting";
 import { Metrics } from "@/platform/metrics";
 import { RateLimitStore } from "@/platform/rate-limit";
+import { Realtime } from "@/platform/realtime";
 
 import { setApp } from "./app";
 
@@ -87,6 +89,7 @@ afterEach(async () => {
   (make(CaptchaVerifier) as MemoryCaptchaVerifier).clear();
   (make(ErrorReporter) as MemoryErrorReporter).clear();
   (make(Metrics) as MemoryMetrics).clear();
+  (make(Realtime) as MemoryRealtime).clear();
 });
 
 afterAll(async () => {

@@ -10,11 +10,13 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "generate": "bun run --filter @repo/api-codegen generate",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "test": "bun test"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
+    "@types/bun": "^1.4.2",
     "eslint": "10.11.0",
     "typescript": "6.0.3"
   }

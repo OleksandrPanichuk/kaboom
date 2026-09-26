@@ -4,6 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "noEmit": true,
+    "types": ["bun"],
     "verbatimModuleSyntax": true
   },
   "include": ["src/**/*.ts"],

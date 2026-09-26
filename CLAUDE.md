@@ -56,7 +56,8 @@ infrastructure/<tech>/   technology clients: connect, reconnect, ping, close
 ```
 
 - **`platform/`** holds what the app offers to modules rather than to users:
-  `cache`, `jobs`, `rate-limit`, `health`, `captcha`, `error-reporting`, `metrics`. The test is "does it have a domain?" —
+  `cache`, `jobs`, `rate-limit`, `health`, `captcha`, `error-reporting`, `metrics`,
+  `realtime`. The test is "does it have a domain?" —
   an entity, a repository, a use case or a route about the product belongs in
   `modules/`; a port plus a `defineModule` lifecycle that any module may consume
   belongs in `platform/`. Both go through `defineModule`, so a platform folder
@@ -291,9 +292,9 @@ lint, types and its tests to check a template change end to end.
 `bun test` sets `NODE_ENV=test`, so every port resolves to its memory adapter
 and only Postgres is real. `tests/helpers/preload.ts` runs once per invocation:
 it creates and migrates the test database, boots the app, truncates every table
-after each test, and clears the mailer and rate-limit counters with it. A test
-therefore starts from empty tables and an empty inbox without arranging
-anything.
+after each test, and clears the mailer, the rate-limit counters and the
+realtime listeners with it. A test therefore starts from empty tables and an
+empty inbox without arranging anything.
 
 Unit tests live next to what they cover; anything that goes through HTTP lives
 in `tests/`, because it crosses modules and belongs to none of them. Factories
@@ -330,6 +331,112 @@ A cache is an optimization, never a dependency: `RedisCache` treats an
 unavailable connection and a malformed entry as a miss and never throws.
 Cached values are validated by a schema on read, because JSON round-trips turn
 `Date` into `string`.
+
+## Pagination
+
+Lists are paginated by cursor, never by offset: a cursor is the position of the
+last row a client saw, so a page stays correct while rows are inserted or
+deleted before it. The pieces, one per layer:
+
+```ts
+query: PageQuery,
+response: PageModel(ProblemModel),
+action: ({ user, query }) =>
+  listProblems.execute({ ownerId: user.id, page: toPageRequest(query) }),
+postAction: ({ output }) => mapPage(output, ProblemEntity.normalize),
+```
+
+A route that filters as well spreads the page fields into its own query:
+`t.Object({ ...PageQueryFields, track: t.Optional(TrackSchema) })`.
+`PageModel(item)` answers `{ items, nextCursor: string | null }`.
+
+```ts
+const BY_CREATION = new Keyset<ProblemEntity>({
+  sort: problemsSchema.createdAt,
+  id: problemsSchema.id,
+  key: (problem) => [problem.createdAt, problem.id],
+});
+
+const rows = await this.db
+  .select()
+  .from(problemsSchema)
+  .where(and(eq(problemsSchema.ownerId, ownerId), BY_CREATION.after(request.cursor)))
+  .orderBy(...BY_CREATION.orderBy())
+  .limit(BY_CREATION.limit(request));
+
+return BY_CREATION.page(rows, request);
+```
+
+- `PageQuery`, `PageModel`, `PageRequest`, `Page<T>`, `toPageRequest` and
+  `mapPage` live in `@/core/pagination`; `Keyset` in `@/db/pagination`.
+- A use case takes a `PageRequest` inside its own options; the route converts
+  the query with `toPageRequest`, which applies the default limit (20, max 100).
+- `Keyset` orders by one not-null column and a unique tie-breaker, and fetches
+  one row more than the page to know whether another follows. Timestamps are
+  compared at millisecond precision: Postgres stores microseconds and a `Date`
+  keeps milliseconds, so the raw column would skip or repeat rows inside one
+  millisecond.
+- The cursor is opaque base64url. A malformed one answers
+  `400 INVALID_CURSOR`, never a 500.
+
+## Live updates
+
+A route that pushes events to the browser is a server-sent event stream,
+declared with `defineStreamRoute` from `@/core/stream-route`. It takes the same
+`params`, `query`, `auth`, `rateLimit` and `guards` as `defineRoute`, and a
+`stream` that yields `{ id?, event?, data }`:
+
+```ts
+defineStreamRoute({
+  params: RoomParams,
+  auth: true,
+  guards: [requireRoomMember],
+  stream: async function* ({ params, query, lastEventId, signal }) {
+    for await (const event of resumableStream({
+      channel: `rooms:${params.id}`,
+      schema: RoomEventSchema,
+      after: lastEventId !== null ? Number(lastEventId) : (query.since ?? null),
+      position: (event) => event.seq,
+      replay: (after) => roomEvents.listAfter(params.id, after),
+      signal,
+    })) {
+      yield { id: event.seq, event: event.type, data: event };
+    }
+  },
+});
+```
+
+- Commands stay ordinary `defineRoute` routes; the stream only pushes. The
+  generated client leaves stream routes out, because it reads whole bodies.
+- An error thrown before the first event answers with its own status, like any
+  route: a guard's 403, or `503 REALTIME_UNAVAILABLE` when the subscription
+  cannot be made. After that, the stream can only end, and an unexpected error
+  is reported through `captureException`.
+- A heartbeat event goes out after `heartbeatMs` (default 15 s) of silence, so
+  proxies do not close an idle connection.
+- `stream` must end when `signal` aborts. `resumableStream` does; a hand-written
+  one that waits on something else keeps its subscription after the client has
+  gone.
+
+`Realtime` (`platform/realtime`) is the pub/sub port: `publish(channel,
+message)` and `subscribe(channel, schema, listener)`. Messages cross it as JSON
+and are validated on arrival, so `MemoryRealtime` under `NODE_ENV=test` turns a
+`Date` into a string exactly as `RedisRealtime` does. `publish` never throws:
+live delivery is best effort, and what a client misses it gets back from
+`replay`.
+
+`resumableStream` is what makes that safe. It subscribes first and buffers,
+then replays everything after the client's position from the system of record,
+then drains the buffer, skipping any position it has already sent. An event
+published while the replay runs therefore arrives exactly once. It also ends
+the stream when a slow client lets more than `maxBuffered` events pile up, and
+the client's reconnect replays from where it was. Positions must increase with
+every event, which is why they come from the store (a sequence column), never
+from the clock.
+
+`RedisRealtime` publishes on the shared connection and subscribes on one owned
+connection per process, multiplexing every channel over it. Channels carry the
+`<slug>:realtime:` prefix, like every other Redis key.
 
 ## Generated API client
 

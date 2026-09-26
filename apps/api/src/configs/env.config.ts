@@ -118,6 +118,7 @@ export const EnvSchema = z.object({
   JOBS_REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
   CACHE_REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
   RATE_LIMIT_REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
+  REALTIME_REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
 
   TRUSTED_PROXY_HEADER: z.string().trim().min(1).toLowerCase().optional(),
   TRUSTED_PROXY_DEPTH: z.coerce.number().int().min(1).max(10).default(1),

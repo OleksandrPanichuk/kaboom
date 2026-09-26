@@ -41,7 +41,7 @@ them from the shell or from a `.env` at the repository root, and uses the slug
 as the project name of both compose files and as the storage bucket name.
 
 Two names cannot be interpolated and are written out by hand: the test database
-in `DATABASE_URL` of `apps/api/.env.test` (`app_test`), and `TEST_S3_BUCKET` in
+in `DATABASE_URL` of `apps/api/.env.test` (`kaboom_test`), and `TEST_S3_BUCKET` in
 the `Makefile`. Neither is visible outside the test stack.
 
 Install dependencies:
@@ -137,6 +137,15 @@ console.log(data.userId, data.expiresAt);
 Route segments are camelCased from the URL (`/api/auth/sign-in` becomes
 `api.auth.signIn`), so `url` is the server's origin without the `/api` prefix.
 Path parameters are call arguments: `api.api.auth.oauth("google").get()`.
+Query parameters go in the options, typed from the route's `query` schema, and
+are required there when the route requires one:
+
+```ts
+const page = await api.api.problems.get({ query: { limit: 20 } });
+const next = await api.api.problems.get({
+  query: { limit: 20, cursor: page.data!.nextCursor! },
+});
+```
 
 `@repo/api-client/server` exposes `createServerApiClient`, which forwards a
 cookie header instead of relying on the browser's cookie jar.
@@ -229,7 +238,7 @@ development stack: different containers, different ports, no volumes. A run
 cannot reach development data, and nothing it writes survives. `bun test` sets `NODE_ENV=test`,
 which makes Bun load `apps/api/.env.test` and every port resolve to its
 in-memory adapter, so Redis, SMTP and the OAuth providers are all doubles. The
-first run creates the `app_test` database and migrates it, and each test starts
+first run creates the `kaboom_test` database and migrates it, and each test starts
 against empty tables.
 
 `make test-integration` additionally starts Redis and a mail server and runs
@@ -271,6 +280,11 @@ for local development.
 `CACHE_REDIS_URL` and `SMTP_URL` are required unless `NODE_ENV=test`, where
 each port falls back to an in-memory adapter so the whole app boots in-process
 with no external services.
+
+`RATE_LIMIT_REDIS_URL` and `REALTIME_REDIS_URL` are optional and only move a
+concern to another server: rate-limit counters default to the sessions Redis,
+which neither evicts nor loses them on a cache flush, and realtime pub/sub
+defaults to the cache Redis, since it stores nothing.
 
 Behind a proxy, set `TRUSTED_PROXY_HEADER` to the header that proxy sets and
 `TRUSTED_PROXY_DEPTH` to how many proxies stand between the client and the API.

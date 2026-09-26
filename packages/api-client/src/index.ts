@@ -3,6 +3,7 @@ export type {
   ApiClientOptions,
   ApiError,
   ApiResult,
+  Query,
   RequestOptions,
 } from "./client";
 export { createApiClient } from "./client";

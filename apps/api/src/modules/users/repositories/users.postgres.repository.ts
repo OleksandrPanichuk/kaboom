@@ -1,12 +1,20 @@
 import { eq } from "drizzle-orm";
 
+import type { Page, PageRequest } from "@/core/pagination";
 import { usersSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
+import { Keyset } from "@/db/pagination";
 
 import { UserEntity } from "../user.entity";
 import { UserNotFoundError } from "../users.errors";
 import type { CreateUserData, UpdateUserData } from "../users.repository";
 import { UsersRepository } from "../users.repository";
+
+const BY_CREATION = new Keyset<UserEntity>({
+  sort: usersSchema.createdAt,
+  id: usersSchema.id,
+  key: (user) => [user.createdAt, user.id],
+});
 
 export class PostgresUsersRepository extends UsersRepository {
   constructor(private readonly resolve: () => DBExecutor = getExecutor) {
@@ -43,8 +51,15 @@ export class PostgresUsersRepository extends UsersRepository {
     return user;
   }
 
-  public list(): Promise<UserEntity[]> {
-    return this.db.select().from(usersSchema).orderBy(usersSchema.createdAt);
+  public async list(request: PageRequest): Promise<Page<UserEntity>> {
+    const rows = await this.db
+      .select()
+      .from(usersSchema)
+      .where(BY_CREATION.after(request.cursor))
+      .orderBy(...BY_CREATION.orderBy())
+      .limit(BY_CREATION.limit(request));
+
+    return BY_CREATION.page(rows, request);
   }
 
   public async findById(id: string): Promise<UserEntity | null> {

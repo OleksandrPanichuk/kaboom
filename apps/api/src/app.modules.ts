@@ -14,6 +14,7 @@ import { healthModule } from "@/platform/health";
 import { jobsModule } from "@/platform/jobs";
 import { metricsModule } from "@/platform/metrics";
 import { rateLimitModule } from "@/platform/rate-limit";
+import { realtimeModule } from "@/platform/realtime";
 import { storageModule } from "@/platform/storage";
 
 export const modules = [
@@ -23,6 +24,7 @@ export const modules = [
   healthModule,
   sessionsModule,
   cacheModule,
+  realtimeModule,
   rateLimitModule,
   captchaModule,
   storageModule,
