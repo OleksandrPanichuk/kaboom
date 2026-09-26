@@ -11,7 +11,9 @@ import {
   ApplyDesignOpsUseCase,
   CreateDesignUseCase,
   DeleteDesignUseCase,
+  GetDesignRevisionUseCase,
   GetDesignUseCase,
+  ListDesignRevisionsUseCase,
   ListDesignsUseCase,
   UpdateDesignUseCase,
 } from "./use-cases";
@@ -35,5 +37,7 @@ export const designsModule = defineModule({
       updateDesign: makeUseCase(UpdateDesignUseCase),
       deleteDesign: makeUseCase(DeleteDesignUseCase),
       applyDesignOps: makeUseCase(ApplyDesignOpsUseCase),
+      listDesignRevisions: makeUseCase(ListDesignRevisionsUseCase),
+      getDesignRevision: makeUseCase(GetDesignRevisionUseCase),
     }),
 });

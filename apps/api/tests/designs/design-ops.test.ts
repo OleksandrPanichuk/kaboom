@@ -137,11 +137,11 @@ describe("applying operations to a design", () => {
     expect((await applyOps(user, design.id, 0, [])).status).toBe(422);
   });
 
-  test("undoes a batch as a new revision", async () => {
+  test("undoes a batch as a new revision, leaving the old one intact", async () => {
     const user = await createUser();
     const design = await createDesign(user);
 
-    await applyOps(user, design.id, 0, addApiAndDb);
+    const first = await applyOps(user, design.id, 0, addApiAndDb);
     const local = applyLocally(design.graph, addApiAndDb);
 
     if (!local.ok) throw new Error("the batch should apply locally");
@@ -150,6 +150,12 @@ describe("applying operations to a design", () => {
 
     expect(undone.body.revision).toBe(2);
     expect(undone.body.graphHash).toBe(design.graphHash);
+
+    const previous = await user.get<{ graphHash: string }>(
+      `${PATH}/${design.id}/revisions/1`,
+    );
+
+    expect(previous.body.graphHash).toBe(first.body.graphHash);
   });
 
   test("keeps another user's design out of reach", async () => {

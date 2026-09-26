@@ -94,6 +94,16 @@ export class PostgresDesignsRepository extends DesignsRepository {
     return row ? toEntity(row) : null;
   }
 
+  public async existsOwned(id: string, ownerId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: designsSchema.id })
+      .from(designsSchema)
+      .where(this.owned(id, ownerId))
+      .limit(1);
+
+    return row !== undefined;
+  }
+
   public async updateOwned(
     id: string,
     ownerId: string,
