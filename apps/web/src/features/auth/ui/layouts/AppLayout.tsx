@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 
 import { signOutMutation } from "../../api/auth.mutations";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { EmailVerificationBanner } from "../components/EmailVerificationBanner";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -36,6 +37,7 @@ export function AppLayout({ children, onSignedOut }: AppLayoutProps) {
           </Button>
         </div>
       </header>
+      <EmailVerificationBanner />
       <div className="flex-1">{children}</div>
     </div>
   );
