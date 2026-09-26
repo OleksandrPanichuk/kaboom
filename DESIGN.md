@@ -6,7 +6,7 @@ Status: Active
 
 Date: 2026-09-27
 
-Product surfaces: web authentication, email-link outcomes, and account security settings. The authenticated application shell, header, future sidebar, design canvas, and interview flows are outside this revision.
+Product surfaces: web authentication, email-link outcomes, account security settings, and the signed-in app shell with its route states. The design canvas and interview flows are outside this revision.
 
 Evidence reviewed: `apps/web/CLAUDE.md`, all current web routes, auth and security views/components, shared UI primitives, global theme tokens, and responsive guidance. No product mockups, brand assets, screenshots, Storybook stories, or browser-test baselines exist in the repository.
 
@@ -34,15 +34,34 @@ The primary user is an individual practising system design. They need to create 
 - Guest routes: sign in, sign up, and forgot password share one focused auth layout.
 - Email-link routes: reset password, verify email, and confirm email change reuse the same layout and outcome language.
 - `/settings/security`: page introduction followed by password, email, connected accounts, sessions, and account deletion.
-- The existing app header remains the only current application navigation. No page-local sidebar or tabs are added.
+- Signed-in routes sit inside the app shell (below). Its sidebar is the only application navigation; pages add no local sidebar or tabs.
 
 ## Design principles
 
 1. One obvious task per auth screen.
 2. Group sensitive settings by purpose and explain consequences before actions.
 3. Use decoration to establish depth and brand, never to carry meaning.
-4. Keep layouts independent of the future app shell.
+4. Views own their content, never the chrome: the app shell provides navigation, the page landmark and the verification banner.
 5. Preserve familiar browser and form behavior.
+
+## App shell
+
+The signed-in app is a sidebar beside the page. The sidebar is the navigation, the page keeps the full height, and nothing sits above the page but a 48px header.
+
+- **Sidebar, desktop (from 768px):** 256px wide with labels, or a 48px rail of icons with a tooltip for each. The header's toggle, `⌘B`/`Ctrl+B` and the sidebar's edge rail switch between them. The choice is remembered per browser, so a canvas user who collapses it once keeps the room.
+- **Sidebar, phone (below 768px):** a 288px drawer from the left, opened from the header's toggle. Choosing a destination closes it.
+- **Brand:** the Kaboom mark and name lead the sidebar and link home; collapsed, the mark stays alone.
+- **Destinations:** two groups. *Practice* holds Home, Designs, Interviews and Progress; *Account* holds Security. A destination that is not built yet is listed, muted, with a *Soon* pill, and is not a link: the reader sees where the product is going without landing on an empty page. It becomes a link in the pull request that builds it.
+- **Active destination:** the matching item carries the accent surface and `aria-current="page"`, and its name repeats in the header, which is the only page title the chrome adds.
+- **Account:** the sidebar's foot shows the initials, name and email, truncated. It opens a menu with the name and email in full, *Security settings* and *Sign out*. Sign-out returns to sign-in.
+- **Verification banner:** below the header, above the page, on every signed-in page until the email is confirmed.
+- **Landmarks:** the shell owns `<main>`; views render a plain container inside it.
+
+### Route states
+
+- **Loading:** a route that takes longer than a second to load shows a centred spinner and "Loading…" in a live `status` region, inside the shell when the route is inside it. The spinner stops under reduced motion.
+- **Failure:** a route that throws shows a centred alert. When the API cannot be reached (offline, a network error or a 502-504) it says *Kaboom can't be reached* and that work is kept on the server; otherwise *This page didn't load*. *Try again* reloads the route's data.
+- **Not found:** an unknown address shows *There's nothing here* with a link home.
 
 ## Visual language
 
@@ -61,6 +80,9 @@ Imagery and iconography: Lucide line icons support section recognition. Abstract
 ## Components
 
 - `AuthLayout`: owns auth-page background, brand mark, heading, elevated content panel, and footer.
+- `AppShell`: owns the sidebar, header, verification banner and page landmark of every signed-in page.
+- `BrandMark`: the one drawing of the Kaboom mark, shared by the auth layout and the sidebar.
+- `RouteError`, `RoutePending`, `NotFound`: the router's defaults for the route states above.
 - `SettingsSection`: owns the responsive section card, icon treatment, heading, description, tone, and content column.
 - Existing `Button`, `Input`, `Field`, `Badge`, and captcha components remain the control primitives.
 - Auth and security sizing is scoped through surface classes; shared primitives are not globally restyled by this work.
@@ -75,7 +97,7 @@ The minimum supported width is 320px. Auth pages use 16px viewport padding on sm
 
 ## Interaction states
 
-Pending actions disable their trigger and retain the existing progress copy. Errors remain adjacent to the relevant form and use alert semantics. Success messages replace or follow the completed interaction. Captcha challenges stay inside the form flow. Empty provider/session states use the existing truthful labels. Slow route-level loading and offline recovery remain open work because the router currently has no product-specific pending or error surface.
+Pending actions disable their trigger and retain the existing progress copy. Errors remain adjacent to the relevant form and use alert semantics. Success messages replace or follow the completed interaction. Captcha challenges stay inside the form flow. Empty provider/session states use the existing truthful labels. Route-level loading, failure and not-found states are described under *App shell*.
 
 ## Content voice
 
@@ -83,10 +105,10 @@ Use plain, reassuring English. Name the action and its consequence. Avoid securi
 
 ## Implementation constraints
 
-Use React 19, TanStack Router and Query, Tailwind 4, Base UI, the existing shadcn-derived primitives, and Lucide icons. Do not add dependencies or create a parallel token system. Preserve file-route boundaries and feature imports. Validate lint, types, unit tests, production build, 320/375px behavior, desktop layout, and keyboard focus. Visual verification requires a running local API because route guards fetch the current user.
+Use React 19, TanStack Router and Query, Tailwind 4, Base UI, the existing shadcn-derived primitives, and Lucide icons. Do not create a parallel token system. Add a dependency only with the product owner's agreement: zustand holds client state such as the sidebar's collapsed state. Preserve file-route boundaries and feature imports. Validate lint, types, unit tests, production build, 320/375px behavior, desktop layout, and keyboard focus. Visual verification requires a running local API because route guards fetch the current user.
 
 ## Open questions
 
 - [ ] Product owner: confirm the long-term brand color and identity before canvas work; impact is limited to accent tokens and the brand mark.
-- [ ] Product owner: define the future app-shell navigation and sidebar; impact is intentionally excluded from these screens.
-- [ ] Engineering: add product-specific route pending, error, and offline recovery states; impact is graceful failure during API outages.
+- [x] Product owner: define the app-shell navigation and sidebar; see *App shell*.
+- [x] Engineering: add product-specific route pending, error, and offline recovery states; see *Route states*.

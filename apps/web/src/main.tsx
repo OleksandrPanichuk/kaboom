@@ -5,6 +5,11 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
+import { NotFound } from "@/components/NotFound";
+import { RouteError } from "@/components/RouteError";
+import { RoutePending } from "@/components/RoutePending";
+import { TooltipProvider } from "@/components/ui/Tooltip";
+
 import { queryClient } from "./lib/query-client";
 import { routeTree } from "./routeTree.gen";
 
@@ -13,6 +18,9 @@ const router = createRouter({
   context: { queryClient },
   defaultPreload: "intent",
   defaultPreloadStaleTime: 0,
+  defaultErrorComponent: RouteError,
+  defaultNotFoundComponent: NotFound,
+  defaultPendingComponent: RoutePending,
 });
 
 declare module "@tanstack/react-router" {
@@ -24,7 +32,9 @@ declare module "@tanstack/react-router" {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <TooltipProvider>
+        <RouterProvider router={router} />
+      </TooltipProvider>
     </QueryClientProvider>
   </StrictMode>,
 );

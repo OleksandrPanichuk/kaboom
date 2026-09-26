@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
-import { AppLayout, currentUserQuery } from "@/features/auth";
+import { currentUserQuery } from "@/features/auth";
+import { AppShell } from "@/features/shell";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async ({ context, location }) => {
@@ -17,8 +18,8 @@ function AuthenticatedRoute() {
   const navigate = Route.useNavigate();
 
   return (
-    <AppLayout onSignedOut={() => void navigate({ to: "/sign-in" })}>
+    <AppShell onSignedOut={() => void navigate({ to: "/sign-in" })}>
       <Outlet />
-    </AppLayout>
+    </AppShell>
   );
 }

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { BrandMark } from "@/components/BrandMark";
+
 interface AuthLayoutProps {
   title: string;
   description: string;
@@ -26,12 +28,7 @@ export function AuthLayout({
 
       <div className="relative mx-auto flex w-full max-w-md flex-col justify-center">
         <div className="mb-8 flex items-center justify-center gap-2.5">
-          <span
-            aria-hidden="true"
-            className="relative grid size-8 place-items-center rounded-xl bg-zinc-950 shadow-sm shadow-zinc-950/20"
-          >
-            <span className="size-2.5 rotate-45 rounded-[3px] border-2 border-white" />
-          </span>
+          <BrandMark />
           <span className="text-base font-semibold tracking-[-0.02em]">
             Kaboom
           </span>

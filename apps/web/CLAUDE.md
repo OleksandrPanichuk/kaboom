@@ -16,6 +16,7 @@ src/
       components/         the feature's building blocks
     api/                  query options and mutations over @repo/api-client
     hooks/                hooks the feature's views and components share
+    store/                zustand stores for client state the feature owns
     constants/
     utils/
     typedefs/
@@ -37,7 +38,7 @@ routes/
     route.tsx             beforeLoad: a signed-in visitor goes on to ?redirect or /
     sign-in.tsx, sign-up.tsx, forgot-password.tsx
   _app/                   the signed-in app
-    route.tsx             beforeLoad: a guest goes to /sign-in?redirect=…; renders AppLayout
+    route.tsx             beforeLoad: a guest goes to /sign-in?redirect=…; renders AppShell
     index.tsx, settings/security.tsx
   (email-links)/          pages opened from an email, signed in or not
     reset-password.tsx, verify-email.tsx, confirm-email-change.tsx
@@ -157,6 +158,7 @@ Every screen works from 320px wide, and the page never scrolls sideways.
 | Component, view, layout | `PascalCase.tsx` | `DesignCanvas.tsx`, `SignInView.tsx` |
 | A component's own pieces | `ComponentName.<role>.ts` | `DesignCanvas.hooks.ts` |
 | Hook | `useCamelCase.ts` | `useCurrentUser.ts` |
+| Store | `<name>.store.ts` | `sidebar.store.ts` |
 | Query options and mutations | `<feature>.queries.ts`, `<feature>.mutations.ts` | `designs.queries.ts` |
 | Feature constants, utils, types | `<feature>.<role>.ts` or a descriptive name | `designs.constants.ts`, `formatUnit.ts` |
 
@@ -168,9 +170,9 @@ The roles are the API's own: `.typedefs.ts`, `.constants.ts`, `.helpers.ts`.
 - Across features, import from the feature's `index.ts`
   (`@/features/auth`), never from a file inside another feature.
 - Inside a feature, import another folder through its barrel by absolute
-  path (`@/features/auth/api`, `@/features/auth/ui/components`), never
+  path (`@/features/shell/store`, `@/features/auth/ui/components`), never
   with `../`. Only a sibling in the same folder is imported by relative path
-  (`./CaptchaChallenge`): going through its own folder's barrel would make that
+  (`./UserMenu`): going through its own folder's barrel would make that
   barrel import itself, and a constant read during that cycle is still
   undefined.
 - Every folder of a feature has an `index.ts` that re-exports everything in
@@ -193,6 +195,11 @@ The roles are the API's own: `.typedefs.ts`, `.constants.ts`, `.helpers.ts`.
   which runs after them. Never `useMutation({ ...someMutation, onSuccess })`:
   the spread replaces the declared callback instead of adding to it, and the
   cache silently stops being updated.
+- Client state that outlives a component, such as whether the sidebar is
+  collapsed, is a zustand store in the feature's `store/` folder:
+  `sidebar.store.ts` exporting `useSidebarStore`. A store that must survive
+  a reload uses `persist` with a `kaboom:<name>` key. Server data never goes
+  into a store; it stays in TanStack Query.
 - Calls go through `api` from `@/lib/api`, which targets `/api` on the same
   origin; the Vite dev server proxies it to the API, so the session cookie and
   CSRF stay same-origin.
