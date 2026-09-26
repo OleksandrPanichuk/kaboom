@@ -25,6 +25,12 @@ export function AppLayout({ children, onSignedOut }: AppLayoutProps) {
         </Link>
         <div className="flex items-center gap-3 text-sm">
           <span className="text-muted-foreground">{user.name}</span>
+          <Link
+            to="/settings/security"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Security
+          </Link>
           <Button
             variant="ghost"
             size="sm"
