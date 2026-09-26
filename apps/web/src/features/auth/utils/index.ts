@@ -4,3 +4,4 @@ export * from "./oauthErrorMessage";
 export * from "./oauthSignInUrl";
 export * from "./safeRedirect";
 export * from "./validateAuthSearch";
+export * from "./validateTokenSearch";

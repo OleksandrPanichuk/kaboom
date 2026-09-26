@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -56,6 +57,14 @@ export function SignInForm({ onSignedIn }: SignInFormProps) {
             autoComplete="current-password"
             required
           />
+          <div className="flex justify-end">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </Field>
         {signIn.isError ? (
           <FieldError>{errorMessage(signIn.error)}</FieldError>

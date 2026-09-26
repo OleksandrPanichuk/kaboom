@@ -59,3 +59,32 @@ export const updateProfileMutation = mutationOptions({
     client.setQueryData(currentUserQuery.queryKey, user);
   },
 });
+
+export interface SendResetPasswordTokenVariables {
+  email: string;
+}
+
+export interface ResetPasswordVariables {
+  token: string;
+  password: string;
+}
+
+export const sendResetPasswordTokenMutation = mutationOptions({
+  mutationKey: ["auth", "send-reset-password-token"],
+  mutationFn: async (variables: SendResetPasswordTokenVariables) =>
+    unwrap(
+      await api.api.auth.sendResetPasswordToken.post(variables, {
+        headers: await captchaHeaders("password_reset"),
+      }),
+    ),
+});
+
+export const resetPasswordMutation = mutationOptions({
+  mutationKey: ["auth", "reset-password"],
+  mutationFn: async (variables: ResetPasswordVariables) =>
+    unwrap(await api.api.auth.resetPassword.post(variables)),
+  onSuccess: (_result, _variables, _mutateResult, { client }) => {
+    client.clear();
+    client.setQueryData(currentUserQuery.queryKey, null);
+  },
+});
