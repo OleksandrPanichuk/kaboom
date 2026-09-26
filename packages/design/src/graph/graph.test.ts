@@ -35,6 +35,7 @@ describe("createNode", () => {
         shards: 1,
         shardKey: "",
       },
+      technology: null,
     });
   });
 });
@@ -104,6 +105,7 @@ describe("canonicalize", () => {
       groups: graph.groups,
       edges: graph.edges,
       nodes: [...graph.nodes].reverse().map((node) => ({
+        technology: node.technology,
         props: node.props,
         notes: node.notes,
         groupId: node.groupId,

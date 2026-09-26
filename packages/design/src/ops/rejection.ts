@@ -5,6 +5,7 @@ export type OpRejectionReason =
   | "unknown-edge"
   | "unknown-group"
   | "invalid-props"
+  | "unknown-technology"
   | "invalid-edge"
   | "load-cycle"
   | "group-not-empty"

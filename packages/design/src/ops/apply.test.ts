@@ -330,6 +330,30 @@ describe("applyOps", () => {
       "load-cycle",
     ],
     [
+      "a node with a technology nobody registered",
+      [
+        {
+          op: "add-node",
+          node: {
+            ...createNode("sql-database", { id: "rds" }),
+            technology: { id: "aws-rds-postgres", props: {} },
+          },
+        },
+      ],
+      "unknown-technology",
+    ],
+    [
+      "giving a node a technology nobody registered",
+      [
+        {
+          op: "update-node",
+          id: "db",
+          patch: { technology: { id: "aws-rds-postgres", props: {} } },
+        },
+      ],
+      "unknown-technology",
+    ],
+    [
       "removing a group that still holds a node",
       [
         { op: "update-node", id: "api", patch: { groupId: "eu" } },
@@ -339,6 +363,12 @@ describe("applyOps", () => {
     ],
   ])("refuses %s", (_, ops, reason) => {
     expect(rejection(ops).reason).toBe(reason as never);
+  });
+
+  test("clears a technology and undoes it", () => {
+    expectRoundTrip([
+      { op: "update-node", id: "db", patch: { technology: null } },
+    ]);
   });
 
   test("lets replication run against the load, since it carries none", () => {

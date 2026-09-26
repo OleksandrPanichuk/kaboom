@@ -2,6 +2,7 @@ import {
   carriesLoad,
   catalogue,
   EdgePropsSchema,
+  findTechnology,
   isNodeKind,
 } from "../catalogue";
 import {
@@ -58,6 +59,33 @@ const parseNodeProps = (
   }
 
   return result.data!;
+};
+
+const parseTechnology = (
+  node: DesignNode,
+  technology: DesignNode["technology"],
+): DesignNode["technology"] => {
+  if (technology === null) return null;
+
+  const definition = findTechnology(technology.id, node.kind);
+
+  if (!definition) {
+    return reject(
+      "unknown-technology",
+      `No technology ${technology.id} for a ${node.kind}`,
+    );
+  }
+
+  const result = definition.props.safeParse(technology.props);
+
+  if (!result.success) {
+    return reject(
+      "invalid-props",
+      `Technology props of ${node.id}: ${result.error.issues.map((issue) => `${issue.path.join(".")} ${issue.message}`).join("; ")}`,
+    );
+  }
+
+  return { id: technology.id, props: result.data };
 };
 
 const parseEdgeProps = (
@@ -167,6 +195,7 @@ const addNode = (graph: DesignGraph, node: DesignNode): DesignOp[] => {
   graph.nodes.push({
     ...structuredClone(node),
     props: parseNodeProps(node, node.props),
+    technology: parseTechnology(node, node.technology),
   } as DesignNode);
 
   return [{ op: "remove-node", id: node.id }];
@@ -211,6 +240,13 @@ const updateNode = (
     assertGroup(graph, patch.groupId);
     previous.groupId = node.groupId;
     node.groupId = patch.groupId;
+  }
+
+  if (patch.technology !== undefined) {
+    const technology = parseTechnology(node, patch.technology);
+
+    previous.technology = node.technology;
+    node.technology = technology;
   }
 
   if (patch.props !== undefined) {

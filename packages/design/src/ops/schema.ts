@@ -9,6 +9,8 @@ import {
   type DesignNode,
   DesignNodeSchema,
   IdSchema,
+  type TechnologyRef,
+  TechnologyRefSchema,
 } from "../graph";
 
 export const MAX_OPS_PER_BATCH = 200;
@@ -18,6 +20,7 @@ export interface NodePatch {
   notes?: string;
   groupId?: string | null;
   props?: Record<string, unknown>;
+  technology?: TechnologyRef | null;
 }
 
 export interface EdgePatch {
@@ -43,6 +46,7 @@ const NodePatchSchema = z.strictObject({
   notes: z.string().max(2_000).optional(),
   groupId: IdSchema.nullable().optional(),
   props: z.record(z.string(), z.unknown()).optional(),
+  technology: TechnologyRefSchema.nullable().optional(),
 });
 
 const EdgePatchSchema = z.strictObject({
