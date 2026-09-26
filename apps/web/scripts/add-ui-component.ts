@@ -81,9 +81,12 @@ const renameToConvention = async (): Promise<string[]> => {
   return renamed;
 };
 
+const comparable = (stem: string): string =>
+  stem.replace(/[-_.]/g, "").toLowerCase();
+
 const actualPath = async (candidate: string): Promise<string | null> => {
   const dir = dirname(candidate);
-  const wanted = basename(candidate).toLowerCase();
+  const wanted = comparable(basename(candidate));
   const entries = await readdir(dir).catch(() => [] as string[]);
 
   for (const entry of entries) {
@@ -92,7 +95,7 @@ const actualPath = async (candidate: string): Promise<string | null> => {
       ? basename(entry, extension)
       : entry;
 
-    if (stem.toLowerCase() === wanted) return join(dir, stem);
+    if (comparable(stem) === wanted) return join(dir, stem);
   }
 
   return null;
@@ -152,7 +155,7 @@ const main = async (): Promise<void> => {
     process.exit(1);
   }
 
-  await $`bunx --bun ${SHADCN} add ${args} --yes`.cwd(ROOT);
+  await $`yes n | bunx --bun ${SHADCN} add ${args} --yes`.cwd(ROOT);
 
   const renamed = await renameToConvention();
   const touched = await fixImportCasing();
