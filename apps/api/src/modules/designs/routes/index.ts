@@ -1,3 +1,4 @@
+export { applyDesignOpsRoute } from "./apply-design-ops.route";
 export { createDesignRoute } from "./create-design.route";
 export { deleteDesignRoute } from "./delete-design.route";
 export { getDesignRoute } from "./get-design.route";

@@ -16,6 +16,12 @@ export interface UpdateDesignData {
   name?: string;
 }
 
+export interface SaveDesignGraphData {
+  graph: DesignGraph;
+  revision: number;
+  graphHash: string;
+}
+
 export abstract class DesignsRepository extends Repository {
   public abstract insert(data: CreateDesignData): Promise<DesignEntity>;
 
@@ -29,11 +35,21 @@ export abstract class DesignsRepository extends Repository {
     ownerId: string,
   ): Promise<DesignEntity | null>;
 
+  public abstract lockOwned(
+    id: string,
+    ownerId: string,
+  ): Promise<DesignEntity | null>;
+
   public abstract updateOwned(
     id: string,
     ownerId: string,
     data: UpdateDesignData,
   ): Promise<DesignEntity | null>;
+
+  public abstract saveGraph(
+    id: string,
+    data: SaveDesignGraphData,
+  ): Promise<DesignEntity>;
 
   public abstract deleteOwned(id: string, ownerId: string): Promise<boolean>;
 }

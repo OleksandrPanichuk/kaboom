@@ -8,6 +8,7 @@ import {
   PostgresDesignsRepository,
 } from "./repositories";
 import {
+  ApplyDesignOpsUseCase,
   CreateDesignUseCase,
   DeleteDesignUseCase,
   GetDesignUseCase,
@@ -33,5 +34,6 @@ export const designsModule = defineModule({
       getDesign: makeUseCase(GetDesignUseCase),
       updateDesign: makeUseCase(UpdateDesignUseCase),
       deleteDesign: makeUseCase(DeleteDesignUseCase),
+      applyDesignOps: makeUseCase(ApplyDesignOpsUseCase),
     }),
 });

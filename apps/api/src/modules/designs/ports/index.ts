@@ -5,5 +5,6 @@ export {
 export {
   type CreateDesignData,
   DesignsRepository,
+  type SaveDesignGraphData,
   type UpdateDesignData,
 } from "./designs.repository";
