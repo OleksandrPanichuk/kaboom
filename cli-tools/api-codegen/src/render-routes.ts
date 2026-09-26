@@ -36,13 +36,32 @@ export type PathItem = Record<string, Operation>;
 
 const JSON_CONTENT = "application/json";
 
+const COERCED_FORMATS = new Set(["integer", "number", "boolean"]);
+
+const isCoercion = (schema: OpenApiSchema): boolean =>
+  schema.type === "string" &&
+  schema.format !== undefined &&
+  COERCED_FORMATS.has(schema.format);
+
+const withoutCoercion = (schema: OpenApiSchema): OpenApiSchema => {
+  const members = schema.anyOf?.filter((member) => !isCoercion(member));
+
+  if (!members?.length || members.length === schema.anyOf?.length) {
+    return schema;
+  }
+
+  return { ...schema, anyOf: members };
+};
+
 const renderSchema = (schema: OpenApiSchema | undefined, depth = 1): string => {
   if (!schema) return "unknown";
 
   if (schema.const !== undefined) return JSON.stringify(schema.const);
 
   if (schema.anyOf?.length) {
-    return schema.anyOf.map((item) => renderSchema(item, depth)).join(" | ");
+    return (withoutCoercion(schema).anyOf ?? [])
+      .map((item) => renderSchema(item, depth))
+      .join(" | ");
   }
 
   if (schema.allOf?.length) {
@@ -137,23 +156,6 @@ const isEventStream = (operation: Operation): boolean =>
 const bodySchema = (operation: Operation): OpenApiSchema | undefined =>
   operation.requestBody?.content?.[JSON_CONTENT]?.schema;
 
-const COERCED_FORMATS = new Set(["integer", "number", "boolean"]);
-
-const isCoercion = (schema: OpenApiSchema): boolean =>
-  schema.type === "string" &&
-  schema.format !== undefined &&
-  COERCED_FORMATS.has(schema.format);
-
-const withoutCoercion = (schema: OpenApiSchema): OpenApiSchema => {
-  const members = schema.anyOf?.filter((member) => !isCoercion(member));
-
-  if (!members?.length || members.length === schema.anyOf?.length) {
-    return schema;
-  }
-
-  return { ...schema, anyOf: members };
-};
-
 const querySchema = (
   parameters: OpenApiParameter[] = [],
 ): OpenApiSchema | undefined => {
@@ -164,10 +166,7 @@ const querySchema = (
   return {
     type: "object",
     properties: Object.fromEntries(
-      query.map((parameter) => [
-        parameter.name,
-        withoutCoercion(parameter.schema ?? {}),
-      ]),
+      query.map((parameter) => [parameter.name, parameter.schema ?? {}]),
     ),
     required: query
       .filter((parameter) => parameter.required)

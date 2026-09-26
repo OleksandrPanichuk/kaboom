@@ -5,7 +5,20 @@ import { renderRoutes } from "./render-routes";
 const response = {
   "200": {
     content: {
-      "application/json": { schema: { type: "object", properties: {} } },
+      "application/json": {
+        schema: {
+          type: "object",
+          required: ["revision"],
+          properties: {
+            revision: {
+              anyOf: [
+                { type: "string", format: "integer", default: 0 },
+                { type: "integer" },
+              ],
+            },
+          },
+        },
+      },
     },
   },
 };
@@ -90,5 +103,10 @@ describe("renderRoutes", () => {
   test("leaves event streams out, since the client reads whole bodies", () => {
     expect(rendered).not.toContain("events:");
     expect(rendered).not.toContain("/events");
+  });
+
+  test("types a coerced integer in a response as a number", () => {
+    expect(rendered).toContain("revision: number;");
+    expect(rendered).not.toContain("revision: string | number;");
   });
 });
