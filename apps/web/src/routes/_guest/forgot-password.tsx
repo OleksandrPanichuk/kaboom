@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { ForgotPasswordView } from "@/features/auth";
 
-export const Route = createFileRoute("/forgot-password")({
+export const Route = createFileRoute("/_guest/forgot-password")({
   component: ForgotPasswordRoute,
 });
 
