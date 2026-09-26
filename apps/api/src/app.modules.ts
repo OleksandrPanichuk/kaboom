@@ -1,6 +1,7 @@
 import type { AppModule } from "@/core/module";
 import { accountsModule } from "@/modules/accounts";
 import { authModule } from "@/modules/auth";
+import { designsModule } from "@/modules/designs";
 import { notificationsModule } from "@/modules/notifications";
 import { oauthModule } from "@/modules/oauth";
 import { sessionsModule } from "@/modules/sessions";
@@ -34,5 +35,6 @@ export const modules = [
   authModule,
   oauthModule,
   verificationTokensModule,
+  designsModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

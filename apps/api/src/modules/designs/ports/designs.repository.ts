@@ -1,0 +1,39 @@
+import type { DesignGraph } from "@repo/design";
+
+import type { Page, PageRequest } from "@/core/pagination";
+import { Repository } from "@/core/repository";
+
+import type { DesignEntity, DesignSummaryEntity } from "../design.entity";
+
+export interface CreateDesignData {
+  ownerId: string;
+  name: string;
+  graph: DesignGraph;
+  graphHash: string;
+}
+
+export interface UpdateDesignData {
+  name?: string;
+}
+
+export abstract class DesignsRepository extends Repository {
+  public abstract insert(data: CreateDesignData): Promise<DesignEntity>;
+
+  public abstract listOwned(
+    ownerId: string,
+    page: PageRequest,
+  ): Promise<Page<DesignSummaryEntity>>;
+
+  public abstract findOwned(
+    id: string,
+    ownerId: string,
+  ): Promise<DesignEntity | null>;
+
+  public abstract updateOwned(
+    id: string,
+    ownerId: string,
+    data: UpdateDesignData,
+  ): Promise<DesignEntity | null>;
+
+  public abstract deleteOwned(id: string, ownerId: string): Promise<boolean>;
+}
