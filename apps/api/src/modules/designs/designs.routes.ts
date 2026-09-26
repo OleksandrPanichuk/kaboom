@@ -3,6 +3,7 @@ import { Elysia } from "elysia";
 import type { Executable } from "@/core/use-case";
 
 import {
+  applyDesignOpsRoute,
   createDesignRoute,
   deleteDesignRoute,
   getDesignRoute,
@@ -10,6 +11,7 @@ import {
   updateDesignRoute,
 } from "./routes";
 import type {
+  ApplyDesignOpsUseCase,
   CreateDesignUseCase,
   DeleteDesignUseCase,
   GetDesignUseCase,
@@ -23,6 +25,7 @@ export interface DesignsActions {
   getDesign: Executable<GetDesignUseCase>;
   updateDesign: Executable<UpdateDesignUseCase>;
   deleteDesign: Executable<DeleteDesignUseCase>;
+  applyDesignOps: Executable<ApplyDesignOpsUseCase>;
 }
 
 export const designsRoutes = (actions: DesignsActions) =>
@@ -31,4 +34,5 @@ export const designsRoutes = (actions: DesignsActions) =>
     .get("/", ...listDesignsRoute(actions))
     .get("/:id", ...getDesignRoute(actions))
     .patch("/:id", ...updateDesignRoute(actions))
-    .delete("/:id", ...deleteDesignRoute(actions));
+    .delete("/:id", ...deleteDesignRoute(actions))
+    .post("/:id/ops", ...applyDesignOpsRoute(actions));

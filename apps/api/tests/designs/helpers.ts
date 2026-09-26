@@ -1,4 +1,4 @@
-import type { DesignGraph } from "@repo/design";
+import type { DesignGraph, DesignOp } from "@repo/design";
 import type { TestClient } from "@tests/helpers";
 
 export const PATH = "/api/designs";
@@ -14,6 +14,18 @@ export interface DesignBody {
   updatedAt: string;
 }
 
+export interface AppliedBody {
+  revision: number;
+  graph: DesignGraph;
+  graphHash: string;
+}
+
+export interface ErrorBody {
+  code: string;
+  error: string;
+  details?: Record<string, unknown>;
+}
+
 export const createDesign = async (
   client: TestClient,
   name = "Sandbox",
@@ -26,3 +38,14 @@ export const createDesign = async (
 
   return response.body;
 };
+
+export const applyOps = (
+  client: TestClient,
+  id: string,
+  baseRevision: number,
+  ops: DesignOp[] | unknown[],
+) =>
+  client.post<AppliedBody & ErrorBody>(`${PATH}/${id}/ops`, {
+    baseRevision,
+    ops,
+  });

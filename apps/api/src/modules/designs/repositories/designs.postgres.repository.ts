@@ -7,9 +7,11 @@ import { type DBExecutor, getExecutor } from "@/db/executor";
 import { Keyset } from "@/db/pagination";
 
 import type { DesignEntity, DesignSummaryEntity } from "../design.entity";
+import { DesignNotFoundError } from "../designs.errors";
 import {
   type CreateDesignData,
   DesignsRepository,
+  type SaveDesignGraphData,
   type UpdateDesignData,
 } from "../ports/designs.repository";
 
@@ -78,6 +80,20 @@ export class PostgresDesignsRepository extends DesignsRepository {
     return row ? toEntity(row) : null;
   }
 
+  public async lockOwned(
+    id: string,
+    ownerId: string,
+  ): Promise<DesignEntity | null> {
+    const [row] = await this.db
+      .select()
+      .from(designsSchema)
+      .where(this.owned(id, ownerId))
+      .limit(1)
+      .for("update");
+
+    return row ? toEntity(row) : null;
+  }
+
   public async updateOwned(
     id: string,
     ownerId: string,
@@ -90,6 +106,21 @@ export class PostgresDesignsRepository extends DesignsRepository {
       .returning();
 
     return row ? toEntity(row) : null;
+  }
+
+  public async saveGraph(
+    id: string,
+    data: SaveDesignGraphData,
+  ): Promise<DesignEntity> {
+    const [row] = await this.db
+      .update(designsSchema)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(designsSchema.id, id))
+      .returning();
+
+    if (!row) throw new DesignNotFoundError(`Design ${id} not found`);
+
+    return toEntity(row);
   }
 
   public async deleteOwned(id: string, ownerId: string): Promise<boolean> {

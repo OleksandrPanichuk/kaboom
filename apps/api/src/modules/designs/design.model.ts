@@ -31,6 +31,13 @@ export const DesignSummaryModel = t.Object({
 });
 export type DesignSummaryModel = typeof DesignSummaryModel.static;
 
+export const AppliedDesignOpsModel = t.Object({
+  revision: t.Integer(),
+  graph: t.Unknown(),
+  graphHash: t.String(),
+});
+export type AppliedDesignOpsModel = typeof AppliedDesignOpsModel.static;
+
 export const DesignMessageModel = t.Object({
   message: t.String(),
 });

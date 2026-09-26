@@ -1,4 +1,8 @@
 export {
+  ApplyDesignOpsUseCase,
+  type ApplyDesignOpsUseCaseOptions,
+} from "./apply-design-ops";
+export {
   CreateDesignUseCase,
   type CreateDesignUseCaseOptions,
 } from "./create-design";
