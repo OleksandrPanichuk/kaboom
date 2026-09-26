@@ -6,7 +6,11 @@ import { type DesignRow, designsSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
 import { Keyset } from "@/db/pagination";
 
-import type { DesignEntity, DesignSummaryEntity } from "../design.entity";
+import type {
+  DesignEntity,
+  DesignLayout,
+  DesignSummaryEntity,
+} from "../design.entity";
 import { DesignNotFoundError } from "../designs.errors";
 import {
   type CreateDesignData,
@@ -131,6 +135,20 @@ export class PostgresDesignsRepository extends DesignsRepository {
     if (!row) throw new DesignNotFoundError(`Design ${id} not found`);
 
     return toEntity(row);
+  }
+
+  public async saveLayout(
+    id: string,
+    ownerId: string,
+    layout: DesignLayout,
+  ): Promise<boolean> {
+    const updated = await this.db
+      .update(designsSchema)
+      .set({ layout })
+      .where(this.owned(id, ownerId))
+      .returning({ id: designsSchema.id });
+
+    return updated.length > 0;
   }
 
   public async deleteOwned(id: string, ownerId: string): Promise<boolean> {

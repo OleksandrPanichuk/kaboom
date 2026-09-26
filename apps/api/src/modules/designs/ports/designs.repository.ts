@@ -3,7 +3,11 @@ import type { DesignGraph } from "@repo/design";
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
 
-import type { DesignEntity, DesignSummaryEntity } from "../design.entity";
+import type {
+  DesignEntity,
+  DesignLayout,
+  DesignSummaryEntity,
+} from "../design.entity";
 
 export interface CreateDesignData {
   ownerId: string;
@@ -52,6 +56,12 @@ export abstract class DesignsRepository extends Repository {
     id: string,
     data: SaveDesignGraphData,
   ): Promise<DesignEntity>;
+
+  public abstract saveLayout(
+    id: string,
+    ownerId: string,
+    layout: DesignLayout,
+  ): Promise<boolean>;
 
   public abstract deleteOwned(id: string, ownerId: string): Promise<boolean>;
 }

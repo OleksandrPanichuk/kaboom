@@ -10,6 +10,7 @@ import {
   getDesignRoute,
   listDesignRevisionsRoute,
   listDesignsRoute,
+  saveDesignLayoutRoute,
   updateDesignRoute,
 } from "./routes";
 import type {
@@ -20,6 +21,7 @@ import type {
   GetDesignUseCase,
   ListDesignRevisionsUseCase,
   ListDesignsUseCase,
+  SaveDesignLayoutUseCase,
   UpdateDesignUseCase,
 } from "./use-cases";
 
@@ -30,6 +32,7 @@ export interface DesignsActions {
   updateDesign: Executable<UpdateDesignUseCase>;
   deleteDesign: Executable<DeleteDesignUseCase>;
   applyDesignOps: Executable<ApplyDesignOpsUseCase>;
+  saveDesignLayout: Executable<SaveDesignLayoutUseCase>;
   listDesignRevisions: Executable<ListDesignRevisionsUseCase>;
   getDesignRevision: Executable<GetDesignRevisionUseCase>;
 }
@@ -42,5 +45,6 @@ export const designsRoutes = (actions: DesignsActions) =>
     .patch("/:id", ...updateDesignRoute(actions))
     .delete("/:id", ...deleteDesignRoute(actions))
     .post("/:id/ops", ...applyDesignOpsRoute(actions))
+    .put("/:id/layout", ...saveDesignLayoutRoute(actions))
     .get("/:id/revisions", ...listDesignRevisionsRoute(actions))
     .get("/:id/revisions/:number", ...getDesignRevisionRoute(actions));

@@ -28,6 +28,11 @@ export interface TestClient {
     body?: unknown,
     headers?: RequestHeaders,
   ): Promise<Response<Body>>;
+  put<Body = unknown>(
+    path: string,
+    body?: unknown,
+    headers?: RequestHeaders,
+  ): Promise<Response<Body>>;
   delete<Body = unknown>(
     path: string,
     body?: unknown,
@@ -113,6 +118,7 @@ export const createClient = ({
     get: (path, headers) => send("GET", path, undefined, headers),
     post: (path, body, headers) => send("POST", path, body, headers),
     patch: (path, body, headers) => send("PATCH", path, body, headers),
+    put: (path, body, headers) => send("PUT", path, body, headers),
     delete: (path, body, headers) => send("DELETE", path, body, headers),
     cookies: () => [...jar].map(([n, v]) => `${n}=${v}`).join("; "),
     clearCookies: () => jar.clear(),
