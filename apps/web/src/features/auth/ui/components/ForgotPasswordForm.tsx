@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/Input";
 
 import { sendResetPasswordTokenMutation } from "../../api/auth.mutations";
 import { errorMessage } from "../../utils/errorMessage";
+import { isChallengeRequired } from "../../utils/isChallengeRequired";
+import { CaptchaChallenge } from "./CaptchaChallenge";
 
 export function ForgotPasswordForm() {
   const send = useMutation(sendResetPasswordTokenMutation);
@@ -51,7 +53,13 @@ export function ForgotPasswordForm() {
             We will send a link to set a new password.
           </FieldDescription>
         </Field>
-        {send.isError ? (
+        {isChallengeRequired(send.error) && send.variables ? (
+          <CaptchaChallenge
+            onSolved={(challengeToken) =>
+              send.mutate({ ...send.variables, challengeToken })
+            }
+          />
+        ) : send.isError ? (
           <FieldError>{errorMessage(send.error)}</FieldError>
         ) : null}
         <Button type="submit" disabled={send.isPending}>

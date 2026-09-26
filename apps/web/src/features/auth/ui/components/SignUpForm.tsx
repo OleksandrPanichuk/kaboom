@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/Input";
 import { signUpMutation } from "../../api/auth.mutations";
 import { PASSWORD_MIN_LENGTH } from "../../constants/auth.constants";
 import { errorMessage } from "../../utils/errorMessage";
+import { isChallengeRequired } from "../../utils/isChallengeRequired";
+import { CaptchaChallenge } from "./CaptchaChallenge";
 
 interface SignUpFormProps {
   onSignedUp: () => void;
@@ -68,7 +70,16 @@ export function SignUpForm({ onSignedUp }: SignUpFormProps) {
             At least {PASSWORD_MIN_LENGTH} characters.
           </FieldDescription>
         </Field>
-        {signUp.isError ? (
+        {isChallengeRequired(signUp.error) && signUp.variables ? (
+          <CaptchaChallenge
+            onSolved={(challengeToken) =>
+              signUp.mutate(
+                { ...signUp.variables, challengeToken },
+                { onSuccess: onSignedUp },
+              )
+            }
+          />
+        ) : signUp.isError ? (
           <FieldError>{errorMessage(signUp.error)}</FieldError>
         ) : null}
         <Button type="submit" disabled={signUp.isPending}>

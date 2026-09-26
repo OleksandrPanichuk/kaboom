@@ -5,7 +5,11 @@ import { api, unwrap } from "@/lib/api";
 import { captchaHeaders } from "../utils/captcha";
 import { currentUserQuery } from "./auth.queries";
 
-export interface SignInVariables {
+export interface WithChallenge {
+  challengeToken?: string;
+}
+
+export interface SignInVariables extends WithChallenge {
   email: string;
   password: string;
 }
@@ -20,10 +24,10 @@ export interface UpdateProfileVariables {
 
 export const signInMutation = mutationOptions({
   mutationKey: ["auth", "sign-in"],
-  mutationFn: async (variables: SignInVariables) =>
+  mutationFn: async ({ challengeToken, ...body }: SignInVariables) =>
     unwrap(
-      await api.api.auth.signIn.post(variables, {
-        headers: await captchaHeaders("sign_in"),
+      await api.api.auth.signIn.post(body, {
+        headers: await captchaHeaders("sign_in", challengeToken),
       }),
     ),
   onSuccess: (_session, _variables, _result, { client }) =>
@@ -32,10 +36,10 @@ export const signInMutation = mutationOptions({
 
 export const signUpMutation = mutationOptions({
   mutationKey: ["auth", "sign-up"],
-  mutationFn: async (variables: SignUpVariables) =>
+  mutationFn: async ({ challengeToken, ...body }: SignUpVariables) =>
     unwrap(
-      await api.api.auth.signUp.post(variables, {
-        headers: await captchaHeaders("sign_up"),
+      await api.api.auth.signUp.post(body, {
+        headers: await captchaHeaders("sign_up", challengeToken),
       }),
     ),
   onSuccess: (_session, _variables, _result, { client }) =>
@@ -60,7 +64,7 @@ export const updateProfileMutation = mutationOptions({
   },
 });
 
-export interface SendResetPasswordTokenVariables {
+export interface SendResetPasswordTokenVariables extends WithChallenge {
   email: string;
 }
 
@@ -71,10 +75,13 @@ export interface ResetPasswordVariables {
 
 export const sendResetPasswordTokenMutation = mutationOptions({
   mutationKey: ["auth", "send-reset-password-token"],
-  mutationFn: async (variables: SendResetPasswordTokenVariables) =>
+  mutationFn: async ({
+    challengeToken,
+    ...body
+  }: SendResetPasswordTokenVariables) =>
     unwrap(
-      await api.api.auth.sendResetPasswordToken.post(variables, {
-        headers: await captchaHeaders("password_reset"),
+      await api.api.auth.sendResetPasswordToken.post(body, {
+        headers: await captchaHeaders("password_reset", challengeToken),
       }),
     ),
 });
@@ -93,7 +100,7 @@ export interface TokenVariables {
   token: string;
 }
 
-export interface SendEmailVerificationTokenVariables {
+export interface SendEmailVerificationTokenVariables extends WithChallenge {
   email: string;
 }
 
@@ -107,10 +114,13 @@ export const verifyEmailMutation = mutationOptions({
 
 export const sendEmailVerificationTokenMutation = mutationOptions({
   mutationKey: ["auth", "send-email-verification-token"],
-  mutationFn: async (variables: SendEmailVerificationTokenVariables) =>
+  mutationFn: async ({
+    challengeToken,
+    ...body
+  }: SendEmailVerificationTokenVariables) =>
     unwrap(
-      await api.api.auth.sendEmailVerificationToken.post(variables, {
-        headers: await captchaHeaders("email_verification"),
+      await api.api.auth.sendEmailVerificationToken.post(body, {
+        headers: await captchaHeaders("email_verification", challengeToken),
       }),
     ),
 });
