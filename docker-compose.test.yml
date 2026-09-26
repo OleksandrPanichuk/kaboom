@@ -6,7 +6,7 @@
 #   make test-integration  adds the services the real adapters talk to
 #   make test-down         removes it all
 
-name: ${APP_SLUG:-app}-test
+name: ${APP_SLUG:-kaboom}-test
 
 services:
   db_test:

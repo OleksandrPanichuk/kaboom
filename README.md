@@ -41,7 +41,7 @@ them from the shell or from a `.env` at the repository root, and uses the slug
 as the project name of both compose files and as the storage bucket name.
 
 Two names cannot be interpolated and are written out by hand: the test database
-in `DATABASE_URL` of `apps/api/.env.test` (`app_test`), and `TEST_S3_BUCKET` in
+in `DATABASE_URL` of `apps/api/.env.test` (`kaboom_test`), and `TEST_S3_BUCKET` in
 the `Makefile`. Neither is visible outside the test stack.
 
 Install dependencies:
@@ -238,7 +238,7 @@ development stack: different containers, different ports, no volumes. A run
 cannot reach development data, and nothing it writes survives. `bun test` sets `NODE_ENV=test`,
 which makes Bun load `apps/api/.env.test` and every port resolve to its
 in-memory adapter, so Redis, SMTP and the OAuth providers are all doubles. The
-first run creates the `app_test` database and migrates it, and each test starts
+first run creates the `kaboom_test` database and migrates it, and each test starts
 against empty tables.
 
 `make test-integration` additionally starts Redis and a mail server and runs
