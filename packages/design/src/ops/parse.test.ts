@@ -37,6 +37,11 @@ describe("parseDesignOps", () => {
       1,
     ],
     ["an empty id", [{ op: "remove-node", id: "" }], 0],
+    [
+      "a technology without an id",
+      [{ op: "update-node", id: "db", patch: { technology: { props: {} } } }],
+      0,
+    ],
   ])("refuses %s and points at it", (_, input, index) => {
     expect(parseDesignOps(input)).toMatchObject({
       ok: false,

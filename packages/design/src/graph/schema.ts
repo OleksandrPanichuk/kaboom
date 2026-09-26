@@ -27,6 +27,16 @@ export const GROUP_KINDS = ["region"] as const;
 
 export type GroupKind = (typeof GROUP_KINDS)[number];
 
+export interface TechnologyRef {
+  id: string;
+  props: Record<string, unknown>;
+}
+
+export const TechnologyRefSchema: z.ZodType<TechnologyRef> = z.strictObject({
+  id: IdSchema,
+  props: z.record(z.string(), z.unknown()).default({}),
+});
+
 export interface NodeOf<Kind extends NodeKind> {
   id: string;
   kind: Kind;
@@ -34,6 +44,7 @@ export interface NodeOf<Kind extends NodeKind> {
   groupId: string | null;
   notes: string;
   props: NodeProps<Kind>;
+  technology: TechnologyRef | null;
 }
 
 export type DesignNode = { [Kind in NodeKind]: NodeOf<Kind> }[NodeKind];
@@ -50,6 +61,7 @@ const nodeSchemaFor = (definition: NodeKindDefinition) =>
     groupId: IdSchema.nullable().default(null),
     notes: NotesSchema.default(""),
     props: definition.props.default(definition.props.parse({})),
+    technology: TechnologyRefSchema.nullable().default(null),
   });
 
 export const DesignNodeSchema = z.discriminatedUnion(

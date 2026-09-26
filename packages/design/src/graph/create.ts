@@ -37,6 +37,7 @@ export const createNode = <Kind extends NodeKind>(
     groupId,
     notes: "",
     props: catalogue[kind].props.parse({}),
+    technology: null,
   }) as NodeFor<Kind>;
 
 export interface CreateEdgeOptions {
