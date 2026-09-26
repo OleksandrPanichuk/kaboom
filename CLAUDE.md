@@ -1,6 +1,8 @@
 # CLAUDE.md
 
 Turborepo monorepo. The API lives in `apps/api` (Bun + Elysia + Drizzle/Postgres).
+The web app lives in `apps/web`, and its conventions are in
+[`apps/web/CLAUDE.md`](apps/web/CLAUDE.md).
 
 ## Use cases
 
