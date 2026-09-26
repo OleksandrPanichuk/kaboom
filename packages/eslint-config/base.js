@@ -141,6 +141,11 @@ export const config = [
           format: null,
         },
         {
+          selector: ["objectLiteralMethod", "typeMethod"],
+          modifiers: ["requiresQuotes"],
+          format: null,
+        },
+        {
           selector: "import",
           format: ["camelCase", "PascalCase"],
         },

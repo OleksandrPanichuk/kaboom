@@ -1,3 +1,4 @@
+export * from "./CaptchaChallenge";
 export * from "./EmailVerificationBanner";
 export * from "./ForgotPasswordForm";
 export * from "./OAuthButtons";

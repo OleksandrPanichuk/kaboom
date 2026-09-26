@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/Input";
 
 import { signInMutation } from "../../api/auth.mutations";
 import { errorMessage } from "../../utils/errorMessage";
+import { isChallengeRequired } from "../../utils/isChallengeRequired";
+import { CaptchaChallenge } from "./CaptchaChallenge";
 
 interface SignInFormProps {
   onSignedIn: () => void;
@@ -66,7 +68,16 @@ export function SignInForm({ onSignedIn }: SignInFormProps) {
             </Link>
           </div>
         </Field>
-        {signIn.isError ? (
+        {isChallengeRequired(signIn.error) && signIn.variables ? (
+          <CaptchaChallenge
+            onSolved={(challengeToken) =>
+              signIn.mutate(
+                { ...signIn.variables, challengeToken },
+                { onSuccess: onSignedIn },
+              )
+            }
+          />
+        ) : signIn.isError ? (
           <FieldError>{errorMessage(signIn.error)}</FieldError>
         ) : null}
         <Button type="submit" disabled={signIn.isPending}>
