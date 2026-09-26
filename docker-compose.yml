@@ -36,8 +36,34 @@ services:
     volumes:
       - ./apps/api:/app/apps/api
       - ./packages/typescript-config:/app/packages/typescript-config
+      - ./packages/design:/app/packages/design
       - /app/node_modules
       - /app/apps/api/node_modules
+      - /app/packages/design/node_modules
+    networks:
+      - main_network
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: dev
+    environment:
+      - API_URL=http://api:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    volumes:
+      - ./apps/web:/app/apps/web
+      - ./apps/api:/app/apps/api:ro
+      - ./packages/api-client:/app/packages/api-client
+      - ./packages/design:/app/packages/design
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/api/node_modules
+      - /app/packages/api-client/node_modules
+      - /app/packages/design/node_modules
     networks:
       - main_network
 
