@@ -88,3 +88,37 @@ export const resetPasswordMutation = mutationOptions({
     client.setQueryData(currentUserQuery.queryKey, null);
   },
 });
+
+export interface TokenVariables {
+  token: string;
+}
+
+export interface SendEmailVerificationTokenVariables {
+  email: string;
+}
+
+export const verifyEmailMutation = mutationOptions({
+  mutationKey: ["auth", "verify-email"],
+  mutationFn: async (variables: TokenVariables) =>
+    unwrap(await api.api.auth.verifyEmail.post(variables)),
+  onSuccess: (_result, _variables, _mutateResult, { client }) =>
+    client.invalidateQueries({ queryKey: currentUserQuery.queryKey }),
+});
+
+export const sendEmailVerificationTokenMutation = mutationOptions({
+  mutationKey: ["auth", "send-email-verification-token"],
+  mutationFn: async (variables: SendEmailVerificationTokenVariables) =>
+    unwrap(
+      await api.api.auth.sendEmailVerificationToken.post(variables, {
+        headers: await captchaHeaders("email_verification"),
+      }),
+    ),
+});
+
+export const confirmEmailChangeMutation = mutationOptions({
+  mutationKey: ["auth", "confirm-email-change"],
+  mutationFn: async (variables: TokenVariables) =>
+    unwrap(await api.api.auth.confirmEmailChange.post(variables)),
+  onSuccess: (_result, _variables, _mutateResult, { client }) =>
+    client.invalidateQueries({ queryKey: currentUserQuery.queryKey }),
+});
