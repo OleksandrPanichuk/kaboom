@@ -33,6 +33,8 @@ The primary user is an individual practising system design. They need to create 
 
 - Guest routes: sign in, sign up, and forgot password share one focused auth layout.
 - Email-link routes: reset password, verify email, and confirm email change reuse the same layout and outcome language.
+- `/designs`: the designs a user owns as cards, newest first, twenty at a time with *Load more*. Each card opens the design and has a menu to rename or delete it; deleting asks first. With no designs, the page is an empty state with *Create your first design*. *New design* asks for a name in a dialog and opens the new design.
+- `/designs/$designId`: the design's name and revision above a placeholder until the canvas lands. An unknown or malformed id is the not-found page.
 - `/settings/profile`: page introduction followed by the name.
 - `/settings/security`: page introduction followed by password, email, connected accounts, sessions, and account deletion.
 - Signed-in routes sit inside the app shell (below). Its sidebar is the only application navigation; pages add no local sidebar or tabs.

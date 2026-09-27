@@ -35,7 +35,7 @@ export const NAVIGATION: NavGroup[] = [
     label: "Practice",
     items: [
       { label: "Home", icon: House, to: "/", exact: true },
-      { label: "Designs", icon: Network, soon: true },
+      { label: "Designs", icon: Network, to: "/designs" },
       { label: "Interviews", icon: MessagesSquare, soon: true },
       { label: "Progress", icon: ChartNoAxesColumn, soon: true },
     ],

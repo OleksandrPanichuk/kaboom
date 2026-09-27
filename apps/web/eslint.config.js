@@ -26,6 +26,11 @@ export default [
               package: "@tanstack/router-core",
               name: "Redirect",
             },
+            {
+              from: "package",
+              package: "@tanstack/router-core",
+              name: "NotFoundError",
+            },
           ],
         },
       ],
