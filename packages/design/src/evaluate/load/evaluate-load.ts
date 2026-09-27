@@ -32,6 +32,7 @@ import {
 import { type Topology, topology } from "./topology";
 
 const DEFAULT_TIMEOUT_MS = 1_000;
+export const CROSS_REGION_MS = 70;
 const ERROR_FINDING = 0.01;
 const GROWTH_STEPS = 3;
 
@@ -98,6 +99,7 @@ interface Memory {
   backlog: Map<string, number>;
   growth: Map<string, number>;
   readShare: Map<string, number>;
+  downSince: Map<string, number>;
 }
 
 export const evaluateLoad = (
@@ -119,6 +121,7 @@ export const evaluateLoad = (
     backlog: new Map(),
     growth: new Map(),
     readShare: new Map(),
+    downSince: new Map(),
   };
   const steps: EvaluationStep[] = [];
 
@@ -146,13 +149,23 @@ const runStep = (
       faultStateAt(
         node,
         scenario.faults,
-        topo.replicasOf.get(node.id)?.length ?? 0,
+        {
+          groups: topo.groupsOf.get(node.id) ?? [],
+          replicaGroups: (topo.replicasOf.get(node.id) ?? []).map(
+            (id) => topo.groupsOf.get(id) ?? [],
+          ),
+        },
         t,
       ),
     );
   }
 
   const isUp = (id: string) => !(state.get(id)?.down ?? false);
+
+  for (const node of topo.order) {
+    if (isUp(node.id)) memory.downSince.delete(node.id);
+    else if (!memory.downSince.has(node.id)) memory.downSince.set(node.id, t);
+  }
 
   const conditionsOf = (node: DesignNode) => {
     const fault = state.get(node.id)!;
@@ -367,6 +380,15 @@ const runStep = (
       const healthChecked =
         node.kind !== "load-balancer" || node.props.healthCheck;
 
+      const routed =
+        node.kind === "dns"
+          ? route(outgoing, node.props.policy, (edge) => {
+              const since = memory.downSince.get(edge.to);
+
+              return since === undefined || t - since < node.props.ttlSeconds;
+            })
+          : null;
+
       for (const channel of ["reads", "writes"] as const) {
         const carrying = outgoing.filter(
           (edge) =>
@@ -378,8 +400,9 @@ const runStep = (
           : carrying;
 
         for (const edge of carrying) {
-          const portion =
-            distribution === "evenly"
+          const portion = routed
+            ? (routed.get(edge.id) ?? 0)
+            : distribution === "evenly"
               ? targets.includes(edge)
                 ? 1 / targets.length
                 : 0
@@ -461,8 +484,11 @@ const runStep = (
       if (!SYNCHRONOUS.has(edge.kind) || !flow || total(flow) === 0) continue;
 
       const below = pathLatency.get(edge.to);
+      const hop = crossesRegions(topo, edge) ? CROSS_REGION_MS : 0;
 
-      if (below && below.p99 > slowest.p99) slowest = below;
+      if (below && below.p99 + hop > slowest.p99) {
+        slowest = { p50: below.p50 + hop, p99: below.p99 + hop };
+      }
     }
 
     pathLatency.set(node.id, {
@@ -591,6 +617,45 @@ const runStep = (
   }
 
   return { t, nodes, edges, clients };
+};
+
+const crossesRegions = (topo: Topology, edge: DesignEdge): boolean => {
+  const from = topo.regionOf.get(edge.from) ?? null;
+  const to = topo.regionOf.get(edge.to) ?? null;
+
+  return from !== null && to !== null && from !== to;
+};
+
+const route = (
+  outgoing: DesignEdge[],
+  policy: "latency" | "failover",
+  routable: (edge: DesignEdge) => boolean,
+): Map<string, number> => {
+  const candidates = outgoing.filter(routable);
+  const portions = new Map<string, number>();
+
+  if (policy === "failover") {
+    const primary = candidates.reduce<DesignEdge | null>(
+      (best, edge) =>
+        best === null || edge.props.share > best.props.share ? edge : best,
+      null,
+    );
+
+    if (primary) portions.set(primary.id, 1);
+
+    return portions;
+  }
+
+  const weight = candidates.reduce((sum, edge) => sum + edge.props.share, 0);
+
+  for (const edge of candidates) {
+    portions.set(
+      edge.id,
+      weight > 0 ? edge.props.share / weight : 1 / candidates.length,
+    );
+  }
+
+  return portions;
 };
 
 const noteBacklog = (

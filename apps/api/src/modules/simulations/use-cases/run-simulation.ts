@@ -53,14 +53,27 @@ export class RunSimulationUseCase extends UseCase<Options, Result> {
 
     const scenario = parsed.data;
     const known = new Set(target.graph.nodes.map((node) => node.id));
-    const unknown = scenario.faults
-      .map((fault) => fault.nodeId)
-      .filter((id) => !known.has(id));
+    const groups = new Set(target.graph.groups.map((group) => group.id));
+    const unknown = scenario.faults.flatMap((fault) =>
+      "nodeId" in fault && !known.has(fault.nodeId) ? [fault.nodeId] : [],
+    );
+    const unknownGroups = scenario.faults.flatMap((fault) =>
+      fault.kind === "region-down" && !groups.has(fault.groupId)
+        ? [fault.groupId]
+        : [],
+    );
 
     if (unknown.length > 0) {
       throw new SimulationScenarioInvalidError(
         "A fault names a node the design does not have",
         { unknownNodes: [...new Set(unknown)] },
+      );
+    }
+
+    if (unknownGroups.length > 0) {
+      throw new SimulationScenarioInvalidError(
+        "A fault names a region the design does not have",
+        { unknownGroups: [...new Set(unknownGroups)] },
       );
     }
 

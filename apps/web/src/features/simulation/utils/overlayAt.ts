@@ -32,13 +32,15 @@ export const overlayAt = (
           ? "Down"
           : node.kind === "coordination"
             ? "Up"
-            : node.kind === "client" || node.kind === "scheduler"
-              ? `Sends ${formatRate(load)}`
-              : turnedAway(numbers) > 0
-                ? `${formatRate(load)} · ${formatRate(turnedAway(numbers))} turned away`
-                : numbers.backlog
-                  ? `${formatShare(numbers.rho)} · ${formatRate(load)} · ${Math.round(numbers.backlog).toLocaleString("en")} waiting`
-                  : `${formatShare(numbers.rho)} · ${formatRate(load)}`,
+            : node.kind === "dns"
+              ? `Routes ${formatRate(load)}`
+              : node.kind === "client" || node.kind === "scheduler"
+                ? `Sends ${formatRate(load)}`
+                : turnedAway(numbers) > 0
+                  ? `${formatRate(load)} · ${formatRate(turnedAway(numbers))} turned away`
+                  : numbers.backlog
+                    ? `${formatShare(numbers.rho)} · ${formatRate(load)} · ${Math.round(numbers.backlog).toLocaleString("en")} waiting`
+                    : `${formatShare(numbers.rho)} · ${formatRate(load)}`,
     };
   }
 

@@ -26,12 +26,26 @@ interface FaultListProps {
   onChange: (draft: ScenarioDraft) => void;
 }
 
-const nodesFor = (graph: DesignGraph, kind: FaultKind) =>
-  graph.nodes.filter(
-    (node) =>
-      node.kind !== "client" &&
-      (kind !== "cache-flush" || FLUSHABLE_KINDS.has(node.kind)),
-  );
+interface FaultTarget {
+  id: string;
+  label: string;
+}
+
+const targetsFor = (graph: DesignGraph, kind: FaultKind): FaultTarget[] =>
+  kind === "region-down"
+    ? graph.groups
+        .filter((group) => group.kind === "region")
+        .map((group) => ({ id: group.id, label: group.label || "Region" }))
+    : graph.nodes
+        .filter(
+          (node) =>
+            node.kind !== "client" &&
+            (kind !== "cache-flush" || FLUSHABLE_KINDS.has(node.kind)),
+        )
+        .map((node) => ({
+          id: node.id,
+          label: node.label || catalogue[node.kind].label,
+        }));
 
 export function FaultList({ graph, draft, onChange }: FaultListProps) {
   const update = (key: string, patch: Partial<FaultDraft>) =>
@@ -43,7 +57,7 @@ export function FaultList({ graph, draft, onChange }: FaultListProps) {
     });
 
   const addFault = () => {
-    const [first] = nodesFor(graph, "node-down");
+    const [first] = targetsFor(graph, "node-down");
 
     if (!first) return;
 
@@ -54,7 +68,7 @@ export function FaultList({ graph, draft, onChange }: FaultListProps) {
         {
           key: crypto.randomUUID(),
           kind: "node-down",
-          nodeId: first.id,
+          targetId: first.id,
           at: 120,
           until: null,
           factor: 0.5,
@@ -85,7 +99,7 @@ export function FaultList({ graph, draft, onChange }: FaultListProps) {
         variant="outline"
         size="sm"
         className="self-start"
-        disabled={nodesFor(graph, "node-down").length === 0}
+        disabled={targetsFor(graph, "node-down").length === 0}
         onClick={addFault}
       >
         <Plus aria-hidden="true" />
@@ -111,9 +125,14 @@ function FaultRow({
   onRemove,
 }: FaultRowProps) {
   const id = useId();
-  const candidates = nodesFor(graph, fault.kind);
-  const missing = !graph.nodes.some((node) => node.id === fault.nodeId);
+  const candidates = targetsFor(graph, fault.kind);
+  const missing = !candidates.some((target) => target.id === fault.targetId);
   const kind = FAULT_KINDS.find((item) => item.kind === fault.kind)!;
+  const kinds = FAULT_KINDS.filter(
+    (item) =>
+      item.kind === fault.kind || targetsFor(graph, item.kind).length > 0,
+  );
+  const noun = fault.kind === "region-down" ? "Region" : "Node";
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-black/[0.07] p-3">
@@ -126,16 +145,16 @@ function FaultRow({
             value={fault.kind}
             onValueChange={(value) => {
               const next = value!;
-              const allowed = nodesFor(graph, next);
+              const allowed = targetsFor(graph, next);
 
               onChange({
                 kind: next,
-                nodeId: allowed.some((node) => node.id === fault.nodeId)
-                  ? fault.nodeId
-                  : (allowed[0]?.id ?? fault.nodeId),
+                targetId: allowed.some((target) => target.id === fault.targetId)
+                  ? fault.targetId
+                  : (allowed[0]?.id ?? fault.targetId),
               });
             }}
-            items={FAULT_KINDS.map((item) => ({
+            items={kinds.map((item) => ({
               value: item.kind,
               label: item.label,
             }))}
@@ -144,7 +163,7 @@ function FaultRow({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {FAULT_KINDS.map((item) => (
+              {kinds.map((item) => (
                 <SelectItem key={item.kind} value={item.kind}>
                   {item.label}
                 </SelectItem>
@@ -167,30 +186,31 @@ function FaultRow({
       </p>
       <Field>
         <FieldLabel htmlFor={`${id}-node`} className="text-xs">
-          Node
+          {noun}
         </FieldLabel>
         <Select
-          value={fault.nodeId}
-          onValueChange={(value) => onChange({ nodeId: String(value) })}
-          items={candidates.map((node) => ({
-            value: node.id,
-            label: node.label || catalogue[node.kind].label,
+          value={fault.targetId}
+          onValueChange={(value) => onChange({ targetId: String(value) })}
+          items={candidates.map((target) => ({
+            value: target.id,
+            label: target.label,
           }))}
         >
           <SelectTrigger id={`${id}-node`} className="w-full">
-            <SelectValue placeholder="Pick a node" />
+            <SelectValue placeholder={`Pick a ${noun.toLowerCase()}`} />
           </SelectTrigger>
           <SelectContent>
-            {candidates.map((node) => (
-              <SelectItem key={node.id} value={node.id}>
-                {node.label || catalogue[node.kind].label}
+            {candidates.map((target) => (
+              <SelectItem key={target.id} value={target.id}>
+                {target.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         {missing ? (
           <p className="text-xs text-amber-700">
-            That node is no longer in the design, so this fault is skipped.
+            That {noun.toLowerCase()} is no longer in the design, so this fault
+            is skipped.
           </p>
         ) : null}
       </Field>

@@ -26,6 +26,11 @@ export const FaultSchema = z.discriminatedUnion("kind", [
     addMs: z.number().min(0).max(600_000),
   }),
   z.strictObject({
+    kind: z.literal("region-down"),
+    groupId: IdSchema,
+    ...window,
+  }),
+  z.strictObject({
     kind: z.literal("cache-flush"),
     nodeId: IdSchema,
     at: Seconds,

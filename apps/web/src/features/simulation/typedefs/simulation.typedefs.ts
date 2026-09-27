@@ -5,7 +5,7 @@ export type FaultKind = Fault["kind"];
 export interface FaultDraft {
   key: string;
   kind: FaultKind;
-  nodeId: string;
+  targetId: string;
   at: number;
   until: number | null;
   factor: number;

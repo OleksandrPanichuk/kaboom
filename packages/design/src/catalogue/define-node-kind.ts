@@ -18,7 +18,7 @@ export interface NodeKindDefinition<
   icon: string;
   stateful: boolean;
   replicable: boolean;
-  distribution: "by-share" | "evenly" | "broadcast";
+  distribution: "by-share" | "evenly" | "broadcast" | "routed";
   props: Props;
   docs: NodeKindDocs;
 }

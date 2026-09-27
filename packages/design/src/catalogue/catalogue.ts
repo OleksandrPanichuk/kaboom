@@ -6,6 +6,7 @@ import {
   cdnKind,
   clientKind,
   coordinationKind,
+  dnsKind,
   externalApiKind,
   loadBalancerKind,
   nosqlDatabaseKind,
@@ -22,6 +23,7 @@ import {
 
 export const catalogue = {
   [clientKind.kind]: clientKind,
+  [dnsKind.kind]: dnsKind,
   [cdnKind.kind]: cdnKind,
   [loadBalancerKind.kind]: loadBalancerKind,
   [apiGatewayKind.kind]: apiGatewayKind,

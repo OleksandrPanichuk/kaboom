@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import { evaluateLoad } from "./evaluate-load";
+import { createGroup, type DesignGraph, type DesignNode } from "../../graph";
+import { CROSS_REGION_MS, evaluateLoad } from "./evaluate-load";
 import { edge, graph, node } from "./fixtures";
 
 const service = (
@@ -537,5 +538,80 @@ describe("golden fixtures", () => {
     ).steps[0]!;
 
     expect(step.nodes.jobs!.writes).toBeCloseTo(50, 6);
+  });
+  describe("15–17. regions", () => {
+    const inRegion = (region: string, created: DesignNode): DesignNode => ({
+      ...created,
+      groupId: region,
+    });
+    const twoRegions = (
+      policy: "latency" | "failover",
+      replicaRegion: "eu" | "us" = "us",
+    ): DesignGraph => ({
+      ...graph(
+        [
+          node("users", "client", { rps: 1_000, readRatio: 1 }),
+          node("dns", "dns", { policy, ttlSeconds: 60 }),
+          inRegion("eu", service("api-eu", 2, 2_000)),
+          inRegion("us", service("api-us", 2, 2_000)),
+          inRegion("eu", node("db", "sql-database", { failover: "automatic" })),
+          inRegion(replicaRegion, node("replica", "sql-database")),
+        ],
+        [
+          edge("users", "dns"),
+          edge("dns", "api-eu", "sync-call", { share: 0.6 }),
+          edge("dns", "api-us", "sync-call", { share: 0.4 }),
+          edge("api-eu", "db", "read"),
+          edge("api-us", "db", "read"),
+          edge("db", "replica", "replication"),
+        ],
+      ),
+      groups: [
+        createGroup({ id: "eu", kind: "region", label: "EU" }),
+        createGroup({ id: "us", kind: "region", label: "US" }),
+      ],
+    });
+
+    test("15. latency routing splits by share, and a call across regions pays the hop", () => {
+      const step = evaluateLoad(twoRegions("latency"), {
+        kind: "load",
+        durationSeconds: 10,
+      }).steps[0]!;
+      const local = step.nodes["api-eu"]!.p99 + step.nodes.db!.p99;
+      const remote = step.nodes["api-us"]!.p99 + step.nodes.db!.p99;
+
+      expect(step.nodes["api-eu"]!.reads).toBeCloseTo(600, 6);
+      expect(step.nodes["api-us"]!.reads).toBeCloseTo(400, 6);
+      expect(step.clients.users!.p99).toBeCloseTo(
+        Math.max(local, remote + CROSS_REGION_MS),
+        6,
+      );
+    });
+
+    test("16. failover keeps sending to a lost region until the TTL runs out, then moves everyone", () => {
+      const availability = evaluateLoad(twoRegions("failover"), {
+        kind: "load",
+        durationSeconds: 200,
+        faults: [{ kind: "region-down", groupId: "eu", at: 60 }],
+      }).steps.map((step) =>
+        Math.round(step.clients.users!.availability * 100),
+      );
+
+      expect(availability.slice(0, 6)).toEqual([100, 100, 100, 100, 100, 100]);
+      expect(availability.slice(6, 12)).toEqual([0, 0, 0, 0, 0, 0]);
+      expect(availability.slice(12, 15)).toEqual([100, 100, 100]);
+    });
+
+    test("17. a primary lost with its region is promoted only from a replica in another region", () => {
+      const run = (replicaRegion: "eu" | "us") =>
+        evaluateLoad(twoRegions("latency", replicaRegion), {
+          kind: "load",
+          durationSeconds: 60,
+          faults: [{ kind: "region-down", groupId: "eu", at: 0 }],
+        }).steps.map((step) => step.nodes.db!.up);
+
+      expect(run("us")).toEqual([false, false, false, true, true, true]);
+      expect(run("eu")).toEqual([false, false, false, false, false, false]);
+    });
   });
 });

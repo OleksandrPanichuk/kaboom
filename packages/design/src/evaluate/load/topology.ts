@@ -9,6 +9,8 @@ export interface Topology {
   replicasOf: Map<string, string[]>;
   primaryOf: Map<string, string>;
   locksOf: Map<string, string[]>;
+  groupsOf: Map<string, string[]>;
+  regionOf: Map<string, string | null>;
 }
 
 export const topology = (graph: DesignGraph): Topology => {
@@ -39,6 +41,25 @@ export const topology = (graph: DesignGraph): Topology => {
     }
   }
 
+  const groups = new Map(graph.groups.map((group) => [group.id, group]));
+  const groupsOf = new Map<string, string[]>();
+  const regionOf = new Map<string, string | null>();
+
+  for (const node of graph.nodes) {
+    const chain: string[] = [];
+    let region: string | null = null;
+    let current = node.groupId ? groups.get(node.groupId) : undefined;
+
+    while (current && !chain.includes(current.id)) {
+      chain.push(current.id);
+      if (region === null && current.kind === "region") region = current.id;
+      current = current.parentId ? groups.get(current.parentId) : undefined;
+    }
+
+    groupsOf.set(node.id, chain);
+    regionOf.set(node.id, region);
+  }
+
   const remaining = new Map(
     graph.nodes.map((node) => [node.id, inbound.get(node.id)?.length ?? 0]),
   );
@@ -59,5 +80,15 @@ export const topology = (graph: DesignGraph): Topology => {
     }
   }
 
-  return { order, byId, inbound, outbound, replicasOf, primaryOf, locksOf };
+  return {
+    order,
+    byId,
+    inbound,
+    outbound,
+    replicasOf,
+    primaryOf,
+    locksOf,
+    groupsOf,
+    regionOf,
+  };
 };

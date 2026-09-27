@@ -176,6 +176,21 @@ describe("simulation runs", () => {
     expect(unknownNode.body.details).toEqual({ unknownNodes: ["ghost"] });
   });
 
+  test("refuses a region fault on a region the design does not have", async () => {
+    const user = await createUser();
+    const { design } = await seeded(user);
+
+    const response = await run(user, design.id, {
+      scenario: {
+        kind: "load",
+        faults: [{ kind: "region-down", groupId: "atlantis", at: 0 }],
+      },
+    });
+
+    expect(response.status).toBe(422);
+    expect(response.body.details).toEqual({ unknownGroups: ["atlantis"] });
+  });
+
   test("answers 404 for a revision the design has not reached", async () => {
     const user = await createUser();
     const { design } = await seeded(user);

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { type EdgeKind, EdgePropsSchema, type NodeKind } from "../catalogue";
 import {
+  createGroup,
   createNode,
   type DesignGraph,
   type DesignNode,
@@ -348,5 +349,30 @@ describe("lints", () => {
     );
 
     expect(hits(g, "spof-critical-path")).toEqual(["zk"]);
+  });
+  describe("failover-nowhere", () => {
+    const dns = (regions: [string, string]) => ({
+      ...graph(
+        [
+          node("users", "client"),
+          node("dns", "dns", { policy: "failover" }),
+          { ...node("a", "load-balancer"), groupId: regions[0] },
+          { ...node("b", "load-balancer"), groupId: regions[1] },
+        ],
+        [edge("users", "dns"), edge("dns", "a"), edge("dns", "b")],
+      ),
+      groups: [
+        createGroup({ id: "eu", kind: "region", label: "EU" }),
+        createGroup({ id: "us", kind: "region", label: "US" }),
+      ],
+    });
+
+    test("flags failover whose targets all sit in one region", () => {
+      expect(hits(dns(["eu", "eu"]), "failover-nowhere")).toEqual(["dns+a+b"]);
+    });
+
+    test("accepts targets in two regions", () => {
+      expect(hits(dns(["eu", "us"]), "failover-nowhere")).toEqual([]);
+    });
   });
 });

@@ -29,6 +29,12 @@ export const FAULT_KINDS: ReadonlyArray<{
     description: "Every request through the node takes longer.",
   },
   {
+    kind: "region-down",
+    label: "Region down",
+    description:
+      "Every node in the region stops; DNS moves users once their cached answer expires.",
+  },
+  {
     kind: "cache-flush",
     label: "Cache flush",
     description: "The hit ratio falls to zero and recovers over a minute.",

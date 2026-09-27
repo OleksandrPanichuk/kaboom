@@ -14,6 +14,7 @@ import {
   ScrollText,
   Search,
   Server,
+  Signpost,
   Split,
   Waypoints,
   Zap,
@@ -37,6 +38,7 @@ export const NODE_KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
   "search-index": Search,
   scheduler: CalendarClock,
   coordination: KeyRound,
+  dns: Signpost,
 };
 
 export const FALLBACK_NODE_ICON: LucideIcon = Server;
