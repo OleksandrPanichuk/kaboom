@@ -72,6 +72,13 @@ A design, and later a problem or an interview, opens full screen without the sid
 - **Below 1024px** the canvas takes the whole window under the top bar. The tool panel opens as a sheet from the left and the inspector as a sheet from the bottom, 80 % of the height, from the same toggles.
 - The verification banner is not shown in a workspace.
 
+### Canvas
+
+- **Nodes** are 208px cards: the kind's Lucide icon in an indigo tile, the label, and below it the technology (such as RDS) or, without one, the kind. A selected node gets an indigo border and ring.
+- **Edges** are drawn by kind so a diagram reads without a legend: sync calls solid zinc, async messages dashed indigo and animated, reads sky, writes amber, replication dotted grey. An edge's label sits on it in a small white pill.
+- **Viewport:** opens fitted to the graph, but never below 70 % zoom, so labels stay readable and a large graph is panned instead. Zoom and fit controls sit at the bottom left; the minimap, from 640px, at the bottom right.
+- **Empty design:** a centred note on the dotted background.
+
 ### Route states
 
 - **Loading:** a route that takes longer than a second to load shows a centred spinner and "Loading…" in a live `status` region, inside the shell when the route is inside it. The spinner stops under reduced motion.
