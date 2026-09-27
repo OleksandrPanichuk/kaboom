@@ -1,10 +1,13 @@
+export { apiGatewayKind } from "./api-gateway";
 export { cacheKind } from "./cache";
 export { cdnKind } from "./cdn";
 export { clientKind } from "./client";
+export { externalApiKind } from "./external-api";
 export { loadBalancerKind } from "./load-balancer";
 export { nosqlDatabaseKind } from "./nosql-database";
 export { objectStorageKind } from "./object-storage";
 export { queueKind } from "./queue";
+export { rateLimiterKind } from "./rate-limiter";
 export { serviceKind } from "./service";
 export { sqlDatabaseKind } from "./sql-database";
 export { streamKind } from "./stream";

@@ -12,13 +12,13 @@ same pull request.
 
 ## Scenario
 
-| Field | Default | Meaning |
-|---|---|---|
-| `stepSeconds` | 10 | Length of one step |
-| `durationSeconds` | 600 | Length of the run; steps = duration / step |
-| `traffic` | `[]` | Piecewise-constant multiplier on every client's `rps`: `{ at, multiplier }` holds from `at` seconds until the next entry. 1 before the first |
-| `faults` | `[]` | Events, below |
-| `slo` | p99 300 ms, availability 99.9 % | Targets `slo-breach` compares against |
+| Field             | Default                         | Meaning                                                                                                                                      |
+|-------------------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| `stepSeconds`     | 10                              | Length of one step                                                                                                                           |
+| `durationSeconds` | 600                             | Length of the run; steps = duration / step                                                                                                   |
+| `traffic`         | `[]`                            | Piecewise-constant multiplier on every client's `rps`: `{ at, multiplier }` holds from `at` seconds until the next entry. 1 before the first |
+| `faults`          | `[]`                            | Events, below                                                                                                                                |
+| `slo`             | p99 300 ms, availability 99.9 % | Targets `slo-breach` compares against                                                                                                        |
 
 ## Traffic
 
@@ -49,22 +49,32 @@ same pull request.
 serve. A node that is down serves nothing, forwards nothing and fails every
 request it receives.
 
-| Kind | Capacity | Forwards |
-|---|---|---|
-| `client` | unbounded | what it emits |
-| `service` | `replicas × capacityRpsPerReplica` | what it serves |
-| `worker` | `replicas × capacityMsgPerReplica` | what it serves |
-| `load-balancer`, `cdn` | `capacityRps` | balancer: what it serves; CDN: `reads × (1 − hitRatio)` and all writes |
-| `cache` | reads against `readCapacityRps`, writes against `writeCapacityRps` | `reads × (1 − hitRatio)` and all writes, to whatever it connects to |
-| `sql-database` | writes: `writeCapacityRps × shards`, on the primary only; reads: `readCapacityRps × shards × (1 + up replicas)` | nothing |
-| `nosql-database` | `partitions × readCapacityPerPartition` and `partitions × writeCapacityPerPartition` | nothing |
-| `object-storage` | `readCapacityRps` and `writeCapacityRps` | nothing |
-| `queue` | `capacityMsgPerSecond` accepted | see *Backlog* |
-| `stream` | `capacityMsgPerSecond` accepted | see *Backlog* |
+| Kind                          | Capacity                                                                                                        | Forwards                                                               |
+|-------------------------------|-----------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
+| `client`                      | unbounded                                                                                                       | what it emits                                                          |
+| `service`                     | `replicas × capacityRpsPerReplica`                                                                              | what it serves                                                         |
+| `worker`                      | `replicas × capacityMsgPerReplica`                                                                              | what it serves                                                         |
+| `load-balancer`, `cdn`        | `capacityRps`                                                                                                   | balancer: what it serves; CDN: `reads × (1 − hitRatio)` and all writes |
+| `api-gateway`, `rate-limiter` | `capacityRps`                                                                                                   | what it serves, by share                                               |
+| `external-api`                | unbounded, behind its rate limit                                                                                | nothing                                                                |
+| `cache`                       | reads against `readCapacityRps`, writes against `writeCapacityRps`                                              | `reads × (1 − hitRatio)` and all writes, to whatever it connects to    |
+| `sql-database`                | writes: `writeCapacityRps × shards`, on the primary only; reads: `readCapacityRps × shards × (1 + up replicas)` | nothing                                                                |
+| `nosql-database`              | `partitions × readCapacityPerPartition` and `partitions × writeCapacityPerPartition`                            | nothing                                                                |
+| `object-storage`              | `readCapacityRps` and `writeCapacityRps`                                                                        | nothing                                                                |
+| `queue`                       | `capacityMsgPerSecond` accepted                                                                                 | see _Backlog_                                                          |
+| `stream`                      | `capacityMsgPerSecond` accepted                                                                                 | see _Backlog_                                                          |
 
 For a node with separate read and write capacities, `ρ = max(reads / read
 capacity, writes / write capacity)`; otherwise `ρ = λ / capacity`. Replica
 nodes report their primary's read utilisation.
+
+**Throttling.** A rate limiter, a gateway with throttling enabled and an
+external API (its `rateLimitRps`, scaled by a `capacity` fault) admit at most
+their limit and turn the rest away before anything else happens:
+`admitted = λ × min(1, limit / λ)`. What is turned away is an error, but it
+fails at once: `ρ` and latency are computed on what was admitted, so a
+limiter keeps the requests it lets through fast while the ones behind it stay
+below saturation. The step reports it as `throttled` (req/s).
 
 **Saturation.** Up to `ρ = 0.95` a node serves everything. Above it, it serves
 `0.95 × capacity` of each channel in proportion, and the rest is an error
@@ -79,8 +89,10 @@ Per node, per step:
   largest `timeoutMs` of its inbound edges (1000 ms without one): a caller
   waits no longer than it is willing to. A worker's base is `processingMs`;
   clients, queues and streams add none.
-- **Own error rate**: 1 when down, the unserved fraction when saturated, 0
-  otherwise. A client that connects to nothing has nobody to answer it, so
+- **Own error rate**: 1 when down; otherwise `1 − admitted × served × (1 −
+  intrinsic)`, where `admitted` is the throttling fraction, `served` the
+  saturation fraction, and `intrinsic` an external API's `errorRate` (0 for
+  every other kind). A client that connects to nothing has nobody to answer it, so
   every request it sends fails.
 - **Error rate** = `own + (1 − own) × downstream`, where `downstream` weighs
   each outgoing `sync-call`, `read` or `write` edge by `w`, the share of the
@@ -88,7 +100,7 @@ Per node, per step:
   node splits its requests (a balancer, reads and writes to one database),
   and `downstream = Σ w × error rate of the target`. When they sum to more,
   it fans out and every request makes several calls, and `downstream = 1 − Π
-  (1 − min(1, w) × error rate)`. Async edges decouple: a failing consumer
+(1 − min(1, w) × error rate)`. Async edges decouple: a failing consumer
   grows a backlog, never upstream errors.
 
 Per client, per step: **p50 / p99** is the largest sum of hop latencies along
@@ -122,12 +134,12 @@ A step runs, in order:
 A fault is an event with `at` and an optional `until`, in seconds, applied at
 onset and undone at its end.
 
-| Fault | Effect |
-|---|---|
-| `node-down` | the node is down. A SQL primary with `failover` `automatic` recovers 30 s later, `manual` 300 s later, if it has at least one replica; one replica is then spent on the promotion. With `none`, or no replica, it stays down until `until` |
-| `capacity` | the node's capacity is multiplied by `factor` |
-| `latency` | `addMs` is added to the node's base latency |
-| `cache-flush` | the cache's hit ratio drops to 0 and recovers linearly over 60 s |
+| Fault         | Effect                                                                                                                                                                                                                                     |
+|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `node-down`   | the node is down. A SQL primary with `failover` `automatic` recovers 30 s later, `manual` 300 s later, if it has at least one replica; one replica is then spent on the promotion. With `none`, or no replica, it stays down until `until` |
+| `capacity`    | the node's capacity is multiplied by `factor`                                                                                                                                                                                              |
+| `latency`     | `addMs` is added to the node's base latency                                                                                                                                                                                                |
+| `cache-flush` | the cache's hit ratio drops to 0 and recovers linearly over 60 s                                                                                                                                                                           |
 
 **Autoscaling.** A service or worker with autoscaling enabled that stays above
 its `targetUtilisation` for two consecutive steps gains `ceil(replicas × 0.5)`
@@ -139,9 +151,10 @@ Each finding names its target, the step it first held at, a message that
 quotes the numbers, and those numbers in `data`. One finding per kind and
 target: the first step it held, with the worst value seen.
 
-| Kind | When |
-|---|---|
-| `saturated` | a node reaches `ρ ≥ 0.95` |
-| `errors` | a node's own error rate exceeds 1 % |
+| Kind              | When                                                                 |
+|-------------------|----------------------------------------------------------------------|
+| `saturated`       | a node reaches `ρ ≥ 0.95`                                            |
+| `errors`          | a node's own error rate, less what it throttles, exceeds 1 %         |
+| `throttled`       | a node turns away more than 1 % of what it receives                  |
 | `backlog-growing` | a queue's or consumer group's backlog grows for three steps in a row |
-| `slo-breach` | a client's p99 or availability misses the scenario's SLO |
+| `slo-breach`      | a client's p99 or availability misses the scenario's SLO             |

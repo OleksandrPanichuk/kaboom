@@ -6,11 +6,15 @@ export interface PaletteGroup {
 }
 
 export const PALETTE_GROUPS: PaletteGroup[] = [
-  { label: "Entry", kinds: ["client", "cdn", "load-balancer"] },
+  {
+    label: "Entry",
+    kinds: ["client", "cdn", "load-balancer", "api-gateway", "rate-limiter"],
+  },
   { label: "Compute", kinds: ["service", "worker"] },
   {
     label: "Data",
     kinds: ["cache", "sql-database", "nosql-database", "object-storage"],
   },
   { label: "Messaging", kinds: ["queue", "stream"] },
+  { label: "Third party", kinds: ["external-api"] },
 ];

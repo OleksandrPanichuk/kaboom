@@ -22,8 +22,10 @@ import {
   type Channels,
   consumerLimit,
   forwardedBy,
+  intrinsicErrorRateOf,
   SATURATION,
   SYNCHRONOUS,
+  throttleLimitOf,
   utilisation,
 } from "./node-model";
 import { type Topology, topology } from "./topology";
@@ -175,16 +177,25 @@ const runStep = (
     }
 
     const capacity = capacityOf(node, conditions);
+    const limit = throttleLimitOf(node, conditions.capacityFactor);
+    const offered = total(load);
+    const admittedFraction =
+      up && limit !== null && offered > limit ? limit / offered : 1;
+    const admitted = scaleBy(load, admittedFraction);
     const rho = up
-      ? utilisation(load, capacity)
-      : total(load) > 0
+      ? utilisation(admitted, capacity)
+      : offered > 0
         ? Number.POSITIVE_INFINITY
         : 0;
     const servedFraction = !up ? 0 : rho <= SATURATION ? 1 : SATURATION / rho;
-    const served = scaleBy(load, servedFraction);
+    const served = scaleBy(admitted, servedFraction);
     const unanswered =
-      node.kind === "client" && outgoing.length === 0 && total(load) > 0;
-    const ownErrorRate = !up || unanswered ? 1 : 1 - servedFraction;
+      node.kind === "client" && outgoing.length === 0 && offered > 0;
+    const ownErrorRate =
+      !up || unanswered
+        ? 1
+        : 1 -
+          admittedFraction * servedFraction * (1 - intrinsicErrorRateOf(node));
 
     const inboundTimeouts = (topo.inbound.get(node.id) ?? []).map(
       (edge) => edge.props.timeoutMs,
@@ -207,6 +218,9 @@ const runStep = (
       ownErrorRate,
       errorRate: ownErrorRate,
       up,
+      ...(limit !== null && up
+        ? { throttled: offered * (1 - admittedFraction) }
+        : {}),
       ...(autoscaled(node) || node.kind === "service" || node.kind === "worker"
         ? { replicas: conditions.replicas }
         : {}),
@@ -470,15 +484,37 @@ const runStep = (
       });
     }
 
-    if (step.ownErrorRate > ERROR_FINDING && lambda > 0) {
+    const throttled = step.throttled ?? 0;
+    const throttledRate = lambda > 0 ? throttled / lambda : 0;
+
+    if (throttledRate > ERROR_FINDING) {
+      const limit = throttleLimitOf(node, conditionsOf(node).capacityFactor)!;
+
+      log.note(index, {
+        target: { type: "node", id: node.id },
+        kind: "throttled",
+        message: `${label} turns away ${perSecond(throttled)} of ${perSecond(lambda)}: it lets through ${perSecond(limit)}.`,
+        data: {
+          throttled: round(throttled),
+          lambda: round(lambda),
+          limit: round(limit),
+        },
+        worst: throttledRate,
+      });
+    }
+
+    if (step.ownErrorRate - throttledRate > ERROR_FINDING && lambda > 0) {
       log.note(index, {
         target: { type: "node", id: node.id },
         kind: "errors",
         message: step.up
-          ? `${label} fails ${percent(step.ownErrorRate)} of what it receives: it cannot serve ${perSecond(lambda * step.ownErrorRate)} of ${perSecond(lambda)}.`
+          ? `${label} fails ${percent(step.ownErrorRate - throttledRate)} of what it receives: it cannot serve ${perSecond(lambda * (step.ownErrorRate - throttledRate))} of ${perSecond(lambda)}.`
           : `${label} is down and fails all ${perSecond(lambda)} it receives.`,
-        data: { errorRate: round(step.ownErrorRate, 5), lambda: round(lambda) },
-        worst: step.ownErrorRate,
+        data: {
+          errorRate: round(step.ownErrorRate - throttledRate, 5),
+          lambda: round(lambda),
+        },
+        worst: step.ownErrorRate - throttledRate,
       });
     }
 

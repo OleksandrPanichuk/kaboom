@@ -9,6 +9,7 @@ export type {
   FindingKind,
   NodeStep,
 } from "./result";
+export { FINDING_KINDS } from "./result";
 export {
   type Fault,
   FaultSchema,

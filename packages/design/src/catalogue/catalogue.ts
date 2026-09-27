@@ -1,13 +1,16 @@
 import type z from "zod";
 
 import {
+  apiGatewayKind,
   cacheKind,
   cdnKind,
   clientKind,
+  externalApiKind,
   loadBalancerKind,
   nosqlDatabaseKind,
   objectStorageKind,
   queueKind,
+  rateLimiterKind,
   serviceKind,
   sqlDatabaseKind,
   streamKind,
@@ -18,6 +21,8 @@ export const catalogue = {
   [clientKind.kind]: clientKind,
   [cdnKind.kind]: cdnKind,
   [loadBalancerKind.kind]: loadBalancerKind,
+  [apiGatewayKind.kind]: apiGatewayKind,
+  [rateLimiterKind.kind]: rateLimiterKind,
   [serviceKind.kind]: serviceKind,
   [cacheKind.kind]: cacheKind,
   [sqlDatabaseKind.kind]: sqlDatabaseKind,
@@ -26,6 +31,7 @@ export const catalogue = {
   [streamKind.kind]: streamKind,
   [workerKind.kind]: workerKind,
   [objectStorageKind.kind]: objectStorageKind,
+  [externalApiKind.kind]: externalApiKind,
 } as const;
 
 export type Catalogue = typeof catalogue;

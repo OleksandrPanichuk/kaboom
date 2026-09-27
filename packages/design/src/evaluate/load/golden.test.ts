@@ -307,4 +307,134 @@ describe("golden fixtures", () => {
       expect(dbReads[index]!).toBeLessThan(dbReads[index - 1]!);
     }
   });
+  describe("8. a rate limiter turns the excess away fast and keeps the database alive", () => {
+    const spike = (limited: boolean) =>
+      graph(
+        [
+          node("users", "client", { rps: 20_000, readRatio: 1 }),
+          ...(limited
+            ? [node("limiter", "rate-limiter", { limitRps: 10_000 })]
+            : []),
+          service("api", 10, 2_000),
+          node("db", "sql-database", { readCapacityRps: 12_000 }),
+        ],
+        [
+          ...(limited
+            ? [edge("users", "limiter"), edge("limiter", "api")]
+            : [edge("users", "api")]),
+          edge("api", "db", "read"),
+        ],
+      );
+    const run = (limited: boolean) =>
+      evaluateLoad(spike(limited), { kind: "load", durationSeconds: 10 });
+
+    test("with a limiter, half is turned away and the rest stays fast", () => {
+      const { steps, findings } = run(true);
+      const step = steps[0]!;
+
+      expect(step.nodes.limiter!.throttled).toBeCloseTo(10_000, 6);
+      expect(step.nodes.limiter!.ownErrorRate).toBeCloseTo(0.5, 6);
+      expect(step.nodes.api!.reads).toBeCloseTo(10_000, 6);
+      expect(step.nodes.db!.rho).toBeLessThan(0.95);
+      expect(step.clients.users!.availability).toBeCloseTo(0.5, 6);
+      expect(step.clients.users!.p99).toBeLessThan(1_000);
+      expect(findings.map((finding) => finding.kind)).toContain("throttled");
+      expect(
+        findings.filter(
+          (finding) =>
+            finding.kind === "errors" && finding.target.id === "limiter",
+        ),
+      ).toEqual([]);
+    });
+
+    test("without one, the database saturates and every request waits for the timeout", () => {
+      const step = run(false).steps[0]!;
+
+      expect(step.nodes.db!.rho).toBeGreaterThan(0.95);
+      expect(step.clients.users!.p99).toBeGreaterThanOrEqual(1_000);
+    });
+  });
+
+  describe("9. a third party on the request path passes its errors to the user, and a queue absorbs them", () => {
+    const payments = node("payments", "external-api", { errorRate: 0.02 });
+
+    test("called synchronously, its error rate is the user's", () => {
+      const step = evaluateLoad(
+        graph(
+          [
+            node("users", "client", { rps: 100 }),
+            service("api", 2, 1_000),
+            payments,
+          ],
+          [edge("users", "api"), edge("api", "payments")],
+        ),
+        { kind: "load", durationSeconds: 10 },
+      ).steps[0]!;
+
+      expect(step.nodes.payments!.ownErrorRate).toBeCloseTo(0.02, 6);
+      expect(step.clients.users!.availability).toBeCloseTo(0.98, 6);
+    });
+
+    test("behind a queue and a worker, the user is not affected", () => {
+      const step = evaluateLoad(
+        graph(
+          [
+            node("users", "client", { rps: 100 }),
+            service("api", 2, 1_000),
+            node("jobs", "queue"),
+            node("worker", "worker", { replicas: 2 }),
+            payments,
+          ],
+          [
+            edge("users", "api"),
+            edge("api", "jobs", "async-message"),
+            edge("jobs", "worker", "async-message"),
+            edge("worker", "payments"),
+          ],
+        ),
+        { kind: "load", durationSeconds: 10 },
+      ).steps[0]!;
+
+      expect(step.nodes.payments!.ownErrorRate).toBeCloseTo(0.02, 6);
+      expect(step.clients.users!.availability).toBeCloseTo(1, 6);
+    });
+  });
+
+  test("10. calls above a provider's rate limit fail at once, without waiting", () => {
+    const step = evaluateLoad(
+      graph(
+        [
+          node("users", "client", { rps: 1_000 }),
+          service("api", 2, 1_000),
+          node("sms", "external-api", { rateLimitRps: 500, errorRate: 0 }),
+        ],
+        [edge("users", "api"), edge("api", "sms")],
+      ),
+      { kind: "load", durationSeconds: 10 },
+    ).steps[0]!;
+
+    expect(step.nodes.sms!.throttled).toBeCloseTo(500, 6);
+    expect(step.nodes.sms!.ownErrorRate).toBeCloseTo(0.5, 6);
+    expect(step.nodes.sms!.p99).toBeCloseTo(150, 6);
+  });
+
+  test("11. a gateway without throttling passes everything on", () => {
+    const step = evaluateLoad(
+      graph(
+        [
+          node("users", "client", { rps: 30_000 }),
+          node("gw", "api-gateway"),
+          service("api", 20, 2_000),
+        ],
+        [edge("users", "gw"), edge("gw", "api")],
+      ),
+      { kind: "load", durationSeconds: 10 },
+    ).steps[0]!;
+
+    expect(step.nodes.gw!.throttled).toBeUndefined();
+    expect(step.nodes.api!.reads + step.nodes.api!.writes).toBeCloseTo(
+      30_000,
+      6,
+    );
+  });
 });
