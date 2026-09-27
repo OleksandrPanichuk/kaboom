@@ -58,6 +58,7 @@ export const ProgressModel = t.Object({
   rank: t.Object({
     name: t.String(),
     points: t.Integer(),
+    floorPoints: t.Integer(),
     nextName: t.Nullable(t.String()),
     nextPoints: t.Nullable(t.Integer()),
   }),

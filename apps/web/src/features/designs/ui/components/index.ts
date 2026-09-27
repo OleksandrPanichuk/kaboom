@@ -5,5 +5,6 @@ export * from "./DesignNameDialog";
 export * from "./DesignsEmpty";
 export * from "./DesignsGridSkeleton";
 export * from "./DesignsPage";
+export * from "./DesignWorkspace";
 export * from "./PanelPlaceholder";
 export * from "./RenameDesignDialog";

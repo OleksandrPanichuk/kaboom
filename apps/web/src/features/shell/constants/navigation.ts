@@ -5,6 +5,7 @@ import {
   type LucideIcon,
   MessagesSquare,
   Network,
+  Puzzle,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
@@ -36,6 +37,7 @@ export const NAVIGATION: NavGroup[] = [
     items: [
       { label: "Home", icon: House, to: "/", exact: true },
       { label: "Designs", icon: Network, to: "/designs" },
+      { label: "Problems", icon: Puzzle, to: "/problems" },
       { label: "Interviews", icon: MessagesSquare, soon: true },
       { label: "Progress", icon: ChartNoAxesColumn, soon: true },
     ],
