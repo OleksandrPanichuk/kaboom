@@ -18,10 +18,34 @@ export interface Flow {
   edges: CanvasEdge[];
 }
 
-const gridPosition = (index: number) => ({
-  x: (index % GRID_COLUMNS) * GRID_SPACING.x,
-  y: Math.floor(index / GRID_COLUMNS) * GRID_SPACING.y,
-});
+const gridPlacements = (
+  graph: DesignGraph,
+  layout: DesignLayout,
+): DesignLayout => {
+  const blocks = [null, ...graph.groups.map((group) => group.id)];
+  const placements: DesignLayout = {};
+  let row = 0;
+
+  for (const block of blocks) {
+    const unplaced = graph.nodes.filter(
+      (node) =>
+        !layout[node.id] &&
+        (block === null
+          ? !graph.groups.some((group) => group.id === node.groupId)
+          : node.groupId === block),
+    );
+
+    unplaced.forEach((node, index) => {
+      placements[node.id] = {
+        x: (index % GRID_COLUMNS) * GRID_SPACING.x,
+        y: (row + Math.floor(index / GRID_COLUMNS)) * GRID_SPACING.y,
+      };
+    });
+    row += Math.ceil(unplaced.length / GRID_COLUMNS);
+  }
+
+  return placements;
+};
 
 const NO_HITS: LintHit[] = [];
 
@@ -31,7 +55,7 @@ export const toFlow = (
   hits: LintHit[] = NO_HITS,
   overlay: CanvasOverlay | null = null,
 ): Flow => {
-  let unplaced = 0;
+  const placements = gridPlacements(graph, layout);
   const hitsByNode = new Map<string, LintHit[]>();
 
   for (const hit of hits) {
@@ -41,7 +65,7 @@ export const toFlow = (
   }
 
   const nodes = graph.nodes.map((node): CanvasNode => {
-    const position = layout[node.id] ?? gridPosition(unplaced++);
+    const position = layout[node.id] ?? placements[node.id]!;
 
     return {
       id: node.id,

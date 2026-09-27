@@ -1,4 +1,4 @@
-import { createNode, emptyGraph } from "@repo/design";
+import { createGroup, createNode, emptyGraph } from "@repo/design";
 import { describe, expect, test } from "bun:test";
 
 import { toFlow } from "./toFlow";
@@ -27,6 +27,38 @@ describe("toFlow", () => {
       { x: 560, y: 0 },
       { x: 840, y: 0 },
     ]);
+  });
+
+  test("keeps each region's unplaced nodes together, on rows of their own", () => {
+    const graph = {
+      ...graphWith(["users", "eu-api", "us-api", "eu-db"]),
+      groups: [
+        createGroup({ id: "eu", kind: "region", label: "EU" }),
+        createGroup({ id: "us", kind: "region", label: "US" }),
+      ],
+    };
+    const placed = {
+      ...graph,
+      nodes: graph.nodes.map((node) => ({
+        ...node,
+        groupId: node.id.startsWith("eu")
+          ? "eu"
+          : node.id.startsWith("us")
+            ? "us"
+            : null,
+      })),
+    };
+    const { nodes } = toFlow(placed, {});
+    const at = Object.fromEntries(
+      nodes.map((node) => [node.id, node.position]),
+    );
+
+    expect(at).toEqual({
+      users: { x: 0, y: 0 },
+      "eu-api": { x: 0, y: 160 },
+      "eu-db": { x: 280, y: 160 },
+      "us-api": { x: 0, y: 320 },
+    });
   });
 
   test("maps edges to their endpoints and styles them by kind", () => {

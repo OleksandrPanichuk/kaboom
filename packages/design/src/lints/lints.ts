@@ -7,6 +7,7 @@ import {
   failoverNowhere,
   spofCriticalPath,
   statefulBehindRoundRobin,
+  syncFanOut,
   syncThirdParty,
   unreachableNode,
 } from "./rules";
@@ -15,6 +16,7 @@ export const lints = {
   [spofCriticalPath.id]: spofCriticalPath,
   [statefulBehindRoundRobin.id]: statefulBehindRoundRobin,
   [syncThirdParty.id]: syncThirdParty,
+  [syncFanOut.id]: syncFanOut,
   [unreachableNode.id]: unreachableNode,
   [deadEndNode.id]: deadEndNode,
   [duplicateSchedule.id]: duplicateSchedule,
