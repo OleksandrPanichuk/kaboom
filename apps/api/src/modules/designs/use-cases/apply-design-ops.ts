@@ -9,6 +9,7 @@ import type { DesignEntity } from "../design.entity";
 import { hashGraph } from "../design.hash";
 import type { DesignRevisionEntity } from "../design-revision.entity";
 import {
+  DesignLockedError,
   DesignNotFoundError,
   DesignOpRejectedError,
   DesignRevisionConflictError,
@@ -46,6 +47,10 @@ export class ApplyDesignOpsUseCase extends UseCase<Options, Result> {
       const design = await this.designs.lockOwned(id, ownerId);
 
       if (!design) throw new DesignNotFoundError("Design not found");
+
+      if (design.lockedAt) {
+        throw new DesignLockedError("The design is locked and cannot change");
+      }
 
       if (design.revision !== baseRevision) {
         throw new DesignRevisionConflictError(design.revision);

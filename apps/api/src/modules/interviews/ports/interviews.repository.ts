@@ -1,0 +1,38 @@
+import type { Page, PageRequest } from "@/core/pagination";
+import { Repository } from "@/core/repository";
+
+import type {
+  InterviewEntity,
+  InterviewSummaryEntity,
+} from "../interview.entity";
+
+export interface CreateInterviewData {
+  ownerId: string;
+  problemId: string;
+  problemVersion: number;
+  designId: string;
+  phase: string;
+}
+
+export abstract class InterviewsRepository extends Repository {
+  public abstract insert(data: CreateInterviewData): Promise<InterviewEntity>;
+
+  public abstract findOwned(
+    id: string,
+    ownerId: string,
+  ): Promise<InterviewEntity | null>;
+
+  public abstract findActive(ownerId: string): Promise<InterviewEntity | null>;
+
+  public abstract listOwned(
+    ownerId: string,
+    page: PageRequest,
+  ): Promise<Page<InterviewSummaryEntity>>;
+
+  public abstract nextSeq(id: string): Promise<number>;
+
+  public abstract markReviewing(
+    id: string,
+    finalRevision: number,
+  ): Promise<InterviewEntity | null>;
+}

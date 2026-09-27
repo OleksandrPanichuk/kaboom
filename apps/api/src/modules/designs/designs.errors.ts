@@ -13,6 +13,11 @@ export class DesignRevisionNotFoundError extends ModuleError {
   public readonly code = "DESIGN_REVISION_NOT_FOUND";
 }
 
+export class DesignLockedError extends ModuleError {
+  public readonly status = HttpStatus.Conflict;
+  public readonly code = "DESIGN_LOCKED";
+}
+
 export class DesignRevisionConflictError extends ModuleError {
   public readonly status = HttpStatus.Conflict;
   public readonly code = "DESIGN_REVISION_CONFLICT";

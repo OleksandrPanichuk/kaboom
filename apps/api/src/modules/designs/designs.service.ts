@@ -18,6 +18,10 @@ export class DesignsService extends Service {
     return entity;
   }
 
+  public lock(id: string): Promise<void> {
+    return this.repository.lock(id);
+  }
+
   public async assertOwned(id: string, ownerId: string): Promise<void> {
     if (!(await this.repository.existsOwned(id, ownerId))) {
       throw new DesignNotFoundError("Design not found");
