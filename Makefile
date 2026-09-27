@@ -1,5 +1,5 @@
 
-.PHONY: build test test-integration test-down logs migrate sh up up-db run-all add drop services down reset check generate gen db-generate db-migrate seed db-studio db-development db-shell restart redis-cache-cli redis-queue-cli redis-sessions-cli
+.PHONY: build test test-integration test-down logs migrate sh up up-db run-all add drop services down reset check generate gen db-generate db-migrate seed db-studio db-development db-shell restart redis-cache-cli redis-queue-cli redis-sessions-cli rebuild
 
 OPTIONAL_SERVICES := bull_board drizzle_studio
 
@@ -65,7 +65,7 @@ endif
 		| grep -Fx $(foreach svc,$(OPTIONAL_SERVICES),-e $(svc)) \
 		| sort -u | paste -sd, -); \
 	echo "starting $(s) (profiles: $$profiles)"; \
-	COMPOSE_PROFILES="$$profiles" docker compose up -d --wait $(s)
+	COMPOSE_PROFILES="$$profiles" docker compose up -d --wait --renew-anon-volumes $(s)
 
 drop:
 ifndef s
@@ -144,3 +144,16 @@ redis-queue-cli:
 
 redis-sessions-cli:
 	docker compose exec -it sessions redis-cli
+
+rebuild:
+ifndef s
+	$(error usage: make rebuild s=<service>, e.g. make rebuild s=api)
+endif
+	@project=$$(docker compose config --format json | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p' | head -1); \
+	COMPOSE_PROFILES="$(ALL_PROFILES)" docker compose build --no-cache $(s) || exit 1; \
+	running=$$(docker ps --filter "label=com.docker.compose.project=$$project" \
+		--format '{{.Label "com.docker.compose.service"}}'); \
+	profiles=$$(printf '%s\n%s\n' "$$running" '$(s)' \
+		| grep -Fx $(foreach svc,$(OPTIONAL_SERVICES),-e $(svc)) \
+		| sort -u | paste -sd, -); \
+	COMPOSE_PROFILES="$$profiles" docker compose up -d --wait --renew-anon-volumes $(s)
