@@ -1,5 +1,6 @@
 import type { LinkProps } from "@tanstack/react-router";
 import {
+  BookOpen,
   ChartNoAxesColumn,
   House,
   type LucideIcon,
@@ -38,6 +39,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Home", icon: House, to: "/", exact: true },
       { label: "Designs", icon: Network, to: "/designs" },
       { label: "Problems", icon: Puzzle, to: "/problems" },
+      { label: "Handbook", icon: BookOpen, to: "/handbook" },
       { label: "Interviews", icon: MessagesSquare, soon: true },
       { label: "Progress", icon: ChartNoAxesColumn, soon: true },
     ],

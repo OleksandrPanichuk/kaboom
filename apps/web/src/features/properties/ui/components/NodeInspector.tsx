@@ -103,7 +103,11 @@ export function NodeInspector({
         </div>
       ) : null}
 
-      <KindAbout label={definition.label} docs={definition.docs} />
+      <KindAbout
+        kind={node.kind}
+        label={definition.label}
+        docs={definition.docs}
+      />
 
       <InspectorSection title="General">
         <Field data-invalid={labelError ? true : undefined}>
