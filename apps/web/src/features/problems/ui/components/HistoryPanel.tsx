@@ -38,7 +38,9 @@ export function HistoryPanel({ slug }: HistoryPanelProps) {
         </span>
         <p className="text-sm font-medium">Nothing submitted yet</p>
         <p className="text-sm leading-5 text-muted-foreground text-pretty">
-          Every submission is kept here. Your best score is the one that counts.
+          Every submission is kept here. Your best score is the one that counts,
+          and a design scoring 80 or more may be shown to others without your
+          name.
         </p>
       </div>
     );
@@ -62,6 +64,11 @@ export function HistoryPanel({ slug }: HistoryPanelProps) {
               >
                 {submission.score}
               </span>
+              {!submission.counted ? (
+                <span className="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900">
+                  Not counted
+                </span>
+              ) : null}
               <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
                 Revision {submission.revision} ·{" "}
                 <time dateTime={submission.createdAt}>

@@ -190,6 +190,10 @@ A problem is started explicitly, from a screen with a Start button: the route
 only reads the attempt (`null` when there is none), because a link preloads
 its loader on hover and must never create anything.
 
+`DesignCanvas` with `readOnly` draws a graph nobody may change, such as
+another solver's solution: no dragging, connecting, deleting or dropping,
+and it fits the whole graph however small that makes it.
+
 Regions are groups of kind `region` in the graph, not React Flow nodes.
 `RegionLayer` draws each as a box around its nodes' live positions inside
 `ViewportPortal`, behind nodes and edges (`.design-canvas

@@ -10,5 +10,7 @@ export * from "./ProblemsPage";
 export * from "./ProblemStart";
 export * from "./RankCard";
 export * from "./ScoreBreakdown";
+export * from "./SolutionPreview";
+export * from "./SolutionsPanel";
 export * from "./TaskPanel";
 export * from "./TestsPanel";

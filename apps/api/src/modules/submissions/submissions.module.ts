@@ -1,9 +1,14 @@
 import { defineModule } from "@/core/module";
 import { bind, makeUseCase } from "@/core/registry";
 
-import { ProblemAttemptsRepository, SubmissionsRepository } from "./ports";
+import {
+  ProblemAttemptsRepository,
+  SolutionRevealsRepository,
+  SubmissionsRepository,
+} from "./ports";
 import {
   PostgresProblemAttemptsRepository,
+  PostgresSolutionRevealsRepository,
   PostgresSubmissionsRepository,
 } from "./repositories";
 import { submissionsRoutes } from "./submissions.routes";
@@ -12,6 +17,7 @@ import {
   GetProgressUseCase,
   ListSubmissionsUseCase,
   RevealHintUseCase,
+  RevealSolutionsUseCase,
   RunProblemUseCase,
   StartProblemUseCase,
   SubmitSolutionUseCase,
@@ -26,6 +32,10 @@ export const submissionsModule = defineModule({
       () => new PostgresProblemAttemptsRepository(),
     );
     bind(SubmissionsRepository, () => new PostgresSubmissionsRepository());
+    bind(
+      SolutionRevealsRepository,
+      () => new PostgresSolutionRevealsRepository(),
+    );
   },
 
   routes: () =>
@@ -37,5 +47,6 @@ export const submissionsModule = defineModule({
       listSubmissions: makeUseCase(ListSubmissionsUseCase),
       getProgress: makeUseCase(GetProgressUseCase),
       revealHint: makeUseCase(RevealHintUseCase),
+      revealSolutions: makeUseCase(RevealSolutionsUseCase),
     }),
 });

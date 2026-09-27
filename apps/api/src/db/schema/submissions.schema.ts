@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -34,6 +35,8 @@ export const submissionsSchema = pgTable(
     graphHash: text("graph_hash").notNull(),
     score: integer("score").notNull(),
     hintPenalty: integer("hint_penalty").notNull().default(0),
+    counted: boolean("counted").notNull().default(true),
+    graph: jsonb("graph").$type<unknown>(),
     items: jsonb("items").$type<unknown[]>().notNull(),
     drills: jsonb("drills").$type<unknown[]>().notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -47,6 +50,7 @@ export const submissionsSchema = pgTable(
       table.createdAt,
       table.id,
     ),
+    index("submissions_problem_id_score_idx").on(table.problemId, table.score),
   ],
 );
 

@@ -13,6 +13,7 @@ export const AttemptModel = t.Object({
   problemVersion: t.Integer(),
   hints: t.Array(RevealedHintModel),
   hintPenalty: t.Integer(),
+  lockedUntil: t.Nullable(t.String({ format: "date-time" })),
   createdAt: t.String({ format: "date-time" }),
 });
 export type AttemptModel = typeof AttemptModel.static;
@@ -48,6 +49,7 @@ export const SubmissionModel = t.Object({
   revision: t.Integer(),
   score: t.Integer(),
   hintPenalty: t.Integer(),
+  counted: t.Boolean(),
   items: t.Array(ItemResultModel),
   drills: t.Array(DrillResultModel),
   createdAt: t.String({ format: "date-time" }),
@@ -61,6 +63,7 @@ export const ProblemProgressModel = t.Object({
   bestScore: t.Integer(),
   points: t.Integer(),
   submissions: t.Integer(),
+  lockedUntil: t.Nullable(t.String({ format: "date-time" })),
 });
 export type ProblemProgressModel = typeof ProblemProgressModel.static;
 
@@ -76,3 +79,17 @@ export const ProgressModel = t.Object({
   problems: t.Array(ProblemProgressModel),
 });
 export type ProgressModel = typeof ProgressModel.static;
+
+export const SolutionModel = t.Object({
+  score: t.Integer(),
+  problemVersion: t.Integer(),
+  graph: t.Unknown(),
+  submittedAt: t.String({ format: "date-time" }),
+});
+export type SolutionModel = typeof SolutionModel.static;
+
+export const SolutionsModel = t.Object({
+  lockedUntil: t.String({ format: "date-time" }),
+  solutions: t.Array(SolutionModel),
+});
+export type SolutionsModel = typeof SolutionsModel.static;

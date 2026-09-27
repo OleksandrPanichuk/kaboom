@@ -31,7 +31,7 @@ describe("toFlow", () => {
 
   test("keeps each region's unplaced nodes together, on rows of their own", () => {
     const graph = {
-      ...graphWith(["users", "eu-api", "us-api", "eu-db"]),
+      ...graphWith(["people", "eu-api", "us-api", "eu-db"]),
       groups: [
         createGroup({ id: "eu", kind: "region", label: "EU" }),
         createGroup({ id: "us", kind: "region", label: "US" }),
@@ -41,9 +41,9 @@ describe("toFlow", () => {
       ...graph,
       nodes: graph.nodes.map((node) => ({
         ...node,
-        groupId: node.id.startsWith("eu")
+        groupId: node.id.startsWith("eu-")
           ? "eu"
-          : node.id.startsWith("us")
+          : node.id.startsWith("us-")
             ? "us"
             : null,
       })),
@@ -54,7 +54,7 @@ describe("toFlow", () => {
     );
 
     expect(at).toEqual({
-      users: { x: 0, y: 0 },
+      people: { x: 0, y: 0 },
       "eu-api": { x: 0, y: 160 },
       "eu-db": { x: 280, y: 160 },
       "us-api": { x: 0, y: 320 },

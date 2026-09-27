@@ -5,7 +5,7 @@ import type {
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 
-import { scoreTone } from "@/features/problems/utils";
+import { formatSubmittedAt, scoreTone } from "@/features/problems/utils";
 
 import { DifficultyBadge } from "./DifficultyBadge";
 
@@ -43,7 +43,11 @@ export function ProblemCard({ problem, progress }: ProblemCardProps) {
             </li>
           ))}
         </ul>
-        {progress && progress.submissions > 0 ? (
+        {progress?.lockedUntil ? (
+          <p className="shrink-0 text-sm text-amber-800">
+            Counts again {formatSubmittedAt(progress.lockedUntil)}
+          </p>
+        ) : progress && progress.submissions > 0 ? (
           <p className="shrink-0 text-sm text-muted-foreground">
             Best{" "}
             <span

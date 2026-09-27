@@ -7,6 +7,7 @@ import {
   getProgressRoute,
   listSubmissionsRoute,
   revealHintRoute,
+  revealSolutionsRoute,
   runProblemRoute,
   startProblemRoute,
   submitSolutionRoute,
@@ -16,6 +17,7 @@ import type {
   GetProgressUseCase,
   ListSubmissionsUseCase,
   RevealHintUseCase,
+  RevealSolutionsUseCase,
   RunProblemUseCase,
   StartProblemUseCase,
   SubmitSolutionUseCase,
@@ -29,6 +31,7 @@ export interface SubmissionsActions {
   listSubmissions: Executable<ListSubmissionsUseCase>;
   getProgress: Executable<GetProgressUseCase>;
   revealHint: Executable<RevealHintUseCase>;
+  revealSolutions: Executable<RevealSolutionsUseCase>;
 }
 
 export const submissionsRoutes = (actions: SubmissionsActions) =>
@@ -37,6 +40,7 @@ export const submissionsRoutes = (actions: SubmissionsActions) =>
     .get("/problems/:slug/attempt", ...getAttemptRoute(actions))
     .post("/problems/:slug/runs", ...runProblemRoute(actions))
     .post("/problems/:slug/hints/:index", ...revealHintRoute(actions))
+    .post("/problems/:slug/solutions/reveal", ...revealSolutionsRoute(actions))
     .post("/problems/:slug/submissions", ...submitSolutionRoute(actions))
     .get("/problems/:slug/submissions", ...listSubmissionsRoute(actions))
     .get("/progress", ...getProgressRoute(actions));

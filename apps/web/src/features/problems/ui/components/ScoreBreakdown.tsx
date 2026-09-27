@@ -26,6 +26,12 @@ export function ScoreBreakdown({ submission }: ScoreBreakdownProps) {
           / 100 · revision {submission.revision}
         </span>
       </p>
+      {!submission.counted ? (
+        <p className="-mt-3 text-sm text-amber-800">
+          Not counted toward points: you looked at other solutions within the
+          seven days before.
+        </p>
+      ) : null}
       {submission.hintPenalty > 0 ? (
         <p className="-mt-3 text-sm text-muted-foreground tabular-nums">
           {submission.hintPenalty} points off for hints

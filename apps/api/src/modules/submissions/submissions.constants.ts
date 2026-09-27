@@ -1,4 +1,4 @@
-import { MINUTE } from "@/constants";
+import { DAY, MINUTE } from "@/constants";
 import type { ProblemDifficulty } from "@/db";
 
 export const SUBMIT_RATE_LIMIT = {
@@ -26,3 +26,15 @@ export const RANKS = [
   { name: "Staff", points: 600 },
   { name: "Principal", points: 1_000 },
 ] as const;
+
+export const SOLUTION_LOCK_MS = 7 * DAY;
+
+export const MIN_SOLUTION_SCORE = 80;
+
+export const SOLUTIONS_SHOWN = 20;
+
+export const REVEAL_RATE_LIMIT = {
+  limit: 20,
+  windowMs: MINUTE,
+  scope: "submissions:reveal",
+} as const;

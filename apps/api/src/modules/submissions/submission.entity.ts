@@ -16,6 +16,7 @@ export interface AttemptView {
   attempt: AttemptEntity;
   hints: RevealedHint[];
   hintPenalty: number;
+  lockedUntil: Date | null;
 }
 
 export interface SubmissionEntity {
@@ -29,6 +30,7 @@ export interface SubmissionEntity {
   graphHash: string;
   score: number;
   hintPenalty: number;
+  counted: boolean;
   items: ItemScore[];
   drills: DrillScore[];
   createdAt: Date;
@@ -39,12 +41,14 @@ export class AttemptEntity {
     attempt,
     hints,
     hintPenalty,
+    lockedUntil,
   }: AttemptView): AttemptModel {
     return {
       designId: attempt.designId,
       problemVersion: attempt.problemVersion,
       hints,
       hintPenalty,
+      lockedUntil: lockedUntil?.toISOString() ?? null,
       createdAt: attempt.createdAt.toISOString(),
     };
   }
@@ -59,6 +63,7 @@ export class SubmissionEntity {
       revision: entity.revision,
       score: entity.score,
       hintPenalty: entity.hintPenalty,
+      counted: entity.counted,
       items: entity.items,
       drills: entity.drills,
       createdAt: entity.createdAt.toISOString(),

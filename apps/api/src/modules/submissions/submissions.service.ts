@@ -5,8 +5,9 @@ import { Service } from "@/core/service";
 import { DesignsService } from "@/modules/designs";
 import { ProblemsService } from "@/modules/problems";
 
-import { ProblemAttemptsRepository } from "./ports";
+import { ProblemAttemptsRepository, SolutionRevealsRepository } from "./ports";
 import type { AttemptEntity, AttemptView } from "./submission.entity";
+import { SOLUTION_LOCK_MS } from "./submissions.constants";
 import { ProblemNotStartedError } from "./submissions.errors";
 import type { AttemptContext } from "./use-cases/attempt-context";
 
@@ -16,6 +17,22 @@ export class SubmissionsService extends Service {
   private readonly designs = makeService(DesignsService);
 
   private readonly attempts = makeRepository(ProblemAttemptsRepository);
+
+  private readonly reveals = makeRepository(SolutionRevealsRepository);
+
+  public lockedUntil(revealedAt: Date | null, now = new Date()): Date | null {
+    if (!revealedAt) return null;
+
+    const until = new Date(revealedAt.getTime() + SOLUTION_LOCK_MS);
+
+    return until > now ? until : null;
+  }
+
+  public async lockOf(userId: string, problemId: string): Promise<Date | null> {
+    const reveal = await this.reveals.find(userId, problemId);
+
+    return this.lockedUntil(reveal?.revealedAt ?? null);
+  }
 
   public async attempt(userId: string, slug: string): Promise<AttemptContext> {
     const found = await this.problems.getPublished(slug);
@@ -34,13 +51,14 @@ export class SubmissionsService extends Service {
   }
 
   public async view(attempt: AttemptEntity): Promise<AttemptView> {
-    const version = await this.problems.getVersion(
-      attempt.problemId,
-      attempt.problemVersion,
-    );
+    const [version, lockedUntil] = await Promise.all([
+      this.problems.getVersion(attempt.problemId, attempt.problemVersion),
+      this.lockOf(attempt.userId, attempt.problemId),
+    ]);
 
     return {
       attempt,
+      lockedUntil,
       hints: revealedHints(version.content, attempt.hintsRevealed),
       hintPenalty: hintPenalty(version.content, attempt.hintsRevealed),
     };

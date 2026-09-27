@@ -5,6 +5,7 @@ export * from "./problem_attempts.schema";
 export * from "./problem_versions.schema";
 export * from "./problems.schema";
 export * from "./simulation_runs.schema";
+export * from "./solution_reveals.schema";
 export * from "./submissions.schema";
 export * from "./users.schema";
 export * from "./verification_tokens.schema";

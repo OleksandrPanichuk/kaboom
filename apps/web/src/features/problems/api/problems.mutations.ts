@@ -48,6 +48,19 @@ export const revealHintMutation = mutationOptions({
   },
 });
 
+export const revealSolutionsMutation = mutationOptions({
+  mutationKey: ["problems", "solutions"],
+  mutationFn: async ({ slug }: ProblemVariables) =>
+    unwrap(await api.api.problems(slug).solutions.reveal.post()),
+  onSuccess: ({ lockedUntil }, { slug }, _mutateResult, { client }) => {
+    client.setQueryData(attemptQuery(slug).queryKey, (attempt) =>
+      attempt ? { ...attempt, lockedUntil } : attempt,
+    );
+
+    return client.invalidateQueries({ queryKey: progressQuery.queryKey });
+  },
+});
+
 export const runProblemMutation = mutationOptions({
   mutationKey: ["problems", "run"],
   mutationFn: async ({ slug }: ProblemVariables) =>
