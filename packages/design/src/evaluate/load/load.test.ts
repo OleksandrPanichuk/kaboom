@@ -270,6 +270,15 @@ describe("load evaluator rules", () => {
     );
   });
 
+  test("fails every request of a client that connects to nothing", () => {
+    const lonely = once(graph([node("users", "client", { rps: 100 })], []));
+
+    expect(lonely.steps[0]!.clients.users!.availability).toBe(0);
+    expect(lonely.findings.map((finding) => finding.kind)).toContain(
+      "slo-breach",
+    );
+  });
+
   test("defaults to 60 steps of 10 s and refuses a malformed scenario", () => {
     const design = graph([node("users", "client")], []);
 

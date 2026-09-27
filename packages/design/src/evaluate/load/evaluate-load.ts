@@ -182,7 +182,9 @@ const runStep = (
         : 0;
     const servedFraction = !up ? 0 : rho <= SATURATION ? 1 : SATURATION / rho;
     const served = scaleBy(load, servedFraction);
-    const ownErrorRate = !up ? 1 : 1 - servedFraction;
+    const unanswered =
+      node.kind === "client" && outgoing.length === 0 && total(load) > 0;
+    const ownErrorRate = !up || unanswered ? 1 : 1 - servedFraction;
 
     const inboundTimeouts = (topo.inbound.get(node.id) ?? []).map(
       (edge) => edge.props.timeoutMs,
