@@ -3,7 +3,12 @@ import { describe, expect, test } from "bun:test";
 import { createNode, emptyGraph } from "../graph";
 import { OFFICIAL_PROBLEMS } from "./library";
 import { edge, graph, node } from "./library/build";
-import { checkPublishable, publicProblem } from "./publish";
+import {
+  checkPublishable,
+  HIDDEN_FAILED,
+  publicProblem,
+  publicScore,
+} from "./publish";
 import { drillScenario, selectNodes } from "./resolve";
 import { ProblemContentSchema } from "./schema";
 import { runPublicDrills, scoreSubmission } from "./score";
@@ -216,6 +221,29 @@ describe("publishing", () => {
     expect(serialised).not.toContain("reference");
     expect(serialised).not.toContain("node-down");
     expect(serialised).not.toContain("endAvailability");
+  });
+
+  test("masks what a score says about hidden drills", () => {
+    const shown = publicScore(
+      shortener,
+      scoreSubmission(shortener, shortener.baseline),
+    );
+    const serialised = JSON.stringify(shown);
+
+    expect(shown.score).toBe(0);
+    expect(
+      shown.items.find((item) => item.key === "recovers-from-primary-failure")
+        ?.evidence,
+    ).toBe(HIDDEN_FAILED);
+    expect(
+      shown.items.find((item) => item.key === "handles-a-normal-day")?.evidence,
+    ).toContain("Users");
+    expect(
+      shown.drills
+        .filter((drill) => drill.visibility === "hidden")
+        .every((drill) => drill.failures.length === 0),
+    ).toBe(true);
+    expect(serialised).not.toContain("by then");
   });
 
   test("refuses a problem whose reference does not solve it", () => {

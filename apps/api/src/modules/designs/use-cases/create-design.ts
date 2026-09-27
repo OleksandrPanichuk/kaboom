@@ -1,4 +1,4 @@
-import { emptyGraph } from "@repo/design";
+import { type DesignGraph, emptyGraph } from "@repo/design";
 
 import { makeRepository } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
@@ -11,6 +11,7 @@ import { DesignRevisionsRepository, DesignsRepository } from "../ports";
 export interface CreateDesignUseCaseOptions {
   ownerId: string;
   name: string;
+  baseline?: DesignGraph;
 }
 
 type Options = CreateDesignUseCaseOptions;
@@ -21,8 +22,8 @@ export class CreateDesignUseCase extends UseCase<Options, Result> {
 
   private readonly revisions = makeRepository(DesignRevisionsRepository);
 
-  public execute({ ownerId, name }: Options): Promise<Result> {
-    const graph = emptyGraph();
+  public execute({ ownerId, name, baseline }: Options): Promise<Result> {
+    const graph = baseline ?? emptyGraph();
     const graphHash = hashGraph(graph);
 
     return transaction(async () => {

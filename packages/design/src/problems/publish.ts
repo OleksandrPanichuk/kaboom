@@ -1,6 +1,6 @@
 import type { DesignGraph } from "../graph";
 import { type ProblemContent, ProblemContentSchema } from "./schema";
-import { scoreSubmission } from "./score";
+import { type Score, scoreSubmission } from "./score";
 
 export interface PublicDrill {
   id: string;
@@ -100,4 +100,34 @@ export const checkPublishable = (input: unknown): PublishCheck => {
   }
 
   return issues.length === 0 ? { ok: true, problem } : { ok: false, issues };
+};
+
+export const HIDDEN_PASSED = "Passed a hidden drill.";
+export const HIDDEN_FAILED = "A hidden drill found a problem.";
+
+export const publicScore = (problem: ProblemContent, score: Score): Score => {
+  const hidden = new Set(
+    problem.drills
+      .filter((drill) => drill.visibility === "hidden")
+      .map((drill) => drill.id),
+  );
+  const onHidden = new Set(
+    problem.rubric
+      .filter(
+        (item) => "drillId" in item.check && hidden.has(item.check.drillId),
+      )
+      .map((item) => item.key),
+  );
+
+  return {
+    score: score.score,
+    items: score.items.map((item) =>
+      onHidden.has(item.key)
+        ? { ...item, evidence: item.passed ? HIDDEN_PASSED : HIDDEN_FAILED }
+        : item,
+    ),
+    drills: score.drills.map((drill) =>
+      drill.visibility === "hidden" ? { ...drill, failures: [] } : drill,
+    ),
+  };
 };
