@@ -7,8 +7,12 @@ import {
   Background,
   BackgroundVariant,
   Controls,
+  type IsValidConnection,
   MiniMap,
   type NodeTypes,
+  type OnBeforeDelete,
+  type OnConnect,
+  type OnConnectEnd,
   type OnEdgesChange,
   type OnNodeDrag,
   type OnNodesChange,
@@ -36,11 +40,23 @@ const NODE_TYPES: NodeTypes = { "design-node": CanvasNodeCard };
 
 const FIT_VIEW = { padding: 0.15, minZoom: 0.7, maxZoom: 1 };
 
+const DELETE_KEYS = ["Backspace", "Delete"];
+
+const CONNECTION_LINE = {
+  stroke: "var(--color-indigo-500)",
+  strokeWidth: 1.5,
+  strokeDasharray: "4 4",
+};
+
 interface DesignCanvasProps {
   graph: DesignGraph;
   layout: DesignLayout;
   onAddNode: (kind: NodeKind, position: { x: number; y: number }) => void;
   onMoveNodes: (positions: DesignLayout) => void;
+  connectionError: (from: string, to: string) => string | null;
+  onConnect: (from: string, to: string) => void;
+  onRefuseConnection: (reason: string) => void;
+  onDelete: (nodeIds: string[], edgeIds: string[]) => void;
 }
 
 export function DesignCanvas({
@@ -48,6 +64,10 @@ export function DesignCanvas({
   layout,
   onAddNode,
   onMoveNodes,
+  connectionError,
+  onConnect,
+  onRefuseConnection,
+  onDelete,
 }: DesignCanvasProps) {
   const { screenToFlowPosition } = useReactFlow();
   const flow = useMemo(() => toFlow(graph, layout), [graph, layout]);
@@ -81,6 +101,37 @@ export function DesignCanvas({
     onMoveNodes(
       Object.fromEntries(dragged.map((node) => [node.id, node.position])),
     );
+
+  const isValidConnection: IsValidConnection<CanvasEdge> = ({
+    source,
+    target,
+  }) => connectionError(source, target) === null;
+
+  const connect: OnConnect = ({ source, target }) => onConnect(source, target);
+
+  const onConnectEnd: OnConnectEnd = (_event, state) => {
+    if (state.isValid !== false || !state.fromNode || !state.toNode) return;
+
+    const [from, to] =
+      state.fromHandle?.type === "target"
+        ? [state.toNode.id, state.fromNode.id]
+        : [state.fromNode.id, state.toNode.id];
+    const reason = connectionError(from, to);
+
+    if (reason) onRefuseConnection(reason);
+  };
+
+  const onBeforeDelete: OnBeforeDelete<CanvasNode, CanvasEdge> = ({
+    nodes: removed,
+    edges: cut,
+  }) => {
+    onDelete(
+      removed.map((node) => node.id),
+      cut.map((edge) => edge.id),
+    );
+
+    return Promise.resolve(false);
+  };
 
   const onDragOver = (event: DragEvent<HTMLDivElement>) => {
     if (!event.dataTransfer.types.includes(NODE_KIND_MIME)) return;
@@ -120,8 +171,12 @@ export function DesignCanvas({
         onEdgesChange={onEdgesChange}
         onNodeDragStop={onNodeDragStop}
         nodeTypes={NODE_TYPES}
-        nodesConnectable={false}
-        deleteKeyCode={null}
+        isValidConnection={isValidConnection}
+        onConnect={connect}
+        onConnectEnd={onConnectEnd}
+        onBeforeDelete={onBeforeDelete}
+        deleteKeyCode={DELETE_KEYS}
+        connectionLineStyle={CONNECTION_LINE}
         fitView={fitOnOpen}
         fitViewOptions={FIT_VIEW}
         minZoom={0.2}

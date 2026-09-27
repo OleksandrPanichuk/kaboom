@@ -160,7 +160,9 @@ receives the graph and layout and reports additions and moves. Writes belong
 to `features/designs`. `DesignWriter` (`designs/utils`) holds the confirmed
 revision and a queue of pending op batches, shows their result at once, sends
 one batch at a time on the revision before it, replays the queue on the
-latest design after a 409, and drops a batch the server rejects;
+latest design after a 409, and drops a batch the server rejects. It also
+keeps the undo history as pairs of ops and their inverse from `applyOps`, so
+undo and redo are ordinary batches that go to the server like any other;
 `useDesignEditor` wraps it for React and saves the layout on a debounce. The
 query cache only ever receives confirmed revisions.
  `toFlow` is the one place a
