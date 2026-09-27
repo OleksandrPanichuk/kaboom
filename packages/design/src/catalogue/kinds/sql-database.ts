@@ -19,6 +19,17 @@ export const sqlDatabaseKind = defineNodeKind({
   stateful: true,
   replicable: true,
   distribution: "by-share",
+  docs: {
+    summary:
+      "A relational database with transactions: the usual system of record.",
+    useWhen:
+      "Data with relationships, constraints and writes that must be all or nothing.",
+    pitfalls: [
+      "Without failover and a replica, losing the primary takes every write down.",
+      "Writes go to the primary only; replicas add read capacity, never write capacity.",
+      "Sharding adds write capacity but makes queries across shards expensive.",
+    ],
+  },
   props: z.strictObject({
     readCapacityRps: rate(5_000, {
       title: "Read capacity",

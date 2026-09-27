@@ -12,6 +12,16 @@ export const queueKind = defineNodeKind({
   stateful: true,
   replicable: false,
   distribution: "by-share",
+  docs: {
+    summary:
+      "Holds jobs until a worker takes them. Each job goes to exactly one consumer.",
+    useWhen:
+      "Moving slow or bursty work off the request path, and smoothing spikes the workers cannot take at once.",
+    pitfalls: [
+      "A queue only delays the problem if workers cannot keep up on average.",
+      "Retention limits how long a backlog can wait before jobs are lost.",
+    ],
+  },
   props: z.strictObject({
     partitions: count(1, {
       title: "Partitions",

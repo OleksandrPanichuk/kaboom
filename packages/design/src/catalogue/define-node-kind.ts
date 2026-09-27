@@ -2,6 +2,12 @@ import type z from "zod";
 
 export type Track = "system-design";
 
+export interface NodeKindDocs {
+  summary: string;
+  useWhen: string;
+  pitfalls: readonly [string, ...string[]];
+}
+
 export interface NodeKindDefinition<
   Kind extends string = string,
   Props extends z.ZodObject = z.ZodObject,
@@ -14,6 +20,7 @@ export interface NodeKindDefinition<
   replicable: boolean;
   distribution: "by-share" | "evenly" | "broadcast";
   props: Props;
+  docs: NodeKindDocs;
 }
 
 export const defineNodeKind = <

@@ -11,6 +11,16 @@ export const loadBalancerKind = defineNodeKind({
   stateful: false,
   replicable: false,
   distribution: "evenly",
+  docs: {
+    summary:
+      "Spreads requests evenly over the nodes behind it and stops sending to those that fail health checks.",
+    useWhen:
+      "Whenever more than one replica or service answers the same requests.",
+    pitfalls: [
+      "A single load balancer is itself a single point of failure.",
+      "It balances; it does not add capacity. Too few replicas behind it still saturate.",
+    ],
+  },
   props: z.strictObject({
     algorithm: choice(
       ["round-robin", "least-connections", "ip-hash"],

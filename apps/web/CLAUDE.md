@@ -171,6 +171,10 @@ undo and redo are ordinary batches that go to the server like any other;
 `.meta()` and it appears in the form; never write a form for one kind. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
 drawn the same way.
+What a kind is for comes from the catalogue too: every kind declares `docs`
+(`summary`, `useWhen`, `pitfalls`), which the palette shows as a tooltip and
+the inspector under *About*. A kind cannot be defined without it, so a new
+kind needs no UI code to be explained.
 
 `DesignWorkspace` (`features/designs`) is the editor without a screen around
 it: canvas, palette, Node and Checks tabs, undo and saving. A page that edits

@@ -9,6 +9,7 @@ export {
 export {
   defineNodeKind,
   type NodeKindDefinition,
+  type NodeKindDocs,
   type Track,
 } from "./define-node-kind";
 export {

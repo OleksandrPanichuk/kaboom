@@ -19,6 +19,16 @@ export const nosqlDatabaseKind = defineNodeKind({
   stateful: true,
   replicable: true,
   distribution: "by-share",
+  docs: {
+    summary:
+      "A partitioned key-value or document store that scales by adding partitions.",
+    useWhen:
+      "Very high throughput on simple lookups by key, where joins and transactions are not needed.",
+    pitfalls: [
+      "A hot key lands on one partition, and more partitions do not help it.",
+      "Eventual consistency means a read right after a write may not see it.",
+    ],
+  },
   props: z.strictObject({
     consistency: choice(["eventual", "strong"], "eventual", {
       title: "Consistency",

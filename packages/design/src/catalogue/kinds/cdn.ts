@@ -12,6 +12,16 @@ export const cdnKind = defineNodeKind({
   stateful: false,
   replicable: false,
   distribution: "by-share",
+  docs: {
+    summary:
+      "Serves cached copies of static or rarely changing responses from servers close to the user.",
+    useWhen:
+      "Images, video, scripts and pages that many users read and nobody changes often.",
+    pitfalls: [
+      "Only the hit ratio is served at the edge; every miss still reaches what is behind it.",
+      "A long TTL keeps stale content after it changes, and a short one sends more misses to the origin.",
+    ],
+  },
   props: z.strictObject({
     hitRatio: ratio(0.9, {
       title: "Hit ratio",

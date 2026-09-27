@@ -20,6 +20,17 @@ describe("catalogue", () => {
     expect(catalogue[kind].props.safeParse({ typo: 1 }).success).toBe(false);
   });
 
+  test.each(NODE_KINDS)("documents %s for the handbook", (kind) => {
+    const { docs } = catalogue[kind];
+    const sentences = [docs.summary, docs.useWhen, ...docs.pitfalls];
+
+    expect(docs.summary.length).toBeLessThanOrEqual(120);
+    expect(docs.pitfalls.length).toBeLessThanOrEqual(4);
+    for (const sentence of sentences) {
+      expect(sentence).toMatch(/^[A-Z].*\.$/);
+    }
+  });
+
   test("tells a known kind from anything else", () => {
     expect(isNodeKind("service")).toBe(true);
     expect(isNodeKind("toString")).toBe(false);
