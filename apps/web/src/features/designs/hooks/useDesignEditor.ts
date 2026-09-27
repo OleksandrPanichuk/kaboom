@@ -1,4 +1,10 @@
-import { type DesignOp, migrateGraph, type NodeKind } from "@repo/design";
+import {
+  type DesignEdge,
+  type DesignOp,
+  EdgePropsSchema,
+  migrateGraph,
+  type NodeKind,
+} from "@repo/design";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -11,10 +17,13 @@ import {
   sendDesignOps,
 } from "@/features/designs/api";
 import {
+  describeConnectionRefusal,
   type DesignSnapshot,
   DesignWriter,
   type DesignWriterState,
   newNode,
+  removalOps,
+  suggestEdgeKind,
 } from "@/features/designs/utils";
 import { ApiRequestError } from "@/lib/api";
 
@@ -25,6 +34,12 @@ export interface DesignEditor extends DesignWriterState {
   apply: (ops: DesignOp[]) => string | null;
   addNode: (kind: NodeKind, position: { x: number; y: number }) => void;
   moveNodes: (positions: DesignLayoutPositions) => void;
+  connect: (from: string, to: string) => void;
+  connectionError: (from: string, to: string) => string | null;
+  remove: (nodeIds: string[], edgeIds: string[]) => void;
+  undo: () => void;
+  redo: () => void;
+  reportError: (message: string) => void;
   dismissError: () => void;
 }
 
@@ -33,12 +48,7 @@ export const useDesignEditor = (designId: string): DesignEditor => {
   const { data: design } = useSuspenseQuery(designQuery(designId));
   const queryKey = designQuery(designId).queryKey;
 
-  const [state, setState] = useState<DesignWriterState>(() => ({
-    graph: migrateGraph(design.graph),
-    revision: design.revision,
-    saving: false,
-    error: null,
-  }));
+  const [latest, setState] = useState<DesignWriterState | null>(null);
 
   const [writer] = useState(
     () =>
@@ -88,6 +98,8 @@ export const useDesignEditor = (designId: string): DesignEditor => {
         },
       ),
   );
+
+  const state = latest ?? writer.state;
 
   const [layout, setLayout] = useState<DesignLayoutPositions>(design.layout);
   const [layoutSaving, setLayoutSaving] = useState(false);
@@ -153,6 +165,74 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     [moveNodes, writer],
   );
 
+  const edgeOp = useCallback(
+    (from: string, to: string): DesignOp | null => {
+      const { graph } = writer.state;
+      const source = graph.nodes.find((node) => node.id === from);
+      const target = graph.nodes.find((node) => node.id === to);
+
+      if (!source || !target) return null;
+
+      const edge: DesignEdge = {
+        id: `edge-${crypto.randomUUID().slice(0, 8)}`,
+        from,
+        to,
+        kind: suggestEdgeKind(source, target),
+        label: "",
+        props: EdgePropsSchema.parse({}),
+      };
+
+      return { op: "add-edge", edge };
+    },
+    [writer],
+  );
+
+  const connectionError = useCallback(
+    (from: string, to: string) => {
+      const op = edgeOp(from, to);
+
+      if (!op) return "One of those nodes is no longer in the design.";
+
+      const rejection = writer.check([op]);
+
+      return rejection
+        ? describeConnectionRefusal(writer.state.graph, from, to, rejection)
+        : null;
+    },
+    [edgeOp, writer],
+  );
+
+  const connect = useCallback(
+    (from: string, to: string) => {
+      const op = edgeOp(from, to);
+      const refused = op ? writer.apply([op]) : null;
+
+      if (refused) writer.reportError(refused);
+    },
+    [edgeOp, writer],
+  );
+
+  const remove = useCallback(
+    (nodeIds: string[], edgeIds: string[]) => {
+      const ops = removalOps(writer.state.graph, nodeIds, edgeIds);
+
+      if (ops.length === 0) return;
+
+      const refused = writer.apply(ops);
+
+      if (refused) writer.reportError(refused);
+    },
+    [writer],
+  );
+
+  const reportError = useCallback(
+    (message: string) => writer.reportError(message),
+    [writer],
+  );
+
+  const undo = useCallback(() => writer.undo(), [writer]);
+  const redo = useCallback(() => writer.redo(), [writer]);
+
   const dismissError = useCallback(() => {
     writer.dismissError();
     setLayoutError(null);
@@ -166,6 +246,12 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     apply,
     addNode,
     moveNodes,
+    connect,
+    connectionError,
+    remove,
+    undo,
+    redo,
+    reportError,
     dismissError,
   };
 };

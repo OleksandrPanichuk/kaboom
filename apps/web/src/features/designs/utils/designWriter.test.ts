@@ -8,6 +8,7 @@ import {
 import { describe, expect, test } from "bun:test";
 
 import {
+  CANNOT_UNDO,
   CONFLICT_DROPPED,
   CONFLICT_GAVE_UP,
   type DesignSnapshot,
@@ -181,5 +182,89 @@ describe("DesignWriter", () => {
 
     expect(ids(writer.state.graph)).toEqual(["good"]);
     expect(writer.state).toMatchObject({ revision: 1, error: "rejected" });
+  });
+});
+
+describe("DesignWriter history", () => {
+  test("undoes and redoes a change, each as a new revision", async () => {
+    const server = new FakeServer();
+    const { writer } = writerFor(server);
+
+    writer.apply([add("api")]);
+    await settle();
+    expect(writer.state).toMatchObject({ canUndo: true, canRedo: false });
+
+    writer.undo();
+    await settle();
+    expect(ids(writer.state.graph)).toEqual([]);
+    expect(writer.state).toMatchObject({
+      revision: 2,
+      canUndo: false,
+      canRedo: true,
+    });
+
+    writer.redo();
+    await settle();
+    expect(ids(writer.state.graph)).toEqual(["api"]);
+    expect(ids(server.snapshot.graph)).toEqual(["api"]);
+    expect(writer.state.revision).toBe(3);
+  });
+
+  test("undoing a removal brings the node back with its edges", async () => {
+    const server = new FakeServer();
+    const { writer } = writerFor(server);
+
+    writer.apply([
+      add("api"),
+      add("db"),
+      {
+        op: "add-edge",
+        edge: {
+          id: "e1",
+          from: "api",
+          to: "db",
+          kind: "write",
+          label: "",
+          props: { share: 1, fanOut: 1, timeoutMs: 1_000 },
+        },
+      },
+    ]);
+    writer.apply([remove("db")]);
+    await settle();
+    expect(server.snapshot.graph.edges).toHaveLength(0);
+
+    writer.undo();
+    await settle();
+    expect(ids(server.snapshot.graph)).toEqual(["api", "db"]);
+    expect(server.snapshot.graph.edges.map((edge) => edge.id)).toEqual(["e1"]);
+  });
+
+  test("a new change clears what could be redone", () => {
+    const server = new FakeServer();
+    const { writer } = writerFor(server);
+
+    writer.apply([add("a")]);
+    writer.undo();
+    expect(writer.state.canRedo).toBe(true);
+
+    writer.apply([add("b")]);
+    expect(writer.state.canRedo).toBe(false);
+  });
+
+  test("says so when a change can no longer be undone", async () => {
+    const server = new FakeServer();
+    const { writer } = writerFor(server);
+
+    writer.apply([add("api")]);
+    await settle();
+    server.commit([remove("api")]);
+    writer.apply([add("other")]);
+    await settle();
+
+    writer.undo();
+    writer.undo();
+
+    expect(writer.state.error).toBe(CANNOT_UNDO);
+    expect(writer.state.canUndo).toBe(false);
   });
 });

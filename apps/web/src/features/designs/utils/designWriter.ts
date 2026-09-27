@@ -1,4 +1,9 @@
-import { applyOps, type DesignGraph, type DesignOp } from "@repo/design";
+import {
+  applyOps,
+  type DesignGraph,
+  type DesignOp,
+  type OpRejection,
+} from "@repo/design";
 
 export interface DesignSnapshot {
   revision: number;
@@ -15,6 +20,13 @@ export interface DesignWriterState {
   revision: number;
   saving: boolean;
   error: string | null;
+  canUndo: boolean;
+  canRedo: boolean;
+}
+
+interface HistoryStep {
+  ops: DesignOp[];
+  inverse: DesignOp[];
 }
 
 export interface DesignWriterIo {
@@ -33,8 +45,18 @@ export const CONFLICT_DROPPED =
 export const CONFLICT_GAVE_UP =
   "The design keeps changing elsewhere. Your latest changes were not saved.";
 
+export const CANNOT_UNDO =
+  "That change can no longer be undone: the design has changed since.";
+
+export const CANNOT_REDO =
+  "That change can no longer be redone: the design has changed since.";
+
+const MAX_HISTORY = 100;
+
 export class DesignWriter {
   private pending: DesignOp[][] = [];
+  private past: HistoryStep[] = [];
+  private future: HistoryStep[] = [];
   private sending = false;
   private error: string | null = null;
 
@@ -49,24 +71,72 @@ export class DesignWriter {
       revision: this.confirmed.revision,
       saving: this.sending || this.pending.length > 0,
       error: this.error,
+      canUndo: this.past.length > 0,
+      canRedo: this.future.length > 0,
     };
   }
 
+  public check(ops: DesignOp[]): OpRejection | null {
+    const result = applyOps(this.displayed(), ops);
+
+    return result.ok ? null : result;
+  }
+
   public apply(ops: DesignOp[]): string | null {
+    const inverse = this.enqueue(ops);
+
+    if (typeof inverse === "string") return inverse;
+
+    this.past = [...this.past, { ops, inverse }].slice(-MAX_HISTORY);
+    this.future = [];
+    this.emit();
+
+    return null;
+  }
+
+  public undo(): void {
+    this.step(this.past, this.future, CANNOT_UNDO);
+  }
+
+  public redo(): void {
+    this.step(this.future, this.past, CANNOT_REDO);
+  }
+
+  public reportError(message: string): void {
+    this.error = message;
+    this.emit();
+  }
+
+  public dismissError(): void {
+    this.error = null;
+    this.emit();
+  }
+
+  private enqueue(ops: DesignOp[]): DesignOp[] | string {
     const result = applyOps(this.displayed(), ops);
 
     if (!result.ok) return result.message;
 
     this.pending.push(ops);
     this.error = null;
-    this.emit();
     void this.flush();
 
-    return null;
+    return result.inverse;
   }
 
-  public dismissError(): void {
-    this.error = null;
+  private step(from: HistoryStep[], to: HistoryStep[], failure: string): void {
+    const entry = from.pop();
+
+    if (!entry) return;
+
+    const inverse = this.enqueue(entry.inverse);
+
+    if (typeof inverse === "string") {
+      this.error = failure;
+    } else {
+      to.push({ ops: entry.inverse, inverse });
+    }
+
     this.emit();
   }
 
