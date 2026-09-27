@@ -65,9 +65,11 @@ describe("problems", () => {
       `${PATH}?difficulty=medium`,
     );
 
-    expect(medium.body.items.map((item) => item.slug)).toEqual([
-      "photo-uploads",
-    ]);
+    expect(medium.body.items.map((item) => item.slug).sort()).toEqual(
+      OFFICIAL_PROBLEMS.filter((problem) => problem.difficulty === "medium")
+        .map((problem) => problem.slug)
+        .sort(),
+    );
   });
 
   test("shows a problem without what solvers must not see", async () => {
@@ -114,10 +116,11 @@ describe("problems", () => {
     const repository = make(ProblemsRepository);
     const original = OFFICIAL_PROBLEMS[0]!;
 
-    expect(await service.syncOfficial()).toEqual({
-      "url-shortener": "unchanged",
-      "photo-uploads": "unchanged",
-    });
+    expect(await service.syncOfficial()).toEqual(
+      Object.fromEntries(
+        OFFICIAL_PROBLEMS.map((problem) => [problem.slug, "unchanged"]),
+      ),
+    );
 
     const edited = {
       ...original,

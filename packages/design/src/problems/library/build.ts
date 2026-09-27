@@ -1,4 +1,4 @@
-import type { EdgeKind, NodeKind } from "../../catalogue";
+import type { EdgeKind, EdgeProps, NodeKind } from "../../catalogue";
 import {
   createEdge,
   createNode,
@@ -18,8 +18,16 @@ export const node = (
   return { ...created, props: { ...created.props, ...props } } as DesignNode;
 };
 
-export const edge = (from: string, to: string, kind: EdgeKind) =>
-  createEdge({ id: `${from}-${to}-${kind}`, from, to, kind });
+export const edge = (
+  from: string,
+  to: string,
+  kind: EdgeKind,
+  props: Partial<EdgeProps> = {},
+) => {
+  const created = createEdge({ id: `${from}-${to}-${kind}`, from, to, kind });
+
+  return { ...created, props: { ...created.props, ...props } };
+};
 
 export const graph = (
   nodes: DesignNode[],

@@ -88,6 +88,7 @@ export const CheckRefSchema = z.discriminatedUnion("check", [
     nodeKind: NodeKindSchema,
     min: z.number().int().min(1).max(100).default(1),
   }),
+  z.strictObject({ check: z.literal("throttles") }),
   z.strictObject({
     check: z.literal("no-lint"),
     lint: z.enum(LINT_IDS as [string, ...string[]]),
