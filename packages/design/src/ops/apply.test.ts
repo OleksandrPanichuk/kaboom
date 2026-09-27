@@ -168,6 +168,23 @@ describe("applyOps", () => {
     ]);
   });
 
+  test("refuses an edge into a client, which only sends requests", () => {
+    const refused = rejection([
+      {
+        op: "add-edge",
+        edge: createEdge({
+          id: "back",
+          from: "api",
+          to: "users",
+          kind: "sync-call",
+        }),
+      },
+    ]);
+
+    expect(refused.reason).toBe("invalid-edge");
+    expect(refused.message).toContain("a client");
+  });
+
   test("allows replication between two stores of one replicable kind", () => {
     apply([
       {
