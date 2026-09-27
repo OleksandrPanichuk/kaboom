@@ -134,6 +134,143 @@ The *Users* client is already on the canvas. Build what it talks to.`,
       cost: 15,
     },
   ],
+  interview: {
+    opening:
+      "Hi! Today let's design a URL shortener, something like bit.ly. Before you draw anything: what would you like to know about how it is used?",
+    facts: [
+      {
+        topic: "How long a link lives",
+        answer:
+          "Forever by default. A creator can set an expiry date, after which the link answers 404.",
+      },
+      {
+        topic: "Custom aliases",
+        answer:
+          "Yes, optional. An alias must be unique; a taken one is refused, not overwritten.",
+      },
+      {
+        topic: "Traffic",
+        answer:
+          "About 10,000 requests a second at a normal time, 95 % of them redirects. A viral link can bring four times that for a few minutes.",
+      },
+      {
+        topic: "Link length and alphabet",
+        answer:
+          "Seven characters of letters and digits are enough for years of links.",
+      },
+      {
+        topic: "Redirect status",
+        answer:
+          "302, so every click reaches us and can be counted. Click counts may lag by a minute and must never slow a redirect down.",
+      },
+      {
+        topic: "Storage",
+        answer:
+          "About 500 bytes a link, kept for at least five years. About 500 links are created a second.",
+      },
+      {
+        topic: "Users and regions",
+        answer:
+          "Users are global, but one region is fine for this interview. Anonymous users can create links; there is no sign-in to design.",
+      },
+      {
+        topic: "Latency and availability",
+        answer:
+          "A redirect within 200 ms at p99, and 99.9 % of requests must succeed, including while the database fails over.",
+      },
+    ],
+    phases: [
+      {
+        id: "requirements",
+        minutes: 5,
+        goal: "Agree on what the service does and how much traffic it takes, before any boxes are drawn.",
+      },
+      {
+        id: "high-level",
+        minutes: 15,
+        goal: "A design that serves redirects and creations end to end, with its API and data model.",
+      },
+      {
+        id: "deep-dive",
+        minutes: 15,
+        goal: "Make the read path fast under a viral link and keep the service up when the database primary fails.",
+      },
+      {
+        id: "wrap-up",
+        minutes: 5,
+        goal: "Summarise the design, its trade-offs and what would change at ten times the scale.",
+      },
+    ],
+    rubric: [
+      {
+        key: "clarifies-requirements",
+        dimension: "requirements",
+        title: "Clarifies the requirements before designing",
+        signals: [
+          "Asks about traffic and the read to write ratio",
+          "Asks about expiry, custom aliases or analytics",
+          "States which requirements they are designing for",
+        ],
+        weight: 15,
+      },
+      {
+        key: "estimates-capacity",
+        dimension: "requirements",
+        title: "Estimates capacity and storage",
+        signals: [
+          "Turns the traffic into requests a second for reads and writes",
+          "Estimates the storage for years of links",
+          "Uses the estimates to size the design",
+        ],
+        weight: 10,
+      },
+      {
+        key: "designs-the-core",
+        dimension: "design",
+        title: "Designs the API, the key generation and the data model",
+        signals: [
+          "Defines create and redirect endpoints",
+          "Explains how short keys are generated without collisions",
+          "Chooses a store and a schema for links, and says why",
+        ],
+        weight: 20,
+      },
+      {
+        key: "scales-the-read-path",
+        dimension: "scaling",
+        title: "Scales the read path",
+        signals: [
+          "Caches redirects and reasons about the hit ratio",
+          "Plans for a viral link that multiplies the traffic",
+          "Keeps click counting off the redirect path",
+        ],
+        weight: 20,
+      },
+      {
+        key: "survives-failures",
+        dimension: "reliability",
+        title: "Keeps the service up when parts fail",
+        signals: [
+          "Removes single points of failure on the request path",
+          "Replicates the database and plans its failover",
+          "Explains what users see while a failover happens",
+        ],
+        weight: 20,
+      },
+      {
+        key: "communicates",
+        dimension: "communication",
+        title: "Explains trade-offs and responds to challenges",
+        signals: [
+          "Thinks aloud and keeps the design and the explanation in step",
+          "Names the trade-off behind each choice",
+          "Changes the design when a drill or a question shows a problem",
+        ],
+        weight: 15,
+      },
+    ],
+    drillIds: ["normal-day", "primary-fails"],
+  },
   reference: {
     notes:
       "A balancer in front of a stateless service with room for the viral peak. Redirects read through a cache with a 90 % hit ratio; creations write to a sharded primary with automatic failover and two read replicas, which also carry the reads when the cache is empty.",

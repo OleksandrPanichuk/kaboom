@@ -516,3 +516,39 @@ describe("hints", () => {
     expect(penalised(90, 15)).toBe(75);
   });
 });
+
+describe("interviews", () => {
+  test("the URL shortener can be interviewed, and nothing about it reaches solvers", () => {
+    const shown = publicProblem(shortener);
+
+    expect(shortener.interview?.drillIds).toEqual([
+      "normal-day",
+      "primary-fails",
+    ]);
+    expect(shown.interviewable).toBe(true);
+    expect(JSON.stringify(shown)).not.toContain(
+      shortener.interview!.facts[0]!.answer,
+    );
+    expect(JSON.stringify(shown)).not.toContain("clarifies-requirements");
+  });
+
+  test("refuses an interview whose rubric, phases or drills do not add up", () => {
+    const broken = {
+      ...shortener,
+      interview: {
+        ...shortener.interview!,
+        rubric: shortener.interview!.rubric.slice(1),
+        phases: [...shortener.interview!.phases].reverse(),
+        drillIds: ["no-such-drill"],
+      },
+    };
+    const check = checkPublishable(broken);
+
+    expect(check.ok).toBe(false);
+    expect(check.ok ? [] : check.issues).toEqual([
+      "The interview rubric weighs 85, not 100.",
+      "The interview's phases are out of order.",
+      "The interview runs a drill, no-such-drill, the problem does not have.",
+    ]);
+  });
+});
