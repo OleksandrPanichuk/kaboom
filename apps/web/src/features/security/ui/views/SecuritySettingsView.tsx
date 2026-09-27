@@ -1,12 +1,14 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ShieldCheck } from "lucide-react";
 
-import { connectedAccountsQuery } from "../../api/security.queries";
-import { ConnectedAccountsSection } from "../components/ConnectedAccountsSection";
-import { DeleteAccountSection } from "../components/DeleteAccountSection";
-import { EmailSection } from "../components/EmailSection";
-import { PasswordSection } from "../components/PasswordSection";
-import { SessionsSection } from "../components/SessionsSection";
+import { connectedAccountsQuery } from "@/features/security/api";
+import {
+  ConnectedAccountsSection,
+  DeleteAccountSection,
+  EmailSection,
+  PasswordSection,
+  SessionsSection,
+} from "@/features/security/ui/components";
 
 interface SecuritySettingsViewProps {
   linkError: string | undefined;

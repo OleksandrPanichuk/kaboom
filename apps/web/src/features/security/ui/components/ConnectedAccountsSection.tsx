@@ -9,10 +9,12 @@ import {
   oauthErrorMessage,
   type OAuthProvider,
 } from "@/features/auth";
+import {
+  connectedAccountsQuery,
+  unlinkProviderMutation,
+} from "@/features/security/api";
+import { securityErrorMessage } from "@/features/security/utils";
 
-import { unlinkProviderMutation } from "../../api/security.mutations";
-import { connectedAccountsQuery } from "../../api/security.queries";
-import { securityErrorMessage } from "../../utils/securityErrorMessage";
 import { SettingsSection } from "./SettingsSection";
 
 const PROVIDERS: ReadonlyArray<{

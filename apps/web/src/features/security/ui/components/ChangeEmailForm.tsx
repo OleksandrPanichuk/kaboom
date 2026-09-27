@@ -10,9 +10,8 @@ import {
   FieldLabel,
 } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
-
-import { changeEmailMutation } from "../../api/security.mutations";
-import { securityErrorMessage } from "../../utils/securityErrorMessage";
+import { changeEmailMutation } from "@/features/security/api";
+import { securityErrorMessage } from "@/features/security/utils";
 
 interface ChangeEmailFormProps {
   hasPassword: boolean;

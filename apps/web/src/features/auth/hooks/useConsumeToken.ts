@@ -1,7 +1,7 @@
 import { useMutation, type UseMutationOptions } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 
-import type { TokenVariables } from "../api/auth.mutations";
+import type { TokenVariables } from "@/features/auth/api";
 
 export const useConsumeToken = <Data>(
   options: UseMutationOptions<Data, Error, TokenVariables>,

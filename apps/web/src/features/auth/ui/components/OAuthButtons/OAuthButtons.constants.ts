@@ -1,4 +1,4 @@
-import type { OAuthProvider } from "../../../typedefs/auth.typedefs";
+import type { OAuthProvider } from "@/features/auth/typedefs";
 
 export const OAUTH_PROVIDERS: ReadonlyArray<{
   provider: OAuthProvider;

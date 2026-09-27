@@ -1,11 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/Button";
+import { sendEmailVerificationTokenMutation } from "@/features/auth/api";
+import { useCurrentUser } from "@/features/auth/hooks";
+import { errorMessage, isChallengeRequired } from "@/features/auth/utils";
 
-import { sendEmailVerificationTokenMutation } from "../../api/auth.mutations";
-import { useCurrentUser } from "../../hooks/useCurrentUser";
-import { errorMessage } from "../../utils/errorMessage";
-import { isChallengeRequired } from "../../utils/isChallengeRequired";
 import { CaptchaChallenge } from "./CaptchaChallenge";
 
 export function EmailVerificationBanner() {

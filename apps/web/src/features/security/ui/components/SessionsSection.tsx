@@ -4,15 +4,17 @@ import { MonitorSmartphone } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/Field";
-
 import {
   revokeOtherSessionsMutation,
   revokeSessionMutation,
-} from "../../api/security.mutations";
-import { sessionsQuery } from "../../api/security.queries";
-import { describeUserAgent } from "../../utils/describeUserAgent";
-import { formatIp } from "../../utils/formatIp";
-import { securityErrorMessage } from "../../utils/securityErrorMessage";
+  sessionsQuery,
+} from "@/features/security/api";
+import {
+  describeUserAgent,
+  formatIp,
+  securityErrorMessage,
+} from "@/features/security/utils";
+
 import { SettingsSection } from "./SettingsSection";
 
 const dateTime = new Intl.DateTimeFormat(undefined, {

@@ -1,7 +1,7 @@
-import { confirmEmailChangeMutation } from "../../api/auth.mutations";
-import { useConsumeToken } from "../../hooks/useConsumeToken";
-import { TokenOutcome } from "../components/TokenOutcome";
-import { AuthLayout } from "../layouts/AuthLayout";
+import { confirmEmailChangeMutation } from "@/features/auth/api";
+import { useConsumeToken } from "@/features/auth/hooks";
+import { TokenOutcome } from "@/features/auth/ui/components";
+import { AuthLayout } from "@/features/auth/ui/layouts";
 
 interface ConfirmEmailChangeViewProps {
   token: string | undefined;

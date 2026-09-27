@@ -3,10 +3,9 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
-
-import { signOutMutation } from "../../api/auth.mutations";
-import { useCurrentUser } from "../../hooks/useCurrentUser";
-import { EmailVerificationBanner } from "../components/EmailVerificationBanner";
+import { signOutMutation } from "@/features/auth/api";
+import { useCurrentUser } from "@/features/auth/hooks";
+import { EmailVerificationBanner } from "@/features/auth/ui/components";
 
 interface AppLayoutProps {
   children: ReactNode;

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
-import { ForgotPasswordForm } from "../components/ForgotPasswordForm";
-import { AuthLayout } from "../layouts/AuthLayout";
+import { ForgotPasswordForm } from "@/features/auth/ui/components";
+import { AuthLayout } from "@/features/auth/ui/layouts";
 
 export function ForgotPasswordView() {
   return (
