@@ -34,6 +34,19 @@ import { ApiRequestError } from "@/lib/api";
 
 const LAYOUT_SAVE_DELAY_MS = 500;
 
+export interface DesignTransport {
+  sendOps: (
+    baseRevision: number,
+    ops: DesignOp[],
+  ) => Promise<{ revision: number; graph: unknown }>;
+  saveLayout: (layout: DesignLayoutPositions) => Promise<unknown>;
+}
+
+const designTransport = (designId: string): DesignTransport => ({
+  sendOps: (baseRevision, ops) => sendDesignOps(designId, baseRevision, ops),
+  saveLayout: (layout) => saveDesignLayout(designId, layout),
+});
+
 export interface DesignEditor extends DesignWriterState {
   layout: DesignLayoutPositions;
   apply: (ops: DesignOp[]) => string | null;
@@ -47,13 +60,20 @@ export interface DesignEditor extends DesignWriterState {
   placeInRegion: (nodeIds: string[], target: RegionTarget) => void;
   renameRegion: (id: string, label: string) => string | null;
   dissolveRegion: (id: string) => void;
+  resync: () => Promise<void>;
   undo: () => void;
   redo: () => void;
   reportError: (message: string) => void;
   dismissError: () => void;
 }
 
-export const useDesignEditor = (designId: string): DesignEditor => {
+export const useDesignEditor = (
+  designId: string,
+  customTransport?: DesignTransport,
+): DesignEditor => {
+  const [transport] = useState(
+    () => customTransport ?? designTransport(designId),
+  );
   const client = useQueryClient();
   const { data: design } = useSuspenseQuery(designQuery(designId));
   const queryKey = designQuery(designId).queryKey;
@@ -67,7 +87,7 @@ export const useDesignEditor = (designId: string): DesignEditor => {
         {
           send: async (baseRevision, ops) => {
             try {
-              const applied = await sendDesignOps(designId, baseRevision, ops);
+              const applied = await transport.sendOps(baseRevision, ops);
 
               return {
                 ok: true,
@@ -77,7 +97,10 @@ export const useDesignEditor = (designId: string): DesignEditor => {
                 },
               };
             } catch (error) {
-              if (error instanceof ApiRequestError && error.status === 409) {
+              if (
+                error instanceof ApiRequestError &&
+                error.code === "DESIGN_REVISION_CONFLICT"
+              ) {
                 return { ok: false, conflict: true };
               }
 
@@ -128,7 +151,7 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     );
 
     try {
-      await saveDesignLayout(designId, kept);
+      await transport.saveLayout(kept);
       client.setQueryData(queryKey, (old) =>
         old ? { ...old, layout: kept } : old,
       );
@@ -138,7 +161,7 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     } finally {
       setLayoutSaving(dirtyRef.current);
     }
-  }, [client, designId, queryKey, writer]);
+  }, [client, queryKey, transport, writer]);
 
   useEffect(() => {
     if (!dirtyRef.current) return;
@@ -299,6 +322,8 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     [writer],
   );
 
+  const resync = useCallback(() => writer.resync(), [writer]);
+
   const undo = useCallback(() => writer.undo(), [writer]);
   const redo = useCallback(() => writer.redo(), [writer]);
 
@@ -323,6 +348,7 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     placeInRegion,
     renameRegion,
     dissolveRegion,
+    resync,
     undo,
     redo,
     reportError,

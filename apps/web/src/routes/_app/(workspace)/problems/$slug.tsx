@@ -23,6 +23,17 @@ export const Route = createFileRoute("/_app/(workspace)/problems/$slug")({
 
 function ProblemRoute() {
   const { slug } = Route.useParams();
+  const navigate = Route.useNavigate();
 
-  return <ProblemView slug={slug} />;
+  return (
+    <ProblemView
+      slug={slug}
+      onOpenInterview={(interviewId) =>
+        void navigate({
+          to: "/interviews/$interviewId",
+          params: { interviewId },
+        })
+      }
+    />
+  );
 }

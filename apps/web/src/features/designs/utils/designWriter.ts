@@ -102,6 +102,18 @@ export class DesignWriter {
     this.step(this.future, this.past, CANNOT_REDO);
   }
 
+  public async resync(): Promise<void> {
+    if (this.sending || this.pending.length > 0) return;
+
+    const latest = await this.io.fetchLatest();
+
+    if (latest.revision <= this.confirmed.revision) return;
+
+    this.confirmed = latest;
+    this.io.onConfirmed?.(latest);
+    this.emit();
+  }
+
   public reportError(message: string): void {
     this.error = message;
     this.emit();
