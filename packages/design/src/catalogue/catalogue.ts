@@ -10,6 +10,7 @@ import {
   queueKind,
   serviceKind,
   sqlDatabaseKind,
+  streamKind,
   workerKind,
 } from "./kinds";
 
@@ -22,6 +23,7 @@ export const catalogue = {
   [sqlDatabaseKind.kind]: sqlDatabaseKind,
   [nosqlDatabaseKind.kind]: nosqlDatabaseKind,
   [queueKind.kind]: queueKind,
+  [streamKind.kind]: streamKind,
   [workerKind.kind]: workerKind,
   [objectStorageKind.kind]: objectStorageKind,
 } as const;

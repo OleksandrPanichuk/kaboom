@@ -9,6 +9,8 @@ const NEEDS_A_TARGET: Partial<Record<NodeKind, (label: string) => string>> = {
   "load-balancer": (label) =>
     `${label} has no targets to spread requests over.`,
   queue: (label) => `${label} has no consumer; its messages pile up.`,
+  stream: (label) =>
+    `${label} has no consumer group; what it keeps, nobody reads.`,
 };
 
 export const deadEndNode = defineLint({

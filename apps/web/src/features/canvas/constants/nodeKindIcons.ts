@@ -7,6 +7,7 @@ import {
   type LucideIcon,
   MonitorSmartphone,
   Rows3,
+  ScrollText,
   Server,
   Split,
   Zap,
@@ -21,6 +22,7 @@ export const NODE_KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
   "sql-database": Database,
   "nosql-database": DatabaseZap,
   queue: Rows3,
+  stream: ScrollText,
   worker: Cog,
   "object-storage": Archive,
 };

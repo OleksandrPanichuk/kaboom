@@ -10,6 +10,8 @@ describe("suggestEdgeKind", () => {
     ["load-balancer", "service", "sync-call"],
     ["service", "queue", "async-message"],
     ["queue", "worker", "async-message"],
+    ["service", "stream", "async-message"],
+    ["stream", "worker", "async-message"],
     ["service", "cache", "read"],
     ["service", "sql-database", "write"],
     ["worker", "object-storage", "write"],

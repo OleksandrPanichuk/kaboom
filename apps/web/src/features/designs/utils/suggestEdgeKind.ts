@@ -6,12 +6,16 @@ const STORES = new Set<DesignNode["kind"]>([
   "object-storage",
 ]);
 
+const MESSAGING = new Set<DesignNode["kind"]>(["queue", "stream"]);
+
 const candidates = (from: DesignNode, to: DesignNode): EdgeKind[] => {
   if (from.kind === to.kind && catalogue[from.kind].replicable) {
     return ["replication", "write", "read"];
   }
 
-  if (from.kind === "queue" || to.kind === "queue") return ["async-message"];
+  if (MESSAGING.has(from.kind) || MESSAGING.has(to.kind)) {
+    return ["async-message"];
+  }
   if (to.kind === "cache") return ["read", "write"];
   if (STORES.has(to.kind)) return ["write", "read"];
 

@@ -7,7 +7,7 @@ import { choice, count, rate } from "./shared";
 export const queueKind = defineNodeKind({
   kind: "queue",
   track: "system-design",
-  label: "Queue",
+  label: "Work queue",
   icon: "queue",
   stateful: true,
   replicable: false,
@@ -15,7 +15,8 @@ export const queueKind = defineNodeKind({
   props: z.strictObject({
     partitions: count(1, {
       title: "Partitions",
-      description: "Ordered lanes; consumers work them in parallel",
+      description:
+        "Ordered lanes, such as FIFO message groups; consumers share the work and each message goes to one of them",
     }),
     capacityMsgPerSecond: rate(10_000, {
       title: "Capacity",
@@ -24,7 +25,8 @@ export const queueKind = defineNodeKind({
     }),
     retentionHours: prop(z.number().int().min(1).max(8_760).default(24), {
       title: "Retention",
-      description: "How long an unconsumed message is kept",
+      description:
+        "How long an unconsumed message is kept; a consumed one is removed",
       unit: "h",
     }),
     deliveryGuarantee: choice(

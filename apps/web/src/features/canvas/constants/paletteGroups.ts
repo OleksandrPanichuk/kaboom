@@ -12,5 +12,5 @@ export const PALETTE_GROUPS: PaletteGroup[] = [
     label: "Data",
     kinds: ["cache", "sql-database", "nosql-database", "object-storage"],
   },
-  { label: "Messaging", kinds: ["queue"] },
+  { label: "Messaging", kinds: ["queue", "stream"] },
 ];
