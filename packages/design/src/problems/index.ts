@@ -5,7 +5,6 @@ export {
   type RevealedHint,
   revealedHints,
 } from "./hints";
-export { OFFICIAL_PROBLEMS } from "./library";
 export {
   checkPublishable,
   HIDDEN_FAILED,
