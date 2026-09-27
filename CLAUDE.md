@@ -59,7 +59,7 @@ infrastructure/<tech>/   technology clients: connect, reconnect, ping, close
 
 - **`platform/`** holds what the app offers to modules rather than to users:
   `cache`, `jobs`, `rate-limit`, `health`, `captcha`, `error-reporting`, `metrics`,
-  `realtime`. The test is "does it have a domain?" —
+  `realtime`, `llm`. The test is "does it have a domain?" —
   an entity, a repository, a use case or a route about the product belongs in
   `modules/`; a port plus a `defineModule` lifecycle that any module may consume
   belongs in `platform/`. Both go through `defineModule`, so a platform folder
@@ -443,6 +443,23 @@ from the clock.
 `RedisRealtime` publishes on the shared connection and subscribes on one owned
 connection per process, multiplexing every channel over it. Channels carry the
 `<slug>:realtime:` prefix, like every other Redis key.
+
+## Language models
+
+`LanguageModel` (`platform/llm`) streams a turn as events: `text-delta`,
+`tool-use`, `usage` and one `stop`, whose reason is `end`, `tool-use`,
+`max-tokens` or `aborted`. It honours the request's `signal`, and a request
+names its `role` (`interviewer` or `review`) rather than a model, so the model
+per role is configuration. Under `NODE_ENV=test` it is `ScriptedLanguageModel`:
+a test enqueues what the next turns say, with `wait` steps for timing, and
+reads the requests the model received. `preload.ts` resets it after every
+test. Outside tests, with no key configured, `UnavailableLanguageModel`
+refuses every request with `503 LANGUAGE_MODEL_UNAVAILABLE`, so the rest of
+the app still boots.
+
+`UsageLedger` holds each user's daily token budget. `reserve` answers whether
+a turn may start, and `record` adds what it used, in one atomic upsert of
+`llm_usage (user_id, day)`. A cache read counts a tenth of a token.
 
 ## Generated API client
 

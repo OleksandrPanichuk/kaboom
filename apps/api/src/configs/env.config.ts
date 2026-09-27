@@ -136,6 +136,16 @@ export const EnvSchema = z.object({
   GITHUB_CLIENT_ID: z.string().min(1).optional(),
   GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
 
+  ANTHROPIC_API_KEY: z.preprocess(emptyAsUnset, z.string().min(1).optional()),
+  LLM_INTERVIEWER_MODEL: z.string().trim().min(1).default("claude-sonnet-5"),
+  LLM_REVIEW_MODEL: z.string().trim().min(1).default("claude-opus-5-5"),
+  LLM_DAILY_TOKEN_BUDGET: z.coerce
+    .number()
+    .int()
+    .min(1_000)
+    .max(100_000_000)
+    .default(500_000),
+
   CLOUDWATCH_METRICS_NAMESPACE: z.preprocess(
     emptyAsUnset,
     z.string().trim().min(1).max(255).optional(),
