@@ -79,7 +79,8 @@ A design, and later a problem or an interview, opens full screen without the sid
 - **Viewport:** opens fitted to the graph, but never below 70 % zoom, so labels stay readable and a large graph is panned instead. Zoom and fit controls sit at the bottom left; the minimap, from 640px, at the bottom right.
 - **Empty design:** a centred note on the dotted background, pointing at the palette.
 - **Palette:** the tool panel lists the kinds in four groups (Entry, Compute, Data, Messaging). A kind is dragged onto the canvas and lands where it is dropped, or clicked to land in the middle of the view, on the nearest spot no other node covers. On a phone, a tap adds it and closes the sheet.
-- **Connecting:** a node's handles, an indigo dot on each side, appear on hover, focus, selection and while any connection is being drawn. Dragging from the right handle to another node's left one adds an edge whose kind follows from the two nodes: replication between two stores of one replicable kind, an async message to or from a queue, a read into a cache, a write into a database or object storage, otherwise a sync call. A connection the design refuses, such as one that closes a loop, is not drawn, and a notice names both nodes and why.
+- **Connecting:** a node's handles, an indigo dot on each side, appear on hover, focus, selection and while any connection is being drawn. Dragging from the right handle to another node's left one adds an edge whose kind follows from the two nodes: replication between two stores of one replicable kind, an async message to or from a queue, a read into a cache, a write into a database or object storage, otherwise a sync call. A second connection between the same two nodes takes the next kind not yet used there, so a service connected twice to a database writes along one edge and reads along the other.
+- **Parallel edges:** a single edge between two nodes is drawn as a right-angled step; two or more between the same pair, in either direction, are drawn as arcs spread apart, so each can be seen and clicked on its own. A connection the design refuses, such as one that closes a loop, is not drawn, and a notice names both nodes and why.
 - **Deleting:** Delete or Backspace removes what is selected, or the delete button in the inspector on a phone; a node takes its edges with it.
 - **Selecting:** a click selects, Shift, ⌘ or Ctrl adds to the selection, and anything selected opens the inspector's *Node* tab.
 
@@ -93,6 +94,7 @@ A design, and later a problem or an interview, opens full screen without the sid
 - **Edge:** its kind and ends in the header; *General* holds the kind, a select with a one-line meaning under it, and the label shown on the canvas; *Load* holds share (a percentage), fan-out and timeout, and is left out for replication, which carries no load. A kind the edge cannot take, such as replication between different kinds or one that closes a loop, is explained under the select and never sent; the select keeps its value and is not marked invalid, since the value it shows is still the edge's. A delete button closes the panel.
 - **Several selected:** how many, and a button that deletes them all.
 - **Problems:** a node the checks flag lists its problems at the top of its inspector.
+- **Replicated SQL database:** a primary with replication edges says where its load goes, under the header: writes to it alone, reads spread over it and its replicas. This is the single-leader model the simulation uses, so a service connects to the primary, never to each replica.
 
 ### Checks
 

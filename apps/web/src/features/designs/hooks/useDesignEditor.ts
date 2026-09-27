@@ -181,7 +181,13 @@ export const useDesignEditor = (designId: string): DesignEditor => {
         id: `edge-${crypto.randomUUID().slice(0, 8)}`,
         from,
         to,
-        kind: suggestEdgeKind(source, target),
+        kind: suggestEdgeKind(
+          source,
+          target,
+          graph.edges
+            .filter((edge) => edge.from === from && edge.to === to)
+            .map((edge) => edge.kind),
+        ),
         label: "",
         props: EdgePropsSchema.parse({}),
       };

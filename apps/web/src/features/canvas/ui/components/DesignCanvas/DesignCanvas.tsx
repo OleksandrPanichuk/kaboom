@@ -12,6 +12,7 @@ import {
   Background,
   BackgroundVariant,
   Controls,
+  type EdgeTypes,
   type IsValidConnection,
   MiniMap,
   type NodeTypes,
@@ -46,9 +47,12 @@ import type {
 } from "@/features/canvas/typedefs";
 import { type Flow, mergeFlowNodes, toFlow } from "@/features/canvas/utils";
 
+import { CanvasEdgePath } from "./CanvasEdgePath";
 import { CanvasNodeCard } from "./CanvasNodeCard";
 
 const NODE_TYPES: NodeTypes = { "design-node": CanvasNodeCard };
+
+const EDGE_TYPES: EdgeTypes = { "design-edge": CanvasEdgePath };
 
 const FIT_VIEW = { padding: 0.15, minZoom: 0.7, maxZoom: 1 };
 
@@ -236,6 +240,7 @@ export function DesignCanvas({
         onEdgesChange={onEdgesChange}
         onNodeDragStop={onNodeDragStop}
         nodeTypes={NODE_TYPES}
+        edgeTypes={EDGE_TYPES}
         isValidConnection={isValidConnection}
         onConnect={connect}
         onConnectEnd={onConnectEnd}

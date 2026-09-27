@@ -99,6 +99,11 @@ export function DesignView({ designId }: DesignViewProps) {
         key={onlyNode.id}
         node={onlyNode}
         hits={hits.filter((hit) => hit.nodeIds.includes(onlyNode.id))}
+        replicas={graph.edges
+          .filter(
+            (edge) => edge.kind === "replication" && edge.from === onlyNode.id,
+          )
+          .map((edge) => labelOf(edge.to))}
         onPatch={(patch) => editor.updateNode(onlyNode.id, patch)}
         onDelete={removeSelection}
       />

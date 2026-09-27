@@ -49,23 +49,31 @@ export const toFlow = (
     };
   });
 
+  const pairKey = (from: string, to: string) =>
+    from < to ? `${from}|${to}` : `${to}|${from}`;
+  const lanes = new Map<string, number>();
+
+  for (const edge of graph.edges) {
+    const key = pairKey(edge.from, edge.to);
+
+    lanes.set(key, (lanes.get(key) ?? 0) + 1);
+  }
+
+  const taken = new Map<string, number>();
+
   const edges = graph.edges.map((edge): CanvasEdge => {
     const kind = EDGE_KIND_STYLES[edge.kind];
+    const key = pairKey(edge.from, edge.to);
+    const lane = taken.get(key) ?? 0;
+
+    taken.set(key, lane + 1);
 
     return {
       id: edge.id,
       source: edge.from,
       target: edge.to,
-      type: "smoothstep",
+      type: "design-edge",
       label: edge.label || undefined,
-      labelStyle: {
-        fontSize: 11,
-        fontWeight: 500,
-        fill: "var(--color-zinc-600)",
-      },
-      labelBgStyle: { fill: "white", stroke: "var(--color-zinc-200)" },
-      labelBgPadding: [6, 3],
-      labelBgBorderRadius: 6,
       animated: kind.animated,
       style: kind.style,
       markerEnd: {
@@ -75,7 +83,12 @@ export const toFlow = (
         height: 16,
       },
       ariaLabel: `${kind.label} from ${edge.from} to ${edge.to}`,
-      data: { edge },
+      data: {
+        edge,
+        lane,
+        lanes: lanes.get(key) ?? 1,
+        reversed: edge.from > edge.to,
+      },
     };
   });
 
