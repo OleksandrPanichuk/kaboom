@@ -16,22 +16,50 @@ export interface FaultState {
   hitRatio: number | null;
 }
 
+export interface Placement {
+  groups: readonly string[];
+  replicaGroups: ReadonlyArray<readonly string[]>;
+}
+
+const regionDownAt = (
+  faults: readonly Fault[],
+  groups: readonly string[],
+  t: number,
+) =>
+  faults.find(
+    (fault) =>
+      fault.kind === "region-down" &&
+      groups.includes(fault.groupId) &&
+      active(fault, t),
+  );
+
 export const faultStateAt = (
   node: DesignNode,
   faults: readonly Fault[],
-  replicaCount: number,
+  placement: Placement,
   t: number,
 ): FaultState => {
-  const mine = faults.filter((fault) => fault.nodeId === node.id);
+  const mine = faults.filter(
+    (fault) => "nodeId" in fault && fault.nodeId === node.id,
+  );
+  const outage = [
+    ...mine.filter((fault) => fault.kind === "node-down"),
+    ...(regionDownAt(faults, placement.groups, t)
+      ? [regionDownAt(faults, placement.groups, t)!]
+      : []),
+  ];
+  const survivors = placement.replicaGroups.filter(
+    (groups) => !regionDownAt(faults, groups, t),
+  ).length;
   let down = false;
   let promoted = false;
 
-  for (const fault of mine) {
-    if (fault.kind !== "node-down" || !active(fault, t)) continue;
+  for (const fault of outage) {
+    if (!active(fault, t)) continue;
 
     const failover =
       node.kind === "sql-database" &&
-      replicaCount > 0 &&
+      survivors > 0 &&
       node.props.failover !== "none"
         ? FAILOVER_SECONDS[node.props.failover]
         : null;

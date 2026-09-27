@@ -43,6 +43,7 @@ same pull request.
     keeps sending to targets that are down;
   - `broadcast` (stream): each edge gets all of it, times `fanOut`; every
     outgoing edge is a consumer group.
+  - `routed` (DNS): see *Regions*.
 
 ## Topology
 
@@ -71,6 +72,7 @@ request it receives.
 | `sql-database`                | writes: `writeCapacityRps × shards`, on the primary only; reads: `readCapacityRps × shards × (1 + up replicas)` | its writes, on `change-feed` edges                                     |
 | `nosql-database`              | `partitions × readCapacityPerPartition` and `partitions × writeCapacityPerPartition`                            | its writes, on `change-feed` edges                                     |
 | `object-storage`              | `readCapacityRps` and `writeCapacityRps`                                                                        | nothing                                                                |
+| `dns`                         | unbounded                                                                                                       | see *Regions*                                                          |
 | `search-index`                | reads: `shards × replicas × queryCapacityPerCopy`; writes: `shards × indexCapacityPerShard`                     | nothing                                                                |
 | `scheduler`, `coordination`   | unbounded                                                                                                       | scheduler: what it emits; coordination: nothing                        |
 | `queue`                       | `capacityMsgPerSecond` accepted                                                                                 | see _Backlog_                                                          |
@@ -119,6 +121,22 @@ Per client, per step: **p50 / p99** is the largest sum of hop latencies along
 a synchronous path from it; **availability** = `1 − error rate`; **served** =
 emitted × availability.
 
+## Regions
+
+A node belongs to the region of the nearest `region` group around it; a node
+in no group is in none.
+
+- A synchronous edge between two nodes in **different** regions adds
+  `CROSS_REGION_MS` (70 ms) to the path latency of every request that takes
+  it. An edge with an end in no region adds nothing, so a client outside
+  every region pays no hop to reach one.
+- `dns` forwards over its **routable** targets: a target that is up, or one
+  that went down less than `ttlSeconds` ago, since clients keep the answer
+  they cached. With `latency` it splits by `share`, renormalised over the
+  routable targets; with `failover` everything goes to the routable target
+  with the largest `share`. Traffic sent to a target that is down fails, so
+  a lost region costs its share of requests for one TTL.
+
 ## Backlog
 
 A queue drains up to what its consumers can take: the sum over its outgoing
@@ -146,12 +164,13 @@ A step runs, in order:
 A fault is an event with `at` and an optional `until`, in seconds, applied at
 onset and undone at its end.
 
-| Fault         | Effect                                                                                                                                                                                                                                     |
-|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `node-down`   | the node is down. A SQL primary with `failover` `automatic` recovers 30 s later, `manual` 300 s later, if it has at least one replica; one replica is then spent on the promotion. With `none`, or no replica, it stays down until `until` |
-| `capacity`    | the node's capacity is multiplied by `factor`                                                                                                                                                                                              |
-| `latency`     | `addMs` is added to the node's base latency                                                                                                                                                                                                |
-| `cache-flush` | the cache's hit ratio drops to 0 and recovers linearly over 60 s                                                                                                                                                                           |
+| Fault         | Effect                                                                                                                                                                                                                                                                            |
+|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `node-down`   | the node is down. A SQL primary with `failover` `automatic` recovers 30 s later, `manual` 300 s later, if it has at least one replica outside every region that is down; one replica is then spent on the promotion. With `none`, or no such replica, it stays down until `until` |
+| `region-down` | every node in the group `groupId`, or in a group inside it, is down, as if each had its own `node-down`; a SQL primary among them fails over the same way                                                                                                                         |
+| `capacity`    | the node's capacity is multiplied by `factor`                                                                                                                                                                                                                                     |
+| `latency`     | `addMs` is added to the node's base latency                                                                                                                                                                                                                                       |
+| `cache-flush` | the cache's hit ratio drops to 0 and recovers linearly over 60 s                                                                                                                                                                                                                  |
 
 **Autoscaling.** A service or worker with autoscaling enabled that stays above
 its `targetUtilisation` for two consecutive steps gains `ceil(replicas × 0.5)`

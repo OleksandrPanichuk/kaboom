@@ -4,6 +4,7 @@ import {
   deadEndNode,
   dualWrite,
   duplicateSchedule,
+  failoverNowhere,
   spofCriticalPath,
   statefulBehindRoundRobin,
   syncThirdParty,
@@ -18,6 +19,7 @@ export const lints = {
   [deadEndNode.id]: deadEndNode,
   [duplicateSchedule.id]: duplicateSchedule,
   [dualWrite.id]: dualWrite,
+  [failoverNowhere.id]: failoverNowhere,
 } as const;
 
 export type LintId = keyof typeof lints;

@@ -1,4 +1,4 @@
-import { createNode, emptyGraph } from "@repo/design";
+import { createGroup, createNode, emptyGraph } from "@repo/design";
 import { describe, expect, test } from "bun:test";
 
 import { DEFAULT_SCENARIO } from "@/features/simulation/constants";
@@ -51,7 +51,7 @@ describe("toScenario", () => {
           {
             key: "1",
             kind: "capacity",
-            nodeId: "api",
+            targetId: "api",
             at: 30,
             until: null,
             factor: 0.5,
@@ -60,7 +60,7 @@ describe("toScenario", () => {
           {
             key: "2",
             kind: "cache-flush",
-            nodeId: "cache",
+            targetId: "cache",
             at: 60,
             until: 90,
             factor: 1,
@@ -69,7 +69,7 @@ describe("toScenario", () => {
           {
             key: "3",
             kind: "node-down",
-            nodeId: "gone",
+            targetId: "gone",
             at: 0,
             until: null,
             factor: 1,
@@ -83,6 +83,30 @@ describe("toScenario", () => {
     expect(scenario.faults).toEqual([
       { kind: "capacity", nodeId: "api", at: 30, factor: 0.5 },
       { kind: "cache-flush", nodeId: "cache", at: 60 },
+    ]);
+  });
+
+  test("builds a region fault on its group, and drops it once the region is gone", () => {
+    const withRegion = {
+      ...graph,
+      groups: [createGroup({ id: "eu", kind: "region", label: "EU" })],
+    };
+    const fault = (targetId: string) => ({
+      key: targetId,
+      kind: "region-down" as const,
+      targetId,
+      at: 60,
+      until: 120,
+      factor: 1,
+      addMs: 0,
+    });
+    const scenario = toScenario(
+      { ...DEFAULT_SCENARIO, faults: [fault("eu"), fault("gone")] },
+      withRegion,
+    );
+
+    expect(scenario.faults).toEqual([
+      { kind: "region-down", groupId: "eu", at: 60, until: 120 },
     ]);
   });
 });

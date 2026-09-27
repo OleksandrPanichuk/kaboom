@@ -3,6 +3,7 @@ export { cacheKind } from "./cache";
 export { cdnKind } from "./cdn";
 export { clientKind } from "./client";
 export { coordinationKind } from "./coordination";
+export { dnsKind } from "./dns";
 export { externalApiKind } from "./external-api";
 export { loadBalancerKind } from "./load-balancer";
 export { nosqlDatabaseKind } from "./nosql-database";

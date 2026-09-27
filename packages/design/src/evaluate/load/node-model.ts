@@ -47,6 +47,7 @@ export const capacityOf = (
     case "client":
     case "scheduler":
     case "coordination":
+    case "dns":
       return shared(Number.POSITIVE_INFINITY);
     case "search-index":
       return scale(
@@ -145,6 +146,7 @@ export const baseLatencyOf = (node: DesignNode): number => {
   switch (node.kind) {
     case "client":
     case "scheduler":
+    case "dns":
     case "queue":
     case "stream":
       return 0;

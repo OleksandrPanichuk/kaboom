@@ -8,7 +8,14 @@ export interface PaletteGroup {
 export const PALETTE_GROUPS: PaletteGroup[] = [
   {
     label: "Entry",
-    kinds: ["client", "cdn", "load-balancer", "api-gateway", "rate-limiter"],
+    kinds: [
+      "client",
+      "dns",
+      "cdn",
+      "load-balancer",
+      "api-gateway",
+      "rate-limiter",
+    ],
   },
   { label: "Compute", kinds: ["service", "worker", "scheduler"] },
   {
