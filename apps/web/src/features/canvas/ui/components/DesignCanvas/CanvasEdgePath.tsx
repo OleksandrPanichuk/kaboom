@@ -44,7 +44,15 @@ function CanvasEdgePathComponent(props: EdgeProps<CanvasEdge>) {
     <>
       <BaseEdge
         path={path}
-        style={style}
+        style={
+          data?.weight === undefined
+            ? style
+            : {
+                ...style,
+                strokeWidth: 1.25 + data.weight * 4,
+                opacity: data.weight === 0 ? 0.3 : 1,
+              }
+        }
         markerEnd={markerEnd}
         interactionWidth={interactionWidth}
       />

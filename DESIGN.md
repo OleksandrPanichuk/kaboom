@@ -96,6 +96,17 @@ A design, and later a problem or an interview, opens full screen without the sid
 - **Problems:** a node the checks flag lists its problems at the top of its inspector.
 - **Replicated SQL database:** a primary with replication edges says where its load goes, under the header: writes to it alone, reads spread over it and its replicas. This is the single-leader model the simulation uses, so a service connects to the primary, never to each replica.
 
+### Run
+
+The *Run* tab puts the design under load in the browser as it is edited, with the evaluator from `@repo/design`, so every change shows its effect at once.
+
+- **Results:** a time scrubber over the run (keyboard: arrows, Home, End) and, per client at that moment, what it sends, the share served and its p99, in red when it misses the SLO.
+- **Findings:** saturated, failing requests, falling behind and SLO missed, each with the time it starts and the numbers behind it. *Show on canvas* selects the node, moves the scrubber to the moment it starts and stays on the tab.
+- **Scenario:** duration (5, 10 or 30 minutes, 10-second steps), a traffic spike (a multiplier between two moments) and the SLO targets.
+- **Faults:** node down, capacity drop, slow node and cache flush, each on a node and between two moments. A fault on a node that has since been removed says so and is skipped.
+- **On the canvas, while the tab is open:** each node gets a strip with its utilisation and load (and its backlog for a queue), and a border in its heat: green below 70 %, amber below 95 %, red at 95 % or when down (dashed). Edges thicken with the traffic they carry against the busiest one, and edges carrying nothing fade. Leaving the tab takes the colours away.
+- **Save this run** stores the scenario and its findings with the design's confirmed revision on the server, and says so under the button.
+
 ### Checks
 
 Checks run on every change, in the browser, from `@repo/design`, and say what is wrong in the design's own names.

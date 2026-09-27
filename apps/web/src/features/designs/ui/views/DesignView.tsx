@@ -1,5 +1,5 @@
-import { type LintHit, runLints } from "@repo/design";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { type Finding, type LintHit, runLints } from "@repo/design";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import {
   ListChecks,
   Play,
@@ -10,6 +10,7 @@ import {
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { errorMessage } from "@/features/auth";
 import {
   type CanvasFocus,
   CanvasNotice,
@@ -19,7 +20,6 @@ import {
 } from "@/features/canvas";
 import { designQuery } from "@/features/designs/api";
 import { useDesignEditor, useHistoryShortcuts } from "@/features/designs/hooks";
-import { PanelPlaceholder } from "@/features/designs/ui/components";
 import {
   ChecksPanel,
   EdgeInspector,
@@ -28,6 +28,14 @@ import {
   SelectionInspector,
 } from "@/features/properties";
 import { WorkspaceLayout } from "@/features/shell";
+import {
+  DEFAULT_SCENARIO,
+  overlayAt,
+  RunPanel,
+  saveRunMutation,
+  type ScenarioDraft,
+  useSimulation,
+} from "@/features/simulation";
 
 interface DesignViewProps {
   designId: string;
@@ -51,6 +59,21 @@ export function DesignView({ designId }: DesignViewProps) {
   const [focus, setFocus] = useState<CanvasFocus | null>(null);
   const focusingRef = useRef(false);
   const hits = useMemo(() => runLints(editor.graph), [editor.graph]);
+  const [draft, setDraft] = useState<ScenarioDraft>(DEFAULT_SCENARIO);
+  const [stepIndex, setStepIndex] = useState(0);
+  const [savedNote, setSavedNote] = useState<string | null>(null);
+  const running = tab === "run";
+  const simulation = useSimulation(editor.graph, draft, running);
+  const steps = simulation.result?.steps.length ?? 0;
+  const step = Math.min(stepIndex, Math.max(0, steps - 1));
+  const overlay = useMemo(
+    () =>
+      running && simulation.result
+        ? overlayAt(editor.graph, simulation.result.steps[step])
+        : null,
+    [running, simulation.result, editor.graph, step],
+  );
+  const saveRun = useMutation(saveRunMutation);
 
   useHistoryShortcuts(editor.undo, editor.redo);
 
@@ -67,6 +90,38 @@ export function DesignView({ designId }: DesignViewProps) {
       setTab("node");
     }
   }, []);
+
+  const showFinding = useCallback(
+    (finding: Finding) => {
+      const target = finding.target;
+      const edge =
+        target.type === "edge"
+          ? editor.graph.edges.find((item) => item.id === target.id)
+          : undefined;
+      const nodeIds = edge
+        ? [edge.from, edge.to]
+        : target.id
+          ? [target.id]
+          : [];
+
+      setStepIndex(finding.atStep);
+      focusingRef.current = true;
+      setFocus((current) => ({ nodeIds, token: (current?.token ?? 0) + 1 }));
+    },
+    [editor.graph],
+  );
+
+  const onSaveRun = () =>
+    saveRun.mutate(
+      { designId, revision: editor.revision, scenario: simulation.scenario },
+      {
+        onSuccess: (run) =>
+          setSavedNote(
+            `Saved for revision ${run.revision}, with ${run.findings.length} ${run.findings.length === 1 ? "finding" : "findings"}.`,
+          ),
+        onError: (error) => setSavedNote(errorMessage(error)),
+      },
+    );
 
   const showHit = useCallback((hit: LintHit) => {
     focusingRef.current = true;
@@ -186,13 +241,27 @@ export function DesignView({ designId }: DesignViewProps) {
             id: "run",
             label: "Run",
             icon: Play,
-            content: (
-              <PanelPlaceholder
-                icon={Play}
-                title="No runs yet"
-                description="Run the design under load to see where it bends and where it breaks."
+            content: simulation.result ? (
+              <RunPanel
+                graph={editor.graph}
+                draft={draft}
+                onDraftChange={(next) => {
+                  setDraft(next);
+                  setSavedNote(null);
+                }}
+                scenario={simulation.scenario}
+                result={simulation.result}
+                step={step}
+                onStepChange={setStepIndex}
+                onShowFinding={showFinding}
+                save={{
+                  disabled: editor.saving,
+                  pending: saveRun.isPending,
+                  note: savedNote,
+                  onSave: onSaveRun,
+                }}
               />
-            ),
+            ) : null,
           },
         ]}
       >
@@ -200,6 +269,7 @@ export function DesignView({ designId }: DesignViewProps) {
           graph={editor.graph}
           layout={editor.layout}
           hits={hits}
+          overlay={overlay}
           focus={focus}
           onAddNode={editor.addNode}
           onMoveNodes={editor.moveNodes}
