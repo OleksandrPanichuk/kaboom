@@ -1,10 +1,14 @@
-import { migrateGraph } from "@repo/design";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Blocks, Play, SlidersHorizontal } from "lucide-react";
-import { useMemo } from "react";
+import { Play, SlidersHorizontal } from "lucide-react";
 
-import { DesignCanvas } from "@/features/canvas";
+import {
+  CanvasNotice,
+  CanvasProvider,
+  DesignCanvas,
+  NodePalette,
+} from "@/features/canvas";
 import { designQuery } from "@/features/designs/api";
+import { useDesignEditor } from "@/features/designs/hooks";
 import { PanelPlaceholder } from "@/features/designs/ui/components";
 import { WorkspaceLayout } from "@/features/shell";
 
@@ -14,56 +18,64 @@ interface DesignViewProps {
 
 export function DesignView({ designId }: DesignViewProps) {
   const { data: design } = useSuspenseQuery(designQuery(designId));
-  const graph = useMemo(() => migrateGraph(design.graph), [design.graph]);
+  const editor = useDesignEditor(designId);
 
   return (
-    <WorkspaceLayout
-      back={{ to: "/designs", label: "Designs" }}
-      title={design.name}
-      meta={`Revision ${design.revision}`}
-      tool={{
-        label: "Nodes",
-        content: (
-          <PanelPlaceholder
-            icon={Blocks}
-            title="No nodes yet"
-            description="Services, databases, caches and queues will be listed here to drag onto the canvas."
+    <CanvasProvider>
+      <WorkspaceLayout
+        back={{ to: "/designs", label: "Designs" }}
+        title={design.name}
+        meta={
+          <span aria-live="polite">
+            Revision {editor.revision}
+            {editor.saving ? " · Saving…" : ""}
+          </span>
+        }
+        tool={{
+          label: "Nodes",
+          content: <NodePalette onAdd={editor.addNode} />,
+        }}
+        tabsLabel="Inspector"
+        tabs={[
+          {
+            id: "node",
+            label: "Node",
+            icon: SlidersHorizontal,
+            content: (
+              <PanelPlaceholder
+                icon={SlidersHorizontal}
+                title="Nothing selected"
+                description="Select a node on the canvas to edit its properties here."
+              />
+            ),
+          },
+          {
+            id: "run",
+            label: "Run",
+            icon: Play,
+            content: (
+              <PanelPlaceholder
+                icon={Play}
+                title="No runs yet"
+                description="Run the design under load to see where it bends and where it breaks."
+              />
+            ),
+          },
+        ]}
+      >
+        <DesignCanvas
+          graph={editor.graph}
+          layout={editor.layout}
+          onAddNode={editor.addNode}
+          onMoveNodes={editor.moveNodes}
+        />
+        {editor.error ? (
+          <CanvasNotice
+            message={editor.error}
+            onDismiss={editor.dismissError}
           />
-        ),
-      }}
-      tabsLabel="Inspector"
-      tabs={[
-        {
-          id: "node",
-          label: "Node",
-          icon: SlidersHorizontal,
-          content: (
-            <PanelPlaceholder
-              icon={SlidersHorizontal}
-              title="Nothing selected"
-              description="Select a node on the canvas to edit its properties here."
-            />
-          ),
-        },
-        {
-          id: "run",
-          label: "Run",
-          icon: Play,
-          content: (
-            <PanelPlaceholder
-              icon={Play}
-              title="No runs yet"
-              description="Run the design under load to see where it bends and where it breaks."
-            />
-          ),
-        },
-      ]}
-    >
-      <DesignCanvas
-        graph={graph}
-        layout={design.layout}
-        revision={design.revision}
-      />
-    </WorkspaceLayout>
+        ) : null}
+      </WorkspaceLayout>
+    </CanvasProvider>
   );
 }

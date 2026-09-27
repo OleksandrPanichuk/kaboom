@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import {
   Sheet,
@@ -7,6 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/Sheet";
+import { WorkspacePanelsContext } from "@/features/shell/hooks";
 import type {
   WorkspaceBackLink,
   WorkspaceTab,
@@ -45,11 +46,13 @@ export function WorkspaceCompact({
 }: WorkspaceCompactProps) {
   const [sheet, setSheet] = useState<OpenSheet>(null);
 
+  const panels = useMemo(() => ({ closePanels: () => setSheet(null) }), []);
+
   const show = (next: Exclude<OpenSheet, null>) =>
     setSheet((current) => (current === next ? null : next));
 
   return (
-    <>
+    <WorkspacePanelsContext value={panels}>
       <WorkspaceTopBar
         back={back}
         title={title}
@@ -99,6 +102,6 @@ export function WorkspaceCompact({
           <WorkspaceTabs tabs={tabs} value={tab} onValueChange={onTabChange} />
         </SheetContent>
       </Sheet>
-    </>
+    </WorkspacePanelsContext>
   );
 }

@@ -1,18 +1,34 @@
 import "@xyflow/react/dist/style.css";
 
-import type { DesignGraph } from "@repo/design";
+import { type DesignGraph, isNodeKind, type NodeKind } from "@repo/design";
 import {
+  applyEdgeChanges,
+  applyNodeChanges,
   Background,
   BackgroundVariant,
   Controls,
   MiniMap,
   type NodeTypes,
+  type OnEdgesChange,
+  type OnNodeDrag,
+  type OnNodesChange,
   ReactFlow,
+  useReactFlow,
 } from "@xyflow/react";
-import { useMemo } from "react";
+import { type DragEvent, useMemo, useState } from "react";
 
-import type { DesignLayout } from "@/features/canvas/typedefs";
-import { toFlow } from "@/features/canvas/utils";
+import {
+  CANVAS_ELEMENT_ID,
+  NODE_HEIGHT,
+  NODE_KIND_MIME,
+  NODE_WIDTH,
+} from "@/features/canvas/constants";
+import type {
+  CanvasEdge,
+  CanvasNode,
+  DesignLayout,
+} from "@/features/canvas/typedefs";
+import { type Flow, mergeFlowNodes, toFlow } from "@/features/canvas/utils";
 
 import { CanvasNodeCard } from "./CanvasNodeCard";
 
@@ -23,24 +39,90 @@ const FIT_VIEW = { padding: 0.15, minZoom: 0.7, maxZoom: 1 };
 interface DesignCanvasProps {
   graph: DesignGraph;
   layout: DesignLayout;
-  revision: number;
+  onAddNode: (kind: NodeKind, position: { x: number; y: number }) => void;
+  onMoveNodes: (positions: DesignLayout) => void;
 }
 
-export function DesignCanvas({ graph, layout, revision }: DesignCanvasProps) {
+export function DesignCanvas({
+  graph,
+  layout,
+  onAddNode,
+  onMoveNodes,
+}: DesignCanvasProps) {
+  const { screenToFlowPosition } = useReactFlow();
   const flow = useMemo(() => toFlow(graph, layout), [graph, layout]);
-  const empty = flow.nodes.length === 0;
+
+  const [fitOnOpen] = useState(flow.nodes.length > 0);
+  const [synced, setSynced] = useState<Flow>(flow);
+  const [nodes, setNodes] = useState<CanvasNode[]>(flow.nodes);
+  const [edges, setEdges] = useState<CanvasEdge[]>(flow.edges);
+
+  if (synced !== flow) {
+    setSynced(flow);
+    setNodes((current) => mergeFlowNodes(current, flow.nodes));
+    setEdges((current) => {
+      const selected = new Set(
+        current.filter((edge) => edge.selected).map((edge) => edge.id),
+      );
+
+      return flow.edges.map((edge) =>
+        selected.has(edge.id) ? { ...edge, selected: true } : edge,
+      );
+    });
+  }
+
+  const onNodesChange: OnNodesChange<CanvasNode> = (changes) =>
+    setNodes((current) => applyNodeChanges(changes, current));
+
+  const onEdgesChange: OnEdgesChange<CanvasEdge> = (changes) =>
+    setEdges((current) => applyEdgeChanges(changes, current));
+
+  const onNodeDragStop: OnNodeDrag<CanvasNode> = (_event, _node, dragged) =>
+    onMoveNodes(
+      Object.fromEntries(dragged.map((node) => [node.id, node.position])),
+    );
+
+  const onDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (!event.dataTransfer.types.includes(NODE_KIND_MIME)) return;
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  };
+
+  const onDrop = (event: DragEvent<HTMLDivElement>) => {
+    const kind = event.dataTransfer.getData(NODE_KIND_MIME);
+
+    if (!isNodeKind(kind)) return;
+
+    event.preventDefault();
+
+    const point = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+
+    onAddNode(kind, {
+      x: point.x - NODE_WIDTH / 2,
+      y: point.y - NODE_HEIGHT / 2,
+    });
+  };
+
+  const empty = nodes.length === 0;
 
   return (
-    <div className="absolute inset-0">
-      <ReactFlow
-        key={revision}
-        defaultNodes={flow.nodes}
-        defaultEdges={flow.edges}
+    <div
+      id={CANVAS_ELEMENT_ID}
+      className="absolute inset-0"
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
+      <ReactFlow<CanvasNode, CanvasEdge>
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodeDragStop={onNodeDragStop}
         nodeTypes={NODE_TYPES}
-        nodesDraggable={false}
         nodesConnectable={false}
-        elementsSelectable
-        fitView
+        deleteKeyCode={null}
+        fitView={fitOnOpen}
         fitViewOptions={FIT_VIEW}
         minZoom={0.2}
         maxZoom={2}
@@ -74,10 +156,11 @@ export function DesignCanvas({ graph, layout, revision }: DesignCanvasProps) {
         <div className="pointer-events-none absolute inset-0 grid place-items-center p-6">
           <div className="flex max-w-xs flex-col items-center gap-1.5 rounded-2xl border border-black/[0.07] bg-white/90 p-5 text-center shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] backdrop-blur">
             <p className="font-semibold tracking-[-0.02em]">
-              This design has no nodes yet
+              Start with a node
             </p>
             <p className="text-sm leading-5 text-muted-foreground text-pretty">
-              Adding and connecting nodes is the next step we are building.
+              Drag one from the palette onto the canvas, or click it to place it
+              here.
             </p>
           </div>
         </div>

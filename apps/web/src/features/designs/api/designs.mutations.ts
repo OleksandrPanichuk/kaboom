@@ -1,3 +1,4 @@
+import type { DesignOp } from "@repo/design";
 import { mutationOptions } from "@tanstack/react-query";
 
 import { api, unwrap } from "@/lib/api";
@@ -49,3 +50,16 @@ export const deleteDesignMutation = mutationOptions({
     return client.invalidateQueries({ queryKey: designsListKey });
   },
 });
+
+export type DesignLayoutPositions = Record<string, { x: number; y: number }>;
+
+export const sendDesignOps = async (
+  id: string,
+  baseRevision: number,
+  ops: DesignOp[],
+) => unwrap(await api.api.designs(id).ops.post({ baseRevision, ops }));
+
+export const saveDesignLayout = async (
+  id: string,
+  layout: DesignLayoutPositions,
+) => unwrap(await api.api.designs(id).layout.put({ layout }));
