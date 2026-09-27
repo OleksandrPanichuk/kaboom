@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { createNode, type DesignGraph, emptyGraph } from "../graph";
+import { hintPenalty, penalised, revealedHints } from "./hints";
 import { OFFICIAL_PROBLEMS } from "./library";
 import { edge, graph, node, region, within } from "./library/build";
 import {
@@ -486,5 +487,32 @@ describe("scoring team chat", () => {
 
     expect(passed["survives-losing-a-region"]).toBe(false);
     expect(passed["handles-a-normal-day"]).toBe(true);
+  });
+});
+
+describe("hints", () => {
+  test.each(OFFICIAL_PROBLEMS.map((problem) => [problem.slug, problem]))(
+    "%s offers hints that cost more as they give more away",
+    (_, problem) => {
+      const costs = problem.hints.map((hint) => hint.cost);
+
+      expect(costs.length).toBeGreaterThan(0);
+      expect([...costs].sort((a, b) => a - b)).toEqual(costs);
+    },
+  );
+
+  test("shows titles and costs to solvers, never the text", () => {
+    const shown = publicProblem(shortener);
+
+    expect(shown.hints.map((hint) => hint.index)).toEqual([0, 1, 2]);
+    expect(JSON.stringify(shown.hints)).not.toContain(shortener.hints[0]!.body);
+  });
+
+  test("charges what was revealed, in order, and never below zero", () => {
+    expect(hintPenalty(shortener, 0)).toBe(0);
+    expect(hintPenalty(shortener, 2)).toBe(15);
+    expect(revealedHints(shortener, 1).map((hint) => hint.index)).toEqual([0]);
+    expect(penalised(10, 30)).toBe(0);
+    expect(penalised(90, 15)).toBe(75);
   });
 });

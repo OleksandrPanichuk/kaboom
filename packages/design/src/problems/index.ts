@@ -1,9 +1,16 @@
 export { type DrillOutcome, runDrill } from "./drills";
+export {
+  hintPenalty,
+  penalised,
+  type RevealedHint,
+  revealedHints,
+} from "./hints";
 export { OFFICIAL_PROBLEMS } from "./library";
 export {
   checkPublishable,
   HIDDEN_FAILED,
   HIDDEN_PASSED,
+  MAX_HINT_COST,
   type PublicDrill,
   type PublicProblem,
   publicProblem,
@@ -20,6 +27,9 @@ export {
   type DrillExpectation,
   type DrillFault,
   DrillSchema,
+  type Hint,
+  HintSchema,
+  MAX_HINTS,
   type NodeSelector,
   NodeSelectorSchema,
   type ProblemContent,

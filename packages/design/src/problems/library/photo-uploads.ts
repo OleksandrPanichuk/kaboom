@@ -126,6 +126,23 @@ The *Users* client is already on the canvas. Build what it talks to.`,
       check: { check: "has-node-kind", nodeKind: "queue" },
     },
   ],
+  hints: [
+    {
+      title: "What does the uploader wait for?",
+      body: "Making thumbnails takes 200 ms a photo. If the upload waits for it, a slow worker makes every upload slow.",
+      cost: 5,
+    },
+    {
+      title: "Hand the work over",
+      body: "Store the photo, put a message on a queue, and let workers make the thumbnails in the background. The upload answers as soon as the photo is stored.",
+      cost: 10,
+    },
+    {
+      title: "Serve views from the edge",
+      body: "Views are most of the traffic and never change. A CDN in front of object storage answers them close to the user and keeps the origin quiet during an event.",
+      cost: 15,
+    },
+  ],
   reference: {
     notes:
       "Views go through a CDN to object storage. Uploads hit a stateless API that writes the original and enqueues a thumbnail job; autoscaled workers drain the queue and write the thumbnails. The queue keeps uploads fast through bursts and worker outages, and the workers have headroom to catch up.",

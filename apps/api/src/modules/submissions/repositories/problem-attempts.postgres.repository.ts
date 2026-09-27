@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { problemAttemptsSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
@@ -43,5 +43,23 @@ export class PostgresProblemAttemptsRepository extends ProblemAttemptsRepository
       .returning();
 
     return row!;
+  }
+
+  public async revealHint(
+    id: string,
+    index: number,
+  ): Promise<AttemptEntity | null> {
+    const [row] = await this.db
+      .update(problemAttemptsSchema)
+      .set({ hintsRevealed: sql`${problemAttemptsSchema.hintsRevealed} + 1` })
+      .where(
+        and(
+          eq(problemAttemptsSchema.id, id),
+          eq(problemAttemptsSchema.hintsRevealed, index),
+        ),
+      )
+      .returning();
+
+    return row ?? null;
   }
 }

@@ -156,6 +156,23 @@ The apps and both providers are already on the canvas. Build what sits between t
       check: { check: "no-lint", lint: "sync-third-party" },
     },
   ],
+  hints: [
+    {
+      title: "Who waits for the providers?",
+      body: "If the API calls the push or SMS provider itself, their outages and slow answers become the apps' outages and slow answers.",
+      cost: 5,
+    },
+    {
+      title: "Put a queue in between",
+      body: "Store the notification, hand it to a queue, and let workers call the providers. The apps get their answer before any provider is involved.",
+      cost: 10,
+    },
+    {
+      title: "Size the workers to the slowest provider",
+      body: "One message in ten goes to SMS, which takes 500 a second. Workers that drain faster than about 5,000 a second get refused by it; let the queue hold the digest instead. Run the digest from one scheduler replica, or give it a lock.",
+      cost: 15,
+    },
+  ],
   reference: {
     notes:
       "The API stores each notification and hands it to a queue, so no provider is ever on the request path. A single scheduler replica feeds the digest into the same queue. Workers are sized to what the SMS provider takes: at most about 3,800 messages a second, of which a tenth, 380, go to SMS against its limit of 500. The queue absorbs the digest and any outage, and drains before the end.",

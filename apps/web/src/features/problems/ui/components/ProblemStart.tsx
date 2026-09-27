@@ -53,7 +53,11 @@ export function ProblemStart({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm leading-5 text-muted-foreground text-pretty">
             {problem.drills.length} drills, {hidden} of them hidden until you
-            submit. Starting gives you your own copy of the starting design.
+            submit
+            {problem.hints.length > 0
+              ? `, and ${problem.hints.length} hints if you get stuck`
+              : ""}
+            . Starting gives you your own copy of the starting design.
           </p>
           <Button
             size="lg"

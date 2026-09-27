@@ -15,6 +15,7 @@ export interface CreateSubmissionData {
   revision: number;
   graphHash: string;
   score: number;
+  hintPenalty: number;
   items: ItemScore[];
   drills: DrillScore[];
 }

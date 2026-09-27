@@ -26,6 +26,11 @@ export function ScoreBreakdown({ submission }: ScoreBreakdownProps) {
           / 100 · revision {submission.revision}
         </span>
       </p>
+      {submission.hintPenalty > 0 ? (
+        <p className="-mt-3 text-sm text-muted-foreground tabular-nums">
+          {submission.hintPenalty} points off for hints
+        </p>
+      ) : null}
       <ul className="flex flex-col gap-2.5">
         {submission.items.map((item) => (
           <li key={item.key} className="flex min-w-0 gap-2.5">

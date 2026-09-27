@@ -25,6 +25,7 @@ export const problemAttemptsSchema = pgTable(
       .notNull()
       .unique()
       .references(() => designsSchema.id, { onDelete: "cascade" }),
+    hintsRevealed: integer("hints_revealed").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

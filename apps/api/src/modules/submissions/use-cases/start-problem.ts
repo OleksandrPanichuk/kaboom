@@ -5,7 +5,8 @@ import { CreateDesignUseCase } from "@/modules/designs";
 import { ProblemsService } from "@/modules/problems";
 
 import { ProblemAttemptsRepository } from "../ports";
-import type { AttemptEntity } from "../submission.entity";
+import type { AttemptView } from "../submission.entity";
+import { SubmissionsService } from "../submissions.service";
 
 export interface StartProblemUseCaseOptions {
   userId: string;
@@ -13,20 +14,22 @@ export interface StartProblemUseCaseOptions {
 }
 
 type Options = StartProblemUseCaseOptions;
-type Result = AttemptEntity;
+type Result = AttemptView;
 
 export class StartProblemUseCase extends UseCase<Options, Result> {
   private readonly problems = makeService(ProblemsService);
 
   private readonly attempts = makeRepository(ProblemAttemptsRepository);
 
+  private readonly service = makeService(SubmissionsService);
+
   public async execute({ userId, slug }: Options): Promise<Result> {
     const { problem, version } = await this.problems.getPublished(slug);
     const existing = await this.attempts.find(userId, problem.id);
 
-    if (existing) return existing;
+    if (existing) return this.service.view(existing);
 
-    return transaction(async () => {
+    const attempt = await transaction(async () => {
       const design = await make(CreateDesignUseCase).execute({
         ownerId: userId,
         name: problem.title,
@@ -40,5 +43,7 @@ export class StartProblemUseCase extends UseCase<Options, Result> {
         designId: design.id,
       });
     });
+
+    return this.service.view(attempt);
   }
 }

@@ -16,4 +16,9 @@ export abstract class ProblemAttemptsRepository extends Repository {
   ): Promise<AttemptEntity | null>;
 
   public abstract insert(data: CreateAttemptData): Promise<AttemptEntity>;
+
+  public abstract revealHint(
+    id: string,
+    index: number,
+  ): Promise<AttemptEntity | null>;
 }

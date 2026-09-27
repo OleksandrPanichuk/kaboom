@@ -1,8 +1,18 @@
 import { t } from "elysia";
 
+export const RevealedHintModel = t.Object({
+  index: t.Integer(),
+  title: t.String(),
+  body: t.String(),
+  cost: t.Integer(),
+});
+export type RevealedHintModel = typeof RevealedHintModel.static;
+
 export const AttemptModel = t.Object({
   designId: t.String({ format: "uuid" }),
   problemVersion: t.Integer(),
+  hints: t.Array(RevealedHintModel),
+  hintPenalty: t.Integer(),
   createdAt: t.String({ format: "date-time" }),
 });
 export type AttemptModel = typeof AttemptModel.static;
@@ -37,6 +47,7 @@ export const SubmissionModel = t.Object({
   problemVersion: t.Integer(),
   revision: t.Integer(),
   score: t.Integer(),
+  hintPenalty: t.Integer(),
   items: t.Array(ItemResultModel),
   drills: t.Array(DrillResultModel),
   createdAt: t.String({ format: "date-time" }),

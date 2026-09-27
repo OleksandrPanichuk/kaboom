@@ -124,6 +124,23 @@ The *Partners* client is already on the canvas. Build what it talks to.`,
       check: { check: "no-lint", lint: "spof-critical-path" },
     },
   ],
+  hints: [
+    {
+      title: "Why does everyone wait during a flood?",
+      body: "Once the pricing database saturates, every request waits for the timeout, the well-behaved ones too. Scaling the database is ruled out.",
+      cost: 5,
+    },
+    {
+      title: "Turn the excess away",
+      body: "Put a rate limiter, or a gateway with throttling on, in front of the API. Requests above the limit fail at once instead of queueing behind the flood.",
+      cost: 10,
+    },
+    {
+      title: "Pick the limit",
+      body: "Set it above the normal 4,000 requests a second and below what the database can take at its read/write mix. The drills then pass for what gets through.",
+      cost: 15,
+    },
+  ],
   reference: {
     notes:
       "A gateway throttles at 5,000 requests a second, above the normal 4,000 and below what the pricing database can take (4,500 lookups and 500 bookings at the limit, against 6,000 and 1,500). Behind it, a service with room to lose a quarter of its replicas, and the database with a replica and automatic failover. During a flood the gateway turns most of it away at once, so the requests it admits never queue.",
