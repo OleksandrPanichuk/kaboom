@@ -24,6 +24,7 @@ const NOTES_MAX_LENGTH = 2_000;
 interface NodeInspectorProps {
   node: DesignNode;
   hits: LintHit[];
+  replicas?: string[];
   onPatch: (patch: NodePatch) => CommitResult;
   onDelete: () => void;
 }
@@ -31,6 +32,7 @@ interface NodeInspectorProps {
 export function NodeInspector({
   node,
   hits,
+  replicas = [],
   onPatch,
   onDelete,
 }: NodeInspectorProps) {
@@ -68,6 +70,22 @@ export function NodeInspector({
           </p>
         </div>
       </div>
+
+      {node.kind === "sql-database" && replicas.length > 0 ? (
+        <p className="border-b px-4 py-3 text-sm leading-5 text-muted-foreground">
+          Writes go to{" "}
+          <span className="font-medium text-foreground">
+            {node.label || definition.label}
+          </span>{" "}
+          only. Reads are spread over it and{" "}
+          <span className="font-medium text-foreground">
+            {replicas.length === 1
+              ? replicas[0]
+              : `${replicas.length} replicas`}
+          </span>
+          .
+        </p>
+      ) : null}
 
       {hits.length > 0 ? (
         <div className="flex flex-col gap-2 border-b p-4">

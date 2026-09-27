@@ -6,14 +6,24 @@ const STORES = new Set<DesignNode["kind"]>([
   "object-storage",
 ]);
 
-export const suggestEdgeKind = (from: DesignNode, to: DesignNode): EdgeKind => {
+const candidates = (from: DesignNode, to: DesignNode): EdgeKind[] => {
   if (from.kind === to.kind && catalogue[from.kind].replicable) {
-    return "replication";
+    return ["replication", "write", "read"];
   }
 
-  if (from.kind === "queue" || to.kind === "queue") return "async-message";
-  if (to.kind === "cache") return "read";
-  if (STORES.has(to.kind)) return "write";
+  if (from.kind === "queue" || to.kind === "queue") return ["async-message"];
+  if (to.kind === "cache") return ["read", "write"];
+  if (STORES.has(to.kind)) return ["write", "read"];
 
-  return "sync-call";
+  return ["sync-call", "async-message"];
+};
+
+export const suggestEdgeKind = (
+  from: DesignNode,
+  to: DesignNode,
+  taken: readonly EdgeKind[] = [],
+): EdgeKind => {
+  const options = candidates(from, to);
+
+  return options.find((kind) => !taken.includes(kind)) ?? options[0]!;
 };

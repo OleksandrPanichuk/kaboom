@@ -20,3 +20,26 @@ describe("suggestEdgeKind", () => {
     expect(suggestEdgeKind(node(from), node(to))).toBe(kind);
   });
 });
+
+describe("suggestEdgeKind with edges already there", () => {
+  test("offers a read once the service already writes to the database", () => {
+    expect(
+      suggestEdgeKind(node("service"), node("sql-database"), ["write"]),
+    ).toBe("read");
+    expect(
+      suggestEdgeKind(node("service"), node("sql-database"), ["read"]),
+    ).toBe("write");
+  });
+
+  test("offers a write once a cache is already read", () => {
+    expect(suggestEdgeKind(node("service"), node("cache"), ["read"])).toBe(
+      "write",
+    );
+  });
+
+  test("falls back to the first kind when every one is taken", () => {
+    expect(
+      suggestEdgeKind(node("service"), node("sql-database"), ["write", "read"]),
+    ).toBe("write");
+  });
+});

@@ -10,6 +10,11 @@ export type CanvasNodeData = Record<string, unknown> & {
 
 export type CanvasNode = Node<CanvasNodeData, "design-node">;
 
-export type CanvasEdgeData = Record<string, unknown> & { edge: DesignEdge };
+export type CanvasEdgeData = Record<string, unknown> & {
+  edge: DesignEdge;
+  lane: number;
+  lanes: number;
+  reversed: boolean;
+};
 
-export type CanvasEdge = Edge<CanvasEdgeData>;
+export type CanvasEdge = Edge<CanvasEdgeData, "design-edge">;

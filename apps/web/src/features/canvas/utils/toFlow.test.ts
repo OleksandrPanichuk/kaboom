@@ -68,3 +68,43 @@ describe("toFlow lint hits", () => {
     expect(nodes.map((node) => node.data.hits.length)).toEqual([1, 0]);
   });
 });
+
+describe("toFlow parallel edges", () => {
+  const edge = (
+    id: string,
+    from: string,
+    to: string,
+    kind: "read" | "write",
+  ) => ({
+    id,
+    from,
+    to,
+    kind,
+    label: "",
+    props: { share: 1, fanOut: 1, timeoutMs: 1_000 },
+  });
+
+  test("gives edges between the same two nodes their own lanes, in either direction", () => {
+    const graph = {
+      ...graphWith(["api", "db", "cache"]),
+      edges: [
+        edge("w", "api", "db", "write"),
+        edge("r", "api", "db", "read"),
+        edge("back", "db", "api", "read"),
+        edge("c", "api", "cache", "read"),
+      ],
+    };
+    const lanes = toFlow(graph, {}).edges.map((item) => [
+      item.id,
+      item.data?.lane,
+      item.data?.lanes,
+    ]);
+
+    expect(lanes).toEqual([
+      ["w", 0, 3],
+      ["r", 1, 3],
+      ["back", 2, 3],
+      ["c", 0, 1],
+    ]);
+  });
+});
