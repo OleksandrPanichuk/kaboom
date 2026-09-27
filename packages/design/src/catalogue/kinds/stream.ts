@@ -12,6 +12,16 @@ export const streamKind = defineNodeKind({
   stateful: true,
   replicable: false,
   distribution: "broadcast",
+  docs: {
+    summary:
+      "An append-only log of events that every consumer reads in full, at its own pace.",
+    useWhen:
+      "Several consumers need the same events: search indexing, analytics and notifications from one source.",
+    pitfalls: [
+      "Every consumer gets every event, so each must keep up with the full rate.",
+      "Order is kept within a partition only; pick the partition key by what must stay in order.",
+    ],
+  },
   props: z.strictObject({
     partitions: count(6, {
       title: "Partitions",

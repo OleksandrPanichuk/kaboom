@@ -11,6 +11,16 @@ export const objectStorageKind = defineNodeKind({
   stateful: true,
   replicable: false,
   distribution: "by-share",
+  docs: {
+    summary:
+      "Stores files and blobs (photos, videos, backups) durably and cheaply.",
+    useWhen:
+      "Anything large and binary. Put the file here and keep its key in a database.",
+    pitfalls: [
+      "It is slow for small, frequent reads; put a CDN in front for public files.",
+      "Uploads through your own service cost its capacity; direct uploads with signed URLs avoid that.",
+    ],
+  },
   props: z.strictObject({
     readCapacityRps: rate(5_500, {
       title: "Read capacity",

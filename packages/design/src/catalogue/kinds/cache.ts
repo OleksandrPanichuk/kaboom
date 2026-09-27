@@ -11,6 +11,17 @@ export const cacheKind = defineNodeKind({
   stateful: true,
   replicable: true,
   distribution: "by-share",
+  docs: {
+    summary:
+      "Keeps hot data in memory so repeated reads skip the slower store behind it.",
+    useWhen:
+      "Read-heavy data that changes rarely and is read far more often than it is written.",
+    pitfalls: [
+      "A flushed or cold cache sends every read to the database at once; size the database for that moment.",
+      "A cache is not the system of record. Anything only in the cache is gone when it restarts.",
+      "Writes need an invalidation story, or readers see stale values.",
+    ],
+  },
   props: z.strictObject({
     hitRatio: ratio(0.8, {
       title: "Hit ratio",

@@ -11,6 +11,16 @@ export const serviceKind = defineNodeKind({
   stateful: false,
   replicable: false,
   distribution: "by-share",
+  docs: {
+    summary:
+      "Stateless code that answers requests: an API, a backend, a microservice.",
+    useWhen: "Request-response work that has to finish while the caller waits.",
+    pitfalls: [
+      "One replica is a single point of failure; two behind a load balancer is the usual minimum.",
+      "Slow work on the request path (sending email, resizing images) belongs in a queue and a worker.",
+      "Every replica added still hits the same database, so scaling the service can move the bottleneck, not remove it.",
+    ],
+  },
   props: z.strictObject({
     replicas: count(2, {
       title: "Replicas",

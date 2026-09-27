@@ -15,6 +15,7 @@ import { FALLBACK_NODE_ICON, NODE_KIND_ICONS } from "@/features/canvas";
 
 import { DraftInput } from "./DraftInput";
 import { InspectorSection } from "./InspectorSection";
+import { KindAbout } from "./KindAbout";
 import { LintCallout } from "./LintCallout";
 import { type CommitResult, PropFieldControl } from "./PropFieldControl";
 
@@ -94,6 +95,8 @@ export function NodeInspector({
           ))}
         </div>
       ) : null}
+
+      <KindAbout label={definition.label} docs={definition.docs} />
 
       <InspectorSection title="General">
         <Field data-invalid={labelError ? true : undefined}>
