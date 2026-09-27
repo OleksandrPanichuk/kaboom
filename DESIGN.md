@@ -77,7 +77,10 @@ A design, and later a problem or an interview, opens full screen without the sid
 - **Nodes** are 208px cards: the kind's Lucide icon in an indigo tile, the label, and below it the technology (such as RDS) or, without one, the kind. A selected node gets an indigo border and ring.
 - **Edges** are drawn by kind so a diagram reads without a legend: sync calls solid zinc, async messages dashed indigo and animated, reads sky, writes amber, replication dotted grey. An edge's label sits on it in a small white pill.
 - **Viewport:** opens fitted to the graph, but never below 70 % zoom, so labels stay readable and a large graph is panned instead. Zoom and fit controls sit at the bottom left; the minimap, from 640px, at the bottom right.
-- **Empty design:** a centred note on the dotted background.
+- **Empty design:** a centred note on the dotted background, pointing at the palette.
+- **Palette:** the tool panel lists the kinds in four groups (Entry, Compute, Data, Messaging). A kind is dragged onto the canvas and lands where it is dropped, or clicked to land in the middle of the view, on the nearest spot no other node covers. On a phone, a tap adds it and closes the sheet.
+- **Moving:** nodes are dragged freely; where they sit is saved half a second after the last move and creates no revision.
+- **Saving:** a change shows at once. The top bar reads *Revision N · Saving…* until the server has it, then the new revision. When the design changed elsewhere in the meantime, the change is replayed on top and only a change that no longer fits is dropped, with a notice on the canvas that names what happened.
 
 ### Route states
 

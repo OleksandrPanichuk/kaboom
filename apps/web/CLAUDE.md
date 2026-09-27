@@ -155,7 +155,15 @@ The registry writes them to `components/` rather than `components/ui/`;
 move each into `components/flow/`, and drop the comments and any
 `tabIndex` it sets, since React Flow's own node wrapper already takes focus.
 
-The canvas itself lives in `features/canvas`. `toFlow` is the one place a
+The canvas itself lives in `features/canvas`, and is presentational: it
+receives the graph and layout and reports additions and moves. Writes belong
+to `features/designs`. `DesignWriter` (`designs/utils`) holds the confirmed
+revision and a queue of pending op batches, shows their result at once, sends
+one batch at a time on the revision before it, replays the queue on the
+latest design after a 409, and drops a batch the server rejects;
+`useDesignEditor` wraps it for React and saves the layout on a debounce. The
+query cache only ever receives confirmed revisions.
+ `toFlow` is the one place a
 `DesignGraph` and its layout turn into React Flow nodes and edges; a node
 without a saved position is placed on a grid, so a graph written by the API
 or the interviewer still renders.
