@@ -15,7 +15,7 @@ import {
   MAX_NODES,
 } from "../graph";
 import { type OpRejection, reject, RejectedOp } from "./rejection";
-import type { DesignOp, EdgePatch, NodePatch } from "./schema";
+import type { DesignOp, EdgePatch, GroupPatch, NodePatch } from "./schema";
 
 export type ApplyOpsResult =
   { ok: true; graph: DesignGraph; inverse: DesignOp[] } | OpRejection;
@@ -370,6 +370,22 @@ const removeGroup = (graph: DesignGraph, id: string): DesignOp[] => {
   return [{ op: "add-group", group }];
 };
 
+const updateGroup = (
+  graph: DesignGraph,
+  id: string,
+  patch: GroupPatch,
+): DesignOp[] => {
+  const group = findGroup(graph, id);
+  const previous: GroupPatch = {};
+
+  if (patch.label !== undefined) {
+    previous.label = group.label;
+    group.label = patch.label;
+  }
+
+  return [{ op: "update-group", id, patch: previous }];
+};
+
 const applyOne = (graph: DesignGraph, op: DesignOp): DesignOp[] => {
   switch (op.op) {
     case "add-node":
@@ -388,6 +404,8 @@ const applyOne = (graph: DesignGraph, op: DesignOp): DesignOp[] => {
       return addGroup(graph, op.group);
     case "remove-group":
       return removeGroup(graph, op.id);
+    case "update-group":
+      return updateGroup(graph, op.id, op.patch);
   }
 };
 

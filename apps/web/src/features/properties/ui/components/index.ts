@@ -7,4 +7,6 @@ export * from "./KindAbout";
 export * from "./LintCallout";
 export * from "./NodeInspector";
 export * from "./PropFieldControl";
+export * from "./RegionField";
+export * from "./RegionInspector";
 export * from "./SelectionInspector";

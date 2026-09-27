@@ -190,6 +190,15 @@ A problem is started explicitly, from a screen with a Start button: the route
 only reads the attempt (`null` when there is none), because a link preloads
 its loader on hover and must never create anything.
 
+Regions are groups of kind `region` in the graph, not React Flow nodes.
+`RegionLayer` draws each as a box around its nodes' live positions inside
+`ViewportPortal`, behind nodes and edges (`.design-canvas
+.react-flow__viewport-portal` in `globals.css`), so a region follows a drag
+without owning any position of its own; only its label is clickable. A node
+joins or leaves one from the inspector's *Region* field, and
+`placementOps` (`designs/utils`) keeps regions non-empty: the batch that
+moves or deletes a region's last node removes the region with it.
+
 `features/simulation` runs `evaluateLoad` in the browser while the Run tab
 is open, on a deferred graph so typing stays smooth, and turns a step into
 the canvas overlay (`overlayAt`); the canvas only draws it. A saved run posts

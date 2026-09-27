@@ -26,6 +26,7 @@ import {
   EdgeInspector,
   InspectorEmpty,
   NodeInspector,
+  RegionInspector,
   SelectionInspector,
 } from "@/features/properties";
 import {
@@ -80,6 +81,7 @@ export function DesignWorkspace({
   const { data: design } = useSuspenseQuery(designQuery(designId));
   const editor = useDesignEditor(designId);
   const [selection, setSelection] = useState<Selection>(NOTHING);
+  const [regionId, setRegionId] = useState<string | null>(null);
   const [tab, setTab] = useState(initialTab);
   const context: DesignWorkspaceContext = {
     revision: editor.revision,
@@ -113,6 +115,8 @@ export function DesignWorkspace({
         ? current
         : { nodes, edges },
     );
+
+    if (nodes.length + edges.length > 0) setRegionId(null);
 
     if (focusingRef.current) {
       focusingRef.current = false;
@@ -176,10 +180,35 @@ export function DesignWorkspace({
       selectedEdges.map((edge) => edge.id),
     );
 
+  const regions = graph.groups.filter((group) => group.kind === "region");
+  const region = regions.find((group) => group.id === regionId) ?? null;
+  const sharedRegion = selectedNodes.every(
+    (node) => node.groupId === selectedNodes[0]?.groupId,
+  )
+    ? (selectedNodes[0]?.groupId ?? null)
+    : null;
+  const selectRegion = (id: string | null) => {
+    setRegionId(id);
+    if (id) setTab("node");
+  };
+
   const [onlyNode] = selectedNodes;
   const [onlyEdge] = selectedEdges;
   const inspector =
-    onlyNode && selectedNodes.length === 1 && selectedEdges.length === 0 ? (
+    region && selectedNodes.length + selectedEdges.length === 0 ? (
+      <RegionInspector
+        key={region.id}
+        region={region}
+        members={graph.nodes
+          .filter((node) => node.groupId === region.id)
+          .map((node) => labelOf(node.id))}
+        onRename={(label) => editor.renameRegion(region.id, label)}
+        onDissolve={() => {
+          editor.dissolveRegion(region.id);
+          setRegionId(null);
+        }}
+      />
+    ) : onlyNode && selectedNodes.length === 1 && selectedEdges.length === 0 ? (
       <NodeInspector
         key={onlyNode.id}
         node={onlyNode}
@@ -189,6 +218,8 @@ export function DesignWorkspace({
             (edge) => edge.kind === "replication" && edge.from === onlyNode.id,
           )
           .map((edge) => labelOf(edge.to))}
+        regions={regions}
+        onRegionChange={(target) => editor.placeInRegion([onlyNode.id], target)}
         onPatch={(patch) => editor.updateNode(onlyNode.id, patch)}
         onDelete={removeSelection}
       />
@@ -205,6 +236,14 @@ export function DesignWorkspace({
       <SelectionInspector
         nodes={selectedNodes.length}
         edges={selectedEdges.length}
+        regions={regions}
+        region={sharedRegion}
+        onRegionChange={(target) =>
+          editor.placeInRegion(
+            selectedNodes.map((node) => node.id),
+            target,
+          )
+        }
         onDelete={removeSelection}
       />
     ) : (
@@ -316,6 +355,8 @@ export function DesignWorkspace({
           onRefuseConnection={editor.reportError}
           onDelete={editor.remove}
           onSelectionChange={onSelectionChange}
+          selectedRegionId={region?.id ?? null}
+          onSelectRegion={selectRegion}
         />
         {editor.error ? (
           <CanvasNotice

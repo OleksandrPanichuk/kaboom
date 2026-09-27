@@ -146,3 +146,7 @@
     @apply min-h-9 rounded-xl px-3;
   }
 }
+
+.design-canvas .react-flow__viewport-portal {
+  z-index: -1;
+}

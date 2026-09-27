@@ -141,6 +141,15 @@ describe("applyOps", () => {
     ]);
   });
 
+  test("renames a group and undoes it", () => {
+    const { graph, inverse } = apply([
+      { op: "update-group", id: "eu", patch: { label: "Europe" } },
+    ]);
+
+    expect(graph.groups[0]!.label).toBe("Europe");
+    expect(apply(inverse, graph).graph.groups[0]!.label).toBe("EU");
+  });
+
   test("undoes a whole batch in reverse order", () => {
     expectRoundTrip([
       { op: "add-node", node: createNode("cache", { id: "redis" }) },

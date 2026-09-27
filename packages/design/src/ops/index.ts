@@ -7,6 +7,7 @@ export {
   type DesignOpKind,
   DesignOpSchema,
   type EdgePatch,
+  type GroupPatch,
   MAX_OPS_PER_BATCH,
   type NodePatch,
 } from "./schema";
