@@ -39,7 +39,8 @@ routes/
     sign-in.tsx, sign-up.tsx, forgot-password.tsx
   _app/                   the signed-in app
     route.tsx             beforeLoad: a guest goes to /sign-in?redirect=…; renders AppShell
-    index.tsx, settings/profile.tsx, settings/security.tsx
+    index.tsx, designs/index.tsx, designs/$designId.tsx,
+    settings/profile.tsx, settings/security.tsx
   (email-links)/          pages opened from an email, signed in or not
     reset-password.tsx, verify-email.tsx, confirm-email-change.tsx
 ```

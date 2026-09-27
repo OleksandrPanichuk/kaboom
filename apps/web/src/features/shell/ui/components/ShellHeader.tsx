@@ -6,7 +6,7 @@ export function ShellHeader() {
   const active = useActiveNavItem();
 
   return (
-    <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background/90 px-3 backdrop-blur sm:px-4">
+    <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b bg-background/90 px-3 backdrop-blur sm:px-4">
       <SidebarTrigger className="-ml-1 size-9" aria-label="Toggle navigation" />
       {active ? (
         <>
