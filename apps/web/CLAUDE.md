@@ -38,9 +38,12 @@ routes/
     route.tsx             beforeLoad: a signed-in visitor goes on to ?redirect or /
     sign-in.tsx, sign-up.tsx, forgot-password.tsx
   _app/                   the signed-in app
-    route.tsx             beforeLoad: a guest goes to /sign-in?redirect=…; renders AppShell
-    index.tsx, designs/index.tsx, designs/$designId.tsx,
-    settings/profile.tsx, settings/security.tsx
+    route.tsx             beforeLoad: a guest goes to /sign-in?redirect=…
+    _shell/               pages inside the sidebar
+      route.tsx           renders AppShell
+      index.tsx, designs/index.tsx, settings/profile.tsx, settings/security.tsx
+    (workspace)/          full-screen work surfaces, each view renders WorkspaceLayout
+      designs/$designId.tsx
   (email-links)/          pages opened from an email, signed in or not
     reset-password.tsx, verify-email.tsx, confirm-email-change.tsx
 ```
@@ -53,6 +56,10 @@ routes/
   because a link from an email must open whether or not the reader is signed
   in.
 - A guard lives once, in the layout, never repeated in the routes under it.
+- A page where the user works on something (a design, a problem, an
+  interview) goes under `(workspace)/` and renders `WorkspaceLayout` from
+  `@/features/shell`, passing its own tool panel, tabs and top-bar actions.
+  Everything else goes under `_shell/`.
 - `tsr generate` rewrites the id in `createFileRoute(...)` to match the file's
   place, so moving a route is `git mv` and a regenerate.
 

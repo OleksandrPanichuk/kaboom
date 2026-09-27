@@ -7,16 +7,15 @@ import { AppSidebar, ShellHeader } from "@/features/shell/ui/components";
 
 interface AppShellProps {
   children: ReactNode;
-  onSignedOut: () => void;
 }
 
-export function AppShell({ children, onSignedOut }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   const open = useSidebarStore((state) => state.open);
   const setOpen = useSidebarStore((state) => state.setOpen);
 
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
-      <AppSidebar onSignedOut={onSignedOut} />
+      <AppSidebar />
       <SidebarInset className="min-w-0">
         <ShellHeader />
         <EmailVerificationBanner />
