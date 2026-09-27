@@ -13,6 +13,7 @@ describe("ranking", () => {
     expect(rankFor(0)).toEqual({
       name: "Junior",
       points: 0,
+      floorPoints: 0,
       nextName: "Middle",
       nextPoints: 100,
     });
@@ -21,6 +22,7 @@ describe("ranking", () => {
     expect(rankFor(5_000)).toEqual({
       name: "Principal",
       points: 5_000,
+      floorPoints: 1_000,
       nextName: null,
       nextPoints: null,
     });

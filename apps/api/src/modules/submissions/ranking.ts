@@ -5,6 +5,7 @@ import { DIFFICULTY_WEIGHT, RANKS } from "./submissions.constants";
 export interface Rank {
   name: string;
   points: number;
+  floorPoints: number;
   nextName: string | null;
   nextPoints: number | null;
 }
@@ -26,6 +27,7 @@ export const rankFor = (points: number): Rank => {
   return {
     name: RANKS[index]!.name,
     points,
+    floorPoints: RANKS[index]!.points,
     nextName: next?.name ?? null,
     nextPoints: next?.points ?? null,
   };

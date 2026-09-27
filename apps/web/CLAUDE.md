@@ -42,9 +42,9 @@ routes/
     route.tsx             beforeLoad: a guest goes to /sign-in?redirect=…
     _shell/               pages inside the sidebar
       route.tsx           renders AppShell
-      index.tsx, designs/index.tsx, settings/profile.tsx, settings/security.tsx
+      index.tsx, designs/index.tsx, problems/index.tsx, settings/…
     (workspace)/          full-screen work surfaces, each view renders WorkspaceLayout
-      designs/$designId.tsx
+      designs/$designId.tsx, problems/$slug.tsx
   (email-links)/          pages opened from an email, signed in or not
     reset-password.tsx, verify-email.tsx, confirm-email-change.tsx
 ```
@@ -171,6 +171,20 @@ undo and redo are ordinary batches that go to the server like any other;
 `.meta()` and it appears in the form; never write a form for one kind. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
 drawn the same way.
+
+`DesignWorkspace` (`features/designs`) is the editor without a screen around
+it: canvas, palette, Node and Checks tabs, undo and saving. A page that edits
+a design for its own purpose renders it with its own `back` link, `title`,
+`leadingTabs` and top-bar `actions`, both called with the live `revision`,
+`saving` and `showTab`; `simulation={false}` drops the Run tab. `DesignView`
+is that component with nothing added, and `features/problems` renders it for
+a started problem with Task, Tests and History tabs, and Run tests and Submit
+beside undo. Submit sends the revision on screen, so the server scores the
+design the solver saw and answers 409 if it has moved on.
+
+A problem is started explicitly, from a screen with a Start button: the route
+only reads the attempt (`null` when there is none), because a link preloads
+its loader on hover and must never create anything.
 
 `features/simulation` runs `evaluateLoad` in the browser while the Run tab
 is open, on a deferred graph so typing stays smooth, and turns a step into

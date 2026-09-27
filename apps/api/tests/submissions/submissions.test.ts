@@ -42,6 +42,7 @@ interface Progress {
   rank: {
     name: string;
     points: number;
+    floorPoints: number;
     nextName: string | null;
     nextPoints: number | null;
   };
@@ -238,7 +239,13 @@ describe("running and submitting", () => {
 
     expect((await user.get<Progress>("/api/progress")).body).toEqual({
       points: 0,
-      rank: { name: "Junior", points: 0, nextName: "Middle", nextPoints: 100 },
+      rank: {
+        name: "Junior",
+        points: 0,
+        floorPoints: 0,
+        nextName: "Middle",
+        nextPoints: 100,
+      },
       problems: [],
     });
   });
