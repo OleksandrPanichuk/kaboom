@@ -1,15 +1,18 @@
 import {
   Archive,
   Cable,
+  CalendarClock,
   Cog,
   Database,
   DatabaseZap,
   Gauge,
   Globe,
+  KeyRound,
   type LucideIcon,
   MonitorSmartphone,
   Rows3,
   ScrollText,
+  Search,
   Server,
   Split,
   Waypoints,
@@ -31,6 +34,9 @@ export const NODE_KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
   "api-gateway": Waypoints,
   "rate-limiter": Gauge,
   "external-api": Cable,
+  "search-index": Search,
+  scheduler: CalendarClock,
+  coordination: KeyRound,
 };
 
 export const FALLBACK_NODE_ICON: LucideIcon = Server;

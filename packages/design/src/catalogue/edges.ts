@@ -8,6 +8,8 @@ export const EDGE_KINDS = [
   "read",
   "write",
   "replication",
+  "change-feed",
+  "lock",
 ] as const;
 
 export const EdgeKindSchema = z.enum(EDGE_KINDS);
@@ -46,4 +48,5 @@ export const EdgePropsPatchSchema = z.strictObject({
   timeoutMs: timeoutMs.optional(),
 });
 
-export const carriesLoad = (kind: EdgeKind): boolean => kind !== "replication";
+export const carriesLoad = (kind: EdgeKind): boolean =>
+  kind !== "replication" && kind !== "lock";

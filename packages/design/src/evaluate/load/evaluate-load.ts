@@ -21,6 +21,7 @@ import {
   carries,
   type Channels,
   consumerLimit,
+  feedsOnlyChanges,
   forwardedBy,
   intrinsicErrorRateOf,
   SATURATION,
@@ -58,6 +59,28 @@ const multiplierAt = (scenario: LoadScenario, t: number): number => {
   return multiplier;
 };
 
+const burstShare = (
+  every: number,
+  burst: number,
+  from: number,
+  length: number,
+): number => {
+  let covered = 0;
+
+  for (
+    let start = Math.floor(from / every) * every;
+    start < from + length;
+    start += every
+  ) {
+    covered += Math.max(
+      0,
+      Math.min(start + burst, from + length) - Math.max(start, from),
+    );
+  }
+
+  return covered / length;
+};
+
 const autoscaled = (node: DesignNode) =>
   (node.kind === "service" || node.kind === "worker") &&
   node.props.autoscale.enabled
@@ -65,7 +88,9 @@ const autoscaled = (node: DesignNode) =>
     : null;
 
 const initialReplicas = (node: DesignNode): number =>
-  node.kind === "service" || node.kind === "worker" ? node.props.replicas : 1;
+  node.kind === "service" || node.kind === "worker" || node.kind === "scheduler"
+    ? node.props.replicas
+    : 1;
 
 interface Memory {
   replicas: Map<string, number>;
@@ -176,6 +201,25 @@ const runStep = (
       emitted.set(node.id, rps);
     }
 
+    if (node.kind === "scheduler") {
+      const locks = topo.locksOf.get(node.id) ?? [];
+      const firing =
+        locks.length === 0 ? node.props.replicas : locks.some(isUp) ? 1 : 0;
+
+      load = {
+        reads: 0,
+        writes:
+          node.props.jobsPerSecond *
+          firing *
+          burstShare(
+            node.props.everySeconds,
+            node.props.burstSeconds,
+            t,
+            scenario.stepSeconds,
+          ),
+      };
+    }
+
     const capacity = capacityOf(node, conditions);
     const limit = throttleLimitOf(node, conditions.capacityFactor);
     const offered = total(load);
@@ -221,7 +265,10 @@ const runStep = (
       ...(limit !== null && up
         ? { throttled: offered * (1 - admittedFraction) }
         : {}),
-      ...(autoscaled(node) || node.kind === "service" || node.kind === "worker"
+      ...(autoscaled(node) ||
+      node.kind === "service" ||
+      node.kind === "worker" ||
+      node.kind === "scheduler"
         ? { replicas: conditions.replicas }
         : {}),
     };
@@ -321,7 +368,11 @@ const runStep = (
         node.kind !== "load-balancer" || node.props.healthCheck;
 
       for (const channel of ["reads", "writes"] as const) {
-        const carrying = outgoing.filter((edge) => carries(edge.kind)[channel]);
+        const carrying = outgoing.filter(
+          (edge) =>
+            carries(edge.kind)[channel] &&
+            (!feedsOnlyChanges(node) || edge.kind === "change-feed"),
+        );
         const targets = healthChecked
           ? carrying.filter((edge) => isUp(edge.to))
           : carrying;

@@ -6,6 +6,11 @@ const STORES = new Set<DesignNode["kind"]>([
   "object-storage",
 ]);
 
+const DATABASES = new Set<DesignNode["kind"]>([
+  "sql-database",
+  "nosql-database",
+]);
+
 const MESSAGING = new Set<DesignNode["kind"]>(["queue", "stream"]);
 
 const candidates = (from: DesignNode, to: DesignNode): EdgeKind[] => {
@@ -13,10 +18,14 @@ const candidates = (from: DesignNode, to: DesignNode): EdgeKind[] => {
     return ["replication", "write", "read"];
   }
 
+  if (to.kind === "coordination") return ["lock"];
+  if (DATABASES.has(from.kind)) return ["change-feed"];
+
   if (MESSAGING.has(from.kind) || MESSAGING.has(to.kind)) {
     return ["async-message"];
   }
   if (to.kind === "cache") return ["read", "write"];
+  if (to.kind === "search-index") return ["read", "write"];
   if (STORES.has(to.kind)) return ["write", "read"];
 
   return ["sync-call"];

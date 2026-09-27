@@ -18,6 +18,11 @@ describe("suggestEdgeKind", () => {
     ["sql-database", "sql-database", "replication"],
     ["cache", "cache", "replication"],
     ["service", "service", "sync-call"],
+    ["sql-database", "search-index", "change-feed"],
+    ["nosql-database", "stream", "change-feed"],
+    ["service", "search-index", "read"],
+    ["scheduler", "coordination", "lock"],
+    ["scheduler", "queue", "async-message"],
   ] as const)("%s → %s is %s", (from, to, kind) => {
     expect(suggestEdgeKind(node(from), node(to))).toBe(kind);
   });

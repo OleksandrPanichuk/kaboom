@@ -8,6 +8,7 @@ export interface Topology {
   outbound: Map<string, DesignEdge[]>;
   replicasOf: Map<string, string[]>;
   primaryOf: Map<string, string>;
+  locksOf: Map<string, string[]>;
 }
 
 export const topology = (graph: DesignGraph): Topology => {
@@ -16,6 +17,7 @@ export const topology = (graph: DesignGraph): Topology => {
   const outbound = new Map<string, DesignEdge[]>();
   const replicasOf = new Map<string, string[]>();
   const primaryOf = new Map<string, string>();
+  const locksOf = new Map<string, string[]>();
 
   for (const node of graph.nodes) {
     inbound.set(node.id, []);
@@ -29,6 +31,8 @@ export const topology = (graph: DesignGraph): Topology => {
         edge.to,
       ]);
       primaryOf.set(edge.to, edge.from);
+    } else if (edge.kind === "lock") {
+      locksOf.set(edge.from, [...(locksOf.get(edge.from) ?? []), edge.to]);
     } else if (carriesLoad(edge.kind)) {
       inbound.get(edge.to)?.push(edge);
       outbound.get(edge.from)?.push(edge);
@@ -55,5 +59,5 @@ export const topology = (graph: DesignGraph): Topology => {
     }
   }
 
-  return { order, byId, inbound, outbound, replicasOf, primaryOf };
+  return { order, byId, inbound, outbound, replicasOf, primaryOf, locksOf };
 };

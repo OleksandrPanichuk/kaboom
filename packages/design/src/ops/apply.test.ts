@@ -199,6 +199,36 @@ describe("applyOps", () => {
     ]);
   });
 
+  test("allows a change feed from a database and a lock on a coordination service", () => {
+    apply([
+      { op: "add-node", node: createNode("search-index", { id: "search" }) },
+      { op: "add-node", node: createNode("scheduler", { id: "cron" }) },
+      { op: "add-node", node: createNode("coordination", { id: "zk" }) },
+      {
+        op: "add-edge",
+        edge: createEdge({
+          id: "f1",
+          from: "db",
+          to: "search",
+          kind: "change-feed",
+        }),
+      },
+      {
+        op: "add-edge",
+        edge: createEdge({ id: "l1", from: "cron", to: "zk", kind: "lock" }),
+      },
+      {
+        op: "add-edge",
+        edge: createEdge({
+          id: "c1",
+          from: "cron",
+          to: "api",
+          kind: "sync-call",
+        }),
+      },
+    ]);
+  });
+
   test("never mutates the graph it was given", () => {
     const graph = base();
     const before = canonicalize(graph);
@@ -301,6 +331,64 @@ describe("applyOps", () => {
             from: "api",
             to: "db",
             kind: "replication",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "an edge into a scheduler",
+      [
+        { op: "add-node", node: createNode("scheduler", { id: "cron" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "e9",
+            from: "api",
+            to: "cron",
+            kind: "sync-call",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "a lock on something other than a coordination service",
+      [
+        {
+          op: "add-edge",
+          edge: createEdge({ id: "e9", from: "api", to: "db", kind: "lock" }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "a load edge into a coordination service",
+      [
+        { op: "add-node", node: createNode("coordination", { id: "zk" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "e9",
+            from: "api",
+            to: "zk",
+            kind: "sync-call",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "a change feed from something other than a database",
+      [
+        { op: "add-node", node: createNode("search-index", { id: "search" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "e9",
+            from: "api",
+            to: "search",
+            kind: "change-feed",
           }),
         },
       ],

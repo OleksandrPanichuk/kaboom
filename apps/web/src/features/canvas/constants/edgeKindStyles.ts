@@ -39,6 +39,29 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
     style: { stroke: "var(--color-amber-600)", strokeWidth: 1.5 },
     animated: false,
   },
+  "change-feed": {
+    description:
+      "Every change the database commits, streamed to the target without the writer waiting.",
+    label: "Change feed",
+    style: {
+      stroke: "var(--color-teal-600)",
+      strokeWidth: 1.5,
+      strokeDasharray: "6 4",
+    },
+    animated: true,
+  },
+  lock: {
+    description:
+      "The source takes a lock or a leadership lease here before it acts; it carries no request load.",
+    label: "Lock",
+    style: {
+      stroke: "var(--color-violet-500)",
+      strokeWidth: 1.5,
+      strokeDasharray: "1 4",
+      strokeLinecap: "round",
+    },
+    animated: false,
+  },
   replication: {
     description:
       "The target keeps a copy of the source; it carries no request load.",

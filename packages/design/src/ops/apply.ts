@@ -140,10 +140,30 @@ const assertValidEdge = (graph: DesignGraph, edge: DesignEdge): void => {
     reject("invalid-edge", `Edge ${edge.id} connects ${from.id} to itself`);
   }
 
-  if (to.kind === "client") {
+  if (to.kind === "client" || to.kind === "scheduler") {
     reject(
       "invalid-edge",
-      `Edge ${edge.id} ends at ${to.id}, a client; clients send requests and nothing calls them`,
+      `Edge ${edge.id} ends at ${to.id}, a ${to.kind}; it starts work and nothing calls it`,
+    );
+  }
+
+  if ((edge.kind === "lock") !== (to.kind === "coordination")) {
+    reject(
+      "invalid-edge",
+      edge.kind === "lock"
+        ? `Edge ${edge.id} takes a lock on ${to.id}, a ${to.kind}; locks are taken on a coordination service`
+        : `Edge ${edge.id} ends at ${to.id}, a coordination service; it only hands out locks`,
+    );
+  }
+
+  if (
+    edge.kind === "change-feed" &&
+    from.kind !== "sql-database" &&
+    from.kind !== "nosql-database"
+  ) {
+    reject(
+      "invalid-edge",
+      `Edge ${edge.id} is a change feed from ${from.id}, a ${from.kind}; only a database publishes one`,
     );
   }
 

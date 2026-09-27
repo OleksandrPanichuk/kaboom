@@ -276,4 +276,77 @@ describe("lints", () => {
       expect(hits(pay("async-message"), "sync-third-party")).toEqual([]);
     });
   });
+  describe("duplicate-schedule", () => {
+    const cron = (replicas: number, locked: boolean) =>
+      graph(
+        [
+          node("cron", "scheduler", { replicas }),
+          node("jobs", "queue"),
+          node("worker", "worker", { replicas: 2 }),
+          node("zk", "coordination"),
+        ],
+        [
+          edge("cron", "jobs", "async-message"),
+          edge("jobs", "worker", "async-message"),
+          ...(locked ? [edge("cron", "zk", "lock")] : []),
+        ],
+      );
+
+    test("flags replicas that all fire, and not one replica or a lock", () => {
+      expect(hits(cron(2, false), "duplicate-schedule")).toEqual(["cron"]);
+      expect(hits(cron(1, false), "duplicate-schedule")).toEqual([]);
+      expect(hits(cron(2, true), "duplicate-schedule")).toEqual([]);
+    });
+
+    test("reaches what a scheduler starts, and not a lonely coordination service", () => {
+      expect(hits(cron(2, true), "unreachable-node")).toEqual([]);
+      expect(hits(cron(2, false), "unreachable-node")).toEqual(["zk"]);
+    });
+  });
+
+  describe("dual-write", () => {
+    const writes = (fed: boolean) =>
+      graph(
+        [
+          node("users", "client"),
+          node("api", "service", { replicas: 2 }),
+          node("db", "sql-database"),
+          node("search", "search-index"),
+        ],
+        [
+          edge("users", "api"),
+          edge("api", "db", "write"),
+          edge("api", "search", "read"),
+          fed
+            ? edge("db", "search", "change-feed")
+            : edge("api", "search", "write"),
+        ],
+      );
+
+    test("flags a service that writes a database and an index itself", () => {
+      expect(hits(writes(false), "dual-write")).toEqual(["api+db+search"]);
+    });
+
+    test("accepts an index fed by the database's change feed", () => {
+      expect(hits(writes(true), "dual-write")).toEqual([]);
+    });
+  });
+
+  test("flags a coordination service without a quorum that a scheduler locks on", () => {
+    const g = graph(
+      [
+        node("cron", "scheduler", { replicas: 2 }),
+        node("jobs", "queue"),
+        node("worker", "worker", { replicas: 2 }),
+        node("zk", "coordination", { members: 1 }),
+      ],
+      [
+        edge("cron", "jobs", "async-message"),
+        edge("jobs", "worker", "async-message"),
+        edge("cron", "zk", "lock"),
+      ],
+    );
+
+    expect(hits(g, "spof-critical-path")).toEqual(["zk"]);
+  });
 });
