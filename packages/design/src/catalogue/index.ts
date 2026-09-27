@@ -30,6 +30,8 @@ export {
   describeProps,
   prop,
   PROP_UNITS,
+  type PropControl,
+  propControl,
   type PropField,
   type PropMeta,
   propMeta,

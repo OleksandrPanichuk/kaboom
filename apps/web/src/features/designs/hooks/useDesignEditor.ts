@@ -4,6 +4,7 @@ import {
   EdgePropsSchema,
   migrateGraph,
   type NodeKind,
+  type NodePatch,
 } from "@repo/design";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -37,6 +38,7 @@ export interface DesignEditor extends DesignWriterState {
   connect: (from: string, to: string) => void;
   connectionError: (from: string, to: string) => string | null;
   remove: (nodeIds: string[], edgeIds: string[]) => void;
+  updateNode: (id: string, patch: NodePatch) => string | null;
   undo: () => void;
   redo: () => void;
   reportError: (message: string) => void;
@@ -225,6 +227,12 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     [writer],
   );
 
+  const updateNode = useCallback(
+    (id: string, patch: NodePatch) =>
+      writer.apply([{ op: "update-node", id, patch }]),
+    [writer],
+  );
+
   const reportError = useCallback(
     (message: string) => writer.reportError(message),
     [writer],
@@ -249,6 +257,7 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     connect,
     connectionError,
     remove,
+    updateNode,
     undo,
     redo,
     reportError,
