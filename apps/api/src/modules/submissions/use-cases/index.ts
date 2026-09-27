@@ -15,6 +15,10 @@ export {
   type RevealHintUseCaseOptions,
 } from "./reveal-hint";
 export {
+  RevealSolutionsUseCase,
+  type RevealSolutionsUseCaseOptions,
+} from "./reveal-solutions";
+export {
   RunProblemUseCase,
   type RunProblemUseCaseOptions,
 } from "./run-problem";

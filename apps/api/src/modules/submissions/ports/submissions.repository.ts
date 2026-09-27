@@ -1,4 +1,4 @@
-import type { DrillScore, ItemScore } from "@repo/design";
+import type { DesignGraph, DrillScore, ItemScore } from "@repo/design";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
@@ -16,11 +16,21 @@ export interface CreateSubmissionData {
   graphHash: string;
   score: number;
   hintPenalty: number;
+  counted: boolean;
+  graph: DesignGraph;
   items: ItemScore[];
   drills: DrillScore[];
 }
 
+export interface SharedSolution {
+  score: number;
+  problemVersion: number;
+  graph: DesignGraph;
+  createdAt: Date;
+}
+
 export interface BestScore {
+  problemId: string;
   slug: string;
   title: string;
   difficulty: ProblemDifficulty;
@@ -38,4 +48,11 @@ export abstract class SubmissionsRepository extends Repository {
   ): Promise<Page<SubmissionEntity>>;
 
   public abstract bestOfficialScores(userId: string): Promise<BestScore[]>;
+
+  public abstract listSolutions(
+    problemId: string,
+    exceptUserId: string,
+    minScore: number,
+    limit: number,
+  ): Promise<SharedSolution[]>;
 }

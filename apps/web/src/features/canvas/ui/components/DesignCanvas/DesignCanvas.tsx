@@ -60,6 +60,8 @@ const EDGE_TYPES: EdgeTypes = { "design-edge": CanvasEdgePath };
 
 const FIT_VIEW = { padding: 0.15, minZoom: 0.7, maxZoom: 1 };
 
+const FIT_EVERYTHING = { padding: 0.1, minZoom: 0.2, maxZoom: 1 };
+
 const DELETE_KEYS = ["Backspace", "Delete"];
 
 const MULTI_SELECT_KEYS = ["Shift", "Meta", "Control"];
@@ -90,6 +92,7 @@ interface DesignCanvasProps {
   onSelectionChange: (nodeIds: string[], edgeIds: string[]) => void;
   selectedRegionId?: string | null;
   onSelectRegion?: (id: string | null) => void;
+  readOnly?: boolean;
 }
 
 export function DesignCanvas({
@@ -107,6 +110,7 @@ export function DesignCanvas({
   onSelectionChange,
   selectedRegionId = null,
   onSelectRegion,
+  readOnly = false,
 }: DesignCanvasProps) {
   const { screenToFlowPosition, fitView } = useReactFlow();
   const flow = useMemo(
@@ -221,7 +225,7 @@ export function DesignCanvas({
   );
 
   const onDragOver = (event: DragEvent<HTMLDivElement>) => {
-    if (!event.dataTransfer.types.includes(NODE_KIND_MIME)) return;
+    if (readOnly || !event.dataTransfer.types.includes(NODE_KIND_MIME)) return;
 
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
@@ -281,11 +285,13 @@ export function DesignCanvas({
         onBeforeDelete={onBeforeDelete}
         onSelectionChange={selectionChanged}
         onPaneClick={() => onSelectRegion?.(null)}
-        deleteKeyCode={DELETE_KEYS}
+        deleteKeyCode={readOnly ? null : DELETE_KEYS}
+        nodesDraggable={!readOnly}
+        nodesConnectable={!readOnly}
         multiSelectionKeyCode={MULTI_SELECT_KEYS}
         connectionLineStyle={CONNECTION_LINE}
         fitView={fitOnOpen}
-        fitViewOptions={FIT_VIEW}
+        fitViewOptions={readOnly ? FIT_EVERYTHING : FIT_VIEW}
         minZoom={0.2}
         maxZoom={2}
         className="design-canvas bg-zinc-50"
@@ -307,7 +313,7 @@ export function DesignCanvas({
         <Controls
           showInteractive={false}
           position="bottom-left"
-          fitViewOptions={FIT_VIEW}
+          fitViewOptions={readOnly ? FIT_EVERYTHING : FIT_VIEW}
         />
         {empty ? null : (
           <MiniMap
@@ -321,7 +327,7 @@ export function DesignCanvas({
           />
         )}
       </ReactFlow>
-      {empty ? (
+      {empty && !readOnly ? (
         <div className="pointer-events-none absolute inset-0 grid place-items-center p-6">
           <div className="flex max-w-xs flex-col items-center gap-1.5 rounded-2xl border border-black/[0.07] bg-white/90 p-5 text-center shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] backdrop-blur">
             <p className="font-semibold tracking-[-0.02em]">

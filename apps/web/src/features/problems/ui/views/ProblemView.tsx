@@ -1,5 +1,12 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { FileText, FlaskConical, History, Play, Send } from "lucide-react";
+import {
+  FileText,
+  FlaskConical,
+  History,
+  Play,
+  Send,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -9,6 +16,7 @@ import {
   attemptQuery,
   problemQuery,
   revealHintMutation,
+  revealSolutionsMutation,
   runProblemMutation,
   startProblemMutation,
   submitSolutionMutation,
@@ -17,6 +25,7 @@ import type { ProblemOutcome } from "@/features/problems/typedefs";
 import {
   HistoryPanel,
   ProblemStart,
+  SolutionsPanel,
   TaskPanel,
   TestsPanel,
 } from "@/features/problems/ui/components";
@@ -32,6 +41,7 @@ export function ProblemView({ slug }: ProblemViewProps) {
   const run = useMutation(runProblemMutation);
   const submit = useMutation(submitSolutionMutation);
   const hint = useMutation(revealHintMutation);
+  const solutions = useMutation(revealSolutionsMutation);
   const [outcome, setOutcome] = useState<ProblemOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,6 +94,20 @@ export function ProblemView({ slug }: ProblemViewProps) {
           label: "History",
           icon: History,
           content: <HistoryPanel slug={slug} />,
+        },
+        {
+          id: "solutions",
+          label: "Solutions",
+          icon: Users,
+          content: (
+            <SolutionsPanel
+              lockedUntil={attempt.lockedUntil}
+              shown={solutions.data ?? null}
+              pending={solutions.isPending}
+              error={solutions.error ? errorMessage(solutions.error) : null}
+              onReveal={() => solutions.mutate({ slug })}
+            />
+          ),
         },
       ]}
       actions={({ revision, saving, showTab }) => (

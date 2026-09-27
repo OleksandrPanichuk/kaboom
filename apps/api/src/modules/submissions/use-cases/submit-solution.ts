@@ -45,6 +45,7 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       scoreSubmission(version.content, design.graph),
     );
     const penalty = hintPenalty(version.content, attempt.hintsRevealed);
+    const lockedUntil = await this.service.lockOf(userId, attempt.problemId);
 
     return this.submissions.insert({
       attemptId: attempt.id,
@@ -56,6 +57,8 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       graphHash: design.graphHash,
       score: penalised(shown.score, penalty),
       hintPenalty: penalty,
+      counted: lockedUntil === null,
+      graph: design.graph,
       items: shown.items,
       drills: shown.drills,
     });
