@@ -8,6 +8,7 @@ import { DesignWorkspace } from "@/features/designs";
 import {
   attemptQuery,
   problemQuery,
+  revealHintMutation,
   runProblemMutation,
   startProblemMutation,
   submitSolutionMutation,
@@ -30,6 +31,7 @@ export function ProblemView({ slug }: ProblemViewProps) {
   const start = useMutation(startProblemMutation);
   const run = useMutation(runProblemMutation);
   const submit = useMutation(submitSolutionMutation);
+  const hint = useMutation(revealHintMutation);
   const [outcome, setOutcome] = useState<ProblemOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,7 +61,15 @@ export function ProblemView({ slug }: ProblemViewProps) {
           id: "task",
           label: "Task",
           icon: FileText,
-          content: <TaskPanel problem={problem} />,
+          content: (
+            <TaskPanel
+              problem={problem}
+              attempt={attempt}
+              revealing={hint.isPending}
+              hintError={hint.error ? errorMessage(hint.error) : null}
+              onRevealHint={(index) => hint.mutate({ slug, index })}
+            />
+          ),
         },
         {
           id: "tests",

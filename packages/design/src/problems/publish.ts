@@ -21,6 +21,7 @@ export interface PublicProblem {
   baseline: DesignGraph;
   drills: PublicDrill[];
   rubric: Array<{ key: string; title: string; weight: number }>;
+  hints: Array<{ index: number; title: string; cost: number }>;
 }
 
 export const publicProblem = (problem: ProblemContent): PublicProblem => ({
@@ -43,6 +44,11 @@ export const publicProblem = (problem: ProblemContent): PublicProblem => ({
     title,
     weight,
   })),
+  hints: problem.hints.map(({ title, cost }, index) => ({
+    index,
+    title,
+    cost,
+  })),
 });
 
 export type PublishCheck =
@@ -58,6 +64,8 @@ const buildable = (graph: DesignGraph): string | null => {
 
   return result.ok ? null : result.message;
 };
+
+export const MAX_HINT_COST = 50;
 
 const duplicates = (values: string[]) => [
   ...new Set(values.filter((value, index) => values.indexOf(value) !== index)),
@@ -102,6 +110,14 @@ export const checkPublishable = (input: unknown): PublishCheck => {
     if (refusal) {
       issues.push(`The ${name} could not be drawn by a solver: ${refusal}.`);
     }
+  }
+
+  const hintCost = problem.hints.reduce((sum, hint) => sum + hint.cost, 0);
+
+  if (hintCost > MAX_HINT_COST) {
+    issues.push(
+      `Revealing every hint costs ${hintCost} points; keep it at ${MAX_HINT_COST} or less.`,
+    );
   }
 
   if (!problem.drills.some((drill) => drill.visibility === "public")) {

@@ -101,6 +101,15 @@ export const CheckRefSchema = z.discriminatedUnion("check", [
 ]);
 export type CheckRef = z.output<typeof CheckRefSchema>;
 
+export const MAX_HINTS = 3;
+
+export const HintSchema = z.strictObject({
+  title: z.string().min(1).max(120),
+  body: z.string().min(1).max(2_000),
+  cost: z.number().int().min(1).max(30),
+});
+export type Hint = z.output<typeof HintSchema>;
+
 export const RubricItemSchema = z.strictObject({
   key: IdSchema,
   title: z.string().min(1).max(160),
@@ -124,6 +133,7 @@ export const ProblemContentSchema = z.strictObject({
   baseline: DesignGraphSchema,
   drills: z.array(DrillSchema).min(1).max(20),
   rubric: z.array(RubricItemSchema).min(1).max(40),
+  hints: z.array(HintSchema).max(MAX_HINTS).default([]),
   reference: z.strictObject({
     graph: DesignGraphSchema,
     notes: z.string().max(20_000).default(""),

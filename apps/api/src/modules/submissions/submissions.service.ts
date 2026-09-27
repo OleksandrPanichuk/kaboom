@@ -1,9 +1,12 @@
+import { hintPenalty, revealedHints } from "@repo/design";
+
 import { makeRepository, makeService } from "@/core/registry";
 import { Service } from "@/core/service";
 import { DesignsService } from "@/modules/designs";
 import { ProblemsService } from "@/modules/problems";
 
 import { ProblemAttemptsRepository } from "./ports";
+import type { AttemptEntity, AttemptView } from "./submission.entity";
 import { ProblemNotStartedError } from "./submissions.errors";
 import type { AttemptContext } from "./use-cases/attempt-context";
 
@@ -28,5 +31,18 @@ export class SubmissionsService extends Service {
     ]);
 
     return { found, attempt, version, design };
+  }
+
+  public async view(attempt: AttemptEntity): Promise<AttemptView> {
+    const version = await this.problems.getVersion(
+      attempt.problemId,
+      attempt.problemVersion,
+    );
+
+    return {
+      attempt,
+      hints: revealedHints(version.content, attempt.hintsRevealed),
+      hintPenalty: hintPenalty(version.content, attempt.hintsRevealed),
+    };
   }
 }

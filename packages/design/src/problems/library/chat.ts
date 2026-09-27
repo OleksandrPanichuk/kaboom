@@ -168,6 +168,23 @@ The *People* client is already on the canvas. Build what it talks to.`,
       check: { check: "no-lint", lint: "spof-critical-path" },
     },
   ],
+  hints: [
+    {
+      title: "What does a region failure take with it?",
+      body: "Everything placed in the lost region stops at once: its servers, its streams and any database there. A design with no regions counts as one place.",
+      cost: 5,
+    },
+    {
+      title: "Run the whole path in both regions",
+      body: "Put a balancer, the API, a stream and delivery workers in each region, and route people with DNS. Size each region to carry all the traffic alone.",
+      cost: 10,
+    },
+    {
+      title: "Let the data survive",
+      body: "Keep a replica of the database in the other region with automatic failover. It is promoted when the primary's region goes, and DNS moves people once their cached answer expires.",
+      cost: 15,
+    },
+  ],
   reference: {
     notes:
       "Both regions run the full request path, and DNS sends each person to one by latency. Messages live in one SQL primary in Europe with automatic failover and a replica in each region; American writes pay the 70 ms hop and still fit the budget. Each region appends messages to its own stream and delivers pushes from its own workers, so losing a region loses none of the other's delivery. When Europe goes down, DNS moves everyone to America once the TTL runs out, the American replica is promoted, and each region is sized to carry all the traffic on its own.",

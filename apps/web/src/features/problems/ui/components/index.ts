@@ -1,6 +1,7 @@
 export * from "./DifficultyBadge";
 export * from "./DifficultyFilter";
 export * from "./DrillResults";
+export * from "./HintList";
 export * from "./HistoryPanel";
 export * from "./PanelSection";
 export * from "./ProblemCard";

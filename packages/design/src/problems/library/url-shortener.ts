@@ -117,6 +117,23 @@ The *Users* client is already on the canvas. Build what it talks to.`,
       check: { check: "has-node-kind", nodeKind: "cache" },
     },
   ],
+  hints: [
+    {
+      title: "Where does the time go?",
+      body: "A redirect reads a link that never changes after it is made. Reading it from the database every time spends the database on the same few rows, over and over.",
+      cost: 5,
+    },
+    {
+      title: "Keep hot links close",
+      body: "Put a cache in front of the database for reads, with a high hit ratio. Size the database for the moment the cache is empty, not only for the misses of a normal day.",
+      cost: 10,
+    },
+    {
+      title: "Lose the primary without losing the service",
+      body: "Give the database a replica and turn on automatic failover, so a lost primary is replaced in seconds. Replicas also carry reads while the cache warms up again.",
+      cost: 15,
+    },
+  ],
   reference: {
     notes:
       "A balancer in front of a stateless service with room for the viral peak. Redirects read through a cache with a 90 % hit ratio; creations write to a sharded primary with automatic failover and two read replicas, which also carry the reads when the cache is empty.",

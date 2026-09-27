@@ -12,6 +12,10 @@ export interface ProblemVariables {
   slug: string;
 }
 
+export interface HintVariables extends ProblemVariables {
+  index: number;
+}
+
 export interface SubmitVariables extends ProblemVariables {
   revision: number;
 }
@@ -24,6 +28,23 @@ export const startProblemMutation = mutationOptions({
     client.setQueryData(attemptQuery(slug).queryKey, attempt);
 
     return client.invalidateQueries({ queryKey: ["designs", "list"] });
+  },
+});
+
+export const revealHintMutation = mutationOptions({
+  mutationKey: ["problems", "hint"],
+  mutationFn: async ({ slug, index }: HintVariables) =>
+    unwrap(await api.api.problems(slug).hints(index).post()),
+  onSuccess: (hint, { slug }, _mutateResult, { client }) => {
+    client.setQueryData(attemptQuery(slug).queryKey, (attempt) =>
+      attempt && !attempt.hints.some((item) => item.index === hint.index)
+        ? {
+            ...attempt,
+            hints: [...attempt.hints, hint],
+            hintPenalty: attempt.hintPenalty + hint.cost,
+          }
+        : attempt,
+    );
   },
 });
 

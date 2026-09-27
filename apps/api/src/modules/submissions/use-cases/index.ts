@@ -11,6 +11,10 @@ export {
   type ListSubmissionsUseCaseOptions,
 } from "./list-submissions";
 export {
+  RevealHintUseCase,
+  type RevealHintUseCaseOptions,
+} from "./reveal-hint";
+export {
   RunProblemUseCase,
   type RunProblemUseCaseOptions,
 } from "./run-problem";

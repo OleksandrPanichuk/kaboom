@@ -31,11 +31,19 @@ export const ProblemRubricItemModel = t.Object({
 });
 export type ProblemRubricItemModel = typeof ProblemRubricItemModel.static;
 
+export const ProblemHintModel = t.Object({
+  index: t.Integer(),
+  title: t.String(),
+  cost: t.Integer(),
+});
+export type ProblemHintModel = typeof ProblemHintModel.static;
+
 export const ProblemModel = t.Object({
   ...ProblemSummaryModel.properties,
   statement: t.String(),
   baseline: t.Unknown(),
   drills: t.Array(ProblemDrillModel),
   rubric: t.Array(ProblemRubricItemModel),
+  hints: t.Array(ProblemHintModel),
 });
 export type ProblemModel = typeof ProblemModel.static;

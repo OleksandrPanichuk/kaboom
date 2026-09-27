@@ -137,6 +137,23 @@ The *Members* client is already on the canvas. Build what it talks to.`,
       check: { check: "no-lint", lint: "spof-critical-path" },
     },
   ],
+  hints: [
+    {
+      title: "Build feeds once, not on every read",
+      body: "Assembling a feed from 20 posts on every read multiplies 29,000 reads a second by 20. Posts are written 30 times less often than feeds are read.",
+      cost: 5,
+    },
+    {
+      title: "Fan out when a post is written",
+      body: "Keep each member's feed in a cache and write every new post into its followers' feeds. Do the writing in workers behind a stream, not while the author waits.",
+      cost: 10,
+    },
+    {
+      title: "Keep search off the write path",
+      body: "Feed the search index from the posts store's change feed. Then a post never fails because search is down, and search catches up by itself.",
+      cost: 15,
+    },
+  ],
   reference: {
     notes:
       "Feeds are built when posts are written: the API stores each post and appends it to a stream, and fan-out workers write it into 100 cached feeds. Opening a feed is one cache read; a miss rebuilds the feed from 20 posts. The posts store's change feed keeps the search index up to date, so a post never waits on search. Sized for twice the usual traffic: 60,000 feed reads and 180,000 feed writes a second at the peak.",

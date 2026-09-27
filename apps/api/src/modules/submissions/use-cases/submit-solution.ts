@@ -1,4 +1,9 @@
-import { publicScore, scoreSubmission } from "@repo/design";
+import {
+  hintPenalty,
+  penalised,
+  publicScore,
+  scoreSubmission,
+} from "@repo/design";
 
 import { makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
@@ -39,6 +44,7 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       version.content,
       scoreSubmission(version.content, design.graph),
     );
+    const penalty = hintPenalty(version.content, attempt.hintsRevealed);
 
     return this.submissions.insert({
       attemptId: attempt.id,
@@ -48,7 +54,8 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       designId: design.id,
       revision: design.revision,
       graphHash: design.graphHash,
-      score: shown.score,
+      score: penalised(shown.score, penalty),
+      hintPenalty: penalty,
       items: shown.items,
       drills: shown.drills,
     });

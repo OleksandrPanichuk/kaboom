@@ -33,6 +33,7 @@ export const submissionsSchema = pgTable(
     revision: integer("revision").notNull(),
     graphHash: text("graph_hash").notNull(),
     score: integer("score").notNull(),
+    hintPenalty: integer("hint_penalty").notNull().default(0),
     items: jsonb("items").$type<unknown[]>().notNull(),
     drills: jsonb("drills").$type<unknown[]>().notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })

@@ -1,16 +1,27 @@
-import type { ProblemModel } from "@repo/api-client";
+import type { AttemptModel, ProblemModel } from "@repo/api-client";
 import { EyeOff } from "lucide-react";
 
 import { Markdown } from "@/components/Markdown";
 
 import { DifficultyBadge } from "./DifficultyBadge";
+import { HintList } from "./HintList";
 import { PanelSection } from "./PanelSection";
 
 interface TaskPanelProps {
   problem: ProblemModel;
+  attempt: AttemptModel;
+  revealing: boolean;
+  hintError: string | null;
+  onRevealHint: (index: number) => void;
 }
 
-export function TaskPanel({ problem }: TaskPanelProps) {
+export function TaskPanel({
+  problem,
+  attempt,
+  revealing,
+  hintError,
+  onRevealHint,
+}: TaskPanelProps) {
   return (
     <div className="flex flex-col">
       <div className="flex flex-col gap-2 border-b px-4 py-4">
@@ -56,6 +67,18 @@ export function TaskPanel({ problem }: TaskPanelProps) {
           ))}
         </ul>
       </PanelSection>
+
+      {problem.hints.length > 0 ? (
+        <PanelSection title="Hints">
+          <HintList
+            hints={problem.hints}
+            revealed={attempt.hints}
+            pending={revealing}
+            error={hintError}
+            onReveal={onRevealHint}
+          />
+        </PanelSection>
+      ) : null}
 
       <PanelSection title="How it is scored">
         <ul className="flex flex-col gap-2">

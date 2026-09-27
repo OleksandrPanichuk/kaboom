@@ -67,6 +67,7 @@ export class ProblemEntity {
       baseline: shown.baseline,
       drills: shown.drills,
       rubric: shown.rubric,
+      hints: shown.hints,
     };
   }
 }

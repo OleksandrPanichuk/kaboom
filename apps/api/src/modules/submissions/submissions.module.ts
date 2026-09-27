@@ -11,6 +11,7 @@ import {
   GetAttemptUseCase,
   GetProgressUseCase,
   ListSubmissionsUseCase,
+  RevealHintUseCase,
   RunProblemUseCase,
   StartProblemUseCase,
   SubmitSolutionUseCase,
@@ -35,5 +36,6 @@ export const submissionsModule = defineModule({
       submitSolution: makeUseCase(SubmitSolutionUseCase),
       listSubmissions: makeUseCase(ListSubmissionsUseCase),
       getProgress: makeUseCase(GetProgressUseCase),
+      revealHint: makeUseCase(RevealHintUseCase),
     }),
 });

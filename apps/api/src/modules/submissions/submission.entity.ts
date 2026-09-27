@@ -1,4 +1,4 @@
-import type { DrillScore, ItemScore } from "@repo/design";
+import type { DrillScore, ItemScore, RevealedHint } from "@repo/design";
 
 import type { AttemptModel, SubmissionModel } from "./submission.model";
 
@@ -8,7 +8,14 @@ export interface AttemptEntity {
   problemId: string;
   problemVersion: number;
   designId: string;
+  hintsRevealed: number;
   createdAt: Date;
+}
+
+export interface AttemptView {
+  attempt: AttemptEntity;
+  hints: RevealedHint[];
+  hintPenalty: number;
 }
 
 export interface SubmissionEntity {
@@ -21,17 +28,24 @@ export interface SubmissionEntity {
   revision: number;
   graphHash: string;
   score: number;
+  hintPenalty: number;
   items: ItemScore[];
   drills: DrillScore[];
   createdAt: Date;
 }
 
 export class AttemptEntity {
-  public static normalize(entity: AttemptEntity): AttemptModel {
+  public static normalize({
+    attempt,
+    hints,
+    hintPenalty,
+  }: AttemptView): AttemptModel {
     return {
-      designId: entity.designId,
-      problemVersion: entity.problemVersion,
-      createdAt: entity.createdAt.toISOString(),
+      designId: attempt.designId,
+      problemVersion: attempt.problemVersion,
+      hints,
+      hintPenalty,
+      createdAt: attempt.createdAt.toISOString(),
     };
   }
 }
@@ -44,6 +58,7 @@ export class SubmissionEntity {
       problemVersion: entity.problemVersion,
       revision: entity.revision,
       score: entity.score,
+      hintPenalty: entity.hintPenalty,
       items: entity.items,
       drills: entity.drills,
       createdAt: entity.createdAt.toISOString(),
