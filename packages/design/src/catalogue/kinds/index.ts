@@ -7,4 +7,5 @@ export { objectStorageKind } from "./object-storage";
 export { queueKind } from "./queue";
 export { serviceKind } from "./service";
 export { sqlDatabaseKind } from "./sql-database";
+export { streamKind } from "./stream";
 export { workerKind } from "./worker";

@@ -33,6 +33,10 @@ const why = (graph: DesignGraph, node: DesignNode): string | null => {
     return `${labelOf(node)} keeps one copy of its data; losing a node loses the partitions on it.`;
   }
 
+  if (node.kind === "stream" && node.props.replicationFactor < 2) {
+    return `${labelOf(node)} keeps one copy of each partition; losing a broker loses the messages on it.`;
+  }
+
   return null;
 };
 

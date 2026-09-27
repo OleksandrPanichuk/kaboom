@@ -130,6 +130,25 @@ describe("lints", () => {
       expect(hits(g, "spof-critical-path")).toEqual(["kv"]);
     });
 
+    test("flags a stream that keeps one copy of each partition", () => {
+      const g = graph(
+        [
+          node("users", "client"),
+          node("log", "stream", { replicationFactor: 1 }),
+          node("log3", "stream"),
+          node("w", "worker", { replicas: 2 }),
+        ],
+        [
+          edge("users", "log", "async-message"),
+          edge("users", "log3", "async-message"),
+          edge("log", "w", "async-message"),
+          edge("log3", "w", "async-message"),
+        ],
+      );
+
+      expect(hits(g, "spof-critical-path")).toEqual(["log"]);
+    });
+
     test("ignores what no client reaches, and looks everywhere when there is no client", () => {
       const offPath = graph([
         node("users", "client"),
@@ -160,16 +179,23 @@ describe("lints", () => {
   });
 
   describe("dead-end-node", () => {
-    test("flags a client, CDN, balancer or queue that sends nowhere", () => {
+    test("flags a client, CDN, balancer, queue or stream that sends nowhere", () => {
       const g = graph([
         node("users", "client"),
         node("cdn", "cdn"),
         node("lb", "load-balancer"),
         node("q", "queue"),
+        node("log", "stream"),
         node("api", "service", { replicas: 2 }),
       ]);
 
-      expect(hits(g, "dead-end-node")).toEqual(["users", "cdn", "lb", "q"]);
+      expect(hits(g, "dead-end-node")).toEqual([
+        "users",
+        "cdn",
+        "lb",
+        "q",
+        "log",
+      ]);
     });
 
     test("does not count replication as somewhere to send", () => {
