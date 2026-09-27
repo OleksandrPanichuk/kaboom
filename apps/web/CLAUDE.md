@@ -263,6 +263,11 @@ The roles are the API's own: `.typedefs.ts`, `.constants.ts`, `.helpers.ts`.
   are generated: run `bun run barrels` after adding, renaming or removing a
   file under `features/`, and commit what it writes. Never edit one by hand.
 - `routes/` imports from features; features never import from `routes/`.
+- Never import `@repo/design/library`. It holds the official problems with
+  their reference solutions, hidden drills and hint texts, and everything
+  the web imports ships to the browser. The API serves what a solver may
+  see. `@repo/design` is `"sideEffects": false`, so the rest of the package
+  tree-shakes.
 - `package.json` declares `"sideEffects": ["*.css"]`. Route options that
   are not code-split (`beforeLoad`, `validateSearch`) import a feature's
   barrel, and without the declaration the bundler keeps every module behind
