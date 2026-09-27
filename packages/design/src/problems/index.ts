@@ -2,9 +2,12 @@ export { type DrillOutcome, runDrill } from "./drills";
 export { OFFICIAL_PROBLEMS } from "./library";
 export {
   checkPublishable,
+  HIDDEN_FAILED,
+  HIDDEN_PASSED,
   type PublicDrill,
   type PublicProblem,
   publicProblem,
+  publicScore,
   type PublishCheck,
 } from "./publish";
 export { drillScenario, selectNodes } from "./resolve";
