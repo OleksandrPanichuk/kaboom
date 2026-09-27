@@ -19,6 +19,7 @@ export const DesignModel = t.Object({
   layout: DesignLayoutModel,
   revision: t.Integer(),
   graphHash: t.String(),
+  locked: t.Boolean(),
   createdAt: t.String({ format: "date-time" }),
   updatedAt: t.String({ format: "date-time" }),
 });

@@ -24,6 +24,7 @@ export const designsSchema = pgTable(
     layout: jsonb("layout").$type<DesignLayoutRow>().notNull().default({}),
     revision: integer("revision").notNull().default(0),
     graphHash: text("graph_hash").notNull(),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

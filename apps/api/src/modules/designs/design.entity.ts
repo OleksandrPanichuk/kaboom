@@ -12,6 +12,7 @@ export interface DesignEntity {
   layout: DesignLayout;
   revision: number;
   graphHash: string;
+  lockedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,6 +31,7 @@ export class DesignEntity {
       layout: entity.layout,
       revision: entity.revision,
       graphHash: entity.graphHash,
+      locked: entity.lockedAt !== null,
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString(),
     };

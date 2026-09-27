@@ -64,4 +64,6 @@ export abstract class DesignsRepository extends Repository {
   ): Promise<boolean>;
 
   public abstract deleteOwned(id: string, ownerId: string): Promise<boolean>;
+
+  public abstract lock(id: string): Promise<void>;
 }

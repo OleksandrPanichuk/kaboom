@@ -1,5 +1,5 @@
 import { migrateGraph } from "@repo/design";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import { type DesignRow, designsSchema } from "@/db";
@@ -162,5 +162,12 @@ export class PostgresDesignsRepository extends DesignsRepository {
 
   private owned(id: string, ownerId: string) {
     return and(eq(designsSchema.id, id), eq(designsSchema.ownerId, ownerId));
+  }
+
+  public async lock(id: string): Promise<void> {
+    await this.db
+      .update(designsSchema)
+      .set({ lockedAt: new Date() })
+      .where(and(eq(designsSchema.id, id), isNull(designsSchema.lockedAt)));
   }
 }
