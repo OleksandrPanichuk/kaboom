@@ -17,4 +17,5 @@ export interface WorkspaceTab {
   label: string;
   icon: LucideIcon;
   content: ReactNode;
+  badge?: number;
 }

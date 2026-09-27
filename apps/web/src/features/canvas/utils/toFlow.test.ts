@@ -53,3 +53,18 @@ describe("toFlow", () => {
     });
   });
 });
+
+describe("toFlow lint hits", () => {
+  test("hands each node the hits that name it", () => {
+    const hit = {
+      lint: "spof-critical-path",
+      severity: "warning" as const,
+      message: "api runs a single replica",
+      nodeIds: ["api"],
+      edgeIds: [],
+    };
+    const { nodes } = toFlow(graphWith(["api", "db"]), {}, [hit]);
+
+    expect(nodes.map((node) => node.data.hits.length)).toEqual([1, 0]);
+  });
+});

@@ -10,7 +10,7 @@ const flowNode = (id: string, x: number, extra: Partial<CanvasNode> = {}) =>
     id,
     type: "design-node",
     position: { x, y: 0 },
-    data: { node: createNode("service", { id }) },
+    data: { node: createNode("service", { id }), hits: [] },
     ...extra,
   }) as CanvasNode;
 

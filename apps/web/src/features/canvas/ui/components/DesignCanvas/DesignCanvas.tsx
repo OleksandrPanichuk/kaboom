@@ -1,6 +1,11 @@
 import "@xyflow/react/dist/style.css";
 
-import { type DesignGraph, isNodeKind, type NodeKind } from "@repo/design";
+import {
+  type DesignGraph,
+  isNodeKind,
+  type LintHit,
+  type NodeKind,
+} from "@repo/design";
 import {
   applyEdgeChanges,
   applyNodeChanges,
@@ -20,7 +25,13 @@ import {
   ReactFlow,
   useReactFlow,
 } from "@xyflow/react";
-import { type DragEvent, useCallback, useMemo, useState } from "react";
+import {
+  type DragEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import {
   CANVAS_ELEMENT_ID,
@@ -51,9 +62,16 @@ const CONNECTION_LINE = {
   strokeDasharray: "4 4",
 };
 
+export interface CanvasFocus {
+  nodeIds: string[];
+  token: number;
+}
+
 interface DesignCanvasProps {
   graph: DesignGraph;
   layout: DesignLayout;
+  hits: LintHit[];
+  focus: CanvasFocus | null;
   onAddNode: (kind: NodeKind, position: { x: number; y: number }) => void;
   onMoveNodes: (positions: DesignLayout) => void;
   connectionError: (from: string, to: string) => string | null;
@@ -66,6 +84,8 @@ interface DesignCanvasProps {
 export function DesignCanvas({
   graph,
   layout,
+  hits,
+  focus,
   onAddNode,
   onMoveNodes,
   connectionError,
@@ -74,8 +94,11 @@ export function DesignCanvas({
   onDelete,
   onSelectionChange,
 }: DesignCanvasProps) {
-  const { screenToFlowPosition } = useReactFlow();
-  const flow = useMemo(() => toFlow(graph, layout), [graph, layout]);
+  const { screenToFlowPosition, fitView } = useReactFlow();
+  const flow = useMemo(
+    () => toFlow(graph, layout, hits),
+    [graph, layout, hits],
+  );
 
   const [fitOnOpen] = useState(flow.nodes.length > 0);
   const [synced, setSynced] = useState<Flow>(flow);
@@ -95,6 +118,32 @@ export function DesignCanvas({
       );
     });
   }
+
+  const [focused, setFocused] = useState(focus?.token ?? null);
+
+  if (focus && focused !== focus.token) {
+    setFocused(focus.token);
+
+    const wanted = new Set(focus.nodeIds);
+
+    setNodes((current) =>
+      current.map((node) => ({ ...node, selected: wanted.has(node.id) })),
+    );
+    setEdges((current) =>
+      current.map((edge) => ({ ...edge, selected: false })),
+    );
+  }
+
+  useEffect(() => {
+    if (!focus) return;
+
+    void fitView({
+      nodes: focus.nodeIds.map((id) => ({ id })),
+      duration: 300,
+      padding: 0.4,
+      maxZoom: 1,
+    });
+  }, [focus, fitView]);
 
   const onNodesChange: OnNodesChange<CanvasNode> = (changes) =>
     setNodes((current) => applyNodeChanges(changes, current));

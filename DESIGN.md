@@ -92,6 +92,16 @@ A design, and later a problem or an interview, opens full screen without the sid
 - **Saving:** a field saves on blur or Enter; Escape puts it back. A value the prop does not accept is explained under the field (*Use at least 1.*) and never sent. Each saved field is one revision and one undo step.
 - **Edge:** its kind and ends in the header; *General* holds the kind, a select with a one-line meaning under it, and the label shown on the canvas; *Load* holds share (a percentage), fan-out and timeout, and is left out for replication, which carries no load. A kind the edge cannot take, such as replication between different kinds or one that closes a loop, is explained under the select and never sent; the select keeps its value and is not marked invalid, since the value it shows is still the edge's. A delete button closes the panel.
 - **Several selected:** how many, and a button that deletes them all.
+- **Problems:** a node the checks flag lists its problems at the top of its inspector.
+
+### Checks
+
+Checks run on every change, in the browser, from `@repo/design`, and say what is wrong in the design's own names.
+
+- **Warnings** (amber) are about reliability: a single point of failure on the path from clients (one replica with no autoscaling to two, a SQL database without a replica, a NoSQL database with one copy), and a stateful service behind a balancer that does not pin users to replicas.
+- **Notices** (grey) are about structure and expected while a design is being built: a node no client leads to, and a client, CDN, balancer or queue that sends nowhere.
+- **On the canvas:** a flagged node carries a small badge at its top right, amber if any warning names it, grey otherwise, whose accessible name reads the problems.
+- **The Checks tab** counts the problems in its label and lists them, warnings first, each with *Show on canvas*, which selects the nodes and brings them into view without leaving the tab; on a phone it also closes the sheet. With nothing to report, it says so.
 - **Undo and redo:** ⌘Z / Ctrl+Z, ⇧⌘Z / Ctrl+Y, or the arrows in the top bar, which are the only way on a phone. Each step is saved as a revision of its own. The history belongs to the open page and ends with it; moving a node is not a step.
 - **Moving:** nodes are dragged freely; where they sit is saved half a second after the last move and creates no revision.
 - **Saving:** a change shows at once. The top bar reads *Revision N · Saving…* until the server has it, then the new revision. When the design changed elsewhere in the meantime, the change is replayed on top and only a change that no longer fits is dropped, with a notice on the canvas that names what happened.

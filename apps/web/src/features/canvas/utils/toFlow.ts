@@ -1,4 +1,4 @@
-import type { DesignGraph } from "@repo/design";
+import type { DesignGraph, LintHit } from "@repo/design";
 import { MarkerType } from "@xyflow/react";
 
 import {
@@ -22,13 +22,31 @@ const gridPosition = (index: number) => ({
   y: Math.floor(index / GRID_COLUMNS) * GRID_SPACING.y,
 });
 
-export const toFlow = (graph: DesignGraph, layout: DesignLayout): Flow => {
+const NO_HITS: LintHit[] = [];
+
+export const toFlow = (
+  graph: DesignGraph,
+  layout: DesignLayout,
+  hits: LintHit[] = NO_HITS,
+): Flow => {
   let unplaced = 0;
+  const hitsByNode = new Map<string, LintHit[]>();
+
+  for (const hit of hits) {
+    for (const id of hit.nodeIds) {
+      hitsByNode.set(id, [...(hitsByNode.get(id) ?? []), hit]);
+    }
+  }
 
   const nodes = graph.nodes.map((node): CanvasNode => {
     const position = layout[node.id] ?? gridPosition(unplaced++);
 
-    return { id: node.id, type: "design-node", position, data: { node } };
+    return {
+      id: node.id,
+      type: "design-node",
+      position,
+      data: { node, hits: hitsByNode.get(node.id) ?? NO_HITS },
+    };
   });
 
   const edges = graph.edges.map((edge): CanvasEdge => {
