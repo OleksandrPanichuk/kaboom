@@ -45,5 +45,6 @@ export const ProblemModel = t.Object({
   drills: t.Array(ProblemDrillModel),
   rubric: t.Array(ProblemRubricItemModel),
   hints: t.Array(ProblemHintModel),
+  interviewable: t.Boolean(),
 });
 export type ProblemModel = typeof ProblemModel.static;

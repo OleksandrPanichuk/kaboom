@@ -1,6 +1,10 @@
 import { type DesignGraph, emptyGraph } from "../graph";
 import { applyOps, type DesignOp } from "../ops";
-import { type ProblemContent, ProblemContentSchema } from "./schema";
+import {
+  INTERVIEW_PHASES,
+  type ProblemContent,
+  ProblemContentSchema,
+} from "./schema";
 import { type Score, scoreSubmission } from "./score";
 
 export interface PublicDrill {
@@ -22,6 +26,7 @@ export interface PublicProblem {
   drills: PublicDrill[];
   rubric: Array<{ key: string; title: string; weight: number }>;
   hints: Array<{ index: number; title: string; cost: number }>;
+  interviewable: boolean;
 }
 
 export const publicProblem = (problem: ProblemContent): PublicProblem => ({
@@ -49,6 +54,7 @@ export const publicProblem = (problem: ProblemContent): PublicProblem => ({
     title,
     cost,
   })),
+  interviewable: problem.interview !== undefined,
 });
 
 export type PublishCheck =
@@ -118,6 +124,39 @@ export const checkPublishable = (input: unknown): PublishCheck => {
     issues.push(
       `Revealing every hint costs ${hintCost} points; keep it at ${MAX_HINT_COST} or less.`,
     );
+  }
+
+  if (problem.interview) {
+    const { interview } = problem;
+    const weights = interview.rubric.reduce(
+      (sum, item) => sum + item.weight,
+      0,
+    );
+
+    if (weights !== 100) {
+      issues.push(`The interview rubric weighs ${weights}, not 100.`);
+    }
+    for (const key of duplicates(interview.rubric.map((item) => item.key))) {
+      issues.push(`Two interview rubric items share the key ${key}.`);
+    }
+    for (const id of duplicates(interview.phases.map((phase) => phase.id))) {
+      issues.push(`The interview plans the ${id} phase twice.`);
+    }
+
+    const order = interview.phases.map((phase) =>
+      INTERVIEW_PHASES.indexOf(phase.id),
+    );
+
+    if (order.some((value, index) => index > 0 && value < order[index - 1]!)) {
+      issues.push("The interview's phases are out of order.");
+    }
+    for (const id of interview.drillIds) {
+      if (!drillIds.includes(id)) {
+        issues.push(
+          `The interview runs a drill, ${id}, the problem does not have.`,
+        );
+      }
+    }
   }
 
   if (!problem.drills.some((drill) => drill.visibility === "public")) {

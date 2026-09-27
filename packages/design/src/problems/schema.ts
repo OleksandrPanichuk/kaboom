@@ -118,6 +118,54 @@ export const RubricItemSchema = z.strictObject({
 });
 export type RubricItem = z.output<typeof RubricItemSchema>;
 
+export const INTERVIEW_PHASES = [
+  "requirements",
+  "high-level",
+  "deep-dive",
+  "wrap-up",
+] as const;
+export type InterviewPhase = (typeof INTERVIEW_PHASES)[number];
+
+export const INTERVIEW_DIMENSIONS = [
+  "requirements",
+  "design",
+  "scaling",
+  "reliability",
+  "communication",
+] as const;
+export type InterviewDimension = (typeof INTERVIEW_DIMENSIONS)[number];
+
+export const InterviewFactSchema = z.strictObject({
+  topic: z.string().min(1).max(120),
+  answer: z.string().min(1).max(1_000),
+});
+export type InterviewFact = z.output<typeof InterviewFactSchema>;
+
+export const InterviewPhaseSchema = z.strictObject({
+  id: z.enum(INTERVIEW_PHASES),
+  minutes: z.number().int().min(1).max(60),
+  goal: z.string().min(1).max(500),
+});
+export type InterviewPhasePlan = z.output<typeof InterviewPhaseSchema>;
+
+export const InterviewRubricItemSchema = z.strictObject({
+  key: IdSchema,
+  dimension: z.enum(INTERVIEW_DIMENSIONS),
+  title: z.string().min(1).max(160),
+  signals: z.array(z.string().min(1).max(300)).min(1).max(8),
+  weight: z.number().int().min(1).max(100),
+});
+export type InterviewRubricItem = z.output<typeof InterviewRubricItemSchema>;
+
+export const InterviewContentSchema = z.strictObject({
+  opening: z.string().min(1).max(1_000),
+  facts: z.array(InterviewFactSchema).max(30).default([]),
+  phases: z.array(InterviewPhaseSchema).min(1).max(INTERVIEW_PHASES.length),
+  rubric: z.array(InterviewRubricItemSchema).min(1).max(20),
+  drillIds: z.array(IdSchema).min(1).max(10),
+});
+export type InterviewContent = z.output<typeof InterviewContentSchema>;
+
 export const ProblemContentSchema = z.strictObject({
   slug: z
     .string()
@@ -134,6 +182,7 @@ export const ProblemContentSchema = z.strictObject({
   drills: z.array(DrillSchema).min(1).max(20),
   rubric: z.array(RubricItemSchema).min(1).max(40),
   hints: z.array(HintSchema).max(MAX_HINTS).default([]),
+  interview: InterviewContentSchema.optional(),
   reference: z.strictObject({
     graph: DesignGraphSchema,
     notes: z.string().max(20_000).default(""),

@@ -68,6 +68,7 @@ export class ProblemEntity {
       drills: shown.drills,
       rubric: shown.rubric,
       hints: shown.hints,
+      interviewable: shown.interviewable,
     };
   }
 }
