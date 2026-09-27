@@ -203,6 +203,18 @@ joins or leaves one from the inspector's *Region* field, and
 `placementOps` (`designs/utils`) keeps regions non-empty: the batch that
 moves or deletes a region's last node removes the region with it.
 
+`features/interview` renders `DesignWorkspace` with an interview
+`transport`, so edits and layout saves go through `/interviews/:id` and
+reach the interviewer. `useInterviewEvents` opens one `EventSource` from
+`since=0`: durable events rebuild the timeline and refetch the interview,
+`message-delta` builds the reply as it streams, and `turn` shows that the
+interviewer is thinking. `InterviewBridge`, mounted in the top bar so it
+lives as long as the page, reports `design-settled` four seconds after the
+candidate's last edit, focuses highlighted nodes and resyncs the canvas
+after the interviewer's own edits. The design writer treats only
+`DESIGN_REVISION_CONFLICT` as a conflict to replay; any other refusal,
+such as a locked design, is an error.
+
 `features/simulation` runs `evaluateLoad` in the browser while the Run tab
 is open, on a deferred graph so typing stays smooth, and turns a step into
 the canvas overlay (`overlayAt`); the canvas only draws it. A saved run posts

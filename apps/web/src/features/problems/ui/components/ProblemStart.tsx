@@ -5,6 +5,7 @@ import { ArrowLeft, Play } from "lucide-react";
 
 import { Markdown } from "@/components/Markdown";
 import { Button, buttonVariants } from "@/components/ui/Button";
+import { StartInterviewButton } from "@/features/interview";
 
 import { DifficultyBadge } from "./DifficultyBadge";
 
@@ -13,6 +14,7 @@ interface ProblemStartProps {
   pending: boolean;
   error: string | null;
   onStart: () => void;
+  onOpenInterview: (interviewId: string) => void;
 }
 
 export function ProblemStart({
@@ -20,6 +22,7 @@ export function ProblemStart({
   pending,
   error,
   onStart,
+  onOpenInterview,
 }: ProblemStartProps) {
   const hidden = problem.drills.filter(
     (drill) => drill.visibility === "hidden",
@@ -59,15 +62,23 @@ export function ProblemStart({
               : ""}
             . Starting gives you your own copy of the starting design.
           </p>
-          <Button
-            size="lg"
-            className="shrink-0"
-            disabled={pending}
-            onClick={onStart}
-          >
-            <Play aria-hidden="true" />
-            {pending ? "Starting…" : "Start problem"}
-          </Button>
+          <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+            <Button
+              size="lg"
+              className="shrink-0"
+              disabled={pending}
+              onClick={onStart}
+            >
+              <Play aria-hidden="true" />
+              {pending ? "Starting…" : "Start problem"}
+            </Button>
+            {problem.interviewable ? (
+              <StartInterviewButton
+                slug={problem.slug}
+                onOpen={onOpenInterview}
+              />
+            ) : null}
+          </div>
         </div>
         {error ? (
           <p role="alert" className="text-sm text-destructive">

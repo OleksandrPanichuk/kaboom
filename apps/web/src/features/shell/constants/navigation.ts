@@ -40,7 +40,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Designs", icon: Network, to: "/designs" },
       { label: "Problems", icon: Puzzle, to: "/problems" },
       { label: "Handbook", icon: BookOpen, to: "/handbook" },
-      { label: "Interviews", icon: MessagesSquare, soon: true },
+      { label: "Interviews", icon: MessagesSquare, to: "/interviews" },
       { label: "Progress", icon: ChartNoAxesColumn, soon: true },
     ],
   },

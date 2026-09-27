@@ -20,7 +20,11 @@ import {
   NodePalette,
 } from "@/features/canvas";
 import { designQuery } from "@/features/designs/api";
-import { useDesignEditor, useHistoryShortcuts } from "@/features/designs/hooks";
+import {
+  type DesignTransport,
+  useDesignEditor,
+  useHistoryShortcuts,
+} from "@/features/designs/hooks";
 import {
   ChecksPanel,
   EdgeInspector,
@@ -47,6 +51,8 @@ export interface DesignWorkspaceContext {
   revision: number;
   saving: boolean;
   showTab: (id: string) => void;
+  focusNodes: (nodeIds: string[]) => void;
+  resync: () => Promise<void>;
 }
 
 interface DesignWorkspaceProps {
@@ -57,6 +63,8 @@ interface DesignWorkspaceProps {
   leadingTabs?: (context: DesignWorkspaceContext) => WorkspaceTab[];
   simulation?: boolean;
   initialTab?: string;
+  transport?: DesignTransport;
+  readOnly?: boolean;
 }
 
 interface Selection {
@@ -77,18 +85,23 @@ export function DesignWorkspace({
   leadingTabs,
   simulation: withSimulation = true,
   initialTab = "node",
+  transport,
+  readOnly = false,
 }: DesignWorkspaceProps) {
   const { data: design } = useSuspenseQuery(designQuery(designId));
-  const editor = useDesignEditor(designId);
+  const editor = useDesignEditor(designId, transport);
   const [selection, setSelection] = useState<Selection>(NOTHING);
   const [regionId, setRegionId] = useState<string | null>(null);
   const [tab, setTab] = useState(initialTab);
+  const [focus, setFocus] = useState<CanvasFocus | null>(null);
   const context: DesignWorkspaceContext = {
     revision: editor.revision,
     saving: editor.saving,
     showTab: setTab,
+    focusNodes: (nodeIds) =>
+      setFocus((current) => ({ nodeIds, token: (current?.token ?? 0) + 1 })),
+    resync: editor.resync,
   };
-  const [focus, setFocus] = useState<CanvasFocus | null>(null);
   const focusingRef = useRef(false);
   const hits = useMemo(() => runLints(editor.graph), [editor.graph]);
   const [draft, setDraft] = useState<ScenarioDraft>(DEFAULT_SCENARIO);
@@ -270,7 +283,7 @@ export function DesignWorkspace({
               aria-label="Undo"
               title="Undo (⌘Z)"
               className={cn(actions && "max-sm:hidden")}
-              disabled={!editor.canUndo}
+              disabled={readOnly || !editor.canUndo}
               onClick={editor.undo}
             >
               <Undo2 aria-hidden="true" />
@@ -281,7 +294,7 @@ export function DesignWorkspace({
               aria-label="Redo"
               title="Redo (⇧⌘Z)"
               className={cn(actions && "max-sm:hidden")}
-              disabled={!editor.canRedo}
+              disabled={readOnly || !editor.canRedo}
               onClick={editor.redo}
             >
               <Redo2 aria-hidden="true" />
@@ -290,7 +303,13 @@ export function DesignWorkspace({
         }
         tool={{
           label: "Nodes",
-          content: <NodePalette onAdd={editor.addNode} />,
+          content: readOnly ? (
+            <p className="p-4 text-sm leading-5 text-muted-foreground text-pretty">
+              This design is locked: it was submitted and can no longer change.
+            </p>
+          ) : (
+            <NodePalette onAdd={editor.addNode} />
+          ),
         }}
         tabsLabel="Inspector"
         tab={tab}
@@ -355,6 +374,7 @@ export function DesignWorkspace({
           onRefuseConnection={editor.reportError}
           onDelete={editor.remove}
           onSelectionChange={onSelectionChange}
+          readOnly={readOnly}
           selectedRegionId={region?.id ?? null}
           onSelectRegion={selectRegion}
         />

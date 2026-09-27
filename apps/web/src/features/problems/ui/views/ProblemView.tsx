@@ -32,9 +32,10 @@ import {
 
 interface ProblemViewProps {
   slug: string;
+  onOpenInterview: (interviewId: string) => void;
 }
 
-export function ProblemView({ slug }: ProblemViewProps) {
+export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
   const { data: problem } = useSuspenseQuery(problemQuery(slug));
   const { data: attempt } = useSuspenseQuery(attemptQuery(slug));
   const start = useMutation(startProblemMutation);
@@ -52,6 +53,7 @@ export function ProblemView({ slug }: ProblemViewProps) {
         pending={start.isPending}
         error={start.error ? errorMessage(start.error) : null}
         onStart={() => start.mutate({ slug })}
+        onOpenInterview={onOpenInterview}
       />
     );
   }
