@@ -7,6 +7,10 @@ export {
   type GetInterviewUseCaseOptions,
 } from "./get-interview";
 export {
+  InterruptInterviewerUseCase,
+  type InterruptInterviewerUseCaseOptions,
+} from "./interrupt-interviewer";
+export {
   ListInterviewsUseCase,
   type ListInterviewsUseCaseOptions,
 } from "./list-interviews";
@@ -30,3 +34,7 @@ export {
   SubmitInterviewUseCase,
   type SubmitInterviewUseCaseOptions,
 } from "./submit-interview";
+export {
+  TriggerInterviewerUseCase,
+  type TriggerInterviewerUseCaseOptions,
+} from "./trigger-interviewer";

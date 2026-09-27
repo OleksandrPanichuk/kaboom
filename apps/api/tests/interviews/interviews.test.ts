@@ -122,10 +122,10 @@ describe("commands", () => {
     });
     const events = await openEvents(user, interview.id, { since: 0 });
     const seen = [
-      await events.next(),
-      await events.next(),
-      await events.next(),
-      await events.next(),
+      await events.nextDurable(),
+      await events.nextDurable(),
+      await events.nextDurable(),
+      await events.nextDurable(),
     ];
 
     events.close();
@@ -238,11 +238,11 @@ describe("the event stream", () => {
     await user.post(`${base}/messages`, { body: "second" });
 
     const resumed = await openEvents(user, interview.id, { lastEventId: 1 });
-    const replayed = [await resumed.next(), await resumed.next()];
+    const replayed = [await resumed.nextDurable(), await resumed.nextDurable()];
 
     await user.post(`${base}/messages`, { body: "live" });
 
-    const live = await resumed.next();
+    const live = await resumed.nextDurable();
 
     resumed.close();
 

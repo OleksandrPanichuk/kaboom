@@ -21,7 +21,14 @@ export interface InterviewBody {
 export interface StreamedEvent {
   id: string;
   event: string;
-  data: { seq: number; type: string; payload: Record<string, unknown> };
+  data: {
+    seq: number;
+    type: string;
+    payload: Record<string, unknown>;
+    turnId?: string;
+    text?: string;
+    state?: string;
+  };
 }
 
 export const startInterview = async (
@@ -83,7 +90,11 @@ export const openEvents = async (
     for (;;) {
       const block = await nextBlock();
 
-      if (block.data && block.event !== "heartbeat") {
+      if (
+        block.data &&
+        block.event !== "heartbeat" &&
+        block.event !== "ready"
+      ) {
         return {
           id: block.id ?? "",
           event: block.event ?? "",
@@ -93,9 +104,18 @@ export const openEvents = async (
     }
   };
 
+  const nextDurable = async (): Promise<StreamedEvent> => {
+    for (;;) {
+      const event = await next();
+
+      if (event.id) return event;
+    }
+  };
+
   return {
     status: response.status,
     next,
+    nextDurable,
     close: () => controller.abort(),
   };
 };

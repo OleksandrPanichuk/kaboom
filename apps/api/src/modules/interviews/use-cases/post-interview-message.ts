@@ -2,6 +2,7 @@ import { makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 
 import type { InterviewMessageEntity } from "../interview.entity";
+import { TurnScheduler } from "../interviewer/scheduler";
 import { InterviewsService } from "../interviews.service";
 import { InterviewMessagesRepository } from "../ports";
 
@@ -22,16 +23,20 @@ export class PostInterviewMessageUseCase extends UseCase<Options, Result> {
   public async execute({ ownerId, id, body }: Options): Promise<Result> {
     await this.service.getActive(id, ownerId);
 
-    return this.service.commit(id, async (emit) => {
-      const message = await this.messages.insert({
+    const message = await this.service.commit(id, async (emit) => {
+      const saved = await this.messages.insert({
         interviewId: id,
         author: "user",
         body,
       });
 
-      await emit("message", { messageId: message.id });
+      await emit("message", { messageId: saved.id });
 
-      return message;
+      return saved;
     });
+
+    makeService(TurnScheduler).enqueue(id, "user-message");
+
+    return message;
   }
 }

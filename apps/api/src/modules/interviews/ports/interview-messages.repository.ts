@@ -9,6 +9,7 @@ export interface CreateInterviewMessageData {
   body: string;
   turnId?: string | null;
   interrupted?: boolean;
+  createdAt?: Date;
 }
 
 export abstract class InterviewMessagesRepository extends Repository {

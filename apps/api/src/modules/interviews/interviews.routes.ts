@@ -5,6 +5,7 @@ import type { Executable } from "@/core/use-case";
 import {
   applyInterviewOpsRoute,
   getInterviewRoute,
+  interruptInterviewerRoute,
   interviewEventsRoute,
   listInterviewsRoute,
   postInterviewMessageRoute,
@@ -12,16 +13,19 @@ import {
   saveInterviewLayoutRoute,
   startInterviewRoute,
   submitInterviewRoute,
+  triggerInterviewerRoute,
 } from "./routes";
 import type {
   ApplyInterviewOpsUseCase,
   GetInterviewUseCase,
+  InterruptInterviewerUseCase,
   ListInterviewsUseCase,
   PostInterviewMessageUseCase,
   RunInterviewSimulationUseCase,
   SaveInterviewLayoutUseCase,
   StartInterviewUseCase,
   SubmitInterviewUseCase,
+  TriggerInterviewerUseCase,
 } from "./use-cases";
 
 export interface InterviewsActions {
@@ -33,6 +37,8 @@ export interface InterviewsActions {
   saveInterviewLayout: Executable<SaveInterviewLayoutUseCase>;
   runInterviewSimulation: Executable<RunInterviewSimulationUseCase>;
   submitInterview: Executable<SubmitInterviewUseCase>;
+  triggerInterviewer: Executable<TriggerInterviewerUseCase>;
+  interruptInterviewer: Executable<InterruptInterviewerUseCase>;
 }
 
 export const interviewsRoutes = (actions: InterviewsActions) =>
@@ -45,4 +51,6 @@ export const interviewsRoutes = (actions: InterviewsActions) =>
     .post("/:id/ops", ...applyInterviewOpsRoute(actions))
     .put("/:id/layout", ...saveInterviewLayoutRoute(actions))
     .post("/:id/simulations", ...runInterviewSimulationRoute(actions))
+    .post("/:id/triggers", ...triggerInterviewerRoute(actions))
+    .post("/:id/interrupt", ...interruptInterviewerRoute(actions))
     .post("/:id/submit", ...submitInterviewRoute(actions));

@@ -24,6 +24,14 @@ export const INTERVIEW_SIMULATION_RATE_LIMIT = {
   scope: "interviews:simulation",
 } as const;
 
+export const INTERVIEW_TRIGGER_RATE_LIMIT = {
+  limit: 30,
+  windowMs: MINUTE,
+  scope: "interviews:trigger",
+} as const;
+
+export const PHASE_TICK_MS = 30_000;
+
 export const MESSAGE_MAX_LENGTH = 4_000;
 
 export const interviewChannel = (id: string) => `interviews:${id}`;

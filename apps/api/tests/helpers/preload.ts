@@ -19,6 +19,7 @@ import { make } from "@/core/registry";
 import { createDatabase, getDatabase } from "@/db";
 import * as schema from "@/db/schema";
 import { closeInfrastructure } from "@/infrastructure";
+import { TurnScheduler } from "@/modules/interviews";
 import { Mailer } from "@/modules/notifications/ports";
 import { CaptchaVerifier } from "@/platform/captcha";
 import { ErrorReporter } from "@/platform/error-reporting";
@@ -83,6 +84,9 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
+  await make(TurnScheduler).drain();
+  make(TurnScheduler).reset();
+
   await getDatabase().execute(
     `truncate table ${tables.join(", ")} restart identity cascade`,
   );

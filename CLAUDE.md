@@ -461,6 +461,35 @@ the app still boots.
 a turn may start, and `record` adds what it used, in one atomic upsert of
 `llm_usage (user_id, day)`. A cache read counts a tenth of a token.
 
+## Interviews
+
+Commands under `/interviews/:id` store what they carry and answer at once;
+nothing waits for the interviewer. Every durable change goes through
+`InterviewsService.commit(id, work)`, which appends its events to
+`interview_events` in the same transaction, numbered by the interview's own
+`event_seq`, and publishes them only after the commit. `GET
+/interviews/:id/events` replays them after `Last-Event-ID` or `?since` and
+merges the live channel, whose `message-delta` and `turn` events carry no
+id and are lost on disconnect by design.
+
+`TurnScheduler` owns the turns: one mailbox per interview and one turn at a
+time. Triggers (`user-message`, `design-settled`, `phase-timer`) coalesce
+while a turn runs, a user message supersedes a pending `design-settled`, an
+unprompted interjection happens at most once a minute, and a turn starts
+only if `UsageLedger.reserve` allows it. Two failed turns in a row post a
+system message and stop. `preload.ts` drains the scheduler before
+truncating tables, so a test never sees another test's turn.
+
+`InterviewerRunner` runs one turn: the persona and the pinned problem as
+cached system blocks, the phase, clock and design as a fresh one, then the
+model's tool loop. It checks the abort signal before every tool, so an
+interrupted turn applies nothing more and keeps what it said, marked as
+interrupted. A tool is a file in `interviewer/tools/` defined with
+`defineInterviewerTool`: a zod input, which is also the model's JSON schema,
+the phases it is offered in, and a handler that goes through the module's
+own use cases. An invalid input or an `AppError` comes back to the model as
+a tool error rather than failing the turn.
+
 ## Generated API client
 
 `packages/api-client/src/generated` is not committed. It is produced by
