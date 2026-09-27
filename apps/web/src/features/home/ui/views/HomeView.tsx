@@ -1,4 +1,4 @@
-import { ProfileNameForm, useCurrentUser } from "@/features/auth";
+import { useCurrentUser } from "@/features/auth";
 
 export function HomeView() {
   const user = useCurrentUser();
@@ -13,7 +13,6 @@ export function HomeView() {
           Your designs and interviews will live here.
         </p>
       </div>
-      <ProfileNameForm />
     </div>
   );
 }

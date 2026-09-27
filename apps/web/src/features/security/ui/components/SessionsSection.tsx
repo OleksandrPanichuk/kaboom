@@ -1,6 +1,7 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { MonitorSmartphone } from "lucide-react";
 
+import { SettingsSection } from "@/components/SettingsSection";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/Field";
@@ -14,8 +15,6 @@ import {
   formatIp,
   securityErrorMessage,
 } from "@/features/security/utils";
-
-import { SettingsSection } from "./SettingsSection";
 
 const dateTime = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",

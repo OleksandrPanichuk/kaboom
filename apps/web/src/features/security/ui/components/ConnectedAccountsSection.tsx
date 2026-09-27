@@ -1,6 +1,7 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Link2 } from "lucide-react";
 
+import { SettingsSection } from "@/components/SettingsSection";
 import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/Field";
 import {
@@ -14,8 +15,6 @@ import {
   unlinkProviderMutation,
 } from "@/features/security/api";
 import { securityErrorMessage } from "@/features/security/utils";
-
-import { SettingsSection } from "./SettingsSection";
 
 const PROVIDERS: ReadonlyArray<{
   provider: OAuthProvider;

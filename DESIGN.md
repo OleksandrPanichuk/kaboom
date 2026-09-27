@@ -33,6 +33,7 @@ The primary user is an individual practising system design. They need to create 
 
 - Guest routes: sign in, sign up, and forgot password share one focused auth layout.
 - Email-link routes: reset password, verify email, and confirm email change reuse the same layout and outcome language.
+- `/settings/profile`: page introduction followed by the name.
 - `/settings/security`: page introduction followed by password, email, connected accounts, sessions, and account deletion.
 - Signed-in routes sit inside the app shell (below). Its sidebar is the only application navigation; pages add no local sidebar or tabs.
 
@@ -51,9 +52,9 @@ The signed-in app is a sidebar beside the page. The sidebar is the navigation, t
 - **Sidebar, desktop (from 768px):** 256px wide with labels, or a 48px rail of icons with a tooltip for each. The header's toggle, `⌘B`/`Ctrl+B` and the sidebar's edge rail switch between them. The choice is remembered per browser, so a canvas user who collapses it once keeps the room.
 - **Sidebar, phone (below 768px):** a 288px drawer from the left, opened from the header's toggle. Choosing a destination closes it.
 - **Brand:** the Kaboom mark and name lead the sidebar and link home; collapsed, the mark stays alone.
-- **Destinations:** two groups. *Practice* holds Home, Designs, Interviews and Progress; *Account* holds Security. A destination that is not built yet is listed, muted, with a *Soon* pill, and is not a link: the reader sees where the product is going without landing on an empty page. It becomes a link in the pull request that builds it.
+- **Destinations:** *Practice* holds Home, Designs, Interviews and Progress. Account pages are not in the sidebar; they are reached from the account menu. A destination that is not built yet is listed, muted, with a *Soon* pill, and is not a link: the reader sees where the product is going without landing on an empty page. It becomes a link in the pull request that builds it.
 - **Active destination:** the matching item carries the accent surface and `aria-current="page"`, and its name repeats in the header, which is the only page title the chrome adds.
-- **Account:** the sidebar's foot shows the initials, name and email, truncated. It opens a menu with the name and email in full, *Security settings* and *Sign out*. Sign-out returns to sign-in.
+- **Account:** the sidebar's foot shows the initials, name and email, truncated. It opens a menu with the name and email in full, *Profile*, *Security* and *Sign out*. Sign-out returns to sign-in.
 - **Verification banner:** below the header, above the page, on every signed-in page until the email is confirmed.
 - **Landmarks:** the shell owns `<main>`; views render a plain container inside it.
 
@@ -69,7 +70,7 @@ Color: neutral white and zinc surfaces with the existing semantic colors; indigo
 
 Typography: Geist remains the single family. Page titles use compact tracking and strong weight; body text stays short and muted.
 
-Spacing: auth panels use 24px mobile and 32px desktop padding. Security sections use 16px mobile and 24px desktop padding with 24px between groups.
+Spacing: auth panels use 24px mobile and 32px desktop padding. Settings sections use 16px mobile and 24px desktop padding with 24px between groups.
 
 Shape and elevation: 16-24px outer radii, hairline borders, and soft low-contrast shadows. Controls remain 10-12px radii. Avoid stacked heavy shadows.
 
@@ -83,6 +84,7 @@ Imagery and iconography: Lucide line icons support section recognition. Abstract
 - `AppShell`: owns the sidebar, header, verification banner and page landmark of every signed-in page.
 - `BrandMark`: the one drawing of the Kaboom mark, shared by the auth layout and the sidebar.
 - `RouteError`, `RoutePending`, `NotFound`: the router's defaults for the route states above.
+- `SettingsPageHeader`: owns a settings page's icon, eyebrow, title and description.
 - `SettingsSection`: owns the responsive section card, icon treatment, heading, description, tone, and content column.
 - Existing `Button`, `Input`, `Field`, `Badge`, and captcha components remain the control primitives.
 - Auth and security sizing is scoped through surface classes; shared primitives are not globally restyled by this work.

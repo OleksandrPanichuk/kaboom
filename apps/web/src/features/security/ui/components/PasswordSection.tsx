@@ -1,6 +1,7 @@
+import { SettingsSection } from "@/components/SettingsSection";
+
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { SetPasswordForm } from "./SetPasswordForm";
-import { SettingsSection } from "./SettingsSection";
 
 interface PasswordSectionProps {
   hasPassword: boolean;
