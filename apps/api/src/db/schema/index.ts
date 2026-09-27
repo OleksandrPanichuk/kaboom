@@ -1,6 +1,7 @@
 export * from "./accounts.schema";
 export * from "./design_revisions.schema";
 export * from "./designs.schema";
+export * from "./llm_usage.schema";
 export * from "./problem_attempts.schema";
 export * from "./problem_versions.schema";
 export * from "./problems.schema";

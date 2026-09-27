@@ -16,6 +16,7 @@ import { databaseModule } from "@/platform/database";
 import { errorReportingModule } from "@/platform/error-reporting";
 import { healthModule } from "@/platform/health";
 import { jobsModule } from "@/platform/jobs";
+import { llmModule } from "@/platform/llm";
 import { metricsModule } from "@/platform/metrics";
 import { rateLimitModule } from "@/platform/rate-limit";
 import { realtimeModule } from "@/platform/realtime";
@@ -29,6 +30,7 @@ export const modules = [
   sessionsModule,
   cacheModule,
   realtimeModule,
+  llmModule,
   rateLimitModule,
   captchaModule,
   storageModule,
