@@ -1,4 +1,3 @@
-export * from "./CanvasPlaceholder";
 export * from "./CreateDesignDialog";
 export * from "./DeleteDesignDialog";
 export * from "./DesignCard";

@@ -1,11 +1,11 @@
+import { migrateGraph } from "@repo/design";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Blocks, Play, SlidersHorizontal } from "lucide-react";
+import { useMemo } from "react";
 
+import { DesignCanvas } from "@/features/canvas";
 import { designQuery } from "@/features/designs/api";
-import {
-  CanvasPlaceholder,
-  PanelPlaceholder,
-} from "@/features/designs/ui/components";
+import { PanelPlaceholder } from "@/features/designs/ui/components";
 import { WorkspaceLayout } from "@/features/shell";
 
 interface DesignViewProps {
@@ -14,6 +14,7 @@ interface DesignViewProps {
 
 export function DesignView({ designId }: DesignViewProps) {
   const { data: design } = useSuspenseQuery(designQuery(designId));
+  const graph = useMemo(() => migrateGraph(design.graph), [design.graph]);
 
   return (
     <WorkspaceLayout
@@ -58,7 +59,11 @@ export function DesignView({ designId }: DesignViewProps) {
         },
       ]}
     >
-      <CanvasPlaceholder />
+      <DesignCanvas
+        graph={graph}
+        layout={design.layout}
+        revision={design.revision}
+      />
     </WorkspaceLayout>
   );
 }

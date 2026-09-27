@@ -23,6 +23,7 @@ src/
     index.ts              what other features and routes may import
   components/             app-wide components that belong to no feature
   components/ui/          shadcn components, added with `bun run ui:add`
+  components/flow/        React Flow UI components (below)
   lib/                    the API client, the query client, cn
   styles/
 ```
@@ -146,6 +147,19 @@ each other, such as `Field` importing `Label`), and runs `eslint --fix` over
   edited in place when it needs to be. Re-adding with `--overwrite` replaces
   such edits, so review the diff when updating one.
 
+### React Flow UI components
+
+React Flow UI ships as a shadcn registry, so its components are added with
+the same script, by URL: `bun run ui:add https://ui.reactflow.dev/base-node`.
+The registry writes them to `components/` rather than `components/ui/`;
+move each into `components/flow/`, and drop the comments and any
+`tabIndex` it sets, since React Flow's own node wrapper already takes focus.
+
+The canvas itself lives in `features/canvas`. `toFlow` is the one place a
+`DesignGraph` and its layout turn into React Flow nodes and edges; a node
+without a saved position is placed on a grid, so a graph written by the API
+or the interviewer still renders.
+
 ### Narrow screens
 
 Every screen works from 320px wide, and the page never scrolls sideways.
@@ -190,6 +204,13 @@ The roles are the API's own: `.typedefs.ts`, `.constants.ts`, `.helpers.ts`.
   are generated: run `bun run barrels` after adding, renaming or removing a
   file under `features/`, and commit what it writes. Never edit one by hand.
 - `routes/` imports from features; features never import from `routes/`.
+- `package.json` declares `"sideEffects": ["*.css"]`. Route options that
+  are not code-split (`beforeLoad`, `validateSearch`) import a feature's
+  barrel, and without the declaration the bundler keeps every module behind
+  that barrel in the main chunk, because a top-level `cva()`, zustand
+  `create()` or zod schema might have side effects. A module that must run
+  for its side effect alone, other than a stylesheet, has to be added to that
+  list.
 
 ## Data
 
