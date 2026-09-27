@@ -90,6 +90,60 @@ describe("scoring the URL shortener", () => {
   });
 });
 
+describe("scoring the photo upload pipeline", () => {
+  const uploads = OFFICIAL_PROBLEMS.find(
+    (problem) => problem.slug === "photo-uploads",
+  )!;
+
+  test("gives thumbnails made inside the upload request almost nothing", () => {
+    const synchronous = graph(
+      [
+        node("users", "client", "Users", { rps: 5_500, readRatio: 0.9 }),
+        node("cdn", "cdn", "CDN", { hitRatio: 0.9, capacityRps: 100_000 }),
+        node("lb", "load-balancer", "LB"),
+        node("api", "service", "API", {
+          replicas: 6,
+          capacityRpsPerReplica: 500,
+        }),
+        node("store", "object-storage", "Store", {
+          readCapacityRps: 10_000,
+          writeCapacityRps: 10_000,
+        }),
+        node("workers", "worker", "Workers", {
+          replicas: 150,
+          capacityMsgPerReplica: 5,
+          processingMs: 200,
+        }),
+      ],
+      [
+        edge("users", "cdn", "read"),
+        edge("cdn", "store", "read"),
+        edge("users", "lb", "write"),
+        edge("lb", "api", "sync-call"),
+        edge("api", "store", "write"),
+        edge("api", "workers", "sync-call"),
+        edge("workers", "store", "write"),
+      ],
+    );
+    const score = scoreSubmission(uploads, synchronous);
+
+    expect(score.score).toBe(10);
+    expect(
+      score.items.find((item) => item.key === "handles-a-normal-day")?.evidence,
+    ).toContain("p99");
+  });
+
+  test("lets the reference fall behind while the workers are down, then catch up", () => {
+    const drill = uploads.drills.find((item) => item.id === "workers-down")!;
+    const outcome = scoreSubmission(
+      uploads,
+      uploads.reference.graph,
+    ).drills.find((item) => item.id === drill.id);
+
+    expect(outcome?.passed).toBe(true);
+  });
+});
+
 describe("drill selectors", () => {
   const replicated = graph(
     [

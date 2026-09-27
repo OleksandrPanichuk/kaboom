@@ -4,6 +4,7 @@ import { authModule } from "@/modules/auth";
 import { designsModule } from "@/modules/designs";
 import { notificationsModule } from "@/modules/notifications";
 import { oauthModule } from "@/modules/oauth";
+import { problemsModule } from "@/modules/problems";
 import { sessionsModule } from "@/modules/sessions";
 import { simulationsModule } from "@/modules/simulations";
 import { usersModule } from "@/modules/users";
@@ -38,5 +39,6 @@ export const modules = [
   verificationTokensModule,
   designsModule,
   simulationsModule,
+  problemsModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

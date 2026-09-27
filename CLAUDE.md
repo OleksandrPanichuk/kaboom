@@ -351,6 +351,10 @@ postAction: ({ output }) => mapPage(output, ProblemEntity.normalize),
 A route that filters as well spreads the page fields into its own query:
 `t.Object({ ...PageQueryFields, track: t.Optional(TrackSchema) })`.
 `PageModel(item)` answers `{ items, nextCursor: string | null }`.
+An optional enum in a query is `t.Optional(t.Union(values.map(t.Literal)))`,
+never `t.Optional(t.UnionEnum(values))`: Elysia fills a missing `UnionEnum`
+query parameter with its first member, so an unfiltered list silently comes
+back filtered.
 
 ```ts
 const BY_CREATION = new Keyset<ProblemEntity>({

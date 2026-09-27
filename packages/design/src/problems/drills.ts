@@ -52,6 +52,19 @@ export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome => {
     }
   }
 
+  if (drill.expect.maxEndBacklog !== undefined) {
+    const last = result.steps.at(-1);
+    const waiting = graph.nodes
+      .map((item) => ({ item, backlog: last?.nodes[item.id]?.backlog ?? 0 }))
+      .filter(({ backlog }) => backlog > drill.expect.maxEndBacklog!);
+
+    for (const { item, backlog } of waiting) {
+      failures.push(
+        `${item.label || item.id} still had ${Math.round(backlog).toLocaleString("en")} messages waiting at the end; the drill allows ${drill.expect.maxEndBacklog.toLocaleString("en")}.`,
+      );
+    }
+  }
+
   for (const kind of drill.expect.forbid) {
     const found = result.findings.find((finding) => finding.kind === kind);
 
