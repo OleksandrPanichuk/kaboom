@@ -16,10 +16,11 @@ import {
   type OnEdgesChange,
   type OnNodeDrag,
   type OnNodesChange,
+  type OnSelectionChangeFunc,
   ReactFlow,
   useReactFlow,
 } from "@xyflow/react";
-import { type DragEvent, useMemo, useState } from "react";
+import { type DragEvent, useCallback, useMemo, useState } from "react";
 
 import {
   CANVAS_ELEMENT_ID,
@@ -42,6 +43,8 @@ const FIT_VIEW = { padding: 0.15, minZoom: 0.7, maxZoom: 1 };
 
 const DELETE_KEYS = ["Backspace", "Delete"];
 
+const MULTI_SELECT_KEYS = ["Shift", "Meta", "Control"];
+
 const CONNECTION_LINE = {
   stroke: "var(--color-indigo-500)",
   strokeWidth: 1.5,
@@ -57,6 +60,7 @@ interface DesignCanvasProps {
   onConnect: (from: string, to: string) => void;
   onRefuseConnection: (reason: string) => void;
   onDelete: (nodeIds: string[], edgeIds: string[]) => void;
+  onSelectionChange: (nodeIds: string[], edgeIds: string[]) => void;
 }
 
 export function DesignCanvas({
@@ -68,6 +72,7 @@ export function DesignCanvas({
   onConnect,
   onRefuseConnection,
   onDelete,
+  onSelectionChange,
 }: DesignCanvasProps) {
   const { screenToFlowPosition } = useReactFlow();
   const flow = useMemo(() => toFlow(graph, layout), [graph, layout]);
@@ -133,6 +138,17 @@ export function DesignCanvas({
     return Promise.resolve(false);
   };
 
+  const selectionChanged = useCallback<
+    OnSelectionChangeFunc<CanvasNode, CanvasEdge>
+  >(
+    ({ nodes: picked, edges: cut }) =>
+      onSelectionChange(
+        picked.map((node) => node.id),
+        cut.map((edge) => edge.id),
+      ),
+    [onSelectionChange],
+  );
+
   const onDragOver = (event: DragEvent<HTMLDivElement>) => {
     if (!event.dataTransfer.types.includes(NODE_KIND_MIME)) return;
 
@@ -175,7 +191,9 @@ export function DesignCanvas({
         onConnect={connect}
         onConnectEnd={onConnectEnd}
         onBeforeDelete={onBeforeDelete}
+        onSelectionChange={selectionChanged}
         deleteKeyCode={DELETE_KEYS}
+        multiSelectionKeyCode={MULTI_SELECT_KEYS}
         connectionLineStyle={CONNECTION_LINE}
         fitView={fitOnOpen}
         fitViewOptions={FIT_VIEW}

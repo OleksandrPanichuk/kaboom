@@ -80,7 +80,18 @@ A design, and later a problem or an interview, opens full screen without the sid
 - **Empty design:** a centred note on the dotted background, pointing at the palette.
 - **Palette:** the tool panel lists the kinds in four groups (Entry, Compute, Data, Messaging). A kind is dragged onto the canvas and lands where it is dropped, or clicked to land in the middle of the view, on the nearest spot no other node covers. On a phone, a tap adds it and closes the sheet.
 - **Connecting:** a node's handles, an indigo dot on each side, appear on hover, focus, selection and while any connection is being drawn. Dragging from the right handle to another node's left one adds an edge whose kind follows from the two nodes: replication between two stores of one replicable kind, an async message to or from a queue, a read into a cache, a write into a database or object storage, otherwise a sync call. A connection the design refuses, such as one that closes a loop, is not drawn, and a notice names both nodes and why.
-- **Deleting:** Delete or Backspace removes what is selected; a node takes its edges with it.
+- **Deleting:** Delete or Backspace removes what is selected, or the delete button in the inspector on a phone; a node takes its edges with it.
+- **Selecting:** a click selects, Shift, ⌘ or Ctrl adds to the selection, and anything selected opens the inspector's *Node* tab.
+
+### Node inspector
+
+- **Header:** the kind's icon, the node's name and its kind.
+- **General:** name (empty falls back to the kind) and notes.
+- **Properties:** one control per prop, generated from the kind's schema and its metadata, so a new kind or prop needs no form code. Numbers are text fields with their unit at the right (`req/s`, `ms`, `GB`); ratios are shown and typed as percentages. Toggles are switches, choices a select with readable labels (*LRU*, *Least connections*). A nested prop such as autoscaling is a bordered group.
+- **Advanced:** props marked advanced sit in a collapsed section below.
+- **Saving:** a field saves on blur or Enter; Escape puts it back. A value the prop does not accept is explained under the field (*Use at least 1.*) and never sent. Each saved field is one revision and one undo step.
+- **Edge:** its kind and ends, and a delete button; editing an edge arrives next.
+- **Several selected:** how many, and a button that deletes them all.
 - **Undo and redo:** ⌘Z / Ctrl+Z, ⇧⌘Z / Ctrl+Y, or the arrows in the top bar, which are the only way on a phone. Each step is saved as a revision of its own. The history belongs to the open page and ends with it; moving a node is not a step.
 - **Moving:** nodes are dragged freely; where they sit is saved half a second after the last move and creates no revision.
 - **Saving:** a change shows at once. The top bar reads *Revision N · Saving…* until the server has it, then the new revision. When the design changed elsewhere in the meantime, the change is replayed on top and only a change that no longer fits is dropped, with a notice on the canvas that names what happened.
