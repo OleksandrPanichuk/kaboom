@@ -5,7 +5,7 @@ import { ApiRequestError } from "@/lib/api";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const Route = createFileRoute("/_app/designs/$designId")({
+export const Route = createFileRoute("/_app/(workspace)/designs/$designId")({
   loader: async ({ context, params }) => {
     if (!UUID.test(params.designId)) throw notFound();
 

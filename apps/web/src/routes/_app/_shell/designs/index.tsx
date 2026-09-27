@@ -6,7 +6,7 @@ import {
   DesignsView,
 } from "@/features/designs";
 
-export const Route = createFileRoute("/_app/designs/")({
+export const Route = createFileRoute("/_app/_shell/designs/")({
   loader: ({ context }) =>
     context.queryClient.ensureInfiniteQueryData(designsQuery),
   pendingComponent: DesignsPendingView,

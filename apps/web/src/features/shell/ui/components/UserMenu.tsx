@@ -1,15 +1,7 @@
-import { useMutation } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { ChevronsUpDown, LogOut } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
 import {
   DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import {
@@ -18,17 +10,13 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/Sidebar";
-import { signOutMutation, useCurrentUser } from "@/features/auth";
-import { ACCOUNT_LINKS } from "@/features/shell/constants";
-import { initials } from "@/features/shell/utils";
+import { useCurrentUser } from "@/features/auth";
 
-interface UserMenuProps {
-  onSignedOut: () => void;
-}
+import { AccountMenuContent } from "./AccountMenuContent";
+import { UserAvatar } from "./UserAvatar";
 
-export function UserMenu({ onSignedOut }: UserMenuProps) {
+export function UserMenu() {
   const user = useCurrentUser();
-  const signOut = useMutation(signOutMutation);
   const { isMobile, setOpenMobile } = useSidebar();
 
   return (
@@ -44,11 +32,7 @@ export function UserMenu({ onSignedOut }: UserMenuProps) {
               />
             }
           >
-            <Avatar className="rounded-lg after:rounded-lg">
-              <AvatarFallback className="rounded-lg bg-indigo-50 text-xs font-semibold text-indigo-700">
-                {initials(user.name)}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar />
             <span className="grid min-w-0 flex-1 text-left leading-tight">
               <span className="truncate font-medium">{user.name}</span>
               <span className="truncate text-xs text-muted-foreground">
@@ -57,44 +41,11 @@ export function UserMenu({ onSignedOut }: UserMenuProps) {
             </span>
             <ChevronsUpDown aria-hidden="true" className="ml-auto" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent
+          <AccountMenuContent
             side={isMobile ? "top" : "right"}
             align="end"
-            sideOffset={8}
-            className="min-w-56"
-          >
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="flex min-w-0 flex-col gap-0.5">
-                <span className="truncate font-medium text-foreground">
-                  {user.name}
-                </span>
-                <span className="truncate font-normal">{user.email}</span>
-              </DropdownMenuLabel>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              {ACCOUNT_LINKS.map((link) => (
-                <DropdownMenuItem
-                  key={link.to}
-                  render={<Link to={link.to} />}
-                  onClick={() => setOpenMobile(false)}
-                >
-                  <link.icon aria-hidden="true" />
-                  {link.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              disabled={signOut.isPending}
-              onClick={() =>
-                signOut.mutate(undefined, { onSettled: onSignedOut })
-              }
-            >
-              <LogOut aria-hidden="true" />
-              {signOut.isPending ? "Signing out…" : "Sign out"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+            onNavigate={() => setOpenMobile(false)}
+          />
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>

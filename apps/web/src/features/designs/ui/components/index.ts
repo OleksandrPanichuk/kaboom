@@ -1,3 +1,4 @@
+export * from "./CanvasPlaceholder";
 export * from "./CreateDesignDialog";
 export * from "./DeleteDesignDialog";
 export * from "./DesignCard";
@@ -5,4 +6,5 @@ export * from "./DesignNameDialog";
 export * from "./DesignsEmpty";
 export * from "./DesignsGridSkeleton";
 export * from "./DesignsPage";
+export * from "./PanelPlaceholder";
 export * from "./RenameDesignDialog";

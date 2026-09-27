@@ -21,11 +21,7 @@ import { isNavItemActive, usePathname } from "@/features/shell/hooks";
 
 import { UserMenu } from "./UserMenu";
 
-interface AppSidebarProps {
-  onSignedOut: () => void;
-}
-
-export function AppSidebar({ onSignedOut }: AppSidebarProps) {
+export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
 
   return (
@@ -67,7 +63,7 @@ export function AppSidebar({ onSignedOut }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter>
-        <UserMenu onSignedOut={onSignedOut} />
+        <UserMenu />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -7,7 +7,7 @@ import {
   validateSecuritySearch,
 } from "@/features/security";
 
-export const Route = createFileRoute("/_app/settings/security")({
+export const Route = createFileRoute("/_app/_shell/settings/security")({
   validateSearch: validateSecuritySearch,
   loader: ({ context }) =>
     Promise.all([

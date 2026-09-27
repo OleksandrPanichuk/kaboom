@@ -60,6 +60,18 @@ The signed-in app is a sidebar beside the page. The sidebar is the navigation, t
 - **Verification banner:** below the header, above the page, on every signed-in page until the email is confirmed.
 - **Landmarks:** the shell owns `<main>`; views render a plain container inside it.
 
+### Workspace
+
+A design, and later a problem or an interview, opens full screen without the sidebar, so the whole window is for the work. `WorkspaceLayout` gives each of them the same frame, and the page fills its slots.
+
+- **Top bar (48px):** a back link to the list the page came from, the title and a muted detail (the revision), the page's actions (Run, Submit, End interview), toggles for the two panels, and the account menu.
+- **Tool panel, left:** what the user adds to the canvas; the node palette for a design. 240px by default, resizable from 200 to 360px.
+- **Canvas, centre:** never narrower than 320px.
+- **Inspector, right:** tabs chosen by the page. A design has *Node* (the selected node's properties, opened automatically when a node is selected) and *Run*; a problem adds *Task* and *Submissions*; an interview has *Interview* and *Task*. 360px by default, resizable from 300px to half the window.
+- Both panels collapse to nothing from their toggle or by dragging past their minimum. Their sizes are remembered per browser.
+- **Below 1024px** the canvas takes the whole window under the top bar. The tool panel opens as a sheet from the left and the inspector as a sheet from the bottom, 80 % of the height, from the same toggles.
+- The verification banner is not shown in a workspace.
+
 ### Route states
 
 - **Loading:** a route that takes longer than a second to load shows a centred spinner and "Loading…" in a live `status` region, inside the shell when the route is inside it. The spinner stops under reduced motion.
@@ -83,7 +95,8 @@ Imagery and iconography: Lucide line icons support section recognition. Abstract
 ## Components
 
 - `AuthLayout`: owns auth-page background, brand mark, heading, elevated content panel, and footer.
-- `AppShell`: owns the sidebar, header, verification banner and page landmark of every signed-in page.
+- `AppShell`: owns the sidebar, header, verification banner and page landmark of the signed-in pages outside a workspace.
+- `WorkspaceLayout`: owns the top bar, the resizable tool panel and inspector, their sheets on small screens, and the canvas landmark.
 - `BrandMark`: the one drawing of the Kaboom mark, shared by the auth layout and the sidebar.
 - `RouteError`, `RoutePending`, `NotFound`: the router's defaults for the route states above.
 - `SettingsPageHeader`: owns a settings page's icon, eyebrow, title and description.
