@@ -1,6 +1,7 @@
 import { useRouterState } from "@tanstack/react-router";
 
 import {
+  ACCOUNT_LINKS,
   NAVIGATION,
   type NavItem,
   type NavLinkItem,
@@ -22,7 +23,7 @@ export const usePathname = (): string =>
 export const useActiveNavItem = (): NavLinkItem | undefined => {
   const pathname = usePathname();
 
-  return NAVIGATION.flatMap((group) => group.items)
+  return [...NAVIGATION.flatMap((group) => group.items), ...ACCOUNT_LINKS]
     .filter(isLink)
     .find((item) => isNavItemActive(item, pathname));
 };

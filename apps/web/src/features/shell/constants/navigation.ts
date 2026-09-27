@@ -6,6 +6,7 @@ import {
   MessagesSquare,
   Network,
   ShieldCheck,
+  UserRound,
 } from "lucide-react";
 
 interface NavItemBase {
@@ -39,8 +40,9 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Progress", icon: ChartNoAxesColumn, soon: true },
     ],
   },
-  {
-    label: "Account",
-    items: [{ label: "Security", icon: ShieldCheck, to: "/settings/security" }],
-  },
+];
+
+export const ACCOUNT_LINKS: NavLinkItem[] = [
+  { label: "Profile", icon: UserRound, to: "/settings/profile" },
+  { label: "Security", icon: ShieldCheck, to: "/settings/security" },
 ];

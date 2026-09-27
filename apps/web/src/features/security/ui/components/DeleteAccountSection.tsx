@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import type { FormEvent } from "react";
 
+import { SettingsSection } from "@/components/SettingsSection";
 import { Button } from "@/components/ui/Button";
 import {
   Field,
@@ -14,8 +15,6 @@ import { Input } from "@/components/ui/Input";
 import { useCurrentUser } from "@/features/auth";
 import { deleteAccountMutation } from "@/features/security/api";
 import { securityErrorMessage } from "@/features/security/utils";
-
-import { SettingsSection } from "./SettingsSection";
 
 interface DeleteAccountSectionProps {
   hasPassword: boolean;

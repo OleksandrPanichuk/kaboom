@@ -6,4 +6,3 @@ export * from "./EmailSection";
 export * from "./PasswordSection";
 export * from "./SessionsSection";
 export * from "./SetPasswordForm";
-export * from "./SettingsSection";

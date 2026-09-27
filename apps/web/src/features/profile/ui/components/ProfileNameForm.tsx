@@ -9,9 +9,11 @@ import {
   FieldLabel,
 } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
-import { updateProfileMutation } from "@/features/auth/api";
-import { useCurrentUser } from "@/features/auth/hooks";
-import { errorMessage } from "@/features/auth/utils";
+import {
+  errorMessage,
+  updateProfileMutation,
+  useCurrentUser,
+} from "@/features/auth";
 
 export function ProfileNameForm() {
   const user = useCurrentUser();
@@ -28,7 +30,7 @@ export function ProfileNameForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <Field>
-        <FieldLabel htmlFor="profile-name">Your name</FieldLabel>
+        <FieldLabel htmlFor="profile-name">Name</FieldLabel>
         <div className="flex gap-2">
           <Input
             id="profile-name"
@@ -42,7 +44,11 @@ export function ProfileNameForm() {
             Save
           </Button>
         </div>
-        {update.isSuccess ? <FieldDescription>Saved.</FieldDescription> : null}
+        <FieldDescription>
+          {update.isSuccess
+            ? "Saved."
+            : "Shown in the app and in the emails we send you."}
+        </FieldDescription>
         {update.isError ? (
           <FieldError>{errorMessage(update.error)}</FieldError>
         ) : null}

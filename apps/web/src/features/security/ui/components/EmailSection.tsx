@@ -1,8 +1,8 @@
+import { SettingsSection } from "@/components/SettingsSection";
 import { Badge } from "@/components/ui/Badge";
 import { useCurrentUser } from "@/features/auth";
 
 import { ChangeEmailForm } from "./ChangeEmailForm";
-import { SettingsSection } from "./SettingsSection";
 
 interface EmailSectionProps {
   hasPassword: boolean;

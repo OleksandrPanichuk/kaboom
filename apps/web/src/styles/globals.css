@@ -138,11 +138,11 @@
     @apply h-11 rounded-xl px-4;
   }
 
-  .security-settings [data-slot="input"] {
+  .settings-surface [data-slot="input"] {
     @apply h-10 rounded-xl bg-white px-3 shadow-none;
   }
 
-  .security-settings [data-slot="button"] {
+  .settings-surface [data-slot="button"] {
     @apply min-h-9 rounded-xl px-3;
   }
 }

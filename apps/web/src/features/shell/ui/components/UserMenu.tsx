@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ChevronsUpDown, LogOut, ShieldCheck } from "lucide-react";
+import { ChevronsUpDown, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
 import {
@@ -19,6 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/Sidebar";
 import { signOutMutation, useCurrentUser } from "@/features/auth";
+import { ACCOUNT_LINKS } from "@/features/shell/constants";
 import { initials } from "@/features/shell/utils";
 
 interface UserMenuProps {
@@ -71,13 +72,18 @@ export function UserMenu({ onSignedOut }: UserMenuProps) {
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              render={<Link to="/settings/security" />}
-              onClick={() => setOpenMobile(false)}
-            >
-              <ShieldCheck aria-hidden="true" />
-              Security settings
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              {ACCOUNT_LINKS.map((link) => (
+                <DropdownMenuItem
+                  key={link.to}
+                  render={<Link to={link.to} />}
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <link.icon aria-hidden="true" />
+                  {link.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               disabled={signOut.isPending}

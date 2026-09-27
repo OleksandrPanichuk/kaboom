@@ -3,7 +3,6 @@ export * from "./EmailVerificationBanner";
 export * from "./ForgotPasswordForm";
 export * from "./OAuthButtons";
 export * from "./PasswordFields";
-export * from "./ProfileNameForm";
 export * from "./ResetPasswordForm";
 export * from "./SignInForm";
 export * from "./SignUpForm";
