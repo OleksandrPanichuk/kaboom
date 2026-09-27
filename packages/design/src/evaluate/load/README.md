@@ -80,7 +80,8 @@ Per node, per step:
   waits no longer than it is willing to. A worker's base is `processingMs`;
   clients, queues and streams add none.
 - **Own error rate**: 1 when down, the unserved fraction when saturated, 0
-  otherwise.
+  otherwise. A client that connects to nothing has nobody to answer it, so
+  every request it sends fails.
 - **Error rate** = `own + (1 − own) × downstream`, where `downstream` weighs
   each outgoing `sync-call`, `read` or `write` edge by `w`, the share of the
   node's served requests that take it. When the weights sum to at most 1 the
