@@ -4,12 +4,14 @@ import {
   deadEndNode,
   spofCriticalPath,
   statefulBehindRoundRobin,
+  syncThirdParty,
   unreachableNode,
 } from "./rules";
 
 export const lints = {
   [spofCriticalPath.id]: spofCriticalPath,
   [statefulBehindRoundRobin.id]: statefulBehindRoundRobin,
+  [syncThirdParty.id]: syncThirdParty,
   [unreachableNode.id]: unreachableNode,
   [deadEndNode.id]: deadEndNode,
 } as const;

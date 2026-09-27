@@ -245,4 +245,35 @@ describe("lints", () => {
       expect(hit?.edgeIds).toEqual(["lb-api"]);
     });
   });
+  describe("sync-third-party", () => {
+    const pay = (kind: EdgeKind) =>
+      graph(
+        [
+          node("users", "client"),
+          node("api", "service", { replicas: 2 }),
+          node("jobs", "queue"),
+          node("worker", "worker", { replicas: 2 }),
+          node("payments", "external-api"),
+        ],
+        kind === "async-message"
+          ? [
+              edge("users", "api"),
+              edge("api", "jobs", "async-message"),
+              edge("jobs", "worker", "async-message"),
+              edge("worker", "payments"),
+            ]
+          : [edge("users", "api"), edge("api", "payments", kind)],
+      );
+
+    test("flags a third party the user waits on", () => {
+      expect(hits(pay("sync-call"), "sync-third-party")).toEqual([
+        "api+payments",
+      ]);
+      expect(hits(pay("write"), "sync-third-party")).toEqual(["api+payments"]);
+    });
+
+    test("accepts one called by a worker behind a queue", () => {
+      expect(hits(pay("async-message"), "sync-third-party")).toEqual([]);
+    });
+  });
 });

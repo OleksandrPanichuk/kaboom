@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { NODE_KINDS, type NodeKind } from "../catalogue";
+import { FINDING_KINDS } from "../evaluate/result";
 import { SloSchema } from "../evaluate/scenario";
 import { DesignGraphSchema, IdSchema } from "../graph";
 import { LINT_IDS } from "../lints";
@@ -47,13 +48,6 @@ export const DrillFaultSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 export type DrillFault = z.output<typeof DrillFaultSchema>;
-
-export const FINDING_KINDS = [
-  "saturated",
-  "errors",
-  "backlog-growing",
-  "slo-breach",
-] as const;
 
 export const DrillExpectationSchema = z.strictObject({
   maxP99Ms: z.number().positive().optional(),

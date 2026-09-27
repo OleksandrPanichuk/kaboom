@@ -1,8 +1,10 @@
 import {
   Archive,
+  Cable,
   Cog,
   Database,
   DatabaseZap,
+  Gauge,
   Globe,
   type LucideIcon,
   MonitorSmartphone,
@@ -10,6 +12,7 @@ import {
   ScrollText,
   Server,
   Split,
+  Waypoints,
   Zap,
 } from "lucide-react";
 
@@ -25,6 +28,9 @@ export const NODE_KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
   stream: ScrollText,
   worker: Cog,
   "object-storage": Archive,
+  "api-gateway": Waypoints,
+  "rate-limiter": Gauge,
+  "external-api": Cable,
 };
 
 export const FALLBACK_NODE_ICON: LucideIcon = Server;

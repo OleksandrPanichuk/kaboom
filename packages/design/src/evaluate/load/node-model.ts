@@ -52,7 +52,11 @@ export const capacityOf = (
       return scale(shared(replicas * node.props.capacityMsgPerReplica));
     case "load-balancer":
     case "cdn":
+    case "api-gateway":
+    case "rate-limiter":
       return scale(shared(node.props.capacityRps));
+    case "external-api":
+      return shared(Number.POSITIVE_INFINITY);
     case "cache":
       return scale(
         separate(node.props.readCapacityRps, node.props.writeCapacityRps),
@@ -80,6 +84,25 @@ export const capacityOf = (
       return scale(shared(node.props.capacityMsgPerSecond));
   }
 };
+
+export const throttleLimitOf = (
+  node: DesignNode,
+  capacityFactor: number,
+): number | null => {
+  switch (node.kind) {
+    case "api-gateway":
+      return node.props.throttle.enabled ? node.props.throttle.limitRps : null;
+    case "rate-limiter":
+      return node.props.limitRps;
+    case "external-api":
+      return node.props.rateLimitRps * capacityFactor;
+    default:
+      return null;
+  }
+};
+
+export const intrinsicErrorRateOf = (node: DesignNode): number =>
+  node.kind === "external-api" ? node.props.errorRate : 0;
 
 export const utilisation = (load: Channels, capacity: Capacity): number => {
   if (capacity.shared) {
@@ -132,6 +155,7 @@ export const forwardedBy = (
     case "sql-database":
     case "nosql-database":
     case "object-storage":
+    case "external-api":
       return { reads: 0, writes: 0 };
     default:
       return served;

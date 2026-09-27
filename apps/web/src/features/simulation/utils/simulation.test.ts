@@ -95,6 +95,7 @@ describe("heat", () => {
     expect(heatOf(step(0.8))).toBe("busy");
     expect(heatOf(step(1.4))).toBe("saturated");
     expect(heatOf(step(0, false))).toBe("down");
+    expect(heatOf({ ...step(0.2, true, 1_000), throttled: 500 })).toBe("busy");
   });
 
   test("formats numbers for a card", () => {

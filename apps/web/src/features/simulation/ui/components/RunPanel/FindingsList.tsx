@@ -8,6 +8,7 @@ import { formatClock } from "@/features/simulation/utils";
 const TITLES: Record<Finding["kind"], string> = {
   saturated: "Saturated",
   errors: "Failing requests",
+  throttled: "Turning requests away",
   "backlog-growing": "Falling behind",
   "slo-breach": "SLO missed",
 };

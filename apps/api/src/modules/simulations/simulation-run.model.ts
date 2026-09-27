@@ -1,3 +1,4 @@
+import { FINDING_KINDS } from "@repo/design";
 import { t } from "elysia";
 
 export const SimulationFindingModel = t.Object({
@@ -5,7 +6,7 @@ export const SimulationFindingModel = t.Object({
     type: t.UnionEnum(["node", "edge", "graph"]),
     id: t.Optional(t.String()),
   }),
-  kind: t.UnionEnum(["saturated", "errors", "backlog-growing", "slo-breach"]),
+  kind: t.UnionEnum(FINDING_KINDS),
   atStep: t.Integer(),
   message: t.String(),
   data: t.Record(t.String(), t.Number()),

@@ -9,6 +9,7 @@ export interface NodeStep {
   up: boolean;
   replicas?: number;
   backlog?: number;
+  throttled?: number;
 }
 
 export interface EdgeStep {
@@ -32,8 +33,15 @@ export interface EvaluationStep {
   clients: Record<string, ClientStep>;
 }
 
-export type FindingKind =
-  "saturated" | "errors" | "backlog-growing" | "slo-breach";
+export const FINDING_KINDS = [
+  "saturated",
+  "errors",
+  "throttled",
+  "backlog-growing",
+  "slo-breach",
+] as const;
+
+export type FindingKind = (typeof FINDING_KINDS)[number];
 
 export interface Finding {
   target: { type: "node" | "edge" | "graph"; id?: string };
