@@ -1,5 +1,7 @@
 import type { DesignGraph, DesignOp } from "@repo/design";
 
+import { emptiedRegionOps } from "./regionOps";
+
 export const removalOps = (
   graph: DesignGraph,
   nodeIds: string[],
@@ -16,5 +18,6 @@ export const removalOps = (
     ...graph.nodes
       .filter((node) => nodes.has(node.id))
       .map((node): DesignOp => ({ op: "remove-node", id: node.id })),
+    ...emptiedRegionOps(graph, nodes),
   ];
 };

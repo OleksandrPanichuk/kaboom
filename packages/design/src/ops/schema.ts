@@ -23,6 +23,10 @@ export interface NodePatch {
   technology?: TechnologyRef | null;
 }
 
+export interface GroupPatch {
+  label?: string;
+}
+
 export interface EdgePatch {
   label?: string;
   kind?: DesignEdge["kind"];
@@ -37,7 +41,8 @@ export type DesignOp =
   | { op: "remove-edge"; id: string }
   | { op: "update-edge"; id: string; patch: EdgePatch }
   | { op: "add-group"; group: DesignGroup }
-  | { op: "remove-group"; id: string };
+  | { op: "remove-group"; id: string }
+  | { op: "update-group"; id: string; patch: GroupPatch };
 
 export type DesignOpKind = DesignOp["op"];
 
@@ -72,6 +77,11 @@ export const DesignOpSchema: z.ZodType<DesignOp> = z.discriminatedUnion("op", [
   }),
   z.strictObject({ op: z.literal("add-group"), group: DesignGroupSchema }),
   z.strictObject({ op: z.literal("remove-group"), id: IdSchema }),
+  z.strictObject({
+    op: z.literal("update-group"),
+    id: IdSchema,
+    patch: z.strictObject({ label: z.string().max(80).optional() }),
+  }),
 ]);
 
 export const DesignOpBatchSchema = z

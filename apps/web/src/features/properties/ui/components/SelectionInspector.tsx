@@ -1,10 +1,17 @@
+import type { DesignGroup } from "@repo/design";
 import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
+import type { RegionTarget } from "@/features/properties/typedefs";
+
+import { RegionField } from "./RegionField";
 
 interface SelectionInspectorProps {
   nodes: number;
   edges: number;
+  regions: DesignGroup[];
+  region: string | null | undefined;
+  onRegionChange: (target: RegionTarget) => void;
   onDelete: () => void;
 }
 
@@ -14,6 +21,9 @@ const plural = (count: number, word: string) =>
 export function SelectionInspector({
   nodes,
   edges,
+  regions,
+  region,
+  onRegionChange,
   onDelete,
 }: SelectionInspectorProps) {
   const parts = [
@@ -27,6 +37,13 @@ export function SelectionInspector({
       <p className="text-sm leading-5 text-muted-foreground">
         Select a single node to edit it.
       </p>
+      {nodes > 0 ? (
+        <RegionField
+          regions={regions}
+          value={region ?? null}
+          onChange={onRegionChange}
+        />
+      ) : null}
       <Button
         variant="outline"
         className="w-full text-destructive hover:text-destructive"

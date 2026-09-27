@@ -52,6 +52,7 @@ import { type Flow, mergeFlowNodes, toFlow } from "@/features/canvas/utils";
 
 import { CanvasEdgePath } from "./CanvasEdgePath";
 import { CanvasNodeCard } from "./CanvasNodeCard";
+import { RegionLayer } from "./RegionLayer";
 
 const NODE_TYPES: NodeTypes = { "design-node": CanvasNodeCard };
 
@@ -87,6 +88,8 @@ interface DesignCanvasProps {
   onRefuseConnection: (reason: string) => void;
   onDelete: (nodeIds: string[], edgeIds: string[]) => void;
   onSelectionChange: (nodeIds: string[], edgeIds: string[]) => void;
+  selectedRegionId?: string | null;
+  onSelectRegion?: (id: string | null) => void;
 }
 
 export function DesignCanvas({
@@ -102,6 +105,8 @@ export function DesignCanvas({
   onRefuseConnection,
   onDelete,
   onSelectionChange,
+  selectedRegionId = null,
+  onSelectRegion,
 }: DesignCanvasProps) {
   const { screenToFlowPosition, fitView } = useReactFlow();
   const flow = useMemo(
@@ -238,6 +243,21 @@ export function DesignCanvas({
   };
 
   const empty = nodes.length === 0;
+  const regions = graph.groups.filter((group) => group.kind === "region");
+
+  const selectRegion = (id: string) => {
+    setNodes((current) =>
+      current.map((node) =>
+        node.selected ? { ...node, selected: false } : node,
+      ),
+    );
+    setEdges((current) =>
+      current.map((edge) =>
+        edge.selected ? { ...edge, selected: false } : edge,
+      ),
+    );
+    onSelectRegion?.(id);
+  };
 
   return (
     <div
@@ -260,6 +280,7 @@ export function DesignCanvas({
         onConnectEnd={onConnectEnd}
         onBeforeDelete={onBeforeDelete}
         onSelectionChange={selectionChanged}
+        onPaneClick={() => onSelectRegion?.(null)}
         deleteKeyCode={DELETE_KEYS}
         multiSelectionKeyCode={MULTI_SELECT_KEYS}
         connectionLineStyle={CONNECTION_LINE}
@@ -267,9 +288,16 @@ export function DesignCanvas({
         fitViewOptions={FIT_VIEW}
         minZoom={0.2}
         maxZoom={2}
-        className="bg-zinc-50"
+        className="design-canvas bg-zinc-50"
         aria-label="Design canvas"
       >
+        {regions.length > 0 ? (
+          <RegionLayer
+            regions={regions}
+            selectedId={selectedRegionId}
+            onSelect={selectRegion}
+          />
+        ) : null}
         <Background
           variant={BackgroundVariant.Dots}
           gap={20}

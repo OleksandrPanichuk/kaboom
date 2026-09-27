@@ -23,10 +23,13 @@ import {
   type DesignSnapshot,
   DesignWriter,
   type DesignWriterState,
+  dissolveRegionOps,
   newNode,
+  placementOps,
   removalOps,
   suggestEdgeKind,
 } from "@/features/designs/utils";
+import type { RegionTarget } from "@/features/properties";
 import { ApiRequestError } from "@/lib/api";
 
 const LAYOUT_SAVE_DELAY_MS = 500;
@@ -41,6 +44,9 @@ export interface DesignEditor extends DesignWriterState {
   remove: (nodeIds: string[], edgeIds: string[]) => void;
   updateNode: (id: string, patch: NodePatch) => string | null;
   updateEdge: (id: string, patch: EdgePatch) => string | null;
+  placeInRegion: (nodeIds: string[], target: RegionTarget) => void;
+  renameRegion: (id: string, label: string) => string | null;
+  dissolveRegion: (id: string) => void;
   undo: () => void;
   redo: () => void;
   reportError: (message: string) => void;
@@ -263,6 +269,31 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     [writer],
   );
 
+  const placeInRegion = useCallback(
+    (nodeIds: string[], target: RegionTarget) => {
+      const ops = placementOps(writer.state.graph, nodeIds, target);
+      const refused = ops.length > 0 ? writer.apply(ops) : null;
+
+      if (refused) writer.reportError(refused);
+    },
+    [writer],
+  );
+
+  const renameRegion = useCallback(
+    (id: string, label: string) =>
+      writer.apply([{ op: "update-group", id, patch: { label } }]),
+    [writer],
+  );
+
+  const dissolveRegion = useCallback(
+    (id: string) => {
+      const refused = writer.apply(dissolveRegionOps(writer.state.graph, id));
+
+      if (refused) writer.reportError(refused);
+    },
+    [writer],
+  );
+
   const reportError = useCallback(
     (message: string) => writer.reportError(message),
     [writer],
@@ -289,6 +320,9 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     remove,
     updateNode,
     updateEdge,
+    placeInRegion,
+    renameRegion,
+    dissolveRegion,
     undo,
     redo,
     reportError,
