@@ -2,6 +2,7 @@ export * from "./catalogue";
 export * from "./estimate";
 export * from "./evaluate";
 export * from "./graph";
+export * from "./handbook";
 export * from "./lints";
 export * from "./ops";
 export * from "./problems";

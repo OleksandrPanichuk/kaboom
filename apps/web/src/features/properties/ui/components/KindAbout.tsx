@@ -1,12 +1,14 @@
 import type { NodeKindDocs } from "@repo/design";
+import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 
 interface KindAboutProps {
+  kind: string;
   label: string;
   docs: NodeKindDocs;
 }
 
-export function KindAbout({ label, docs }: KindAboutProps) {
+export function KindAbout({ kind, label, docs }: KindAboutProps) {
   return (
     <details className="group border-b">
       <summary className="flex cursor-pointer list-none items-center gap-1.5 px-4 py-3 text-xs font-medium tracking-wide text-muted-foreground uppercase outline-none select-none focus-visible:ring-2 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
@@ -36,6 +38,14 @@ export function KindAbout({ label, docs }: KindAboutProps) {
             ))}
           </ul>
         </div>
+        <Link
+          to="/handbook"
+          hash={kind}
+          target="_blank"
+          className="self-start text-sm font-medium text-indigo-700 underline-offset-2 hover:underline"
+        >
+          More in the handbook
+        </Link>
       </div>
     </details>
   );
