@@ -31,6 +31,12 @@ export abstract class InterviewsRepository extends Repository {
 
   public abstract nextSeq(id: string): Promise<number>;
 
+  public abstract findById(id: string): Promise<InterviewEntity | null>;
+
+  public abstract listActive(): Promise<InterviewEntity[]>;
+
+  public abstract setPhase(id: string, phase: string): Promise<InterviewEntity>;
+
   public abstract markReviewing(
     id: string,
     finalRevision: number,

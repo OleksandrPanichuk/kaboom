@@ -42,7 +42,12 @@ export class ScriptedLanguageModel extends LanguageModel {
   }
 
   public async *stream(request: LlmRequest): AsyncIterable<LlmEvent> {
-    this.requests.push(request);
+    this.requests.push({
+      ...request,
+      system: structuredClone(request.system),
+      messages: structuredClone(request.messages),
+      tools: structuredClone(request.tools),
+    });
 
     const script = this.scripts.shift() ?? [];
     const steps = typeof script === "function" ? script(request) : script;

@@ -123,4 +123,31 @@ export class PostgresInterviewsRepository extends InterviewsRepository {
 
     return row ?? null;
   }
+
+  public async findById(id: string): Promise<InterviewEntity | null> {
+    const [row] = await this.db
+      .select()
+      .from(interviewsSchema)
+      .where(eq(interviewsSchema.id, id))
+      .limit(1);
+
+    return row ?? null;
+  }
+
+  public listActive(): Promise<InterviewEntity[]> {
+    return this.db
+      .select()
+      .from(interviewsSchema)
+      .where(eq(interviewsSchema.status, "active"));
+  }
+
+  public async setPhase(id: string, phase: string): Promise<InterviewEntity> {
+    const [row] = await this.db
+      .update(interviewsSchema)
+      .set({ phase, phaseStartedAt: new Date() })
+      .where(eq(interviewsSchema.id, id))
+      .returning();
+
+    return row!;
+  }
 }

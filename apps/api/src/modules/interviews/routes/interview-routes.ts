@@ -33,6 +33,7 @@ import {
   INTERVIEW_MESSAGE_RATE_LIMIT,
   INTERVIEW_OPS_RATE_LIMIT,
   INTERVIEW_SIMULATION_RATE_LIMIT,
+  INTERVIEW_TRIGGER_RATE_LIMIT,
   START_INTERVIEW_RATE_LIMIT,
 } from "../interviews.constants";
 import type { InterviewsActions } from "../interviews.routes";
@@ -173,6 +174,54 @@ export const runInterviewSimulationRoute = ({
         scenario: body.scenario,
       }),
     postAction: ({ output }) => SimulationRunEntity.normalize(output),
+  });
+
+export const triggerInterviewerRoute = ({
+  triggerInterviewer,
+}: InterviewsActions) =>
+  defineRoute({
+    params: InterviewParams,
+    body: t.Object({ kind: t.Literal("design-settled") }),
+    response: t.Object({ accepted: t.Boolean() }),
+    summary: "Tell the interviewer the design has settled",
+    description:
+      "The client sends design-settled once the candidate has stopped editing for a few seconds. The interviewer decides whether to speak, and interjects at most once a minute on its own.",
+    auth: true,
+    rateLimit: INTERVIEW_TRIGGER_RATE_LIMIT,
+
+    action: async ({ params, body, user, set }) => {
+      await triggerInterviewer.execute({
+        ownerId: user.id,
+        id: params.id,
+        trigger: body.kind,
+      });
+      set.status = 202;
+    },
+    postAction: () => ({ accepted: true }),
+  });
+
+export const interruptInterviewerRoute = ({
+  interruptInterviewer,
+}: InterviewsActions) =>
+  defineRoute({
+    params: InterviewParams,
+    body: t.Optional(t.Object({})),
+    response: t.Object({ interrupted: t.Boolean() }),
+    summary: "Stop the interviewer mid-turn",
+    description:
+      "Aborts the turn in progress: it applies no further tool, and what it had said so far is kept, marked as interrupted.",
+    auth: true,
+
+    action: async ({ params, user, set }) => {
+      const result = await interruptInterviewer.execute({
+        ownerId: user.id,
+        id: params.id,
+      });
+
+      set.status = 202;
+
+      return result;
+    },
   });
 
 export const submitInterviewRoute = ({ submitInterview }: InterviewsActions) =>

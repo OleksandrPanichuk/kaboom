@@ -1,15 +1,22 @@
 import { NoopReviewScheduler } from "@/adapters/reviews/noop.review-scheduler";
+import { NodeEnv } from "@/configs";
 import { defineModule } from "@/core/module";
-import { bind, makeUseCase } from "@/core/registry";
+import { bind, makeService, makeUseCase } from "@/core/registry";
 
+import { TurnScheduler } from "./interviewer/scheduler";
+import { PHASE_TICK_MS } from "./interviews.constants";
 import { interviewsRoutes } from "./interviews.routes";
 import {
+  EvidenceNotesRepository,
+  InterviewerTurnsRepository,
   InterviewEventsRepository,
   InterviewMessagesRepository,
   InterviewsRepository,
   ReviewScheduler,
 } from "./ports";
 import {
+  PostgresEvidenceNotesRepository,
+  PostgresInterviewerTurnsRepository,
   PostgresInterviewEventsRepository,
   PostgresInterviewMessagesRepository,
   PostgresInterviewsRepository,
@@ -17,18 +24,20 @@ import {
 import {
   ApplyInterviewOpsUseCase,
   GetInterviewUseCase,
+  InterruptInterviewerUseCase,
   ListInterviewsUseCase,
   PostInterviewMessageUseCase,
   RunInterviewSimulationUseCase,
   SaveInterviewLayoutUseCase,
   StartInterviewUseCase,
   SubmitInterviewUseCase,
+  TriggerInterviewerUseCase,
 } from "./use-cases";
 
 export const interviewsModule = defineModule({
   name: "interviews",
 
-  register: () => {
+  register: ({ env }) => {
     bind(InterviewsRepository, () => new PostgresInterviewsRepository());
     bind(
       InterviewMessagesRepository,
@@ -39,10 +48,24 @@ export const interviewsModule = defineModule({
       () => new PostgresInterviewEventsRepository(),
     );
 
+    bind(
+      InterviewerTurnsRepository,
+      () => new PostgresInterviewerTurnsRepository(),
+    );
+    bind(EvidenceNotesRepository, () => new PostgresEvidenceNotesRepository());
+
     const reviews = new NoopReviewScheduler();
 
     bind(ReviewScheduler, () => reviews);
+
+    return { tickMs: env.NODE_ENV === NodeEnv.Test ? 0 : PHASE_TICK_MS };
   },
+
+  start: ({ state }) => {
+    makeService(TurnScheduler).start({ tickMs: state.tickMs });
+  },
+
+  shutdown: () => makeService(TurnScheduler).shutdown(),
 
   routes: () =>
     interviewsRoutes({
@@ -54,5 +77,7 @@ export const interviewsModule = defineModule({
       saveInterviewLayout: makeUseCase(SaveInterviewLayoutUseCase),
       runInterviewSimulation: makeUseCase(RunInterviewSimulationUseCase),
       submitInterview: makeUseCase(SubmitInterviewUseCase),
+      triggerInterviewer: makeUseCase(TriggerInterviewerUseCase),
+      interruptInterviewer: makeUseCase(InterruptInterviewerUseCase),
     }),
 });
