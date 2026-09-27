@@ -2,6 +2,7 @@ import {
   catalogue,
   describeProps,
   type DesignNode,
+  type LintHit,
   type NodePatch,
 } from "@repo/design";
 import { ChevronRight, Trash2 } from "lucide-react";
@@ -14,6 +15,7 @@ import { FALLBACK_NODE_ICON, NODE_KIND_ICONS } from "@/features/canvas";
 
 import { DraftInput } from "./DraftInput";
 import { InspectorSection } from "./InspectorSection";
+import { LintCallout } from "./LintCallout";
 import { type CommitResult, PropFieldControl } from "./PropFieldControl";
 
 const LABEL_MAX_LENGTH = 80;
@@ -21,11 +23,17 @@ const NOTES_MAX_LENGTH = 2_000;
 
 interface NodeInspectorProps {
   node: DesignNode;
+  hits: LintHit[];
   onPatch: (patch: NodePatch) => CommitResult;
   onDelete: () => void;
 }
 
-export function NodeInspector({ node, onPatch, onDelete }: NodeInspectorProps) {
+export function NodeInspector({
+  node,
+  hits,
+  onPatch,
+  onDelete,
+}: NodeInspectorProps) {
   const id = useId();
   const [labelError, setLabelError] = useState<string | null>(null);
   const [notes, setNotes] = useState(node.notes);
@@ -60,6 +68,14 @@ export function NodeInspector({ node, onPatch, onDelete }: NodeInspectorProps) {
           </p>
         </div>
       </div>
+
+      {hits.length > 0 ? (
+        <div className="flex flex-col gap-2 border-b p-4">
+          {hits.map((hit) => (
+            <LintCallout key={`${hit.lint}-${hit.message}`} hit={hit} />
+          ))}
+        </div>
+      ) : null}
 
       <InspectorSection title="General">
         <Field data-invalid={labelError ? true : undefined}>

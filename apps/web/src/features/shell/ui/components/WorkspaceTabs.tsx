@@ -26,6 +26,11 @@ export function WorkspaceTabs({
           <TabsTrigger key={tab.id} value={tab.id} className="flex-none px-2">
             <tab.icon aria-hidden="true" />
             {tab.label}
+            {tab.badge ? (
+              <span className="min-w-5 rounded-full bg-amber-100 px-1.5 text-xs font-semibold text-amber-800 tabular-nums">
+                {tab.badge}
+              </span>
+            ) : null}
           </TabsTrigger>
         ))}
       </TabsList>

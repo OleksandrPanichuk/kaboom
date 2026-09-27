@@ -1,9 +1,17 @@
+import { type LintHit, runLints } from "@repo/design";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Play, Redo2, SlidersHorizontal, Undo2 } from "lucide-react";
-import { useCallback, useState } from "react";
+import {
+  ListChecks,
+  Play,
+  Redo2,
+  SlidersHorizontal,
+  Undo2,
+} from "lucide-react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import {
+  type CanvasFocus,
   CanvasNotice,
   CanvasProvider,
   DesignCanvas,
@@ -13,6 +21,7 @@ import { designQuery } from "@/features/designs/api";
 import { useDesignEditor, useHistoryShortcuts } from "@/features/designs/hooks";
 import { PanelPlaceholder } from "@/features/designs/ui/components";
 import {
+  ChecksPanel,
   EdgeInspector,
   InspectorEmpty,
   NodeInspector,
@@ -39,6 +48,9 @@ export function DesignView({ designId }: DesignViewProps) {
   const editor = useDesignEditor(designId);
   const [selection, setSelection] = useState<Selection>(NOTHING);
   const [tab, setTab] = useState("node");
+  const [focus, setFocus] = useState<CanvasFocus | null>(null);
+  const focusingRef = useRef(false);
+  const hits = useMemo(() => runLints(editor.graph), [editor.graph]);
 
   useHistoryShortcuts(editor.undo, editor.redo);
 
@@ -49,7 +61,19 @@ export function DesignView({ designId }: DesignViewProps) {
         : { nodes, edges },
     );
 
-    if (nodes.length + edges.length > 0) setTab("node");
+    if (focusingRef.current) {
+      focusingRef.current = false;
+    } else if (nodes.length + edges.length > 0) {
+      setTab("node");
+    }
+  }, []);
+
+  const showHit = useCallback((hit: LintHit) => {
+    focusingRef.current = true;
+    setFocus((current) => ({
+      nodeIds: hit.nodeIds,
+      token: (current?.token ?? 0) + 1,
+    }));
   }, []);
 
   const { graph } = editor;
@@ -74,6 +98,7 @@ export function DesignView({ designId }: DesignViewProps) {
       <NodeInspector
         key={onlyNode.id}
         node={onlyNode}
+        hits={hits.filter((hit) => hit.nodeIds.includes(onlyNode.id))}
         onPatch={(patch) => editor.updateNode(onlyNode.id, patch)}
         onDelete={removeSelection}
       />
@@ -146,6 +171,13 @@ export function DesignView({ designId }: DesignViewProps) {
             content: inspector,
           },
           {
+            id: "checks",
+            label: "Checks",
+            icon: ListChecks,
+            badge: hits.length,
+            content: <ChecksPanel hits={hits} onShow={showHit} />,
+          },
+          {
             id: "run",
             label: "Run",
             icon: Play,
@@ -162,6 +194,8 @@ export function DesignView({ designId }: DesignViewProps) {
         <DesignCanvas
           graph={editor.graph}
           layout={editor.layout}
+          hits={hits}
+          focus={focus}
           onAddNode={editor.addNode}
           onMoveNodes={editor.moveNodes}
           connectionError={editor.connectionError}

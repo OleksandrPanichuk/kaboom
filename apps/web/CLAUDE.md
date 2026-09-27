@@ -170,7 +170,12 @@ undo and redo are ordinary batches that go to the server like any other;
 `@repo/design`) the control to draw and its bounds. Add a prop to a kind with
 `.meta()` and it appears in the form; never write a form for one kind. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
-drawn the same way. The
+drawn the same way.
+
+Checks are `defineLint` rules in `packages/design/src/lints/rules/`, one per
+file, registered in `lints.ts`; `runLints(graph)` runs them all and names the
+nodes and edges each hit is about. The web only renders the hits: a new rule
+needs no UI code. A rule's message uses the nodes' labels, never their ids. The
 query cache only ever receives confirmed revisions.
  `toFlow` is the one place a
 `DesignGraph` and its layout turn into React Flow nodes and edges; a node
