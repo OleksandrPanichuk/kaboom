@@ -1,6 +1,7 @@
 import {
   type DesignEdge,
   type DesignOp,
+  type EdgePatch,
   EdgePropsSchema,
   migrateGraph,
   type NodeKind,
@@ -39,6 +40,7 @@ export interface DesignEditor extends DesignWriterState {
   connectionError: (from: string, to: string) => string | null;
   remove: (nodeIds: string[], edgeIds: string[]) => void;
   updateNode: (id: string, patch: NodePatch) => string | null;
+  updateEdge: (id: string, patch: EdgePatch) => string | null;
   undo: () => void;
   redo: () => void;
   reportError: (message: string) => void;
@@ -233,6 +235,28 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     [writer],
   );
 
+  const updateEdge = useCallback(
+    (id: string, patch: EdgePatch) => {
+      const ops: DesignOp[] = [{ op: "update-edge", id, patch }];
+      const rejection = writer.check(ops);
+      const edge = writer.state.graph.edges.find((item) => item.id === id);
+
+      if (rejection) {
+        return edge
+          ? describeConnectionRefusal(
+              writer.state.graph,
+              edge.from,
+              edge.to,
+              rejection,
+            )
+          : rejection.message;
+      }
+
+      return writer.apply(ops);
+    },
+    [writer],
+  );
+
   const reportError = useCallback(
     (message: string) => writer.reportError(message),
     [writer],
@@ -258,6 +282,7 @@ export const useDesignEditor = (designId: string): DesignEditor => {
     connectionError,
     remove,
     updateNode,
+    updateEdge,
     undo,
     redo,
     reportError,

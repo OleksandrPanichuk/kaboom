@@ -98,7 +98,7 @@ export function PropFieldControl({
   const suffix = unit ? UNIT_SUFFIXES[unit] : null;
 
   return (
-    <Field data-invalid={error ? true : undefined}>
+    <Field data-invalid={error && control.type !== "choice" ? true : undefined}>
       <FieldLabel htmlFor={id}>{meta.title}</FieldLabel>
       {control.type === "choice" ? (
         <Select

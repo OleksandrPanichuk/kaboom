@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import z from "zod";
 
 import { catalogue, NODE_KINDS, type NodeKind } from "./catalogue";
+import { EdgePropsSchema } from "./edges";
 import { describeProps, PROP_UNITS, propControl } from "./prop-meta";
 
 describe("prop metadata", () => {
@@ -100,5 +101,21 @@ describe("propControl", () => {
         expect(() => propControl(field.schema)).not.toThrow();
       }
     }
+  });
+});
+
+describe("edge prop metadata", () => {
+  test("labels every edge prop so the inspector can draw it", () => {
+    expect(describeProps(EdgePropsSchema).map((field) => field.key)).toEqual([
+      "share",
+      "fanOut",
+      "timeoutMs",
+    ]);
+    expect(propControl(EdgePropsSchema.shape.fanOut)).toEqual({
+      type: "number",
+      min: 0,
+      max: 1_000,
+      integer: false,
+    });
   });
 });

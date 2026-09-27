@@ -42,5 +42,18 @@ describe("describeConnectionRefusal", () => {
     expect(
       describeConnectionRefusal(graph, "api", "api", refusal("invalid-edge")),
     ).toBe("A node cannot connect to itself.");
+    expect(
+      describeConnectionRefusal(
+        graph,
+        "lb",
+        "api",
+        refusal(
+          "invalid-edge",
+          "Edge e1 replicates load-balancer to service; replication joins two stores of one replicable kind",
+        ),
+      ),
+    ).toBe(
+      "Replication joins two stores of the same kind, such as two SQL databases.",
+    );
   });
 });

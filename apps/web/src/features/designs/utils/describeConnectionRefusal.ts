@@ -15,8 +15,12 @@ export const describeConnectionRefusal = (
     case "invalid-edge":
       if (from === to) return "A node cannot connect to itself.";
 
-      return rejection.message.includes("already exists")
-        ? `${label(from)} is already connected to ${label(to)} this way.`
+      if (rejection.message.includes("already exists")) {
+        return `${label(from)} is already connected to ${label(to)} this way.`;
+      }
+
+      return rejection.message.includes("replicates")
+        ? "Replication joins two stores of the same kind, such as two SQL databases."
         : rejection.message;
     case "unknown-node":
       return "One of those nodes is no longer in the design.";

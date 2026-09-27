@@ -79,7 +79,9 @@ export function DesignView({ designId }: DesignViewProps) {
       />
     ) : onlyEdge && selectedEdges.length === 1 && selectedNodes.length === 0 ? (
       <EdgeInspector
+        key={onlyEdge.id}
         edge={onlyEdge}
+        onPatch={(patch) => editor.updateEdge(onlyEdge.id, patch)}
         fromLabel={labelOf(onlyEdge.from)}
         toLabel={labelOf(onlyEdge.to)}
         onDelete={removeSelection}
