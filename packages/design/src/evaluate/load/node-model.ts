@@ -45,7 +45,18 @@ export const capacityOf = (
 
   switch (node.kind) {
     case "client":
+    case "scheduler":
+    case "coordination":
       return shared(Number.POSITIVE_INFINITY);
+    case "search-index":
+      return scale(
+        separate(
+          node.props.shards *
+            node.props.replicas *
+            node.props.queryCapacityPerCopy,
+          node.props.shards * node.props.indexCapacityPerShard,
+        ),
+      );
     case "service":
       return scale(shared(replicas * node.props.capacityRpsPerReplica));
     case "worker":
@@ -133,6 +144,7 @@ export const consumerLimit = (capacity: Capacity): number =>
 export const baseLatencyOf = (node: DesignNode): number => {
   switch (node.kind) {
     case "client":
+    case "scheduler":
     case "queue":
     case "stream":
       return 0;
@@ -154,8 +166,11 @@ export const forwardedBy = (
       return { reads: served.reads * (1 - hitRatio), writes: served.writes };
     case "sql-database":
     case "nosql-database":
+      return { reads: 0, writes: served.writes };
     case "object-storage":
     case "external-api":
+    case "search-index":
+    case "coordination":
       return { reads: 0, writes: 0 };
     default:
       return served;
@@ -170,11 +185,17 @@ export const carries = (
       return { reads: true, writes: false };
     case "write":
       return { reads: false, writes: true };
+    case "change-feed":
+      return { reads: false, writes: true };
     case "replication":
+    case "lock":
       return { reads: false, writes: false };
     default:
       return { reads: true, writes: true };
   }
 };
+
+export const feedsOnlyChanges = (node: DesignNode): boolean =>
+  node.kind === "sql-database" || node.kind === "nosql-database";
 
 export const SYNCHRONOUS = new Set<EdgeKind>(["sync-call", "read", "write"]);

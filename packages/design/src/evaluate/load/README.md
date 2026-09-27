@@ -24,9 +24,17 @@ same pull request.
 
 - Every node carries **two channels**, reads/s and writes/s.
 - A client emits `rps × multiplier × readRatio` reads and the rest as writes.
+- A scheduler emits writes (jobs) on its own clock, not the traffic
+  multiplier: `jobsPerSecond × firing × share of the step inside a burst`,
+  where a burst of `burstSeconds` starts every `everySeconds` from 0. `firing`
+  is `replicas` without a `lock` edge, 1 with one to an up coordination
+  service, and 0 when every service it locks on is down.
 - An edge carries a channel by kind: `read` edges carry reads only, `write`
-  edges writes only, `sync-call` and `async-message` both. `replication`
-  carries none.
+  edges writes only, `sync-call` and `async-message` both, `change-feed` writes
+  only. `replication` and `lock` carry none.
+- A database forwards its served **writes** on its `change-feed` edges and
+  nothing on any other edge. A change feed is asynchronous: what is behind it
+  adds no latency and no errors to the writer.
 - How a node's **forwarded** channel is split over the outgoing edges that
   carry it depends on the node kind's `distribution`:
   - `by-share`: each edge gets `share × fanOut` of it;
@@ -38,10 +46,12 @@ same pull request.
 
 ## Topology
 
-- The load subgraph is every edge but `replication`. It is acyclic, which
+- The load subgraph is every edge but `replication` and `lock`. It is acyclic, which
   `applyOps` guarantees, and nodes are evaluated in its topological order.
 - A `replication` edge primary → replica declares the replica. It carries no
   load; the primary spreads its reads over itself and its up replicas.
+- A `lock` edge from a scheduler to a coordination service carries no load
+  either; it only decides how many of the scheduler's replicas fire.
 
 ## Node behaviour
 
@@ -58,9 +68,11 @@ request it receives.
 | `api-gateway`, `rate-limiter` | `capacityRps`                                                                                                   | what it serves, by share                                               |
 | `external-api`                | unbounded, behind its rate limit                                                                                | nothing                                                                |
 | `cache`                       | reads against `readCapacityRps`, writes against `writeCapacityRps`                                              | `reads × (1 − hitRatio)` and all writes, to whatever it connects to    |
-| `sql-database`                | writes: `writeCapacityRps × shards`, on the primary only; reads: `readCapacityRps × shards × (1 + up replicas)` | nothing                                                                |
-| `nosql-database`              | `partitions × readCapacityPerPartition` and `partitions × writeCapacityPerPartition`                            | nothing                                                                |
+| `sql-database`                | writes: `writeCapacityRps × shards`, on the primary only; reads: `readCapacityRps × shards × (1 + up replicas)` | its writes, on `change-feed` edges                                     |
+| `nosql-database`              | `partitions × readCapacityPerPartition` and `partitions × writeCapacityPerPartition`                            | its writes, on `change-feed` edges                                     |
 | `object-storage`              | `readCapacityRps` and `writeCapacityRps`                                                                        | nothing                                                                |
+| `search-index`                | reads: `shards × replicas × queryCapacityPerCopy`; writes: `shards × indexCapacityPerShard`                     | nothing                                                                |
+| `scheduler`, `coordination`   | unbounded                                                                                                       | scheduler: what it emits; coordination: nothing                        |
 | `queue`                       | `capacityMsgPerSecond` accepted                                                                                 | see _Backlog_                                                          |
 | `stream`                      | `capacityMsgPerSecond` accepted                                                                                 | see _Backlog_                                                          |
 
@@ -90,7 +102,7 @@ Per node, per step:
   waits no longer than it is willing to. A worker's base is `processingMs`;
   clients, queues and streams add none.
 - **Own error rate**: 1 when down; otherwise `1 − admitted × served × (1 −
-  intrinsic)`, where `admitted` is the throttling fraction, `served` the
+intrinsic)`, where `admitted` is the throttling fraction, `served` the
   saturation fraction, and `intrinsic` an external API's `errorRate` (0 for
   every other kind). A client that connects to nothing has nobody to answer it, so
   every request it sends fails.

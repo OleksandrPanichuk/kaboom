@@ -2,6 +2,8 @@ import type { DesignGraph } from "../graph";
 import type { LintHit } from "./define-lint";
 import {
   deadEndNode,
+  dualWrite,
+  duplicateSchedule,
   spofCriticalPath,
   statefulBehindRoundRobin,
   syncThirdParty,
@@ -14,6 +16,8 @@ export const lints = {
   [syncThirdParty.id]: syncThirdParty,
   [unreachableNode.id]: unreachableNode,
   [deadEndNode.id]: deadEndNode,
+  [duplicateSchedule.id]: duplicateSchedule,
+  [dualWrite.id]: dualWrite,
 } as const;
 
 export type LintId = keyof typeof lints;

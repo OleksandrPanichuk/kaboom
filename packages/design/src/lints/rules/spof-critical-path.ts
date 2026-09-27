@@ -33,6 +33,10 @@ const why = (graph: DesignGraph, node: DesignNode): string | null => {
     return `${labelOf(node)} keeps one copy of its data; losing a node loses the partitions on it.`;
   }
 
+  if (node.kind === "coordination" && node.props.members < 3) {
+    return `${labelOf(node)} has ${node.props.members === 1 ? "one member" : "two members"}; it needs a majority up, so losing one stops every lock.`;
+  }
+
   if (node.kind === "stream" && node.props.replicationFactor < 2) {
     return `${labelOf(node)} keeps one copy of each partition; losing a broker loses the messages on it.`;
   }
@@ -46,6 +50,10 @@ export const spofCriticalPath = defineLint({
   severity: "warning",
   run: (graph) => {
     const path = onRequestPath(graph);
+
+    for (const edge of graph.edges) {
+      if (edge.kind === "lock" && path.has(edge.from)) path.add(edge.to);
+    }
 
     return graph.nodes.flatMap((node) => {
       const message = path.has(node.id) ? why(graph, node) : null;

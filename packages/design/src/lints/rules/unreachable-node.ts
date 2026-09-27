@@ -19,7 +19,7 @@ export const unreachableNode = defineLint({
     return graph.nodes
       .filter((node) => !seen.has(node.id))
       .map((node) => ({
-        message: `${labelOf(node)} gets no traffic: nothing a client calls leads to it.`,
+        message: `${labelOf(node)} gets no traffic: nothing a client or a scheduler starts leads to it.`,
         nodeIds: [node.id],
         edgeIds: [],
       }));

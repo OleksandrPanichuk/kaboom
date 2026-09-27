@@ -5,6 +5,8 @@ import { labelOf, outgoing } from "../walk";
 const NEEDS_A_TARGET: Partial<Record<NodeKind, (label: string) => string>> = {
   client: (label) =>
     `${label} calls nothing; connect it to where its requests go.`,
+  scheduler: (label) =>
+    `${label} starts jobs but sends them nowhere; connect it to a queue.`,
   cdn: (label) => `${label} has no origin to fetch a miss from.`,
   "load-balancer": (label) =>
     `${label} has no targets to spread requests over.`,

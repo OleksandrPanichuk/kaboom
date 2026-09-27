@@ -1,12 +1,14 @@
 import type { DesignGraph } from "../../graph";
 import { defineLint } from "../define-lint";
-import { entries, labelOf } from "../walk";
+import { labelOf } from "../walk";
 
 const SYNCHRONOUS = new Set(["sync-call", "read", "write"]);
 
 const waitedOn = (graph: DesignGraph): Set<string> => {
   const seen = new Set<string>();
-  const stack = entries(graph).map((node) => node.id);
+  const stack = graph.nodes
+    .filter((node) => node.kind === "client")
+    .map((node) => node.id);
 
   while (stack.length > 0) {
     const id = stack.pop()!;

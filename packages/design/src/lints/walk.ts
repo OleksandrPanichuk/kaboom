@@ -13,7 +13,9 @@ export const outgoing = (
   );
 
 export const entries = (graph: DesignGraph): DesignNode[] =>
-  graph.nodes.filter((node) => node.kind === "client");
+  graph.nodes.filter(
+    (node) => node.kind === "client" || node.kind === "scheduler",
+  );
 
 export const reachable = (
   graph: DesignGraph,

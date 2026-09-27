@@ -437,4 +437,105 @@ describe("golden fixtures", () => {
       6,
     );
   });
+  describe("12. a change feed carries a database's writes to a search index", () => {
+    const search = (index: Record<string, unknown>) =>
+      graph(
+        [
+          node("users", "client", { rps: 1_000, readRatio: 0.8 }),
+          service("api", 2, 1_000),
+          node("db", "sql-database"),
+          node("index", "search-index", index),
+        ],
+        [
+          edge("users", "api"),
+          edge("api", "db", "write"),
+          edge("api", "index", "read"),
+          edge("db", "index", "change-feed"),
+        ],
+      );
+    const first = (index: Record<string, unknown>) =>
+      evaluateLoad(search(index), { kind: "load", durationSeconds: 10 })
+        .steps[0]!;
+
+    test("queries go to the index and writes reach it through the feed alone", () => {
+      const step = first({});
+
+      expect(step.nodes.index!.reads).toBeCloseTo(800, 6);
+      expect(step.nodes.index!.writes).toBeCloseTo(200, 6);
+      expect(step.clients.users!.availability).toBeCloseTo(1, 6);
+    });
+
+    test("indexing beyond its capacity slows and fails the queries too", () => {
+      const step = first({ shards: 1, indexCapacityPerShard: 100 });
+
+      expect(step.nodes.index!.rho).toBeCloseTo(2, 6);
+      expect(step.clients.users!.availability).toBeLessThan(0.8);
+    });
+  });
+
+  describe("13. a scheduler fires its bursts, once per replica unless they share a lock", () => {
+    const cron = (replicas: number, lock: "none" | "up" | "down") => {
+      const design = graph(
+        [
+          node("cron", "scheduler", {
+            everySeconds: 60,
+            burstSeconds: 10,
+            jobsPerSecond: 100,
+            replicas,
+          }),
+          node("jobs", "queue"),
+          node("worker", "worker", { replicas: 2 }),
+          ...(lock === "none" ? [] : [node("zk", "coordination")]),
+        ],
+        [
+          edge("cron", "jobs", "async-message"),
+          edge("jobs", "worker", "async-message"),
+          ...(lock === "none" ? [] : [edge("cron", "zk", "lock")]),
+        ],
+      );
+
+      return evaluateLoad(design, {
+        kind: "load",
+        durationSeconds: 120,
+        faults:
+          lock === "down" ? [{ kind: "node-down", nodeId: "zk", at: 0 }] : [],
+      }).steps.map((step) => Math.round(step.nodes.jobs!.writes));
+    };
+
+    test("one replica sends its burst every minute", () => {
+      expect(cron(1, "none")).toEqual([100, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0]);
+    });
+
+    test("two replicas without a lock send every job twice", () => {
+      expect(cron(2, "none")[0]).toBe(200);
+    });
+
+    test("with a lock only the holder fires, and with the lock service down nobody does", () => {
+      expect(cron(2, "up")[0]).toBe(100);
+      expect(cron(2, "down")[0]).toBe(0);
+    });
+  });
+
+  test("14. a burst shorter than a step is spread over it", () => {
+    const step = evaluateLoad(
+      graph(
+        [
+          node("cron", "scheduler", {
+            everySeconds: 300,
+            burstSeconds: 5,
+            jobsPerSecond: 100,
+          }),
+          node("jobs", "queue"),
+          node("worker", "worker"),
+        ],
+        [
+          edge("cron", "jobs", "async-message"),
+          edge("jobs", "worker", "async-message"),
+        ],
+      ),
+      { kind: "load", durationSeconds: 10 },
+    ).steps[0]!;
+
+    expect(step.nodes.jobs!.writes).toBeCloseTo(50, 6);
+  });
 });
