@@ -1,5 +1,7 @@
 import z from "zod";
 
+import { prop } from "./prop-meta";
+
 export const EDGE_KINDS = [
   "sync-call",
   "async-message",
@@ -17,9 +19,23 @@ const fanOut = z.number().positive().max(1_000);
 const timeoutMs = z.number().positive().max(600_000);
 
 export const EdgePropsSchema = z.strictObject({
-  share: share.default(1),
-  fanOut: fanOut.default(1),
-  timeoutMs: timeoutMs.default(1_000),
+  share: prop(share.default(1), {
+    title: "Share",
+    description:
+      "Part of the source's outgoing load this edge carries, when the source splits it",
+    unit: "ratio",
+  }),
+  fanOut: prop(fanOut.default(1), {
+    title: "Fan-out",
+    description:
+      "Calls made along this edge for each request the source handles",
+    unit: "count",
+  }),
+  timeoutMs: prop(timeoutMs.default(1_000), {
+    title: "Timeout",
+    description: "How long the source waits before it gives up on a call",
+    unit: "ms",
+  }),
 });
 
 export type EdgeProps = z.output<typeof EdgePropsSchema>;
