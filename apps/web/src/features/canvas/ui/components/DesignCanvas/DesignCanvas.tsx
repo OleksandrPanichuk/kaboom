@@ -45,6 +45,7 @@ import {
 import type {
   CanvasEdge,
   CanvasNode,
+  CanvasOverlay,
   DesignLayout,
 } from "@/features/canvas/typedefs";
 import { type Flow, mergeFlowNodes, toFlow } from "@/features/canvas/utils";
@@ -77,6 +78,7 @@ interface DesignCanvasProps {
   graph: DesignGraph;
   layout: DesignLayout;
   hits: LintHit[];
+  overlay: CanvasOverlay | null;
   focus: CanvasFocus | null;
   onAddNode: (kind: NodeKind, position: { x: number; y: number }) => void;
   onMoveNodes: (positions: DesignLayout) => void;
@@ -91,6 +93,7 @@ export function DesignCanvas({
   graph,
   layout,
   hits,
+  overlay,
   focus,
   onAddNode,
   onMoveNodes,
@@ -102,8 +105,8 @@ export function DesignCanvas({
 }: DesignCanvasProps) {
   const { screenToFlowPosition, fitView } = useReactFlow();
   const flow = useMemo(
-    () => toFlow(graph, layout, hits),
-    [graph, layout, hits],
+    () => toFlow(graph, layout, hits, overlay),
+    [graph, layout, hits, overlay],
   );
 
   const [fitOnOpen] = useState(flow.nodes.length > 0);

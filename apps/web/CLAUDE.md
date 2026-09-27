@@ -172,6 +172,12 @@ undo and redo are ordinary batches that go to the server like any other;
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
 drawn the same way.
 
+`features/simulation` runs `evaluateLoad` in the browser while the Run tab
+is open, on a deferred graph so typing stays smooth, and turns a step into
+the canvas overlay (`overlayAt`); the canvas only draws it. A saved run posts
+the same scenario to `POST /designs/:id/simulations`, which the server
+evaluates again: the preview never has to be trusted.
+
 Checks are `defineLint` rules in `packages/design/src/lints/rules/`, one per
 file, registered in `lints.ts`; `runLints(graph)` runs them all and names the
 nodes and edges each hit is about. The web only renders the hits: a new rule

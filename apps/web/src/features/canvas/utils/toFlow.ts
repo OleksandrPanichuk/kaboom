@@ -9,6 +9,7 @@ import {
 import type {
   CanvasEdge,
   CanvasNode,
+  CanvasOverlay,
   DesignLayout,
 } from "@/features/canvas/typedefs";
 
@@ -28,6 +29,7 @@ export const toFlow = (
   graph: DesignGraph,
   layout: DesignLayout,
   hits: LintHit[] = NO_HITS,
+  overlay: CanvasOverlay | null = null,
 ): Flow => {
   let unplaced = 0;
   const hitsByNode = new Map<string, LintHit[]>();
@@ -45,7 +47,11 @@ export const toFlow = (
       id: node.id,
       type: "design-node",
       position,
-      data: { node, hits: hitsByNode.get(node.id) ?? NO_HITS },
+      data: {
+        node,
+        hits: hitsByNode.get(node.id) ?? NO_HITS,
+        ...(overlay?.nodes[node.id] ? { overlay: overlay.nodes[node.id] } : {}),
+      },
     };
   });
 
@@ -81,6 +87,7 @@ export const toFlow = (
         color: String(kind.style.stroke),
         width: 16,
         height: 16,
+        markerUnits: "userSpaceOnUse",
       },
       ariaLabel: `${kind.label} from ${edge.from} to ${edge.to}`,
       data: {
@@ -88,6 +95,7 @@ export const toFlow = (
         lane,
         lanes: lanes.get(key) ?? 1,
         reversed: edge.from > edge.to,
+        ...(overlay ? { weight: overlay.edges[edge.id] ?? 0 } : {}),
       },
     };
   });

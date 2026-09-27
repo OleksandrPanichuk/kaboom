@@ -30,11 +30,13 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
   const { hits } = data;
   const warns = hits.some((hit) => hit.severity === "warning");
   const BadgeIcon = warns ? TriangleAlert : Info;
+  const { overlay } = data;
 
   return (
     <BaseNode
       style={{ width: NODE_WIDTH }}
-      className="group/node rounded-xl border-black/10 bg-white shadow-[0_8px_24px_-18px_rgba(24,24,27,0.5)] hover:ring-0 in-[.selected]:border-indigo-400 in-[.selected]:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
+      data-tone={overlay?.tone}
+      className="group/node rounded-xl border-black/10 data-[tone=busy]:border-amber-300 data-[tone=busy]:bg-amber-50/60 data-[tone=down]:border-dashed data-[tone=down]:border-red-400 data-[tone=down]:bg-red-50/60 data-[tone=ok]:border-emerald-300 data-[tone=saturated]:border-red-400 data-[tone=saturated]:bg-red-50/70 bg-white shadow-[0_8px_24px_-18px_rgba(24,24,27,0.5)] hover:ring-0 in-[.selected]:border-indigo-400 in-[.selected]:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
     >
       <Handle type="target" position={Position.Left} className={handleClass} />
       {hits.length > 0 ? (
@@ -63,6 +65,22 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
           </span>
         </div>
       </div>
+      {overlay ? (
+        <p
+          className={cn(
+            "border-t px-2.5 py-1 text-[11px] font-medium tabular-nums",
+            overlay.tone === "saturated" || overlay.tone === "down"
+              ? "border-red-200 text-red-700"
+              : overlay.tone === "busy"
+                ? "border-amber-200 text-amber-800"
+                : overlay.tone === "ok"
+                  ? "border-emerald-200 text-emerald-800"
+                  : "border-black/[0.06] text-muted-foreground",
+          )}
+        >
+          {overlay.text}
+        </p>
+      ) : null}
       <Handle type="source" position={Position.Right} className={handleClass} />
     </BaseNode>
   );
