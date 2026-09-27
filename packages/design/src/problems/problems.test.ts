@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { createNode, emptyGraph } from "../graph";
+import { createNode, type DesignGraph, emptyGraph } from "../graph";
 import { OFFICIAL_PROBLEMS } from "./library";
 import { edge, graph, node } from "./library/build";
 import {
@@ -296,5 +296,75 @@ describe("a design with no client", () => {
     expect(
       scoreSubmission(shortener, empty).drills.every((drill) => !drill.passed),
     ).toBe(true);
+  });
+});
+
+const passedItems = (slug: string, design: DesignGraph) => {
+  const problem = OFFICIAL_PROBLEMS.find((item) => item.slug === slug)!;
+  const score = scoreSubmission(problem, design);
+
+  return {
+    score: score.score,
+    passed: Object.fromEntries(
+      score.items.map((item) => [item.key, item.passed]),
+    ),
+  };
+};
+
+const withProps = (
+  design: DesignGraph,
+  kind: string,
+  props: Record<string, unknown>,
+): DesignGraph => ({
+  ...design,
+  nodes: design.nodes.map((item) =>
+    item.kind === kind
+      ? ({ ...item, props: { ...item.props, ...props } } as typeof item)
+      : item,
+  ),
+});
+
+describe("scoring the public pricing API", () => {
+  const reference = OFFICIAL_PROBLEMS.find(
+    (item) => item.slug === "rate-limited-api",
+  )!.reference.graph;
+
+  test("without throttling a flood makes every partner wait for the timeout", () => {
+    const { score, passed } = passedItems(
+      "rate-limited-api",
+      withProps(reference, "api-gateway", {
+        throttle: { enabled: false, limitRps: 5_000 },
+      }),
+    );
+
+    expect(passed["stays-fast-in-a-flood"]).toBe(false);
+    expect(passed.throttles).toBe(false);
+    expect(score).toBe(45);
+  });
+});
+
+describe("scoring the notification service", () => {
+  const reference = OFFICIAL_PROBLEMS.find(
+    (item) => item.slug === "notifications",
+  )!.reference.graph;
+
+  test("workers faster than the SMS provider get refused during a digest", () => {
+    const { passed } = passedItems(
+      "notifications",
+      withProps(reference, "worker", { replicas: 10 }),
+    );
+
+    expect(passed["handles-a-normal-day"]).toBe(false);
+    expect(passed["survives-a-provider-outage"]).toBe(true);
+  });
+
+  test("two digest replicas without a lock send every digest twice", () => {
+    const { score, passed } = passedItems(
+      "notifications",
+      withProps(reference, "scheduler", { replicas: 2 }),
+    );
+
+    expect(passed["sends-each-digest-once"]).toBe(false);
+    expect(score).toBe(95);
   });
 });

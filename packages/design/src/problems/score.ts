@@ -82,6 +82,24 @@ const judge = (
             evidence: `The design needs at least ${check.min} ${check.nodeKind} node${check.min === 1 ? "" : "s"} and has ${count}.`,
           };
     }
+    case "throttles": {
+      const throttler = context.graph.nodes.find(
+        (node) =>
+          node.kind === "rate-limiter" ||
+          (node.kind === "api-gateway" && node.props.throttle.enabled),
+      );
+
+      return throttler
+        ? {
+            passed: true,
+            evidence: `${throttler.label || throttler.id} limits what gets through.`,
+          }
+        : {
+            passed: false,
+            evidence:
+              "Nothing limits the traffic: add a rate limiter, or turn on throttling in a gateway.",
+          };
+    }
     case "no-lint": {
       if (!serves(context.graph)) {
         return {
