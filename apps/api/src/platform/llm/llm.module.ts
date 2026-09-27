@@ -1,3 +1,7 @@
+import {
+  anthropicClient,
+  AnthropicLanguageModel,
+} from "@/adapters/llm/anthropic";
 import { MemoryUsageLedger } from "@/adapters/llm/memory.usage-ledger";
 import { PostgresUsageLedger } from "@/adapters/llm/postgres.usage-ledger";
 import { ScriptedLanguageModel } from "@/adapters/llm/scripted.language-model";
@@ -22,7 +26,15 @@ export const llmModule = defineModule({
       return { model };
     }
 
-    const model: LanguageModel = new UnavailableLanguageModel();
+    const model: LanguageModel = env.ANTHROPIC_API_KEY
+      ? new AnthropicLanguageModel({
+          client: anthropicClient(env.ANTHROPIC_API_KEY),
+          models: {
+            interviewer: env.LLM_INTERVIEWER_MODEL,
+            review: env.LLM_REVIEW_MODEL,
+          },
+        })
+      : new UnavailableLanguageModel();
 
     bind(LanguageModel, () => model);
     bind(

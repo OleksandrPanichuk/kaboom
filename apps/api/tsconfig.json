@@ -18,6 +18,7 @@
     "src/**/*.ts",
     "tests/**/*.ts",
     "seeders/**/*.ts",
+    "scripts/**/*.ts",
     "eslint.config.js"
   ],
   "exclude": [

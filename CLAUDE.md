@@ -457,6 +457,13 @@ test. Outside tests, with no key configured, `UnavailableLanguageModel`
 refuses every request with `503 LANGUAGE_MODEL_UNAVAILABLE`, so the rest of
 the app still boots.
 
+With `ANTHROPIC_API_KEY` set, the model is `AnthropicLanguageModel`
+(`adapters/llm/anthropic/`), which streams the Messages API, reassembles a
+tool call's JSON from its fragments, marks cached system blocks with
+`cache_control`, and turns an abort into a `stop` with reason `aborted`.
+`bun run llm:smoke` in `apps/api` sends one real request and prints what
+came back.
+
 `UsageLedger` holds each user's daily token budget. `reserve` answers whether
 a turn may start, and `record` adds what it used, in one atomic upsert of
 `llm_usage (user_id, day)`. A cache read counts a tenth of a token.
