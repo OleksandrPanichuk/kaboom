@@ -4,5 +4,6 @@ export { duplicateSchedule } from "./duplicate-schedule";
 export { failoverNowhere } from "./failover-nowhere";
 export { spofCriticalPath } from "./spof-critical-path";
 export { statefulBehindRoundRobin } from "./stateful-behind-round-robin";
+export { syncFanOut } from "./sync-fan-out";
 export { syncThirdParty } from "./sync-third-party";
 export { unreachableNode } from "./unreachable-node";

@@ -1,8 +1,10 @@
 import type { EdgeKind, EdgeProps, NodeKind } from "../../catalogue";
 import {
   createEdge,
+  createGroup,
   createNode,
   type DesignGraph,
+  type DesignGroup,
   type DesignNode,
   emptyGraph,
 } from "../../graph";
@@ -32,4 +34,13 @@ export const edge = (
 export const graph = (
   nodes: DesignNode[],
   edges: Array<ReturnType<typeof edge>> = [],
-): DesignGraph => ({ ...emptyGraph(), nodes, edges });
+  groups: DesignGroup[] = [],
+): DesignGraph => ({ ...emptyGraph(), nodes, edges, groups });
+
+export const region = (id: string, label: string): DesignGroup =>
+  createGroup({ id, kind: "region", label });
+
+export const within = (groupId: string, placed: DesignNode): DesignNode => ({
+  ...placed,
+  groupId,
+});

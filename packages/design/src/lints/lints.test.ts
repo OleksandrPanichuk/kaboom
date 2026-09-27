@@ -375,4 +375,41 @@ describe("lints", () => {
       expect(hits(dns(["eu", "us"]), "failover-nowhere")).toEqual([]);
     });
   });
+  describe("sync-fan-out", () => {
+    const feed = (kind: EdgeKind) =>
+      graph(
+        [
+          node("users", "client"),
+          node("api", "service", { replicas: 2 }),
+          node("feeds", "cache"),
+          node("events", "stream"),
+          node("fanout", "worker", { replicas: 2 }),
+        ],
+        kind === "async-message"
+          ? [
+              edge("users", "api"),
+              edge("api", "events", "write"),
+              edge("events", "fanout", "async-message"),
+              {
+                ...edge("fanout", "feeds", "write"),
+                props: EdgePropsSchema.parse({ fanOut: 100 }),
+              },
+            ]
+          : [
+              edge("users", "api"),
+              {
+                ...edge("api", "feeds", kind),
+                props: EdgePropsSchema.parse({ fanOut: 100 }),
+              },
+            ],
+      );
+
+    test("flags a hundred writes the user waits for", () => {
+      expect(hits(feed("write"), "sync-fan-out")).toEqual(["api+feeds"]);
+    });
+
+    test("accepts the same fan-out done by workers behind a stream", () => {
+      expect(hits(feed("async-message"), "sync-fan-out")).toEqual([]);
+    });
+  });
 });

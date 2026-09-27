@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { createNode, type DesignGraph, emptyGraph } from "../graph";
 import { OFFICIAL_PROBLEMS } from "./library";
-import { edge, graph, node } from "./library/build";
+import { edge, graph, node, region, within } from "./library/build";
 import {
   checkPublishable,
   HIDDEN_FAILED,
@@ -366,5 +366,125 @@ describe("scoring the notification service", () => {
 
     expect(passed["sends-each-digest-once"]).toBe(false);
     expect(score).toBe(95);
+  });
+});
+
+describe("a region-down drill fault", () => {
+  const drill = {
+    id: "lost",
+    title: "Lost",
+    description: "",
+    visibility: "public" as const,
+    durationSeconds: 60,
+    traffic: [],
+    slo: { p99Ms: 300, availability: 0.999 },
+    expect: { forbid: [] },
+    faults: [
+      {
+        kind: "region-down" as const,
+        select: { nodeKind: "sql-database" as const, role: "primary" as const },
+        at: 10,
+      },
+    ],
+  };
+
+  test("takes down the region that holds the selected node", () => {
+    const placed = graph(
+      [
+        node("users", "client", "Users"),
+        within("eu", node("db", "sql-database", "DB")),
+        within("us", node("replica", "sql-database", "Replica")),
+      ],
+      [edge("db", "replica", "replication")],
+      [region("eu", "Europe"), region("us", "America")],
+    );
+
+    expect(drillScenario(drill, placed).faults).toEqual([
+      { kind: "region-down", groupId: "eu", at: 10 },
+    ]);
+  });
+
+  test("treats everything outside a region as one place, and takes it all down", () => {
+    const unplaced = graph([
+      node("users", "client", "Users"),
+      node("api", "service", "API"),
+      node("db", "sql-database", "DB"),
+    ]);
+
+    expect(drillScenario(drill, unplaced).faults).toEqual([
+      { kind: "node-down", nodeId: "api", at: 10 },
+      { kind: "node-down", nodeId: "db", at: 10 },
+    ]);
+  });
+});
+
+describe("scoring the news feed", () => {
+  const reference = OFFICIAL_PROBLEMS.find((item) => item.slug === "news-feed")!
+    .reference.graph;
+
+  test("building feeds when they are read cannot keep up", () => {
+    const onRead: DesignGraph = {
+      ...reference,
+      nodes: reference.nodes.filter(
+        (item) => !["feeds", "events", "fanout"].includes(item.id),
+      ),
+      edges: [
+        ...reference.edges.filter(
+          (item) =>
+            !["feeds", "events", "fanout"].some(
+              (id) => item.from === id || item.to === id,
+            ),
+        ),
+        edge("api", "posts", "read", { share: 0.9, fanOut: 20 }),
+      ],
+    };
+    const { passed } = passedItems("news-feed", onRead);
+
+    expect(passed["handles-a-normal-day"]).toBe(false);
+    expect(passed["handles-a-big-event"]).toBe(false);
+  });
+
+  test("writing the index next to the store loses posts when search is down", () => {
+    const dual: DesignGraph = {
+      ...reference,
+      edges: [
+        ...reference.edges.filter(
+          (item) => !(item.from === "posts" && item.to === "search"),
+        ),
+        edge("api", "search", "write"),
+      ],
+    };
+    const { score, passed } = passedItems("news-feed", dual);
+
+    expect(passed["posts-without-search"]).toBe(false);
+    expect(passed["feeds-the-index-from-the-store"]).toBe(false);
+    expect(score).toBe(80);
+  });
+});
+
+describe("scoring team chat", () => {
+  const reference = OFFICIAL_PROBLEMS.find((item) => item.slug === "chat")!
+    .reference.graph;
+
+  test("two copies with no regions drawn fall together", () => {
+    const { passed } = passedItems("chat", {
+      ...reference,
+      groups: [],
+      nodes: reference.nodes.map((item) => ({ ...item, groupId: null })),
+    });
+
+    expect(passed["survives-losing-a-region"]).toBe(false);
+  });
+
+  test("a replica in the same region as the primary cannot take over", () => {
+    const { passed } = passedItems("chat", {
+      ...reference,
+      nodes: reference.nodes.map((item) =>
+        item.id === "replica-us" ? { ...item, groupId: "eu" } : item,
+      ),
+    });
+
+    expect(passed["survives-losing-a-region"]).toBe(false);
+    expect(passed["handles-a-normal-day"]).toBe(true);
   });
 });

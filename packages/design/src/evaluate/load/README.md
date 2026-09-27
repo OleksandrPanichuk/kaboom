@@ -13,7 +13,7 @@ same pull request.
 ## Scenario
 
 | Field             | Default                         | Meaning                                                                                                                                      |
-|-------------------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `stepSeconds`     | 10                              | Length of one step                                                                                                                           |
 | `durationSeconds` | 600                             | Length of the run; steps = duration / step                                                                                                   |
 | `traffic`         | `[]`                            | Piecewise-constant multiplier on every client's `rps`: `{ at, multiplier }` holds from `at` seconds until the next entry. 1 before the first |
@@ -43,7 +43,7 @@ same pull request.
     keeps sending to targets that are down;
   - `broadcast` (stream): each edge gets all of it, times `fanOut`; every
     outgoing edge is a consumer group.
-  - `routed` (DNS): see *Regions*.
+  - `routed` (DNS): see _Regions_.
 
 ## Topology
 
@@ -61,7 +61,7 @@ serve. A node that is down serves nothing, forwards nothing and fails every
 request it receives.
 
 | Kind                          | Capacity                                                                                                        | Forwards                                                               |
-|-------------------------------|-----------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | `client`                      | unbounded                                                                                                       | what it emits                                                          |
 | `service`                     | `replicas × capacityRpsPerReplica`                                                                              | what it serves                                                         |
 | `worker`                      | `replicas × capacityMsgPerReplica`                                                                              | what it serves                                                         |
@@ -72,7 +72,7 @@ request it receives.
 | `sql-database`                | writes: `writeCapacityRps × shards`, on the primary only; reads: `readCapacityRps × shards × (1 + up replicas)` | its writes, on `change-feed` edges                                     |
 | `nosql-database`              | `partitions × readCapacityPerPartition` and `partitions × writeCapacityPerPartition`                            | its writes, on `change-feed` edges                                     |
 | `object-storage`              | `readCapacityRps` and `writeCapacityRps`                                                                        | nothing                                                                |
-| `dns`                         | unbounded                                                                                                       | see *Regions*                                                          |
+| `dns`                         | unbounded                                                                                                       | see _Regions_                                                          |
 | `search-index`                | reads: `shards × replicas × queryCapacityPerCopy`; writes: `shards × indexCapacityPerShard`                     | nothing                                                                |
 | `scheduler`, `coordination`   | unbounded                                                                                                       | scheduler: what it emits; coordination: nothing                        |
 | `queue`                       | `capacityMsgPerSecond` accepted                                                                                 | see _Backlog_                                                          |
@@ -165,7 +165,7 @@ A fault is an event with `at` and an optional `until`, in seconds, applied at
 onset and undone at its end.
 
 | Fault         | Effect                                                                                                                                                                                                                                                                            |
-|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `node-down`   | the node is down. A SQL primary with `failover` `automatic` recovers 30 s later, `manual` 300 s later, if it has at least one replica outside every region that is down; one replica is then spent on the promotion. With `none`, or no such replica, it stays down until `until` |
 | `region-down` | every node in the group `groupId`, or in a group inside it, is down, as if each had its own `node-down`; a SQL primary among them fails over the same way                                                                                                                         |
 | `capacity`    | the node's capacity is multiplied by `factor`                                                                                                                                                                                                                                     |
@@ -183,7 +183,7 @@ quotes the numbers, and those numbers in `data`. One finding per kind and
 target: the first step it held, with the worst value seen.
 
 | Kind              | When                                                                 |
-|-------------------|----------------------------------------------------------------------|
+| ----------------- | -------------------------------------------------------------------- |
 | `saturated`       | a node reaches `ρ ≥ 0.95`                                            |
 | `errors`          | a node's own error rate, less what it throttles, exceeds 1 %         |
 | `throttled`       | a node turns away more than 1 % of what it receives                  |

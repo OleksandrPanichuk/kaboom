@@ -1,4 +1,5 @@
-import type { DesignGraph } from "../graph";
+import { type DesignGraph, emptyGraph } from "../graph";
+import { applyOps, type DesignOp } from "../ops";
 import { type ProblemContent, ProblemContentSchema } from "./schema";
 import { type Score, scoreSubmission } from "./score";
 
@@ -47,6 +48,17 @@ export const publicProblem = (problem: ProblemContent): PublicProblem => ({
 export type PublishCheck =
   { ok: true; problem: ProblemContent } | { ok: false; issues: string[] };
 
+const buildable = (graph: DesignGraph): string | null => {
+  const ops: DesignOp[] = [
+    ...graph.groups.map((group): DesignOp => ({ op: "add-group", group })),
+    ...graph.nodes.map((node): DesignOp => ({ op: "add-node", node })),
+    ...graph.edges.map((edge): DesignOp => ({ op: "add-edge", edge })),
+  ];
+  const result = applyOps(emptyGraph(), ops);
+
+  return result.ok ? null : result.message;
+};
+
 const duplicates = (values: string[]) => [
   ...new Set(values.filter((value, index) => values.indexOf(value) !== index)),
 ];
@@ -78,6 +90,17 @@ export const checkPublishable = (input: unknown): PublishCheck => {
       issues.push(
         `Rubric item ${item.key} names a drill, ${item.check.drillId}, the problem does not have.`,
       );
+    }
+  }
+
+  for (const [name, graph] of [
+    ["baseline", problem.baseline],
+    ["reference solution", problem.reference.graph],
+  ] as const) {
+    const refusal = buildable(graph);
+
+    if (refusal) {
+      issues.push(`The ${name} could not be drawn by a solver: ${refusal}.`);
     }
   }
 

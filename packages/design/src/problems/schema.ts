@@ -46,6 +46,11 @@ export const DrillFaultSchema = z.discriminatedUnion("kind", [
     select: NodeSelectorSchema,
     at: Seconds,
   }),
+  z.strictObject({
+    kind: z.literal("region-down"),
+    select: NodeSelectorSchema,
+    ...window,
+  }),
 ]);
 export type DrillFault = z.output<typeof DrillFaultSchema>;
 
