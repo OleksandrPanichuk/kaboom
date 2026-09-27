@@ -44,6 +44,25 @@ describe("describeConnectionRefusal", () => {
     ).toBe("A node cannot connect to itself.");
     expect(
       describeConnectionRefusal(
+        {
+          ...graph,
+          nodes: [
+            ...graph.nodes,
+            createNode("client", { id: "web", label: "Browsers" }),
+          ],
+        },
+        "api",
+        "web",
+        refusal(
+          "invalid-edge",
+          "Edge e1 ends at web, a client; clients send requests and nothing calls them",
+        ),
+      ),
+    ).toBe(
+      "Browsers is a client: clients only send requests, so nothing connects into one.",
+    );
+    expect(
+      describeConnectionRefusal(
         graph,
         "lb",
         "api",

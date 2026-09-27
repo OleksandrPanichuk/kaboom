@@ -39,6 +39,12 @@ describe("suggestEdgeKind with edges already there", () => {
     );
   });
 
+  test("keeps one kind between two services, so a second connection is a duplicate", () => {
+    expect(
+      suggestEdgeKind(node("service"), node("service"), ["sync-call"]),
+    ).toBe("sync-call");
+  });
+
   test("falls back to the first kind when every one is taken", () => {
     expect(
       suggestEdgeKind(node("service"), node("sql-database"), ["write", "read"]),

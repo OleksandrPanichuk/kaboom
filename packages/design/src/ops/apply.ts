@@ -140,6 +140,13 @@ const assertValidEdge = (graph: DesignGraph, edge: DesignEdge): void => {
     reject("invalid-edge", `Edge ${edge.id} connects ${from.id} to itself`);
   }
 
+  if (to.kind === "client") {
+    reject(
+      "invalid-edge",
+      `Edge ${edge.id} ends at ${to.id}, a client; clients send requests and nothing calls them`,
+    );
+  }
+
   if (edge.kind === "replication") {
     if (from.kind !== to.kind || !catalogue[from.kind].replicable) {
       reject(

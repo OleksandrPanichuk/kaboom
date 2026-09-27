@@ -19,7 +19,7 @@ const candidates = (from: DesignNode, to: DesignNode): EdgeKind[] => {
   if (to.kind === "cache") return ["read", "write"];
   if (STORES.has(to.kind)) return ["write", "read"];
 
-  return ["sync-call", "async-message"];
+  return ["sync-call"];
 };
 
 export const suggestEdgeKind = (

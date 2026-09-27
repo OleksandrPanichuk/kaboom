@@ -15,6 +15,10 @@ export const describeConnectionRefusal = (
     case "invalid-edge":
       if (from === to) return "A node cannot connect to itself.";
 
+      if (rejection.message.includes("a client")) {
+        return `${label(to)} is a client: clients only send requests, so nothing connects into one.`;
+      }
+
       if (rejection.message.includes("already exists")) {
         return `${label(from)} is already connected to ${label(to)} this way.`;
       }

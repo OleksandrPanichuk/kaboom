@@ -19,6 +19,7 @@ import {
   type OnBeforeDelete,
   type OnConnect,
   type OnConnectEnd,
+  type OnConnectStart,
   type OnEdgesChange,
   type OnNodeDrag,
   type OnNodesChange,
@@ -31,6 +32,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -160,21 +162,29 @@ export function DesignCanvas({
       Object.fromEntries(dragged.map((node) => [node.id, node.position])),
     );
 
+  const startedAtTarget = useRef(false);
+
+  const oriented = (source: string, target: string): [string, string] =>
+    startedAtTarget.current ? [target, source] : [source, target];
+
+  const onConnectStart: OnConnectStart = (_event, { handleType }) => {
+    startedAtTarget.current = handleType === "target";
+  };
+
   const isValidConnection: IsValidConnection<CanvasEdge> = ({
     source,
     target,
-  }) => connectionError(source, target) === null;
+  }) => connectionError(...oriented(source, target)) === null;
 
-  const connect: OnConnect = ({ source, target }) => onConnect(source, target);
+  const connect: OnConnect = ({ source, target }) =>
+    onConnect(...oriented(source, target));
 
   const onConnectEnd: OnConnectEnd = (_event, state) => {
+    startedAtTarget.current = false;
+
     if (state.isValid !== false || !state.fromNode || !state.toNode) return;
 
-    const [from, to] =
-      state.fromHandle?.type === "target"
-        ? [state.toNode.id, state.fromNode.id]
-        : [state.fromNode.id, state.toNode.id];
-    const reason = connectionError(from, to);
+    const reason = connectionError(state.fromNode.id, state.toNode.id);
 
     if (reason) onRefuseConnection(reason);
   };
@@ -242,6 +252,7 @@ export function DesignCanvas({
         nodeTypes={NODE_TYPES}
         edgeTypes={EDGE_TYPES}
         isValidConnection={isValidConnection}
+        onConnectStart={onConnectStart}
         onConnect={connect}
         onConnectEnd={onConnectEnd}
         onBeforeDelete={onBeforeDelete}
