@@ -25,7 +25,7 @@ export function SecuritySettingsView({
   );
 
   return (
-    <main className="security-settings min-h-full bg-zinc-50/70 px-4 py-8 sm:px-8 sm:py-10">
+    <div className="security-settings flex-1 bg-zinc-50/70 px-4 py-8 sm:px-8 sm:py-10">
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <div className="mb-2 flex items-start gap-4">
           <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-indigo-200/60 bg-indigo-50 text-indigo-700 shadow-sm">
@@ -52,6 +52,6 @@ export function SecuritySettingsView({
           onDeleted={onAccountDeleted}
         />
       </div>
-    </main>
+    </div>
   );
 }
