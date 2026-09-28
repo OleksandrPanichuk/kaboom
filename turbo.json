@@ -32,6 +32,12 @@
         "VITE_USE_POLLING"
       ]
     },
+    "eval": {
+      "cache": false,
+      "env": [
+        "EVAL_RUNS"
+      ]
+    },
     "generate": {
       "cache": false,
       "env": [

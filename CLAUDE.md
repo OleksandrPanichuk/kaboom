@@ -497,6 +497,20 @@ the phases it is offered in, and a handler that goes through the module's
 own use cases. An invalid input or an `AppError` comes back to the model as
 a tool error rather than failing the turn.
 
+`bun run eval` in `apps/api` runs the interviewer against the real model.
+It is never part of `bun test`: the files in `evals/` are named `*.eval.ts`,
+cost real tokens, and skip without `ANTHROPIC_API_KEY`, which they read from
+the environment or `apps/api/.env`. They reuse the test preload, so the app
+and its test database boot as for any test, and only `LanguageModel` is
+rebound, to `RecordingLanguageModel` over the Anthropic adapter. Each case
+seeds an interview straight into a phase, a design and a conversation, then
+makes one move and waits for the turn. Invariants that can be read off the
+turn are checked directly: silence is no message and no visible tool. The
+rest go to a judge on the `review` model, which answers through a `verdict`
+tool with a reason that quotes the interviewer. `EVAL_RUNS=3` repeats every
+case, since a pass once proves little about a model. When the persona or the
+tools change, run it before and after.
+
 ## Generated API client
 
 `packages/api-client/src/generated` is not committed. It is produced by

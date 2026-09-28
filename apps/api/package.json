@@ -15,7 +15,8 @@
     "test": "bun test --pass-with-no-tests",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "llm:smoke": "bun scripts/llm-smoke.ts"
+    "llm:smoke": "bun scripts/llm-smoke.ts",
+    "eval": "bun test ./evals/interviewer.eval.ts --timeout 180000"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
