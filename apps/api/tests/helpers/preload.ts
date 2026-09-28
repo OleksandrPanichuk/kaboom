@@ -8,7 +8,7 @@ import { migrate } from "drizzle-orm/bun-sql/migrator";
 import type { MemoryCaptchaVerifier } from "@/adapters/captcha/memory.captcha-verifier";
 import type { MemoryErrorReporter } from "@/adapters/error-reporting/memory.error-reporter";
 import type { MemoryUsageLedger } from "@/adapters/llm/memory.usage-ledger";
-import type { ScriptedLanguageModel } from "@/adapters/llm/scripted.language-model";
+import { ScriptedLanguageModel } from "@/adapters/llm/scripted.language-model";
 import type { MemoryMailer } from "@/adapters/mail/memory.mailer";
 import type { MemoryMetrics } from "@/adapters/metrics/memory.metrics";
 import type { MemoryRateLimitStore } from "@/adapters/rate-limit/memory.rate-limit-store";
@@ -97,7 +97,10 @@ afterEach(async () => {
   (make(ErrorReporter) as MemoryErrorReporter).clear();
   (make(Metrics) as MemoryMetrics).clear();
   (make(Realtime) as MemoryRealtime).clear();
-  (make(LanguageModel) as ScriptedLanguageModel).reset();
+  const model = make(LanguageModel);
+
+  if (model instanceof ScriptedLanguageModel) model.reset();
+
   (make(UsageLedger) as MemoryUsageLedger).clear();
 });
 

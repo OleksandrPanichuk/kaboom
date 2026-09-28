@@ -160,6 +160,7 @@ export const config = [
       "**/scripts/**",
       "**/db/migrate.ts",
       "**/seeders/**",
+      "**/evals/**",
     ],
     rules: {
       "no-console": "off",
