@@ -12,7 +12,13 @@ interface HistoryPanelProps {
 }
 
 export function HistoryPanel({ slug }: HistoryPanelProps) {
-  const { data, isPending, isError } = useQuery(submissionsQuery(slug));
+  const { data, isPending, isError } = useQuery({
+    ...submissionsQuery(slug),
+    refetchInterval: (query) =>
+      query.state.data?.items.some((item) => item.reviewStatus === "pending")
+        ? 3_000
+        : false,
+  });
 
   if (isPending) {
     return (

@@ -88,7 +88,12 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
           label: "Tests",
           icon: FlaskConical,
           content: (
-            <TestsPanel outcome={outcome} revision={revision} error={error} />
+            <TestsPanel
+              slug={slug}
+              outcome={outcome}
+              revision={revision}
+              error={error}
+            />
           ),
         },
         {

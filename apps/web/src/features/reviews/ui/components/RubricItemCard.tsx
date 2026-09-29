@@ -1,9 +1,8 @@
 import type { ReviewModel } from "@repo/api-client";
 import { ChevronRight } from "lucide-react";
 
+import { ScoreDots } from "@/components/ScoreDots";
 import { citationKind, skillLabel } from "@/features/reviews/utils";
-
-import { ScoreDots } from "./ScoreDots";
 
 interface RubricItemCardProps {
   item: ReviewModel["items"][number];
