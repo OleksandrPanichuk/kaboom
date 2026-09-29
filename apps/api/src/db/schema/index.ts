@@ -12,6 +12,7 @@ export * from "./problem_versions.schema";
 export * from "./problems.schema";
 export * from "./reviews.schema";
 export * from "./simulation_runs.schema";
+export * from "./skill_scores.schema";
 export * from "./solution_reveals.schema";
 export * from "./submissions.schema";
 export * from "./users.schema";

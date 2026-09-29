@@ -28,6 +28,8 @@ export abstract class ProblemsRepository extends Repository {
     page: PageRequest,
   ): Promise<Page<ProblemEntity>>;
 
+  public abstract listPublishedContent(): Promise<ProblemWithContent[]>;
+
   public abstract findPublishedBySlug(
     slug: string,
   ): Promise<ProblemWithContent | null>;

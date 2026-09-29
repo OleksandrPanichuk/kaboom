@@ -9,6 +9,7 @@ import { problemsModule } from "@/modules/problems";
 import { reviewsModule } from "@/modules/reviews";
 import { sessionsModule } from "@/modules/sessions";
 import { simulationsModule } from "@/modules/simulations";
+import { skillsModule } from "@/modules/skills";
 import { submissionsModule } from "@/modules/submissions";
 import { usersModule } from "@/modules/users";
 import { verificationTokensModule } from "@/modules/verification-tokens";
@@ -47,6 +48,7 @@ export const modules = [
   problemsModule,
   submissionsModule,
   interviewsModule,
+  skillsModule,
   reviewsModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

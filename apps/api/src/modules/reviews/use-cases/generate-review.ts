@@ -12,6 +12,7 @@ import {
   InterviewsService,
 } from "@/modules/interviews";
 import { NotificationsService } from "@/modules/notifications";
+import { SkillsService } from "@/modules/skills";
 import { UsersService } from "@/modules/users";
 
 import { ReviewsRepository } from "../ports";
@@ -94,6 +95,16 @@ export class GenerateReviewUseCase extends UseCase<Options, Result> {
         checks: shown.items,
         drills: shown.drills,
       });
+
+      if (inserted) {
+        await makeService(SkillsService).recordReview({
+          userId: interview.ownerId,
+          problemId: interview.problemId,
+          interviewId,
+          reviewId: inserted.id,
+          items: inserted.items,
+        });
+      }
 
       await emit("status", { status: reviewed.status });
 

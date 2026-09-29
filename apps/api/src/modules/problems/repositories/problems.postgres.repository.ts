@@ -1,5 +1,5 @@
 import { type ProblemContent, ProblemContentSchema } from "@repo/design";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import {
@@ -74,6 +74,26 @@ export class PostgresProblemsRepository extends ProblemsRepository {
       .limit(OLDEST_FIRST.limit(page));
 
     return OLDEST_FIRST.page(rows.map(toProblem), page);
+  }
+
+  public async listPublishedContent(): Promise<ProblemWithContent[]> {
+    const rows = await this.db
+      .select()
+      .from(problemsSchema)
+      .innerJoin(
+        problemVersionsSchema,
+        and(
+          eq(problemVersionsSchema.problemId, problemsSchema.id),
+          eq(problemVersionsSchema.version, problemsSchema.currentVersion),
+        ),
+      )
+      .where(eq(problemsSchema.status, "published"))
+      .orderBy(asc(problemsSchema.slug));
+
+    return rows.map((row) => ({
+      problem: toProblem(row.problems),
+      version: toVersion(row.problem_versions),
+    }));
   }
 
   public async findPublishedBySlug(
