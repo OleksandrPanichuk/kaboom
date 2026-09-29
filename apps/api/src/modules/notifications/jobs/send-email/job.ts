@@ -16,6 +16,7 @@ import {
   renderNewSignInEmail,
   renderPasswordChangedEmail,
   renderPasswordResetEmail,
+  renderReviewReadyEmail,
 } from "../../templates";
 import { type SendEmailPayload, SendEmailPayloadSchema } from "./schema";
 
@@ -81,6 +82,12 @@ export class SendEmailJob extends Job<SendEmailPayload> {
           name: payload.to.name,
           newEmail: payload.newEmail,
           actionUrl: payload.securityUrl,
+        });
+
+      case EmailKind.ReviewReady:
+        return renderReviewReadyEmail({
+          name: payload.to.name,
+          actionUrl: payload.reviewUrl,
         });
     }
   }

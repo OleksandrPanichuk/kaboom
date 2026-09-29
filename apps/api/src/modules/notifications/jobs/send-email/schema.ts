@@ -52,6 +52,11 @@ export const SendEmailPayloadSchema = z.discriminatedUnion("kind", [
     newEmail: z.email(),
     securityUrl: z.url(),
   }),
+  z.object({
+    kind: z.literal(EmailKind.ReviewReady),
+    to: RecipientSchema,
+    reviewUrl: z.url(),
+  }),
 ]);
 
 export type EmailClient = z.infer<typeof ClientSchema>;

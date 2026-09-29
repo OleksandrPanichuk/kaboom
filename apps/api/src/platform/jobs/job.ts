@@ -15,7 +15,11 @@ export abstract class Job<Payload> extends Injectable {
 
   public abstract handle(payload: Payload, meta: JobMeta): Promise<void>;
 
-  public failed(error: unknown, meta: JobMeta): void {
+  public failed(
+    error: unknown,
+    meta: JobMeta,
+    _payload?: Payload,
+  ): void | Promise<void> {
     this.captureException(error, {
       source: "job",
       tags: { job: meta.name, queue: meta.queue },

@@ -497,6 +497,43 @@ the phases it is offered in, and a handler that goes through the module's
 own use cases. An invalid input or an `AppError` comes back to the model as
 a tool error rather than failing the turn.
 
+## Reviews
+
+Ending an interview moves it to `reviewing` and schedules a review through
+the `ReviewScheduler` port. `interviews` declares the port, and `reviews`
+binds it to `JobReviewScheduler`, so the dependency points one way:
+`reviews` knows `interviews`, never the reverse. When the interview ends
+while a turn runs, the review waits for that turn to finish. This covers the
+interviewer's own `end_interview` and a candidate who submits mid-turn,
+whose turn is interrupted. Otherwise the goodbye the review should read
+would be committed after it. `TurnScheduler` schedules the review once
+such a turn has finished.
+
+`GenerateReviewJob` writes the review:
+
+1. It scores the final revision with `scoreSubmission`, so every drill a
+   check names runs against the design as it ended, whether or not anyone
+   ran it during the interview.
+2. It asks the `review` model for a 0–3 score per rubric item. Each score
+   cites the record by label: `M` a message, `N` an evidence note, `D` a
+   drill, `C` a check.
+3. It asks once more about items it cannot accept, those citing a label
+   that does not exist or scoring above 0 with no citation. What is still
+   wrong after that is stored as unscored with its reason, and the rest
+   is kept.
+4. In one transaction it inserts the review, whose `interview_id` is
+   unique, moves the interview to `reviewed` and emits the `status`
+   event, then emails that the review is ready.
+
+A second submit, a repeated job or a job retry finds the review and
+returns. The last failed attempt goes through `Job.failed`, which now
+receives the payload, and moves the interview to `review_failed`. `POST
+/interviews/:id/review/retry` moves it back and schedules the review
+again. `MemoryJobQueue` calls `failed` instead of throwing, as BullMQ
+would, so a test sees what production sees.
+
+## Evals
+
 `bun run eval` in `apps/api` runs the interviewer against the real model.
 It is never part of `bun test`: the files in `evals/` are named `*.eval.ts`,
 cost real tokens, and skip without `ANTHROPIC_API_KEY`, which they read from

@@ -134,7 +134,7 @@ export class BullMqJobQueue extends JobQueue {
         result.error,
       );
 
-      job.failed(invalid, meta);
+      await job.failed(invalid, meta);
       this.measure(job, "failed", startedAt);
 
       throw new UnrecoverableError(invalid.message);
@@ -148,7 +148,7 @@ export class BullMqJobQueue extends JobQueue {
       const final = unprocessable || meta.attempts >= (raw.opts.attempts ?? 1);
 
       if (final) {
-        job.failed(cause, meta);
+        await job.failed(cause, meta, result.data);
       }
 
       this.measure(job, final ? "failed" : "retried", startedAt);

@@ -6,7 +6,7 @@ export interface RenderedEmail {
   text: string;
 }
 
-interface ActionEmailOptions {
+export interface ActionEmailOptions {
   name?: string;
   title: string;
   preheader: string;
@@ -30,7 +30,7 @@ const escapeHtml = (value: string): string =>
       })[character]!,
   );
 
-const appName = (): string => getEnv().APP_NAME;
+export const appName = (): string => getEnv().APP_NAME;
 
 const normalizeName = (name?: string): string => {
   const normalized = name?.replaceAll(/[\r\n]+/g, " ").trim();
@@ -38,7 +38,7 @@ const normalizeName = (name?: string): string => {
   return normalized ?? "there";
 };
 
-const renderActionEmail = ({
+export const renderActionEmail = ({
   name,
   title,
   preheader,

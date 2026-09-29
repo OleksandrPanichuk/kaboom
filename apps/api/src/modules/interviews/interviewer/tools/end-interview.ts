@@ -15,6 +15,7 @@ export const endInterviewTool = defineInterviewerTool({
     await make(SubmitInterviewUseCase).execute({
       ownerId: interview.ownerId,
       id: interview.id,
+      duringTurn: true,
     });
 
     return { content: "The interview has ended.", ends: true };

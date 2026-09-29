@@ -36,6 +36,10 @@ interface SendEmailChangedOptions extends AuthNotificationRecipient {
   securityUrl: string;
 }
 
+interface SendReviewReadyOptions extends AuthNotificationRecipient {
+  reviewUrl: string;
+}
+
 export class NotificationsService extends Service {
   private readonly sendEmail = make(SendEmailJob);
 
@@ -49,6 +53,19 @@ export class NotificationsService extends Service {
       to: { userId, email, name },
       verificationUrl,
       expiresInHours,
+    });
+  }
+
+  public sendReviewReady({
+    userId,
+    email,
+    name,
+    reviewUrl,
+  }: SendReviewReadyOptions): Promise<void> {
+    return this.sendEmail.dispatch({
+      kind: EmailKind.ReviewReady,
+      to: { userId, email, name },
+      reviewUrl,
     });
   }
 

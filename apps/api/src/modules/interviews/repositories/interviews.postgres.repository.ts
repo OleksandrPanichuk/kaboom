@@ -1,7 +1,7 @@
 import { and, eq, sql } from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";
-import { interviewsSchema, problemsSchema } from "@/db";
+import { interviewsSchema, type InterviewStatus, problemsSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
 import { Keyset } from "@/db/pagination";
 
@@ -107,6 +107,22 @@ export class PostgresInterviewsRepository extends InterviewsRepository {
       .returning({ eventSeq: interviewsSchema.eventSeq });
 
     return row!.eventSeq;
+  }
+
+  public async transition(
+    id: string,
+    from: InterviewStatus,
+    to: InterviewStatus,
+  ): Promise<InterviewEntity | null> {
+    const [row] = await this.db
+      .update(interviewsSchema)
+      .set({ status: to })
+      .where(
+        and(eq(interviewsSchema.id, id), eq(interviewsSchema.status, from)),
+      )
+      .returning();
+
+    return row ?? null;
   }
 
   public async markReviewing(
