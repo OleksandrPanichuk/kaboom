@@ -38,3 +38,5 @@ export const REVEAL_RATE_LIMIT = {
   windowMs: MINUTE,
   scope: "submissions:reveal",
 } as const;
+
+export const DESIGN_REVIEW_WEIGHT = 0.3;

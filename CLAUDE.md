@@ -537,6 +537,17 @@ receives the payload, and moves the interview to `review_failed`. `POST
 again. `MemoryJobQueue` calls `failed` instead of throwing, as BullMQ
 would, so a test sees what production sees.
 
+A challenge submission is reviewed the same way, without a transcript.
+`submissions` declares `SubmissionReviewScheduler`, and `reviews` binds it
+to `ReviewSubmissionJob`. The submission is stored with its deterministic
+score and `review_status: pending`. The job asks the review model for a
+0–3 score on design, scaling and reliability. It sees the design and the
+public score, never a hidden drill's details. The score then becomes the
+blend of `DESIGN_REVIEW_WEIGHT` (30 %) review and 70 % checks, less the
+hint penalty, so the model can move a score but never decide it. A failed
+review leaves the deterministic score in place and marks the submission
+`failed`.
+
 ## Skills
 
 A skill is one of the rubric's dimensions: requirements, core design,

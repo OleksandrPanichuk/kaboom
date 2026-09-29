@@ -14,6 +14,16 @@ import { problemAttemptsSchema } from "./problem_attempts.schema";
 import { problemsSchema } from "./problems.schema";
 import { usersSchema } from "./users.schema";
 
+export const SUBMISSION_REVIEW_STATUSES = [
+  "pending",
+  "reviewed",
+  "failed",
+  "skipped",
+] as const;
+
+export type SubmissionReviewStatus =
+  (typeof SUBMISSION_REVIEW_STATUSES)[number];
+
 export const submissionsSchema = pgTable(
   "submissions",
   {
@@ -34,6 +44,14 @@ export const submissionsSchema = pgTable(
     revision: integer("revision").notNull(),
     graphHash: text("graph_hash").notNull(),
     score: integer("score").notNull(),
+    deterministicScore: integer("deterministic_score").notNull().default(0),
+    reviewStatus: text("review_status", { enum: SUBMISSION_REVIEW_STATUSES })
+      .notNull()
+      .default("skipped"),
+    reviewScore: integer("review_score"),
+    review: jsonb("review").$type<unknown>(),
+    reviewModel: text("review_model"),
+    reviewPromptVersion: integer("review_prompt_version"),
     hintPenalty: integer("hint_penalty").notNull().default(0),
     counted: boolean("counted").notNull().default(true),
     graph: jsonb("graph").$type<unknown>(),

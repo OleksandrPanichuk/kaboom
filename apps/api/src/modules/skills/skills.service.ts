@@ -1,10 +1,15 @@
+import type { InterviewDimension } from "@repo/design";
+
 import { makeRepository, makeService } from "@/core/registry";
 import { Service } from "@/core/service";
 import { ProblemsService } from "@/modules/problems";
 
 import { SkillScoresRepository } from "./ports";
 import type { SkillsView } from "./skill.entity";
-import { SKILL_SCORING_VERSION } from "./skills.constants";
+import {
+  SKILL_SCORING_VERSION,
+  SUBMISSION_SKILL_WEIGHT,
+} from "./skills.constants";
 import {
   nextProblem,
   type ScoredItem,
@@ -18,6 +23,13 @@ export interface RecordReviewSkills {
   interviewId: string;
   reviewId: string;
   items: readonly ScoredItem[];
+}
+
+export interface RecordSubmissionSkills {
+  userId: string;
+  problemId: string;
+  submissionId: string;
+  items: ReadonlyArray<{ dimension: InterviewDimension; score: number }>;
 }
 
 export class SkillsService extends Service {
@@ -39,6 +51,30 @@ export class SkillsService extends Service {
         problemId,
         interviewId,
         reviewId,
+        submissionId: null,
+        score,
+        weight,
+        scoringVersion: SKILL_SCORING_VERSION,
+      })),
+    );
+  }
+
+  public recordSubmission({
+    userId,
+    problemId,
+    submissionId,
+    items,
+  }: RecordSubmissionSkills): Promise<void> {
+    return this.scores.insertMany(
+      skillPointsOf(
+        items.map((item) => ({ ...item, weight: SUBMISSION_SKILL_WEIGHT })),
+      ).map(({ skill, score, weight }) => ({
+        userId,
+        skill,
+        problemId,
+        interviewId: null,
+        reviewId: null,
+        submissionId,
         score,
         weight,
         scoringVersion: SKILL_SCORING_VERSION,

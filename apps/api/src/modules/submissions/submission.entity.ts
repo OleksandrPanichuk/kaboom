@@ -1,4 +1,11 @@
-import type { DrillScore, ItemScore, RevealedHint } from "@repo/design";
+import type {
+  DrillScore,
+  InterviewDimension,
+  ItemScore,
+  RevealedHint,
+} from "@repo/design";
+
+import type { SubmissionReviewStatus } from "@/db";
 
 import type { AttemptModel, SubmissionModel } from "./submission.model";
 
@@ -19,6 +26,19 @@ export interface AttemptView {
   lockedUntil: Date | null;
 }
 
+export interface DesignReviewItem {
+  dimension: InterviewDimension;
+  score: number;
+  rationale: string;
+}
+
+export interface DesignReview {
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+  items: DesignReviewItem[];
+}
+
 export interface SubmissionEntity {
   id: string;
   attemptId: string;
@@ -29,6 +49,10 @@ export interface SubmissionEntity {
   revision: number;
   graphHash: string;
   score: number;
+  deterministicScore: number;
+  reviewStatus: SubmissionReviewStatus;
+  reviewScore: number | null;
+  review: DesignReview | null;
   hintPenalty: number;
   counted: boolean;
   items: ItemScore[];
@@ -62,6 +86,10 @@ export class SubmissionEntity {
       problemVersion: entity.problemVersion,
       revision: entity.revision,
       score: entity.score,
+      deterministicScore: entity.deterministicScore,
+      reviewStatus: entity.reviewStatus,
+      reviewScore: entity.reviewScore,
+      review: entity.review,
       hintPenalty: entity.hintPenalty,
       counted: entity.counted,
       items: entity.items,
