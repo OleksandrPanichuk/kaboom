@@ -1,4 +1,4 @@
-import { HOUR, MINUTE } from "@/constants";
+import { DAY, HOUR, MINUTE } from "@/constants";
 
 export const START_INTERVIEW_RATE_LIMIT = {
   limit: 10,
@@ -35,3 +35,13 @@ export const PHASE_TICK_MS = 30_000;
 export const MESSAGE_MAX_LENGTH = 4_000;
 
 export const interviewChannel = (id: string) => `interviews:${id}`;
+
+export const INTERVIEWS_QUEUE = "interviews";
+
+export const InterviewQueueJobs = {
+  ExpireStale: "interviews.expire-stale",
+} as const;
+
+export const EXPIRE_STALE_INTERVIEWS_PATTERN = "15 * * * *";
+
+export const INTERVIEW_IDLE_MS = DAY;

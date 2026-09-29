@@ -1,7 +1,12 @@
 import { and, eq, sql } from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";
-import { interviewsSchema, type InterviewStatus, problemsSchema } from "@/db";
+import {
+  interviewEventsSchema,
+  interviewsSchema,
+  type InterviewStatus,
+  problemsSchema,
+} from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
 import { Keyset } from "@/db/pagination";
 
@@ -119,6 +124,32 @@ export class PostgresInterviewsRepository extends InterviewsRepository {
       .set({ status: to })
       .where(
         and(eq(interviewsSchema.id, id), eq(interviewsSchema.status, from)),
+      )
+      .returning();
+
+    return row ?? null;
+  }
+
+  public listIdle(before: Date): Promise<InterviewEntity[]> {
+    const lastActivity = sql`coalesce((select max(${interviewEventsSchema.createdAt}) from ${interviewEventsSchema} where ${interviewEventsSchema.interviewId} = ${interviewsSchema.id}), ${interviewsSchema.startedAt})`;
+
+    return this.db
+      .select()
+      .from(interviewsSchema)
+      .where(
+        and(
+          eq(interviewsSchema.status, "active"),
+          sql`${lastActivity} < ${before}`,
+        ),
+      );
+  }
+
+  public async markExpired(id: string): Promise<InterviewEntity | null> {
+    const [row] = await this.db
+      .update(interviewsSchema)
+      .set({ status: "expired", endedAt: new Date() })
+      .where(
+        and(eq(interviewsSchema.id, id), eq(interviewsSchema.status, "active")),
       )
       .returning();
 

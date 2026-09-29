@@ -44,6 +44,10 @@ export abstract class InterviewsRepository extends Repository {
     to: InterviewStatus,
   ): Promise<InterviewEntity | null>;
 
+  public abstract listIdle(before: Date): Promise<InterviewEntity[]>;
+
+  public abstract markExpired(id: string): Promise<InterviewEntity | null>;
+
   public abstract markReviewing(
     id: string,
     finalRevision: number,

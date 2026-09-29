@@ -10,6 +10,7 @@ export interface InterviewBody {
   phase: string;
   lastSeq: number;
   finalRevision: number | null;
+  endedAt: string | null;
   problem: {
     slug: string;
     title: string;

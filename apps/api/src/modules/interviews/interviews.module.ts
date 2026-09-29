@@ -1,10 +1,12 @@
 import { NodeEnv } from "@/configs";
 import { defineModule } from "@/core/module";
 import { bind, makeService, makeUseCase } from "@/core/registry";
+import { registerJob } from "@/platform/jobs";
 
 import { TurnScheduler } from "./interviewer/scheduler";
 import { PHASE_TICK_MS } from "./interviews.constants";
 import { interviewsRoutes } from "./interviews.routes";
+import { ExpireStaleInterviewsJob } from "./jobs";
 import {
   EvidenceNotesRepository,
   InterviewerTurnsRepository,
@@ -51,6 +53,7 @@ export const interviewsModule = defineModule({
       () => new PostgresInterviewerTurnsRepository(),
     );
     bind(EvidenceNotesRepository, () => new PostgresEvidenceNotesRepository());
+    registerJob(ExpireStaleInterviewsJob);
 
     return { tickMs: env.NODE_ENV === NodeEnv.Test ? 0 : PHASE_TICK_MS };
   },
