@@ -215,6 +215,13 @@ after the interviewer's own edits. The design writer treats only
 `DESIGN_REVISION_CONFLICT` as a conflict to replay; any other refusal,
 such as a locked design, is an error.
 
+`features/reviews` renders `/interviews/:id/review`, under `_shell` because
+it is reading, not working. It polls the interview every three seconds
+while its status is `reviewing`, fetches the review once it is
+`reviewed`, and offers *Try again* on `review_failed`. An ended interview's
+top bar links to it, and so does its card in the list. Home shows
+`features/skills`: *Next up* from `GET /skills/me`, and one bar per skill.
+
 `features/simulation` runs `evaluateLoad` in the browser while the Run tab
 is open, on a deferred graph so typing stays smooth, and turns a step into
 the canvas overlay (`overlayAt`); the canvas only draws it. A saved run posts

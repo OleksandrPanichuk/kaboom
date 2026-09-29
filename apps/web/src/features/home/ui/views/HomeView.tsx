@@ -5,8 +5,13 @@ import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/Button";
 import { useCurrentUser } from "@/features/auth";
 import { RankCard } from "@/features/problems";
+import { NextUpCard, SkillsCard } from "@/features/skills";
 
-export function HomeView() {
+interface HomeViewProps {
+  onOpenInterview: (interviewId: string) => void;
+}
+
+export function HomeView({ onOpenInterview }: HomeViewProps) {
   const user = useCurrentUser();
 
   return (
@@ -16,9 +21,11 @@ export function HomeView() {
           Hi, {user.name}
         </h1>
         <p className="text-muted-foreground">
-          Solve problems to earn points and climb the ranks.
+          Practise interviews, solve challenges and watch your skills grow.
         </p>
       </div>
+      <NextUpCard onOpenInterview={onOpenInterview} />
+      <SkillsCard />
       <RankCard />
       <Link
         to="/problems"
