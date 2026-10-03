@@ -113,6 +113,16 @@ export const evaluateNetwork = (graph: DesignGraph): NetworkResult => {
     }
 
     if (source.vpc !== target.vpc) {
+      if (
+        source.zone === "private" &&
+        source.vpc !== null &&
+        !egressFrom(source.vpc)
+      ) {
+        return refuse(
+          `${labelOf(from)} sits in a private subnet with no NAT gateway, so it cannot call ${labelOf(to)} outside the VPC.`,
+        );
+      }
+
       if (target.zone === "private") {
         return refuse(
           `${labelOf(to)} sits in a private subnet, so ${labelOf(from)} cannot reach it from outside its VPC.`,
@@ -192,7 +202,13 @@ export const evaluateNetwork = (graph: DesignGraph): NetworkResult => {
   for (const node of graph.nodes) {
     const placed = placementOf(node);
 
-    if (!catalogue[node.kind].stateful || placed.vpc === null) continue;
+    if (
+      !catalogue[node.kind].stateful ||
+      !catalogue[node.kind].carriesTraffic ||
+      placed.vpc === null
+    ) {
+      continue;
+    }
 
     const guard = guardOf(node.id);
 

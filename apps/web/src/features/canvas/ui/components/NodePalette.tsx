@@ -21,6 +21,7 @@ import {
   NODE_KIND_MIME,
   NODE_WIDTH,
   PALETTE_GROUPS,
+  type PaletteGroup,
 } from "@/features/canvas/constants";
 import { findFreeSpot } from "@/features/canvas/utils";
 import { useWorkspacePanels } from "@/features/shell";
@@ -29,6 +30,22 @@ interface NodePaletteProps {
   track?: Track;
   onAdd: (kind: NodeKind, position: { x: number; y: number }) => void;
 }
+
+const paletteFor = (track: Track | undefined): PaletteGroup[] => {
+  if (track !== undefined) {
+    return PALETTE_GROUPS.filter((group) => group.track === track);
+  }
+
+  const seen = new Set<NodeKind>();
+
+  return PALETTE_GROUPS.flatMap((group) => {
+    const kinds = group.kinds.filter((kind) => !seen.has(kind));
+
+    for (const kind of kinds) seen.add(kind);
+
+    return kinds.length > 0 ? [{ ...group, kinds }] : [];
+  });
+};
 
 export function NodePalette({ track, onAdd }: NodePaletteProps) {
   const flow = useReactFlow();
@@ -64,9 +81,7 @@ export function NodePalette({ track, onAdd }: NodePaletteProps) {
         <p className="px-1 text-xs leading-5 text-muted-foreground">
           Drag a node onto the canvas, or click it to place it in the middle.
         </p>
-        {PALETTE_GROUPS.filter(
-          (group) => track === undefined || group.track === track,
-        ).map((group, index, shown) => (
+        {paletteFor(track).map((group, index, shown) => (
           <section
             key={`${group.track}:${group.label}`}
             className="flex flex-col gap-1"

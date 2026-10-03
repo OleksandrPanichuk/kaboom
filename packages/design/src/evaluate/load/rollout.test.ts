@@ -276,3 +276,30 @@ describe("a release that deadlocks after a while", () => {
     expect(availability(long).at(-1)).toBe(1);
   });
 });
+
+describe("a stalled rollout and its autoscaler", () => {
+  test("keeps growing with the traffic, as a pod autoscaler does on a stuck deployment", async () => {
+    const { OFFICIAL_PROBLEMS } = await import("../../problems/library");
+    const problem = OFFICIAL_PROBLEMS.find(
+      (item) => item.slug === "zero-downtime-rollout",
+    )!;
+    const result = evaluateLoad(problem.reference.graph, {
+      kind: "load",
+      durationSeconds: 1_200,
+      traffic: [{ at: 700, multiplier: 1.5 }],
+      faults: [
+        {
+          kind: "rollout",
+          nodeId: "checkout",
+          at: 60,
+          release: "never-ready",
+        },
+      ],
+    });
+    const last = result.steps.at(-1)!;
+
+    expect(last.nodes.checkout!.rollout!.phase).toBe("stalled");
+    expect(last.nodes.checkout!.replicas).toBeGreaterThan(6);
+    expect(last.clients.shoppers!.availability).toBe(1);
+  });
+});

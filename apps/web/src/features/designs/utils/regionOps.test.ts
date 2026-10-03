@@ -140,6 +140,36 @@ describe("subnet placement", () => {
     ]);
   });
 
+  test("removing a VPC's only subnet removes the VPC it leaves empty", () => {
+    const g = network();
+    const next = run(g, dissolveRegionOps(g, "open"));
+
+    expect(next.groups).toEqual([]);
+    expect(next.nodes.every((node) => node.groupId === null)).toBe(true);
+  });
+
+  test("removing one of two subnets keeps the VPC", () => {
+    const base = network();
+    const g: DesignGraph = {
+      ...base,
+      groups: [
+        ...base.groups,
+        createGroup({
+          id: "closed",
+          kind: "private-subnet",
+          label: "Private",
+          parentId: "vpc",
+        }),
+      ],
+      nodes: base.nodes.map((node) =>
+        node.id === "app" ? { ...node, groupId: "closed" } : node,
+      ),
+    };
+    const next = run(g, dissolveRegionOps(g, "open"));
+
+    expect(next.groups.map((group) => group.id)).toEqual(["vpc", "closed"]);
+  });
+
   test("dissolving a VPC dissolves its subnets and keeps every node", () => {
     const g = network();
     const next = run(g, dissolveRegionOps(g, "vpc"));

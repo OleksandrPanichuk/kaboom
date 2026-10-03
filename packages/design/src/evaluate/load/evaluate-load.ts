@@ -34,6 +34,7 @@ import {
 import {
   advanceRollout,
   CRASH_LOOP_RESTARTS,
+  inheritedFailure,
   type Rollout,
   rolloutStepAt,
   servingPods,
@@ -144,6 +145,7 @@ interface Memory {
   readShare: Map<string, number>;
   downSince: Map<string, number>;
   rollouts: Map<string, Rollout>;
+  triggersStarted: Map<string, number>;
 }
 
 const VOLUME_SYNC_SECONDS = 60;
@@ -198,6 +200,7 @@ export const evaluateLoad = (
     readShare: new Map(),
     downSince: new Map(),
     rollouts: new Map(),
+    triggersStarted: new Map(),
   };
   const steps: EvaluationStep[] = [];
 
@@ -257,45 +260,74 @@ const runStep = (
   for (const node of topo.order) {
     if (node.kind !== "k8s-deployment") continue;
 
-    const release = scenario.faults
-      .filter(
-        (fault) =>
-          fault.kind === "rollout" && fault.nodeId === node.id && fault.at <= t,
-      )
-      .sort((a, b) => a.at - b.at)[0];
     const rotation = rotationOf(topo, scenario, node, t);
     const restarts =
       rotation !== null &&
       node.props.secretDelivery === "env" &&
       node.props.restartOnSecretChange;
+    const triggers = [
+      ...scenario.faults.flatMap((fault) =>
+        fault.kind === "rollout" && fault.nodeId === node.id && fault.at <= t
+          ? [
+              {
+                at: fault.at,
+                release: fault.release,
+                migrates: fault.migrates,
+                rotates: false,
+              },
+            ]
+          : [],
+      ),
+      ...(restarts
+        ? [
+            {
+              at: rotation.at,
+              release: "healthy" as const,
+              migrates: false,
+              rotates: true,
+            },
+          ]
+        : []),
+    ].sort((a, b) => a.at - b.at);
+    const started = memory.triggersStarted.get(node.id) ?? 0;
+    const previous = memory.rollouts.get(node.id);
+    const next = triggers[started];
+    let rollout = previous;
+
+    if (next && previous?.phase !== "rolling") {
+      const oldFailure =
+        next.migrates && node.props.schemaChanges === "breaking"
+          ? { from: t, cause: "migration" as const }
+          : rotation && (next.rotates || (!restarts && rotation.at <= next.at))
+            ? { from: rotation.revokeAt, cause: "rotation" as const }
+            : previous
+              ? inheritedFailure(previous, node.props, t)
+              : null;
+
+      rollout = startRollout(
+        next.release,
+        t,
+        memory.replicas.get(node.id) ?? 1,
+        oldFailure,
+      );
+      memory.triggersStarted.set(node.id, started + 1);
+    }
 
     if (rotation && !restarts) {
       const pickedUp =
         node.props.secretDelivery === "volume"
           ? rotation.at + VOLUME_SYNC_SECONDS
           : null;
+      const refreshed =
+        rollout !== undefined &&
+        rollout.startedAt >= rotation.at &&
+        rollout.oldFailureCause === "rotation";
       const stale =
-        t >= rotation.revokeAt && (pickedUp === null || t < pickedUp);
+        !refreshed &&
+        t >= rotation.revokeAt &&
+        (pickedUp === null || t < pickedUp);
 
       staleShares.set(node.id, stale ? 1 : 0);
-    }
-
-    let rollout = memory.rollouts.get(node.id);
-
-    if (!rollout && release?.kind === "rollout") {
-      rollout = startRollout(
-        release.release,
-        t,
-        memory.replicas.get(node.id) ?? 1,
-        release.migrates && node.props.schemaChanges === "breaking"
-          ? { from: t, cause: "migration" }
-          : null,
-      );
-    } else if (!rollout && restarts) {
-      rollout = startRollout("healthy", t, memory.replicas.get(node.id) ?? 1, {
-        from: rotation.revokeAt,
-        cause: "rotation",
-      });
     }
 
     if (!rollout) continue;
@@ -310,7 +342,12 @@ const runStep = (
 
     if (!step || node.kind !== "k8s-deployment") return null;
 
-    const serving = servingPods(step, node.props);
+    const target = memory.rollouts.get(node.id)?.target ?? 0;
+    const grown =
+      step.phase === "stalled"
+        ? Math.max(0, (memory.replicas.get(node.id) ?? 0) - target)
+        : 0;
+    const serving = servingPods(step, node.props) + grown;
     const settled = step.phase === "complete" || step.phase === "rolled-back";
 
     return {

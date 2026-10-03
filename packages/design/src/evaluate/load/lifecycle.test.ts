@@ -124,3 +124,55 @@ describe("a release with a schema migration", () => {
     expect(availability(compatible).at(-1)).toBe(1);
   });
 });
+
+describe("rollouts one after another", () => {
+  const run = (
+    deployment: Record<string, unknown>,
+    faults: Parameters<typeof evaluateLoad>[1]["faults"],
+  ) =>
+    evaluateLoad(app(deployment), {
+      kind: "load",
+      durationSeconds: 600,
+      faults,
+    });
+
+  test("ship a release after a rotation's restart has finished", () => {
+    const result = run({ secretDelivery: "env", restartOnSecretChange: true }, [
+      { kind: "secret-rotation", nodeId: "password", at: 60 },
+      { kind: "rollout", nodeId: "app", at: 300, release: "broken" },
+    ]);
+
+    expect(availability(result).at(-1)).toBe(0);
+  });
+
+  test("restart for a rotation that comes after a finished rollout", () => {
+    const result = run({ secretDelivery: "env", restartOnSecretChange: true }, [
+      { kind: "rollout", nodeId: "app", at: 10 },
+      { kind: "secret-rotation", nodeId: "password", at: 300 },
+    ]);
+
+    expect(Math.min(...availability(result).slice(30))).toBeLessThan(1);
+    expect(availability(result).at(-1)).toBe(1);
+    expect(kinds(result)).toContain("stale-secret");
+  });
+
+  test("give pods started after a rotation the new value, even read from the environment", () => {
+    const result = run({ secretDelivery: "env" }, [
+      { kind: "secret-rotation", nodeId: "password", at: 60 },
+      { kind: "rollout", nodeId: "app", at: 200 },
+    ]);
+
+    expect(availability(result)[10]).toBe(0);
+    expect(availability(result).at(-1)).toBe(1);
+  });
+
+  test("leave a broken release's pods failing until the next release replaces them", () => {
+    const result = run({}, [
+      { kind: "rollout", nodeId: "app", at: 10, release: "broken" },
+      { kind: "rollout", nodeId: "app", at: 300 },
+    ]);
+
+    expect(availability(result)[25]).toBe(0);
+    expect(availability(result).at(-1)).toBe(1);
+  });
+});

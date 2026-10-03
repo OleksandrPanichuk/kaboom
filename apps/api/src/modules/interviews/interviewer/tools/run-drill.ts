@@ -10,7 +10,7 @@ import { defineInterviewerTool } from "../define-tool";
 export const runDrillTool = defineInterviewerTool({
   name: "run_drill",
   description:
-    "Run one of the problem's drills against the candidate's design: its traffic and faults, or for a pipeline drill its rules, as the problem block lists them. With show, the candidate sees a traffic run on the canvas; without it only you see the result.",
+    "Run one of the problem's drills against the candidate's design, as the problem block lists them: a load drill plays its traffic and faults, and a pipeline or network drill checks its rules. With show, the candidate sees a load drill's run on the canvas; a rule drill never puts anything on the canvas, and only you see its result.",
   input: z.object({
     drillId: z.string(),
     show: z.boolean().default(true),

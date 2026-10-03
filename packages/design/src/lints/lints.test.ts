@@ -463,3 +463,52 @@ describe("lints", () => {
     });
   });
 });
+
+describe("spof-critical-path and a pod autoscaler", () => {
+  test("counts the pods the autoscaler's max allows, as the simulation does", () => {
+    const graph = {
+      schemaVersion: 1 as const,
+      nodes: [
+        createNode("client", { id: "users" }),
+        {
+          ...createNode("k8s-deployment", { id: "app" }),
+          props: {
+            ...createNode("k8s-deployment", { id: "app" }).props,
+            replicas: 3,
+          },
+        },
+        {
+          ...createNode("hpa", { id: "scaler" }),
+          props: {
+            ...createNode("hpa", { id: "scaler" }).props,
+            min: 1,
+            max: 1,
+          },
+        },
+      ],
+      edges: [
+        {
+          id: "e1",
+          from: "users",
+          to: "app",
+          kind: "sync-call" as const,
+          label: "",
+          props: EdgePropsSchema.parse({}),
+        },
+        {
+          id: "e2",
+          from: "scaler",
+          to: "app",
+          kind: "scales" as const,
+          label: "",
+          props: EdgePropsSchema.parse({}),
+        },
+      ],
+      groups: [],
+    } as DesignGraph;
+
+    expect(runLints(graph).map((hit) => hit.lint)).toContain(
+      "spof-critical-path",
+    );
+  });
+});

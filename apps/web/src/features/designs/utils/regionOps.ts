@@ -46,8 +46,9 @@ export const emptiedRegionOps = (
   graph: DesignGraph,
   leaving: ReadonlySet<string>,
   keep: ReadonlySet<string> = new Set(),
+  gone: ReadonlySet<string> = new Set(),
 ): DesignOp[] => {
-  const removed = new Set<string>();
+  const removed = new Set<string>(gone);
   const holds = (group: DesignGroup) =>
     graph.nodes.some((node) => node.groupId === group.id) ||
     graph.groups.some((child) => child.parentId === group.id);
@@ -169,5 +170,17 @@ export const dissolveRegionOps = (
         patch: { groupId: null },
       })),
     ...doomed.map((groupId): DesignOp => ({ op: "remove-group", id: groupId })),
+    ...emptiedRegionOps(
+      graph,
+      new Set(
+        graph.nodes
+          .filter(
+            (node) => node.groupId !== null && doomed.includes(node.groupId),
+          )
+          .map((node) => node.id),
+      ),
+      new Set(),
+      new Set(doomed),
+    ),
   ];
 };

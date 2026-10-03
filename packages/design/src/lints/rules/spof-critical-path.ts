@@ -8,18 +8,26 @@ const replicated = (graph: DesignGraph, id: string): boolean =>
       edge.kind === "replication" && (edge.from === id || edge.to === id),
   );
 
-const autoscalerFloor = (graph: DesignGraph, id: string): number => {
+const podsAtStart = (
+  graph: DesignGraph,
+  node: Extract<DesignNode, { kind: "k8s-deployment" }>,
+): number => {
   const edge = graph.edges.find(
-    (candidate) => candidate.kind === "scales" && candidate.to === id,
+    (candidate) => candidate.kind === "scales" && candidate.to === node.id,
   );
-  const scaler = graph.nodes.find((node) => node.id === edge?.from);
+  const scaler = graph.nodes.find((item) => item.id === edge?.from);
 
-  return scaler?.kind === "hpa" ? scaler.props.min : 0;
+  return scaler?.kind === "hpa"
+    ? Math.min(
+        scaler.props.max,
+        Math.max(scaler.props.min, node.props.replicas),
+      )
+    : node.props.replicas;
 };
 
 const singleInstance = (graph: DesignGraph, node: DesignNode): boolean => {
   if (node.kind === "k8s-deployment") {
-    return Math.max(node.props.replicas, autoscalerFloor(graph, node.id)) < 2;
+    return podsAtStart(graph, node) < 2;
   }
 
   if (node.kind !== "service" && node.kind !== "worker") return false;

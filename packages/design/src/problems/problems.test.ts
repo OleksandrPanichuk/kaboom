@@ -741,3 +741,54 @@ describe("interviews", () => {
     ]);
   });
 });
+
+describe("drills that need a node to act on", () => {
+  test("fail when the design has no deployment to roll out", () => {
+    const problem = OFFICIAL_PROBLEMS.find(
+      (item) => item.slug === "zero-downtime-rollout",
+    )!;
+    const hollow: DesignGraph = {
+      ...problem.reference.graph,
+      nodes: problem.reference.graph.nodes.filter(
+        (item) => item.kind !== "k8s-deployment",
+      ),
+      edges: problem.reference.graph.edges.filter(
+        (item) => item.from !== "checkout" && item.to !== "checkout",
+      ),
+    };
+    const result = scoreSubmission(problem, hollow);
+
+    expect(
+      result.drills.find((drill) => drill.id === "routine-deploy"),
+    ).toMatchObject({ passed: false });
+    expect(result.score).toBeLessThan(50);
+  });
+
+  test("a monorepo pipeline with no test stage earns none of the timing drills", () => {
+    const problem = OFFICIAL_PROBLEMS.find(
+      (item) => item.slug === "monorepo-pipeline",
+    )!;
+    const tests = new Set(
+      problem.reference.graph.nodes
+        .filter(
+          (item) =>
+            item.kind === "pipeline-stage" && item.props.stage === "test",
+        )
+        .map((item) => item.id),
+    );
+
+    expect(tests.size).toBeGreaterThan(0);
+
+    const untested: DesignGraph = {
+      ...problem.reference.graph,
+      nodes: problem.reference.graph.nodes.filter(
+        (item) => !tests.has(item.id),
+      ),
+      edges: problem.reference.graph.edges.filter(
+        (item) => !tests.has(item.from) && !tests.has(item.to),
+      ),
+    };
+
+    expect(scoreSubmission(problem, untested).score).toBeLessThan(50);
+  });
+});

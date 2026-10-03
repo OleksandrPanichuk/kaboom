@@ -178,7 +178,7 @@ onset and undone at its end.
 | `capacity`    | the node's capacity is multiplied by `factor`                                                                                                                                                                                                                                     |
 | `latency`     | `addMs` is added to the node's base latency                                                                                                                                                                                                                                       |
 | `cache-flush` | the cache's hit ratio drops to 0 and recovers linearly over 60 s                                                                                                                                                                                                                  |
-| `rollout`     | a deployment starts replacing its pods with the version `release`, from the first step at or after `at`; see _Rollouts_. It has no `until`, and only a deployment's first rollout counts                                                                                          |
+| `rollout`     | a deployment starts replacing its pods with the version `release`, from the first step at or after `at`; see _Rollouts_. It has no `until`. Rollouts follow one another: a later one starts once the one under way has finished, stalled or rolled back                                                                                          |
 | `secret-rotation` | the secret `nodeId` gets a new value at `at`; see _Secrets and migrations_                                                                                                                                                                                                |
 
 **Autoscaling.** A service or worker with autoscaling enabled that stays above
@@ -186,7 +186,7 @@ its `targetUtilisation` for two consecutive steps gains `ceil(replicas × 0.5)`
 replicas, up to `max`, counted from the next step. It never scales down.
 A deployment does the same with the `min`, `max` and `targetUtilisation` of the
 pod autoscaler that `scales` it, and starts at its `replicas` held between that
-`min` and `max`. The autoscaler holds still while a rollout is under way.
+`min` and `max`. The autoscaler holds still while a rollout is under way; once it has stalled, the pods the autoscaler adds are of the old version and serve alongside what it kept.
 
 ## Rollouts
 
@@ -254,6 +254,12 @@ pods read it, by `secretDelivery`:
   replaced.
 - `env` alone: the pods read the value once, at start, so every pod fails
   every request from the revocation on.
+
+**Following rollouts.** A rollout that starts after another inherits that
+one's failures in its old pods: a breaking migration's or a revoked
+secret's, or a finished release's own failing pods. A rollout that starts
+after a rotation, whatever triggered it, gives its new pods the new
+value, so it ends a rotation's failures as it replaces the pods.
 
 **Migrations.** A `rollout` with `migrates` runs its migration when it
 starts. With `schemaChanges: breaking`, the previous version cannot work

@@ -3,7 +3,7 @@ import { evaluateNetwork } from "../evaluate/network";
 import { evaluatePipeline } from "../evaluate/pipeline";
 import type { EvaluationResult, Finding } from "../evaluate/result";
 import type { DesignGraph } from "../graph";
-import { drillScenario } from "./resolve";
+import { drillScenario, selectNodes } from "./resolve";
 import type { Drill, LoadDrill, NetworkDrill, PipelineDrill } from "./schema";
 
 export interface DrillOutcome {
@@ -126,6 +126,18 @@ const runLoadDrill = (drill: LoadDrill, graph: DesignGraph): DrillOutcome => {
 
   if (clients.length === 0) {
     failures.push("The design has no client, so nothing is sent through it.");
+  }
+
+  for (const fault of drill.faults) {
+    if (fault.kind !== "rollout" && fault.kind !== "secret-rotation") continue;
+
+    if (selectNodes(graph, fault.select).length === 0) {
+      failures.push(
+        fault.kind === "rollout"
+          ? "The design has no deployment to roll out, so the drill tests nothing."
+          : "The design has no secret to rotate, so the drill tests nothing.",
+      );
+    }
   }
 
   for (const client of clients) {
