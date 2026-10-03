@@ -40,6 +40,16 @@ export const graph = (
 export const region = (id: string, label: string): DesignGroup =>
   createGroup({ id, kind: "region", label });
 
+export const vpc = (id: string, label: string): DesignGroup =>
+  createGroup({ id, kind: "vpc", label });
+
+export const subnet = (
+  id: string,
+  kind: "public-subnet" | "private-subnet",
+  label: string,
+  parentId: string,
+): DesignGroup => createGroup({ id, kind, label, parentId });
+
 export const within = (groupId: string, placed: DesignNode): DesignNode => ({
   ...placed,
   groupId,
