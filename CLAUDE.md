@@ -580,9 +580,22 @@ because whether it hurts users depends on the traffic it runs under. It
 replaces a deployment's pods by its strategy, and the step reports the
 rollout's phase and pods. A rollout that has not finished by its progress
 deadline is stalled, and a failing canary is rolled back. Each is a
-finding. The rules are in the load README, next to the rest of the model.
-Pipelines and networks carry no traffic, so they will need a rule
-evaluator of their own.
+finding. A slow release fails nothing but doubles p99, which only a
+latency alert or a canary notices. The rules are in the load README, next
+to the rest of the model.
+
+Pipelines and networks carry no traffic, so each has an evaluator of
+its own that answers once, by rules, with its own README beside it.
+`evaluatePipeline` times the `pipeline-stage` nodes joined by
+`pipeline-next`: the lead time from merge to production, the share of
+green runs, and any deploy no test or scan comes before.
+`evaluateNetwork` checks every load edge against the design's VPCs,
+public and private subnets, NAT gateways and security groups, and finds
+what the internet can reach. A drill names the evaluator it runs on:
+`load` (the default, so older problems need no kind), `pipeline` or
+`network`, each with its own expectations, and `runDrill` dispatches on
+it. A rule drill has nothing to play on the canvas, so the interviewer's
+`run_drill` answers it from its outcome and stores no simulation run.
 
 The interviewer and both reviewers take the problem's track: each track has
 its own introduction, and a DevOps challenge is reviewed on design,
@@ -603,8 +616,8 @@ turn are checked directly: silence is no message and no visible tool. The
 rest go to a judge on the `review` model, which answers through a `verdict`
 tool with a reason that quotes the interviewer. `EVAL_RUNS=3` repeats every
 case, since a pass once proves little about a model. A scene names its
-problem with `slug`; nodes already in that problem's baseline are updated
-rather than added. When the persona or the tools change, run it before and
+problem with `slug`; nodes already in that problem's baseline are updated,
+their group included, rather than added, and a scene may add groups. When the persona or the tools change, run it before and
 after.
 
 ## Generated API client

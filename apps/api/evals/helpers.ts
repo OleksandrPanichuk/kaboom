@@ -135,7 +135,8 @@ export const edge = (from: string, to: string, kind: EdgeKind) =>
 export interface Scene {
   slug?: string;
   phase: string;
-  design: Pick<DesignGraph, "nodes" | "edges">;
+  design: Pick<DesignGraph, "nodes" | "edges"> &
+    Partial<Pick<DesignGraph, "groups">>;
   history: Array<["user" | "interviewer", string]>;
 }
 
@@ -161,10 +162,18 @@ export const seed = async ({
   )!.baseline;
   const present = new Set(baseline.nodes.map((item) => item.id));
   const joined = new Set(baseline.edges.map((item) => item.id));
+  const grouped = new Set(baseline.groups.map((item) => item.id));
   const ops: DesignOp[] = [
+    ...(design.groups ?? [])
+      .filter((item) => !grouped.has(item.id))
+      .map((item): DesignOp => ({ op: "add-group", group: item })),
     ...design.nodes.map((item): DesignOp =>
       present.has(item.id)
-        ? { op: "update-node", id: item.id, patch: { props: item.props } }
+        ? {
+            op: "update-node",
+            id: item.id,
+            patch: { props: item.props, groupId: item.groupId },
+          }
         : { op: "add-node", node: item },
     ),
     ...design.edges

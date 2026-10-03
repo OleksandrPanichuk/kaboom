@@ -1,3 +1,4 @@
+import { createGroup } from "@repo/design";
 import { OFFICIAL_PROBLEMS } from "@repo/design/library";
 import {
   afterAll,
@@ -279,6 +280,50 @@ const SAFE_BUT_SILENT: Scene = {
 
 const STUCK_QUESTION = `The design rolls out safely behind a readiness probe, but nothing watches the rollout: there is no alert on the deployment "Checkout" (node id checkout). A release whose pods never become ready would leave the rollout stuck forever without anyone noticing, which is what happened in the incident the problem describes. Did the interviewer steer the candidate towards that? It passes if it asks what happens when a new version never becomes ready, how anyone would find out that a deploy stopped, or runs the stuck-rollout drill. It fails if it moves on to something else, such as autoscaling or capacity, without raising a rollout that never finishes.`;
 
+const PRIVATE_BUT_CUT_OFF: Scene = {
+  slug: "three-tier-vpc",
+  phase: "deep-dive",
+  design: {
+    groups: [
+      createGroup({
+        id: "apps",
+        kind: "private-subnet",
+        label: "Application",
+        parentId: "shop",
+      }),
+      createGroup({
+        id: "data",
+        kind: "private-subnet",
+        label: "Data",
+        parentId: "shop",
+      }),
+    ],
+    nodes: [
+      { ...node("lb", "load-balancer", "Load balancer"), groupId: "open" },
+      { ...node("app", "service", "Shop", { replicas: 3 }), groupId: "apps" },
+      { ...node("db", "sql-database", "Orders"), groupId: "data" },
+    ],
+    edges: [],
+  },
+  history: [
+    [
+      "user",
+      "Who needs to reach what? Shoppers reach the shop, the shop reaches the database and the payment provider?",
+    ],
+    [
+      "interviewer",
+      "Exactly, and nothing else should reach the database. The payment provider is on the internet.",
+    ],
+    [
+      "user",
+      "Then the load balancer stays public, and the servers and the database move into private subnets.",
+    ],
+    ["interviewer", "Sounds good. Let's look closer at it."],
+  ],
+};
+
+const PAYMENTS_QUESTION = `The application servers ("Shop", node id app) now sit in a private subnet with no NAT gateway anywhere, but they call the payment provider on the internet, so every payment would fail. Did the interviewer steer the candidate towards that? It passes if it asks how the servers reach the payment provider, how a private subnet gets to the internet, or runs the everything-connects drill. It fails if it moves on to something else without raising the outbound call.`;
+
 describe.skipIf(!live)("the interviewer", () => {
   beforeAll(() => {
     bind(LanguageModel, () => live!);
@@ -470,6 +515,39 @@ describe.skipIf(!live)("the interviewer", () => {
 
         record(
           "raises a rollout nobody watches",
+          run,
+          verdict.passed,
+          verdict.reason,
+          outcome,
+        );
+      },
+      TURN_TIMEOUT_MS,
+    );
+
+    test(
+      `raises a private subnet that cannot reach the payment provider (run ${run})`,
+      async () => {
+        const seeded = await seed(PRIVATE_BUT_CUT_OFF);
+        const outcome = await say(
+          seeded,
+          "Everything but the load balancer is private now, so I think the network is done. Anything else?",
+        );
+        const drilled = outcome.calls.some(
+          (call) =>
+            call.name === "run_drill" &&
+            (call.input as { drillId?: string }).drillId ===
+              "everything-connects",
+        );
+        const verdict = drilled
+          ? { passed: true, reason: "It ran the everything-connects drill." }
+          : await judge(
+              PAYMENTS_QUESTION,
+              "Deep-dive phase of a DevOps interview about the network of a three-tier app.",
+              outcome,
+            );
+
+        record(
+          "raises a private subnet that cannot reach the payment provider",
           run,
           verdict.passed,
           verdict.reason,
