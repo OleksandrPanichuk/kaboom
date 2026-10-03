@@ -1,10 +1,9 @@
 import { and, eq, ne, sql } from "drizzle-orm";
 
-import { leaderboardProfilesSchema } from "@/db";
+import { isUniqueViolation, leaderboardProfilesSchema } from "@/db";
 import { type DBExecutor, getExecutor, transaction } from "@/db/executor";
-import { DIFFICULTY_WEIGHT } from "@/modules/submissions";
+import { DIFFICULTY_WEIGHT, MIN_SOLUTION_SCORE } from "@/modules/submissions";
 
-import { SOLVED_SCORE } from "../leaderboard.constants";
 import type {
   LeaderboardFilter,
   LeaderboardProfileEntity,
@@ -14,8 +13,6 @@ import {
   LeaderboardRepository,
   type SaveProfileData,
 } from "../ports/leaderboard.repository";
-
-const UNIQUE_VIOLATION = "23505";
 
 interface StandingRow extends Record<string, unknown> {
   user_id: string;
@@ -59,7 +56,7 @@ export class PostgresLeaderboardRepository extends LeaderboardRepository {
               else ${DIFFICULTY_WEIGHT.hard}
             end
           ) as points,
-          count(*) filter (where b.best >= ${SOLVED_SCORE}) as solved
+          count(*) filter (where b.best >= ${MIN_SOLUTION_SCORE}) as solved
         from best b
         join problems p on p.id = b.problem_id
         group by b.user_id
@@ -130,7 +127,7 @@ export class PostgresLeaderboardRepository extends LeaderboardRepository {
         };
       });
     } catch (error) {
-      if ((error as { errno?: string }).errno === UNIQUE_VIOLATION) return null;
+      if (isUniqueViolation(error)) return null;
 
       throw error;
     }

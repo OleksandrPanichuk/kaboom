@@ -8,8 +8,6 @@ export const LEADERBOARD_SIZE = 50;
 
 export const WEEK_MS = 7 * DAY;
 
-export const SOLVED_SCORE = 80;
-
 export const HANDLE_PATTERN = "^[a-z0-9](?:[a-z0-9_-]{1,18}[a-z0-9])$";
 
 export const SAVE_PROFILE_RATE_LIMIT = {

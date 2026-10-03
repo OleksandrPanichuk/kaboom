@@ -13,6 +13,7 @@ export * from "./submission.model";
 export {
   DESIGN_REVIEW_WEIGHT,
   DIFFICULTY_WEIGHT,
+  MIN_SOLUTION_SCORE,
   RANKS,
 } from "./submissions.constants";
 export {
