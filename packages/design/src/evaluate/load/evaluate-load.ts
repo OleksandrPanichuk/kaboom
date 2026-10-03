@@ -282,6 +282,7 @@ const runStep = (
   const cutSince = partitionsAt(topo, scenario, t);
   const isCut = (edge: DesignEdge) => cutSince.has(edge.id);
   const attempts = new Map<string, number>();
+  const stranded = new Map<string, number>();
   const attemptsOf = (edge: DesignEdge): number => {
     const retries = SYNCHRONOUS.has(edge.kind) ? edge.props.retries : 0;
 
@@ -653,6 +654,18 @@ const runStep = (
           ? carrying.filter((edge) => isUp(edge.to) && !isCut(edge))
           : carrying;
 
+        if (
+          !routed &&
+          distribution === "evenly" &&
+          carrying.length > 0 &&
+          targets.length === 0
+        ) {
+          stranded.set(
+            node.id,
+            (stranded.get(node.id) ?? 0) + forwarded[channel],
+          );
+        }
+
         for (const edge of carrying) {
           const portion = routed
             ? (routed.get(edge.id) ?? 0)
@@ -667,7 +680,7 @@ const runStep = (
           const amount =
             forwarded[channel] * portion * edge.props.fanOut * tries;
 
-          attempts.set(edge.id, tries);
+          if (amount > 0) attempts.set(edge.id, tries);
           const previous = edges[edge.id] ?? { reads: 0, writes: 0 };
 
           edges[edge.id] = { ...previous, [channel]: amount };
@@ -720,6 +733,12 @@ const runStep = (
         };
       })
       .filter((call) => call.weight > 0);
+    const lost = stranded.get(node.id) ?? 0;
+
+    if (lost > 0 && served > 0) {
+      calls.push({ weight: lost / served, errorRate: 1 });
+    }
+
     const weights = calls.reduce((sum, call) => sum + call.weight, 0);
     const downstream =
       weights <= 1 + 1e-9
@@ -748,10 +767,11 @@ const runStep = (
 
       if (!SYNCHRONOUS.has(edge.kind) || !flow || total(flow) === 0) continue;
 
+      const waited = edge.props.timeoutMs * (edge.props.retries + 1);
       const reached = isCut(edge)
-        ? { p50: edge.props.timeoutMs, p99: edge.props.timeoutMs }
+        ? { p50: waited, p99: waited }
         : pathLatency.get(edge.to);
-      const failing = isCut(edge) ? 1 : (nodes[edge.to]?.errorRate ?? 0);
+      const failing = isCut(edge) ? 0 : (nodes[edge.to]?.errorRate ?? 0);
       const retried = edge.props.retries > 0;
       const below = reached && {
         p50: reached.p50 * (retried && failing > RETRY_P50_SHARE ? 2 : 1),

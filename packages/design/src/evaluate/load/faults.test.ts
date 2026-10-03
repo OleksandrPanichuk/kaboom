@@ -168,3 +168,52 @@ describe("a partition", () => {
     expect(kinds(result)).toContain("backlog-growing");
   });
 });
+
+describe("found in review", () => {
+  const balanced = (retries: number) =>
+    graph(
+      [
+        node("users", "client", { rps: 1_000, readRatio: 1 }),
+        node("lb", "load-balancer", { healthCheck: true }),
+        node("a", "service", { replicas: 4 }),
+        node("b", "service", { replicas: 4 }),
+      ],
+      [
+        edge("users", "lb"),
+        edge("lb", "a", "sync-call", { retries }),
+        edge("lb", "b", "sync-call", { retries }),
+      ],
+    );
+
+  test("an idle edge into a dead target is no retry storm", () => {
+    const result = run(balanced(2), [
+      { kind: "node-down", nodeId: "a", at: 0 },
+    ]);
+
+    expect(availability(result).at(-1)).toBe(1);
+    expect(kinds(result)).not.toContain("retry-storm");
+  });
+
+  test("a load balancer with no target left fails what it cannot forward", () => {
+    const result = run(balanced(0), [
+      { kind: "node-down", nodeId: "a", at: 0 },
+      { kind: "node-down", nodeId: "b", at: 0 },
+    ]);
+
+    expect(availability(result).at(-1)).toBe(0);
+  });
+
+  test("a cut call waits out its timeout once per attempt", () => {
+    const design = {
+      ...zoned("region"),
+      edges: [
+        edge("users", "api", "sync-call", { retries: 2, timeoutMs: 1_000 }),
+      ],
+    };
+    const result = run(design, [{ kind: "partition", groupId: "zone", at: 0 }]);
+
+    expect(result.steps.at(-1)!.clients.users!.p99).toBeGreaterThanOrEqual(
+      3_000,
+    );
+  });
+});

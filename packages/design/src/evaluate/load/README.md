@@ -250,7 +250,12 @@ load, though both ends stay up. A synchronous call over it fails, at its
 backlog grows; a producer cannot enqueue across it, which fails the
 producer's request. A load balancer that health-checks drops a target it
 cannot reach, and DNS stops routing to one `ttlSeconds` after the cut, as
-it does for a target that is down.
+it does for a target that is down. A load balancer left with no target it
+can reach fails every request it cannot forward. A call that retries over a
+cut waits out `timeoutMs` once per attempt. A partition is not an outage:
+it promotes no replica, and a `monitoring` node still scrapes across it.
+In a drill, a selected node in no group is cut off on its own, as
+`node-down`.
 
 **Retries.** A synchronous edge's `retries` repeats a failed call. With the
 target failing a share `e` of calls, the caller sees `e^(retries + 1)` fail,
