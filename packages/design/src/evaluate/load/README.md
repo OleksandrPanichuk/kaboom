@@ -179,6 +179,7 @@ onset and undone at its end.
 | `latency`     | `addMs` is added to the node's base latency                                                                                                                                                                                                                                       |
 | `cache-flush` | the cache's hit ratio drops to 0 and recovers linearly over 60 s                                                                                                                                                                                                                  |
 | `rollout`     | a deployment starts replacing its pods with the version `release`, from the first step at or after `at`; see _Rollouts_. It has no `until`, and only a deployment's first rollout counts                                                                                          |
+| `secret-rotation` | the secret `nodeId` gets a new value at `at`; see _Secrets and migrations_                                                                                                                                                                                                |
 
 **Autoscaling.** A service or worker with autoscaling enabled that stays above
 its `targetUtilisation` for two consecutive steps gains `ceil(replicas × 0.5)`
@@ -238,6 +239,29 @@ neither rolls back nor goes on. Each step reports the deployment's `rollout`:
 its phase, its old, ready, starting, failing and slow pods, and how often
 its new pods have been restarted.
 
+## Secrets and migrations
+
+**Rotation.** A secret's old value stops working `overlapSeconds` after a
+rotation. Every deployment that `mounts` the secret then depends on how its
+pods read it, by `secretDelivery`:
+
+- `volume`: the kubelet refreshes the mounted file, so every pod has the new
+  value 60 s after the rotation. Between the revocation and that refresh,
+  every pod fails every request.
+- `env` with `restartOnSecretChange`: the change starts a rollout of a healthy
+  version, by the deployment's strategy. New pods start with the new value.
+  Old pods fail every request once the old value is revoked, until they are
+  replaced.
+- `env` alone: the pods read the value once, at start, so every pod fails
+  every request from the revocation on.
+
+**Migrations.** A `rollout` with `migrates` runs its migration when it
+starts. With `schemaChanges: breaking`, the previous version cannot work
+with the new schema: every old pod fails every request from then on,
+including the old pods a canary's rollback leaves serving. With
+`backward-compatible`, as expand and contract gives, the old version keeps
+working.
+
 ## Alerts
 
 Alerts are evaluated once the steps have run. An alert watches nodes through
@@ -277,3 +301,5 @@ target: the first step it held, with the worst value seen.
 | `rolled-back`     | a deployment's canary is rolled back                                 |
 | `crash-looping`   | a deployment's new pods have been restarted 3 times or more          |
 | `alert-fired`     | an alert paged; see _Alerts_                                         |
+| `stale-secret`    | a deployment's pods hold a secret's value after it was revoked       |
+| `schema-break`    | a breaking migration left old pods failing every request             |

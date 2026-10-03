@@ -11,6 +11,7 @@ export interface FaultDraft {
   factor: number;
   addMs: number;
   release: Release;
+  migrates: boolean;
 }
 
 export interface SpikeDraft {

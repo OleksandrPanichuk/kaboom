@@ -47,6 +47,12 @@ export const FAULT_KINDS: ReadonlyArray<{
     description:
       "The deployment replaces its pods with a new version, the way its strategy says.",
   },
+  {
+    kind: "secret-rotation",
+    label: "Secret rotation",
+    description:
+      "The secret gets a new value, and the old one stops working once the secret's overlap runs out.",
+  },
 ];
 
 export const RELEASES: ReadonlyArray<{ release: Release; label: string }> = [

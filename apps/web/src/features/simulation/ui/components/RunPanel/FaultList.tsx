@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import { Switch } from "@/components/ui/Switch";
 import {
   FAULT_KINDS,
   FLUSHABLE_KINDS,
@@ -42,12 +43,13 @@ const targetsFor = (graph: DesignGraph, kind: FaultKind): FaultTarget[] =>
         .filter((group) => group.kind === "region")
         .map((group) => ({ id: group.id, label: group.label || "Region" }))
     : graph.nodes
-        .filter(
-          (node) =>
-            node.kind !== "client" &&
-            catalogue[node.kind].carriesTraffic &&
-            (kind !== "cache-flush" || FLUSHABLE_KINDS.has(node.kind)) &&
-            (kind !== "rollout" || ROLLABLE_KINDS.has(node.kind)),
+        .filter((node) =>
+          kind === "secret-rotation"
+            ? node.kind === "secret"
+            : node.kind !== "client" &&
+              catalogue[node.kind].carriesTraffic &&
+              (kind !== "cache-flush" || FLUSHABLE_KINDS.has(node.kind)) &&
+              (kind !== "rollout" || ROLLABLE_KINDS.has(node.kind)),
         )
         .map((node) => ({
           id: node.id,
@@ -81,6 +83,7 @@ export function FaultList({ graph, draft, onChange }: FaultListProps) {
           factor: 0.5,
           addMs: 200,
           release: "never-ready",
+          migrates: false,
         },
       ],
     });
@@ -248,6 +251,18 @@ function FaultRow({
           </Select>
         </Field>
       ) : null}
+      {fault.kind === "rollout" ? (
+        <Field orientation="horizontal">
+          <Switch
+            id={`${id}-migrates`}
+            checked={fault.migrates}
+            onCheckedChange={(migrates) => onChange({ migrates })}
+          />
+          <FieldLabel htmlFor={`${id}-migrates`} className="text-xs">
+            Runs a schema migration first
+          </FieldLabel>
+        </Field>
+      ) : null}
       <div className="flex gap-2">
         <NumberField
           label="From"
@@ -258,7 +273,9 @@ function FaultRow({
           integer
           onChange={(at) => onChange({ at })}
         />
-        {fault.kind !== "cache-flush" && fault.kind !== "rollout" ? (
+        {fault.kind !== "cache-flush" &&
+        fault.kind !== "rollout" &&
+        fault.kind !== "secret-rotation" ? (
           <NumberField
             label="Until"
             value={fault.until ?? maxSeconds}

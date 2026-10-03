@@ -6,6 +6,8 @@ import { newsFeed } from "./news-feed";
 import { notifications } from "./notifications";
 import { photoUploads } from "./photo-uploads";
 import { rateLimitedApi } from "./rate-limited-api";
+import { schemaMigration } from "./schema-migration";
+import { secretRotation } from "./secret-rotation";
 import { threeTierVpc } from "./three-tier-vpc";
 import { urlShortener } from "./url-shortener";
 import { zeroDowntimeRollout } from "./zero-downtime-rollout";
@@ -21,4 +23,6 @@ export const OFFICIAL_PROBLEMS: ProblemContent[] = [
   latencyRegression,
   monorepoPipeline,
   threeTierVpc,
+  secretRotation,
+  schemaMigration,
 ].map((problem) => ProblemContentSchema.parse(problem));

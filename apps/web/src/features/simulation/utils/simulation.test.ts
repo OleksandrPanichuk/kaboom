@@ -57,6 +57,7 @@ describe("toScenario", () => {
             factor: 0.5,
             addMs: 100,
             release: "healthy",
+            migrates: false,
           },
           {
             key: "2",
@@ -67,6 +68,7 @@ describe("toScenario", () => {
             factor: 1,
             addMs: 0,
             release: "healthy",
+            migrates: false,
           },
           {
             key: "3",
@@ -77,6 +79,7 @@ describe("toScenario", () => {
             factor: 1,
             addMs: 0,
             release: "healthy",
+            migrates: false,
           },
         ],
       },
@@ -107,6 +110,7 @@ describe("toScenario", () => {
             factor: 1,
             addMs: 0,
             release: "never-ready",
+            migrates: false,
           },
         ],
       },
@@ -114,7 +118,43 @@ describe("toScenario", () => {
     );
 
     expect(scenario.faults).toEqual([
-      { kind: "rollout", nodeId: "app", at: 30, release: "never-ready" },
+      {
+        kind: "rollout",
+        nodeId: "app",
+        at: 30,
+        release: "never-ready",
+        migrates: false,
+      },
+    ]);
+  });
+
+  test("rotates a secret at a moment, with no end", () => {
+    const withSecret = {
+      ...graph,
+      nodes: [...graph.nodes, createNode("secret", { id: "password" })],
+    };
+    const scenario = toScenario(
+      {
+        ...DEFAULT_SCENARIO,
+        faults: [
+          {
+            key: "1",
+            kind: "secret-rotation",
+            targetId: "password",
+            at: 60,
+            until: 120,
+            factor: 1,
+            addMs: 0,
+            release: "healthy",
+            migrates: false,
+          },
+        ],
+      },
+      withSecret,
+    );
+
+    expect(scenario.faults).toEqual([
+      { kind: "secret-rotation", nodeId: "password", at: 60 },
     ]);
   });
 
@@ -132,6 +172,7 @@ describe("toScenario", () => {
       factor: 1,
       addMs: 0,
       release: "healthy" as const,
+      migrates: false,
     });
     const scenario = toScenario(
       { ...DEFAULT_SCENARIO, faults: [fault("eu"), fault("gone")] },

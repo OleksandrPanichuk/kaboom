@@ -61,6 +61,12 @@ export const DrillFaultSchema = z.discriminatedUnion("kind", [
     select: NodeSelectorSchema,
     at: Seconds,
     release: ReleaseSchema.default("healthy"),
+    migrates: z.boolean().default(false),
+  }),
+  z.strictObject({
+    kind: z.literal("secret-rotation"),
+    select: NodeSelectorSchema,
+    at: Seconds,
   }),
 ]);
 export type DrillFault = z.output<typeof DrillFaultSchema>;

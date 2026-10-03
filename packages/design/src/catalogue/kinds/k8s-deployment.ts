@@ -70,6 +70,24 @@ export const k8sDeploymentKind = defineNodeKind({
       description:
         "A pod that stops answering its check is restarted instead of kept in rotation",
     }),
+    secretDelivery: choice(["env", "volume"], "env", {
+      title: "Secrets as",
+      description:
+        "Environment variables are read once at start; a mounted volume is refreshed within about a minute of a change",
+      advanced: true,
+    }),
+    restartOnSecretChange: toggle(false, {
+      title: "Restart on secret change",
+      description:
+        "A change to a mounted secret rolls the pods, so new ones start with the new value",
+      advanced: true,
+    }),
+    schemaChanges: choice(["breaking", "backward-compatible"], "breaking", {
+      title: "Schema changes",
+      description:
+        "Whether a release's migration still works with the previous version, as expand and contract does",
+      advanced: true,
+    }),
     startupSeconds: seconds(30, {
       title: "Startup time",
       description: "From a pod being created to it being ready",

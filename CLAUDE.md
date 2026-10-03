@@ -582,6 +582,15 @@ scrapes never fires. A drill's `detectWithinSeconds` asks for a page in
 time, and the `watches` rubric check passes only when the watched node is
 scraped.
 
+A pod's lifecycle covers more than its version. A `deadlocks` release
+passes readiness and hangs after five minutes, and only a `livenessProbe`
+restarts the pod, into a back-off that the `crash-looping` finding reports.
+A `secret-rotation` fault revokes a secret's old value after its
+`overlapSeconds`, and what the pods that mount it do depends on
+`secretDelivery` and `restartOnSecretChange`. A rollout that `migrates`
+fails the previous version from the start when the deployment's
+`schemaChanges` are `breaking`, and a rollback then brings no relief.
+
 A rollout is a fault in the load simulation, not a separate evaluator,
 because whether it hurts users depends on the traffic it runs under. It
 replaces a deployment's pods by its strategy, and the step reports the

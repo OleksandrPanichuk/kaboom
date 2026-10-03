@@ -15,6 +15,8 @@ const TITLES: Record<Finding["kind"], string> = {
   "rolled-back": "Rolled back",
   "crash-looping": "Restarting in a loop",
   "alert-fired": "Paged",
+  "stale-secret": "Old secret still in use",
+  "schema-break": "Migration broke the old version",
   "untested-deploy": "Deploys untested code",
   "unscanned-deploy": "Deploys unscanned code",
   "blocked-path": "Cannot connect",
