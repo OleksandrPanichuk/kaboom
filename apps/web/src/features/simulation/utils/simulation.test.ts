@@ -213,6 +213,7 @@ describe("overlayAt", () => {
       ready: 1,
       starting: 1,
       failing: 0,
+      slow: 0,
     });
     const overlay = overlayAt(g, {
       t: 0,

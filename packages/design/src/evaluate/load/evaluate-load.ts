@@ -35,6 +35,7 @@ import {
   type Rollout,
   rolloutStepAt,
   servingPods,
+  SLOWDOWN,
   startRollout,
 } from "./rollout";
 import { type Topology, topology } from "./topology";
@@ -43,6 +44,7 @@ const DEFAULT_TIMEOUT_MS = 1_000;
 export const CROSS_REGION_MS = 70;
 const ERROR_FINDING = 0.01;
 const GROWTH_STEPS = 3;
+const SLOW_TAIL = 0.01;
 
 const zero = (): Channels => ({ reads: 0, writes: 0 });
 
@@ -243,6 +245,7 @@ const runStep = (
       step,
       replicas: settled ? null : serving,
       failingShare: serving > 0 ? step.failing / serving : 0,
+      slowShare: serving > 0 ? step.slow / serving : 0,
     };
   };
 
@@ -254,8 +257,11 @@ const runStep = (
       replicaIds.filter(isUp).length - (fault.promoted ? 1 : 0),
     );
 
+    const slowShare = rolloutShape(node)?.slowShare ?? 0;
+
     return {
-      capacityFactor: fault.capacityFactor,
+      capacityFactor:
+        fault.capacityFactor * (1 - slowShare * (1 - 1 / SLOWDOWN)),
       replicas:
         rolloutShape(node)?.replicas ?? memory.replicas.get(node.id) ?? 1,
       upReplicas,
@@ -347,8 +353,14 @@ const runStep = (
         : DEFAULT_TIMEOUT_MS;
     const base = baseLatencyOf(node) + fault.addLatencyMs;
     const pinned = !up || rho >= SATURATION;
-    const p50 = pinned ? timeout : base / (1 - rho);
-    const p99 = pinned ? timeout : p50 * (1 + rho);
+    const slowShare = rollout?.slowShare ?? 0;
+    const p50 = pinned
+      ? timeout
+      : (base * (slowShare >= 0.5 ? SLOWDOWN : 1)) / (1 - rho);
+    const p99 = pinned
+      ? timeout
+      : ((base * (slowShare > SLOW_TAIL ? SLOWDOWN : 1)) / (1 - rho)) *
+        (1 + rho);
 
     const step: NodeStep = {
       reads: load.reads,
@@ -700,7 +712,7 @@ const runStep = (
       log.note(index, {
         target: { type: "node", id: node.id },
         kind: "rolled-back",
-        message: `${label} rolled its canary back: the new version failed the requests it was sent, so the old one keeps serving.`,
+        message: `${label} rolled its canary back: the new version ${rollout?.release === "slow" ? "answered twice as slowly" : "failed the requests it was sent"}, so the old one keeps serving.`,
         data: { old: step.rollout.old },
         worst: 0,
       });

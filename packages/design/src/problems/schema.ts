@@ -70,6 +70,8 @@ export const DrillExpectationSchema = z.strictObject({
   minAvailability: z.number().min(0).max(1).optional(),
   endAvailability: z.number().min(0).max(1).optional(),
   maxEndBacklog: z.number().min(0).optional(),
+  endMaxP99Ms: z.number().positive().optional(),
+  maxPods: z.number().int().min(1).optional(),
   forbid: z.array(z.enum(FINDING_KINDS)).default([]),
 });
 export type DrillExpectation = z.output<typeof DrillExpectationSchema>;

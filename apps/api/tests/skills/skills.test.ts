@@ -73,7 +73,7 @@ describe("skills", () => {
     );
     expect(skills.body.next).toMatchObject([
       { track: "system-design", slug: "url-shortener", skill: null },
-      { track: "devops", slug: "zero-downtime-rollout", skill: null },
+      { track: "devops", slug: "latency-regression", skill: null },
     ]);
   });
 

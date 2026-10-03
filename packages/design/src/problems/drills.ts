@@ -11,6 +11,24 @@ export interface DrillOutcome {
   result: EvaluationResult;
 }
 
+const podsAtMost = (graph: DesignGraph): number =>
+  graph.nodes.reduce((sum, item) => {
+    if (item.kind !== "k8s-deployment") return sum;
+
+    const scaler = graph.edges.find(
+      (edge) => edge.kind === "scales" && edge.to === item.id,
+    );
+    const autoscaler = graph.nodes.find((other) => other.id === scaler?.from);
+
+    return (
+      sum +
+      Math.max(
+        item.props.replicas,
+        autoscaler?.kind === "hpa" ? autoscaler.props.max : 0,
+      )
+    );
+  }, 0);
+
 const percent = (value: number) => `${Math.floor(value * 10_000) / 100}%`;
 
 export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome => {
@@ -30,8 +48,10 @@ export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome => {
       1,
       ...seen.map((step) => step?.availability ?? 1),
     );
-    const { maxP99Ms, minAvailability, endAvailability } = drill.expect;
+    const { maxP99Ms, minAvailability, endAvailability, endMaxP99Ms } =
+      drill.expect;
     const last = seen.at(-1)?.availability ?? 1;
+    const lastP99 = seen.at(-1)?.p99 ?? 0;
 
     if (maxP99Ms !== undefined && worstP99 > maxP99Ms) {
       failures.push(
@@ -42,6 +62,12 @@ export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome => {
     if (minAvailability !== undefined && worstAvailability < minAvailability) {
       failures.push(
         `${label} had ${percent(worstAvailability)} of requests served at worst; the drill needs ${percent(minAvailability)}.`,
+      );
+    }
+
+    if (endMaxP99Ms !== undefined && lastP99 > endMaxP99Ms) {
+      failures.push(
+        `${label} ended the drill with p99 at ${Math.round(lastP99)} ms; the drill needs ${endMaxP99Ms} ms by then.`,
       );
     }
 
@@ -61,6 +87,16 @@ export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome => {
     for (const { item, backlog } of waiting) {
       failures.push(
         `${item.label || item.id} still had ${Math.round(backlog).toLocaleString("en")} messages waiting at the end; the drill allows ${drill.expect.maxEndBacklog.toLocaleString("en")}.`,
+      );
+    }
+  }
+
+  if (drill.expect.maxPods !== undefined) {
+    const pods = podsAtMost(graph);
+
+    if (pods > drill.expect.maxPods) {
+      failures.push(
+        `The design may run ${pods} pods; the budget allows ${drill.expect.maxPods}.`,
       );
     }
   }

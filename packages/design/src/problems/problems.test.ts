@@ -542,6 +542,40 @@ describe("scoring zero-downtime deploys", () => {
   });
 });
 
+describe("scoring the latency regression", () => {
+  const reference = OFFICIAL_PROBLEMS.find(
+    (item) => item.slug === "latency-regression",
+  )!.reference.graph;
+
+  test("a rolling update lets a slow release stay", () => {
+    const { passed } = passedItems(
+      "latency-regression",
+      withProps(reference, "k8s-deployment", { strategy: "rolling" }),
+    );
+
+    expect(passed["undoes-a-slow-release"]).toBe(false);
+    expect(passed["deploys-cleanly"]).toBe(true);
+  });
+
+  test("buying past the budget does not count", () => {
+    const { passed } = passedItems(
+      "latency-regression",
+      withProps(reference, "hpa", { max: 30 }),
+    );
+
+    expect(passed["handles-a-normal-day"]).toBe(false);
+  });
+
+  test("an alert on errors does not see a slow release", () => {
+    const { passed } = passedItems(
+      "latency-regression",
+      withProps(reference, "alert", { signal: "error-rate" }),
+    );
+
+    expect(passed["pages-on-latency"]).toBe(false);
+  });
+});
+
 describe("hints", () => {
   test.each(OFFICIAL_PROBLEMS.map((problem) => [problem.slug, problem]))(
     "%s offers hints that cost more as they give more away",
