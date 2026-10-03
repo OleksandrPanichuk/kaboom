@@ -58,9 +58,7 @@ export class RunSimulationUseCase extends UseCase<Options, Result> {
       "nodeId" in fault && !known.has(fault.nodeId) ? [fault.nodeId] : [],
     );
     const unknownGroups = scenario.faults.flatMap((fault) =>
-      "groupId" in fault && !groups.has(fault.groupId)
-        ? [fault.groupId]
-        : [],
+      "groupId" in fault && !groups.has(fault.groupId) ? [fault.groupId] : [],
     );
 
     if (unknown.length > 0) {
