@@ -46,6 +46,15 @@ CreateUserInput  ->  <UseCase>Options  ->  CreateUserData  ->  UserEntity  ->  U
 Keep them distinct even when identical — an HTTP-only field (a captcha token,
 say) must not be able to reach the database layer.
 
+## Routes
+
+Each route lives in its own file, `routes/<action>.route.ts`, exporting
+`<action>Route` (`get-review.route.ts` exports `getReviewRoute`). A module's
+`<module>.routes.ts` only mounts them on its Elysia instance. Route params
+sit beside them in `<name>-params.ts`, and request bodies in the module's
+`dto/` as `<action>.dto.ts`. A file never holds two routes; the generator
+already scaffolds it this way.
+
 ## Layering: modules, platform, adapters, infrastructure
 
 Where a file lives is decided by what it imports and by whether it has a domain.

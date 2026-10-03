@@ -1,1 +1,9 @@
-export * from "./submission-routes";
+export { getAttemptRoute } from "./get-attempt.route";
+export { getProgressRoute } from "./get-progress.route";
+export * from "./hint-params";
+export { listSubmissionsRoute } from "./list-submissions.route";
+export { revealHintRoute } from "./reveal-hint.route";
+export { revealSolutionsRoute } from "./reveal-solutions.route";
+export { runProblemRoute } from "./run-problem.route";
+export { startProblemRoute } from "./start-problem.route";
+export { submitSolutionRoute } from "./submit-solution.route";
