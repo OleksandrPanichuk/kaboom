@@ -32,6 +32,13 @@ export const GROUP_KINDS = [
 
 export type GroupKind = (typeof GROUP_KINDS)[number];
 
+export const GROUP_KIND_LABELS: Readonly<Record<GroupKind, string>> = {
+  region: "Region",
+  vpc: "VPC",
+  "public-subnet": "Public subnet",
+  "private-subnet": "Private subnet",
+};
+
 export interface TechnologyRef {
   id: string;
   props: Record<string, unknown>;

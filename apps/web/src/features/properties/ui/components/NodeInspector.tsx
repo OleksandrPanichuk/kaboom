@@ -13,7 +13,10 @@ import { Button } from "@/components/ui/Button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/Field";
 import { Textarea } from "@/components/ui/Textarea";
 import { FALLBACK_NODE_ICON, NODE_KIND_ICONS } from "@/features/canvas";
-import type { RegionTarget } from "@/features/properties/typedefs";
+import type {
+  PlacementFields,
+  RegionTarget,
+} from "@/features/properties/typedefs";
 
 import { DraftInput } from "./DraftInput";
 import { InspectorSection } from "./InspectorSection";
@@ -21,6 +24,7 @@ import { KindAbout } from "./KindAbout";
 import { LintCallout } from "./LintCallout";
 import { type CommitResult, PropFieldControl } from "./PropFieldControl";
 import { RegionField } from "./RegionField";
+import { SubnetField } from "./SubnetField";
 
 const LABEL_MAX_LENGTH = 80;
 const NOTES_MAX_LENGTH = 2_000;
@@ -29,7 +33,8 @@ interface NodeInspectorProps {
   node: DesignNode;
   hits: LintHit[];
   replicas?: string[];
-  regions: DesignGroup[];
+  groups: DesignGroup[];
+  placement: PlacementFields;
   onRegionChange: (target: RegionTarget) => void;
   onPatch: (patch: NodePatch) => CommitResult;
   onDelete: () => void;
@@ -39,7 +44,8 @@ export function NodeInspector({
   node,
   hits,
   replicas = [],
-  regions,
+  groups,
+  placement,
   onRegionChange,
   onPatch,
   onDelete,
@@ -137,11 +143,20 @@ export function NodeInspector({
             }}
           />
         </Field>
-        <RegionField
-          regions={regions}
-          value={node.groupId}
-          onChange={onRegionChange}
-        />
+        {placement.regions ? (
+          <RegionField
+            regions={groups.filter((group) => group.kind === "region")}
+            value={node.groupId}
+            onChange={onRegionChange}
+          />
+        ) : null}
+        {placement.subnets ? (
+          <SubnetField
+            groups={groups}
+            value={node.groupId}
+            onChange={onRegionChange}
+          />
+        ) : null}
       </InspectorSection>
 
       <InspectorSection title="Properties">

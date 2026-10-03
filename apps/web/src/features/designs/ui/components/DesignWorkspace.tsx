@@ -28,9 +28,9 @@ import {
 import {
   ChecksPanel,
   EdgeInspector,
+  GroupInspector,
   InspectorEmpty,
   NodeInspector,
-  RegionInspector,
   SelectionInspector,
 } from "@/features/properties";
 import {
@@ -195,8 +195,17 @@ export function DesignWorkspace({
       selectedEdges.map((edge) => edge.id),
     );
 
-  const regions = graph.groups.filter((group) => group.kind === "region");
-  const region = regions.find((group) => group.id === regionId) ?? null;
+  const placement = {
+    regions: track !== "devops",
+    subnets: track !== "system-design",
+  };
+  const region = graph.groups.find((group) => group.id === regionId) ?? null;
+  const within = (groupId: string): string[] => [
+    groupId,
+    ...graph.groups
+      .filter((group) => group.parentId === groupId)
+      .flatMap((group) => within(group.id)),
+  ];
   const sharedRegion = selectedNodes.every(
     (node) => node.groupId === selectedNodes[0]?.groupId,
   )
@@ -211,11 +220,14 @@ export function DesignWorkspace({
   const [onlyEdge] = selectedEdges;
   const inspector =
     region && selectedNodes.length + selectedEdges.length === 0 ? (
-      <RegionInspector
+      <GroupInspector
         key={region.id}
-        region={region}
+        group={region}
         members={graph.nodes
-          .filter((node) => node.groupId === region.id)
+          .filter(
+            (node) =>
+              node.groupId !== null && within(region.id).includes(node.groupId),
+          )
           .map((node) => labelOf(node.id))}
         onRename={(label) => editor.renameRegion(region.id, label)}
         onDissolve={() => {
@@ -233,7 +245,8 @@ export function DesignWorkspace({
             (edge) => edge.kind === "replication" && edge.from === onlyNode.id,
           )
           .map((edge) => labelOf(edge.to))}
-        regions={regions}
+        groups={graph.groups}
+        placement={placement}
         onRegionChange={(target) => editor.placeInRegion([onlyNode.id], target)}
         onPatch={(patch) => editor.updateNode(onlyNode.id, patch)}
         onDelete={removeSelection}
@@ -251,7 +264,8 @@ export function DesignWorkspace({
       <SelectionInspector
         nodes={selectedNodes.length}
         edges={selectedEdges.length}
-        regions={regions}
+        groups={graph.groups}
+        placement={placement}
         region={sharedRegion}
         onRegionChange={(target) =>
           editor.placeInRegion(

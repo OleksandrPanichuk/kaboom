@@ -198,14 +198,19 @@ its loader on hover and must never create anything.
 another solver's solution: no dragging, connecting, deleting or dropping,
 and it fits the whole graph however small that makes it.
 
-Regions are groups of kind `region` in the graph, not React Flow nodes.
-`RegionLayer` draws each as a box around its nodes' live positions inside
-`ViewportPortal`, behind nodes and edges (`.design-canvas
-.react-flow__viewport-portal` in `globals.css`), so a region follows a drag
-without owning any position of its own; only its label is clickable. A node
-joins or leaves one from the inspector's *Region* field, and
-`placementOps` (`designs/utils`) keeps regions non-empty: the batch that
-moves or deletes a region's last node removes the region with it.
+Regions, VPCs and subnets are groups in the graph, not React Flow nodes.
+`GroupLayer` draws each as a box around its nodes' live positions and the
+boxes of the groups inside it, within `ViewportPortal`, behind nodes and
+edges (`.design-canvas .react-flow__viewport-portal` in `globals.css`), so
+a group follows a drag without owning any position of its own; only its
+label is clickable. A node joins or leaves one from the inspector: the
+*Region* field outside DevOps problems, the *Subnet* field outside system
+design ones, and both in a sandbox. A new subnet goes into the design's
+VPC, which is created with the first one. `placementOps` (`designs/utils`)
+keeps groups non-empty: the batch that moves or deletes a group's last
+node removes the group with it, and a VPC once its last subnet goes.
+Removing a group from its inspector removes the groups inside it and
+keeps every node.
 
 `features/interview` renders `DesignWorkspace` with an interview
 `transport`, so edits and layout saves go through `/interviews/:id` and

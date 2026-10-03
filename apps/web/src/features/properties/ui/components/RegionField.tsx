@@ -34,7 +34,11 @@ export function RegionField({ regions, value, onChange }: RegionFieldProps) {
     <Field>
       <FieldLabel htmlFor={`${id}-region`}>Region</FieldLabel>
       <Select
-        value={value ?? NO_REGION}
+        value={
+          value !== null && regions.some((region) => region.id === value)
+            ? value
+            : NO_REGION
+        }
         items={items}
         onValueChange={(next) =>
           onChange(next === NO_REGION ? null : String(next))
