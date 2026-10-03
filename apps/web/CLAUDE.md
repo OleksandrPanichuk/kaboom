@@ -165,6 +165,10 @@ keeps the undo history as pairs of ops and their inverse from `applyOps`, so
 undo and redo are ordinary batches that go to the server like any other;
 `useDesignEditor` wraps it for React and saves the layout on a debounce.
 
+The palette groups kinds by track (`PALETTE_GROUPS`). A problem or an
+interview passes its `track` to `DesignWorkspace`, which shows only that
+track's groups; a sandbox design shows every track under its name.
+
 `features/properties` draws the inspector from the catalogue alone:
 `describeProps` gives each prop's metadata and `propControl` (both in
 `@repo/design`) the control to draw and its bounds. Add a prop to a kind with

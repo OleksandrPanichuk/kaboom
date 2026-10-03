@@ -541,7 +541,9 @@ A challenge submission is reviewed the same way, without a transcript.
 `submissions` declares `SubmissionReviewScheduler`, and `reviews` binds it
 to `ReviewSubmissionJob`. The submission is stored with its deterministic
 score and `review_status: pending`. The job asks the review model for a
-0–3 score on design, scaling and reliability. It sees the design and the
+0–3 score on three dimensions that depend on the track: design, scaling
+and reliability for system design, and design, delivery and operability
+for DevOps. It sees the design and the
 public score, never a hidden drill's details. The score then becomes the
 blend of `DESIGN_REVIEW_WEIGHT` (30 %) review and 70 % checks, less the
 hint penalty, so the model can move a score but never decide it. A failed
@@ -551,14 +553,41 @@ review leaves the deterministic score in place and marks the submission
 ## Skills
 
 A skill is one of the rubric's dimensions: requirements, core design,
-scaling, reliability and communication. The review's transaction writes a
-`skill_scores` row per skill it touched. Each row is the weighted mean of
+scaling, reliability, delivery, operability and communication. The review's
+transaction writes a `skill_scores` row per skill it touched. Each row is the weighted mean of
 that skill's scored items, from 0 to 1, with the weight it rests on, and
 `(interview_id, skill)` is unique, so a repeated review adds nothing. `GET
 /skills/me` averages the rows by weight, recency-agnostic, and suggests the
-next interview. It picks the problem tried least, then the one whose rubric
-leans hardest on the weakest skill, then the easiest. `scoring_version` lets
+next interview, once per track. Within a track it picks the problem tried
+least, then the one whose rubric leans hardest on the weakest of the skills
+that track's interviews score, then the easiest. `scoring_version` lets
 the formula change and be recomputed; decay comes later.
+
+## DevOps track
+
+A problem belongs to one track, `system-design` or `devops` (`TRACKS` in
+`@repo/design`), and so does every node kind. DevOps adds an ingress, a
+Kubernetes service, a deployment, a pod autoscaler, a config map, a secret
+and an alert. A kind declares `carriesTraffic`. The ones that carry none
+take no part in the load evaluation, and they are joined by control edges
+instead: a deployment `mounts` a config map or a secret, a pod autoscaler
+`scales` one deployment, and an alert `watches` a node that serves traffic.
+`applyOps` refuses a control edge between the wrong kinds, and any load
+edge into or out of a kind without traffic.
+
+A rollout is a fault in the load simulation, not a separate evaluator,
+because whether it hurts users depends on the traffic it runs under. It
+replaces a deployment's pods by its strategy, and the step reports the
+rollout's phase and pods. A rollout that has not finished by its progress
+deadline is stalled, and a failing canary is rolled back. Each is a
+finding. The rules are in the load README, next to the rest of the model.
+Pipelines and networks carry no traffic, so they will need a rule
+evaluator of their own.
+
+The interviewer and both reviewers take the problem's track: each track has
+its own introduction, and a DevOps challenge is reviewed on design,
+delivery and operability. The palette shows a problem's own track, and a
+sandbox design shows both.
 
 ## Evals
 
@@ -573,8 +602,10 @@ makes one move and waits for the turn. Invariants that can be read off the
 turn are checked directly: silence is no message and no visible tool. The
 rest go to a judge on the `review` model, which answers through a `verdict`
 tool with a reason that quotes the interviewer. `EVAL_RUNS=3` repeats every
-case, since a pass once proves little about a model. When the persona or the
-tools change, run it before and after.
+case, since a pass once proves little about a model. A scene names its
+problem with `slug`; nodes already in that problem's baseline are updated
+rather than added. When the persona or the tools change, run it before and
+after.
 
 ## Generated API client
 

@@ -10,6 +10,7 @@ import {
   type EdgeKind,
   type NodeKind,
 } from "@repo/design";
+import { OFFICIAL_PROBLEMS } from "@repo/design/library";
 import { createUser, type TestClient, type TestUser } from "@tests/helpers";
 
 import {
@@ -132,6 +133,7 @@ export const edge = (from: string, to: string, kind: EdgeKind) =>
   createEdge({ id: `${from}-${to}-${kind}`, from, to, kind });
 
 export interface Scene {
+  slug?: string;
   phase: string;
   design: Pick<DesignGraph, "nodes" | "edges">;
   history: Array<["user" | "interviewer", string]>;
@@ -144,20 +146,30 @@ export interface Seeded {
 }
 
 export const seed = async ({
+  slug = "url-shortener",
   phase,
   design,
   history,
 }: Scene): Promise<Seeded> => {
   const user = await createUser();
   const started = await user.post<{ id: string; designId: string }>(PATH, {
-    slug: "url-shortener",
+    slug,
   });
   const { id, designId } = started.body;
+  const baseline = OFFICIAL_PROBLEMS.find(
+    (problem) => problem.slug === slug,
+  )!.baseline;
+  const present = new Set(baseline.nodes.map((item) => item.id));
+  const joined = new Set(baseline.edges.map((item) => item.id));
   const ops: DesignOp[] = [
-    ...design.nodes
-      .filter((item) => item.id !== "users")
-      .map((item): DesignOp => ({ op: "add-node", node: item })),
-    ...design.edges.map((item): DesignOp => ({ op: "add-edge", edge: item })),
+    ...design.nodes.map((item): DesignOp =>
+      present.has(item.id)
+        ? { op: "update-node", id: item.id, patch: { props: item.props } }
+        : { op: "add-node", node: item },
+    ),
+    ...design.edges
+      .filter((item) => !joined.has(item.id))
+      .map((item): DesignOp => ({ op: "add-edge", edge: item })),
   ];
 
   if (ops.length > 0) {
