@@ -4,7 +4,12 @@ import { evaluateLoad } from "../evaluate/load";
 import { createEdge, createNode, emptyGraph } from "../graph";
 import { applyOps } from "../ops";
 import { catalogue, isNodeKind } from "./catalogue";
-import { findTechnology, technologies, technologiesFor } from "./technologies";
+import {
+  derivedProps,
+  findTechnology,
+  technologies,
+  technologiesFor,
+} from "./technologies";
 
 describe("technologies", () => {
   test("keys every technology by its id and ties it to a known kind", () => {
@@ -99,6 +104,76 @@ describe("a node with a technology", () => {
     const undone = applyOps(changed.graph, changed.inverse);
 
     expect(undone.ok && undone.graph.nodes[0]).toEqual(added.graph.nodes[0]);
+  });
+
+  test("hands back the ops with the product's values written in, so a replay needs no product table", () => {
+    const added = applyOps(emptyGraph(), [{ op: "add-node", node: rds({}) }]);
+
+    if (!added.ok) throw new Error(added.message);
+
+    const changed = applyOps(added.graph, [
+      {
+        op: "update-node",
+        id: "db",
+        patch: {
+          technology: {
+            id: "amazon-rds",
+            props: { instanceClass: "db.r6g.8xlarge" },
+          },
+        },
+      },
+    ]);
+
+    if (!changed.ok) throw new Error(changed.message);
+
+    const replayed = applyOps(
+      emptyGraph(),
+      [...added.applied, ...changed.applied],
+      { derive: false },
+    );
+
+    const [update] = changed.applied;
+
+    expect(update?.op === "update-node" && update.patch.props).toEqual({
+      readCapacityRps: 40_000,
+      writeCapacityRps: 9_000,
+    });
+    expect(replayed.ok && replayed.graph).toEqual(changed.graph);
+  });
+});
+
+describe("derived props", () => {
+  const derive = (
+    id: string,
+    kind: Parameters<typeof derivedProps>[0],
+    props: Record<string, unknown>,
+  ) => derivedProps(kind, { id, props });
+
+  test("stay within the kind's bounds however large the product's settings", () => {
+    const derived = derive("redis", "cache", { shards: 5_000 });
+
+    expect(derived).toMatchObject({ readCapacityRps: 100_000_000 });
+    expect(() => catalogue.cache.props.parse({ ...derived })).not.toThrow();
+  });
+
+  test("give a provisioned table only the units reserved for it", () => {
+    expect(
+      derive("amazon-dynamodb", "nosql-database", {
+        mode: "provisioned",
+        readUnits: 3_000,
+        writeUnits: 10_000,
+      }),
+    ).toMatchObject({
+      partitions: 10,
+      readCapacityPerPartition: 300,
+      writeCapacityPerPartition: 1_000,
+    });
+  });
+
+  test("divide a Kafka cluster's throughput by the copies it can really keep", () => {
+    expect(
+      derive("kafka", "stream", { brokers: 1, replicationFactor: 3 }),
+    ).toMatchObject({ capacityMsgPerSecond: 90_000, replicationFactor: 1 });
   });
 });
 

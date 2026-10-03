@@ -1,4 +1,4 @@
-export { applyOps, type ApplyOpsResult } from "./apply";
+export { applyOps, type ApplyOpsOptions, type ApplyOpsResult } from "./apply";
 export { parseDesignOps, type ParseOpsResult } from "./parse";
 export { type OpRejection, type OpRejectionReason } from "./rejection";
 export {

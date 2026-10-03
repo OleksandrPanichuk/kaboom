@@ -123,11 +123,15 @@ export const kafka = defineTechnology({
       unit: "count",
     }),
   }),
-  derive: ({ brokers, partitions, replicationFactor }) => ({
-    capacityMsgPerSecond: (brokers * 90_000) / replicationFactor,
-    partitions,
-    replicationFactor: Math.min(replicationFactor, brokers),
-  }),
+  derive: ({ brokers, partitions, replicationFactor }) => {
+    const copies = Math.min(replicationFactor, brokers);
+
+    return {
+      capacityMsgPerSecond: (brokers * 90_000) / copies,
+      partitions,
+      replicationFactor: copies,
+    };
+  },
 });
 
 export const amazonMsk = defineTechnology({

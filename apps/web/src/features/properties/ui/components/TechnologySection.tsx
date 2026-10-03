@@ -6,9 +6,14 @@ import {
   PROVIDER_LABELS,
   technologiesFor,
 } from "@repo/design";
-import { useId } from "react";
+import { useId, useState } from "react";
 
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/Field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/Field";
 import {
   Select,
   SelectContent,
@@ -29,6 +34,7 @@ const GENERIC = "generic";
 
 export function TechnologySection({ node, onPatch }: TechnologySectionProps) {
   const id = useId();
+  const [error, setError] = useState<string | null>(null);
   const options = technologiesFor(node.kind);
   const chosen = node.technology
     ? findTechnology(node.technology.id, node.kind)
@@ -45,21 +51,28 @@ export function TechnologySection({ node, onPatch }: TechnologySectionProps) {
   ];
   const settings = chosen ? describeProps(chosen.props) : [];
   const current = node.technology?.props ?? {};
-  const values = chosen ? chosen.props.parse(current) : {};
+  const stored = chosen?.props.safeParse(current);
+  const values = chosen
+    ? stored?.success
+      ? stored.data
+      : chosen.props.parse({})
+    : {};
 
   return (
     <InspectorSection title="Technology">
-      <Field>
+      <Field data-invalid={error ? true : undefined}>
         <FieldLabel htmlFor={`${id}-technology`}>Product</FieldLabel>
         <Select
           value={chosen?.id ?? GENERIC}
           onValueChange={(value) =>
-            onPatch({
-              technology:
-                value === GENERIC || value === null
-                  ? null
-                  : { id: String(value), props: {} },
-            })
+            setError(
+              onPatch({
+                technology:
+                  value === GENERIC || value === null
+                    ? null
+                    : { id: String(value), props: {} },
+              }),
+            )
           }
           items={items}
         >
@@ -79,11 +92,12 @@ export function TechnologySection({ node, onPatch }: TechnologySectionProps) {
             ? chosen.summary
             : "Pick the product it runs on, and its own settings fill in the numbers below."}
         </FieldDescription>
+        {error ? <FieldError>{error}</FieldError> : null}
       </Field>
       {chosen
         ? settings.map((field) => (
             <PropFieldControl
-              key={field.key}
+              key={`${chosen.id}:${field.key}`}
               field={field}
               value={values[field.key]}
               onCommit={(value) =>

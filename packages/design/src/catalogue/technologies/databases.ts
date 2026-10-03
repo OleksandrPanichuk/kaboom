@@ -125,18 +125,31 @@ export const amazonDynamodb = defineTechnology({
       description: "Reserved writes a second, when provisioned",
     }),
   }),
-  derive: ({ mode, readUnits, writeUnits }) => ({
-    partitions:
-      mode === "on-demand"
-        ? 40
-        : Math.max(
-            1,
-            Math.ceil(Math.max(readUnits / 3_000, writeUnits / 1_000)),
-          ),
-    readCapacityPerPartition: 3_000,
-    writeCapacityPerPartition: 1_000,
-    replicationFactor: 3,
-  }),
+  derive: ({ mode, readUnits, writeUnits }) => {
+    if (mode === "on-demand") {
+      return {
+        partitions: 40,
+        readCapacityPerPartition: 3_000,
+        writeCapacityPerPartition: 1_000,
+        replicationFactor: 3,
+      };
+    }
+
+    const partitions = Math.max(
+      1,
+      Math.ceil(Math.max(readUnits / 3_000, writeUnits / 1_000)),
+    );
+
+    return {
+      partitions,
+      readCapacityPerPartition: Math.max(1, Math.floor(readUnits / partitions)),
+      writeCapacityPerPartition: Math.max(
+        1,
+        Math.floor(writeUnits / partitions),
+      ),
+      replicationFactor: 3,
+    };
+  },
 });
 
 export const cassandra = defineTechnology({

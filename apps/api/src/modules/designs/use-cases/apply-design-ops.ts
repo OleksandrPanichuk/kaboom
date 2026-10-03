@@ -67,7 +67,7 @@ export class ApplyDesignOpsUseCase extends UseCase<Options, Result> {
         designId: id,
         number,
         author,
-        ops,
+        ops: result.applied,
         inverse: result.inverse,
         snapshot: null,
         graphHash,
