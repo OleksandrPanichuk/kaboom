@@ -238,6 +238,11 @@ the same points, recent activity and the challenge table. A sparkline's
 axis fits its points with a span of at least 20, since its value is
 printed beside it, and it answers hover and the arrow keys.
 
+`features/leaderboard` renders `/leaderboard`: the caller's standing with
+the form to choose a handle and whether to be shown, the period and track
+filters (kept in the URL as `?period=week&track=…`, the default left out),
+and the table, where the caller's row is marked.
+
 `features/simulation` runs `evaluateLoad` in the browser while the Run tab
 is open, on a deferred graph so typing stays smooth, and turns a step into
 the canvas overlay (`overlayAt`); the canvas only draws it. A saved run posts
