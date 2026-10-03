@@ -15,6 +15,10 @@ import { ProblemNotFoundError } from "./problems.errors";
 export class ProblemsService extends Service {
   private readonly problems = makeRepository(ProblemsRepository);
 
+  public listPublishedContent(): Promise<ProblemWithContent[]> {
+    return this.problems.listPublishedContent();
+  }
+
   public async getPublished(slug: string): Promise<ProblemWithContent> {
     const found = await this.problems.findPublishedBySlug(slug);
 

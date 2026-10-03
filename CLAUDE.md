@@ -532,6 +532,18 @@ receives the payload, and moves the interview to `review_failed`. `POST
 again. `MemoryJobQueue` calls `failed` instead of throwing, as BullMQ
 would, so a test sees what production sees.
 
+## Skills
+
+A skill is one of the rubric's dimensions: requirements, core design,
+scaling, reliability and communication. The review's transaction writes a
+`skill_scores` row per skill it touched. Each row is the weighted mean of
+that skill's scored items, from 0 to 1, with the weight it rests on, and
+`(interview_id, skill)` is unique, so a repeated review adds nothing. `GET
+/skills/me` averages the rows by weight, recency-agnostic, and suggests the
+next interview. It picks the problem tried least, then the one whose rubric
+leans hardest on the weakest skill, then the easiest. `scoring_version` lets
+the formula change and be recomputed; decay comes later.
+
 ## Evals
 
 `bun run eval` in `apps/api` runs the interviewer against the real model.
