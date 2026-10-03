@@ -82,6 +82,51 @@ beforeEach(async () => {
 });
 
 describe("a turn", () => {
+  test("runs a pipeline drill by its rules, with nothing to play on the canvas", async () => {
+    const user = await createUser();
+    const interview = await startInterview(user, "monorepo-pipeline");
+
+    model().enqueue(
+      [
+        {
+          type: "tool-use",
+          id: "p1",
+          name: "set_phase",
+          input: { phase: "high-level" },
+        },
+        { type: "stop", reason: "tool-use" },
+      ],
+      [
+        {
+          type: "tool-use",
+          id: "d1",
+          name: "run_drill",
+          input: { drillId: "typical-change" },
+        },
+        { type: "stop", reason: "tool-use" },
+      ],
+      [{ type: "text-delta", text: "That took a while. Why?" }],
+    );
+    await say(user, interview.id, "Run a typical change through it.");
+    await scheduler().drain();
+
+    const drill = toolResults(2).find((result) => result.toolUseId === "d1")!;
+    const after = await interviewOf(user, interview.id);
+    const stream = await openEvents(user, interview.id, { since: 0 });
+    const events = [];
+
+    for (let i = 0; i < after.lastSeq; i++)
+      events.push(await stream.nextDurable());
+    stream.close();
+
+    expect(drill.isError ?? false).toBe(false);
+    expect(JSON.stringify(drill.content)).toContain("failed");
+    expect(JSON.stringify(drill.content)).toContain("95 minutes");
+    expect(events.some((event) => event.data.type === "simulation")).toBe(
+      false,
+    );
+  });
+
   test("introduces the interviewer for the problem's track", async () => {
     const user = await createUser();
     const designInterview = await startInterview(user);

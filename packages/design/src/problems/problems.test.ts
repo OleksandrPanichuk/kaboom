@@ -578,6 +578,59 @@ describe("scoring the latency regression", () => {
   });
 });
 
+describe("scoring the monorepo pipeline", () => {
+  const reference = OFFICIAL_PROBLEMS.find(
+    (item) => item.slug === "monorepo-pipeline",
+  )!.reference.graph;
+  const stage = (id: string, props: Record<string, unknown>) => ({
+    ...reference,
+    nodes: reference.nodes.map((item) =>
+      item.id === id
+        ? ({ ...item, props: { ...item.props, ...props } } as typeof item)
+        : item,
+    ),
+  });
+
+  test("working on the whole repository misses the typical target", () => {
+    const { passed } = passedItems(
+      "monorepo-pipeline",
+      stage("build", { affectedOnly: false }),
+    );
+
+    expect(passed["ships-a-typical-change-fast"]).toBe(false);
+    expect(passed["ships-a-shared-change-in-time"]).toBe(true);
+  });
+
+  test("one test runner cannot carry a change to the shared library", () => {
+    const { passed } = passedItems(
+      "monorepo-pipeline",
+      stage("test", { parallelism: 1 }),
+    );
+
+    expect(passed["ships-a-shared-change-in-time"]).toBe(false);
+  });
+
+  test("without a retry a flaky stage keeps runs red", () => {
+    const { passed } = passedItems(
+      "monorepo-pipeline",
+      stage("test", { retries: 0 }),
+    );
+
+    expect(passed["keeps-runs-green"]).toBe(false);
+  });
+
+  test("a deploy that skips the scan is caught", () => {
+    const { passed } = passedItems("monorepo-pipeline", {
+      ...reference,
+      edges: reference.edges.filter(
+        (item) => item.to !== "deploy" || item.from !== "scan",
+      ),
+    });
+
+    expect(passed["gates-every-deploy"]).toBe(false);
+  });
+});
+
 describe("hints", () => {
   test.each(OFFICIAL_PROBLEMS.map((problem) => [problem.slug, problem]))(
     "%s offers hints that cost more as they give more away",
