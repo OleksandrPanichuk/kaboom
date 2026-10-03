@@ -3,6 +3,8 @@ const LABELS: Record<string, string> = {
   design: "Core design",
   scaling: "Scaling",
   reliability: "Reliability",
+  delivery: "Delivery",
+  operability: "Operability",
   communication: "Communication",
 };
 

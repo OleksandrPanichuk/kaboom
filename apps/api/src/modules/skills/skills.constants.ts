@@ -9,6 +9,8 @@ export const SKILL_LABELS: Record<InterviewDimension, string> = {
   design: "Core design",
   scaling: "Scaling",
   reliability: "Reliability",
+  delivery: "Delivery",
+  operability: "Operability",
   communication: "Communication",
 };
 

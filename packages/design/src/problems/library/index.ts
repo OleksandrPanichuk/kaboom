@@ -5,6 +5,7 @@ import { notifications } from "./notifications";
 import { photoUploads } from "./photo-uploads";
 import { rateLimitedApi } from "./rate-limited-api";
 import { urlShortener } from "./url-shortener";
+import { zeroDowntimeRollout } from "./zero-downtime-rollout";
 
 export const OFFICIAL_PROBLEMS: ProblemContent[] = [
   urlShortener,
@@ -13,4 +14,5 @@ export const OFFICIAL_PROBLEMS: ProblemContent[] = [
   notifications,
   newsFeed,
   chat,
+  zeroDowntimeRollout,
 ].map((problem) => ProblemContentSchema.parse(problem));

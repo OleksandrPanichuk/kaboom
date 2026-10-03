@@ -1,6 +1,12 @@
 import z from "zod";
 
-import { NODE_KINDS, type NodeKind, type Track, TRACKS } from "../catalogue";
+import {
+  ALERT_SIGNALS,
+  NODE_KINDS,
+  type NodeKind,
+  type Track,
+  TRACKS,
+} from "../catalogue";
 import { FINDING_KINDS } from "../evaluate/result";
 import { ReleaseSchema, SloSchema } from "../evaluate/scenario";
 import { DesignGraphSchema, IdSchema } from "../graph";
@@ -100,6 +106,11 @@ export const CheckRefSchema = z.discriminatedUnion("check", [
   }),
   z.strictObject({ check: z.literal("throttles") }),
   z.strictObject({
+    check: z.literal("watches"),
+    nodeKind: NodeKindSchema,
+    signal: z.enum(ALERT_SIGNALS),
+  }),
+  z.strictObject({
     check: z.literal("no-lint"),
     lint: z.enum(LINT_IDS as [string, ...string[]]),
   }),
@@ -136,6 +147,8 @@ export const INTERVIEW_DIMENSIONS = [
   "design",
   "scaling",
   "reliability",
+  "delivery",
+  "operability",
   "communication",
 ] as const;
 export type InterviewDimension = (typeof INTERVIEW_DIMENSIONS)[number];

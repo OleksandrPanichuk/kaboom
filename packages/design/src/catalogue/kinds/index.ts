@@ -1,4 +1,4 @@
-export { alertKind } from "./alert";
+export { ALERT_SIGNALS, alertKind } from "./alert";
 export { apiGatewayKind } from "./api-gateway";
 export { cacheKind } from "./cache";
 export { cdnKind } from "./cdn";

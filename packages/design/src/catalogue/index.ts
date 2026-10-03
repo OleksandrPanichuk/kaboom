@@ -30,6 +30,7 @@ export {
   EdgePropsSchema,
   isControlEdge,
 } from "./edges";
+export { ALERT_SIGNALS } from "./kinds";
 export {
   describeProps,
   prop,

@@ -100,6 +100,44 @@ const judge = (
               "Nothing limits the traffic: add a rate limiter, or turn on throttling in a gateway.",
           };
     }
+    case "watches": {
+      const watched = selectNodes(context.graph, {
+        nodeKind: check.nodeKind,
+        role: "any",
+      });
+      const unwatched = watched.filter(
+        (target) =>
+          !context.graph.edges.some((edge) => {
+            const source = context.graph.nodes.find(
+              (item) => item.id === edge.from,
+            );
+
+            return (
+              edge.kind === "watches" &&
+              edge.to === target.id &&
+              source?.kind === "alert" &&
+              source.props.signal === check.signal
+            );
+          }),
+      );
+
+      if (watched.length === 0) {
+        return {
+          passed: false,
+          evidence: `The design has no ${check.nodeKind} to watch.`,
+        };
+      }
+
+      return unwatched.length === 0
+        ? {
+            passed: true,
+            evidence: `An alert on ${check.signal} watches every ${check.nodeKind}.`,
+          }
+        : {
+            passed: false,
+            evidence: `No alert on ${check.signal} watches ${unwatched.map((item) => item.label || item.id).join(", ")}.`,
+          };
+    }
     case "no-lint": {
       if (!serves(context.graph)) {
         return {

@@ -490,6 +490,58 @@ describe("scoring team chat", () => {
   });
 });
 
+describe("scoring zero-downtime deploys", () => {
+  const reference = OFFICIAL_PROBLEMS.find(
+    (item) => item.slug === "zero-downtime-rollout",
+  )!.reference.graph;
+
+  test("without a readiness probe a stuck rollout reaches shoppers", () => {
+    const { passed } = passedItems(
+      "zero-downtime-rollout",
+      withProps(reference, "k8s-deployment", { readinessProbe: false }),
+    );
+
+    expect(passed["survives-a-stuck-rollout"]).toBe(false);
+    expect(passed["deploys-at-peak"]).toBe(true);
+  });
+
+  test("a rolling update cannot stop a release that fails every order", () => {
+    const { passed } = passedItems(
+      "zero-downtime-rollout",
+      withProps(reference, "k8s-deployment", { strategy: "rolling" }),
+    );
+
+    expect(passed["limits-a-bad-release"]).toBe(false);
+    expect(passed["survives-a-stuck-rollout"]).toBe(true);
+  });
+
+  test("taking a pod away at peak costs requests", () => {
+    const { passed } = passedItems(
+      "zero-downtime-rollout",
+      withProps(
+        withProps(reference, "k8s-deployment", {
+          strategy: "rolling",
+          replicas: 5,
+          maxUnavailable: 1,
+        }),
+        "hpa",
+        { min: 5, max: 5 },
+      ),
+    );
+
+    expect(passed["deploys-at-peak"]).toBe(false);
+  });
+
+  test("counts an alert only when it watches rollout progress", () => {
+    const { passed } = passedItems(
+      "zero-downtime-rollout",
+      withProps(reference, "alert", { signal: "error-rate" }),
+    );
+
+    expect(passed["notices-a-stuck-rollout"]).toBe(false);
+  });
+});
+
 describe("hints", () => {
   test.each(OFFICIAL_PROBLEMS.map((problem) => [problem.slug, problem]))(
     "%s offers hints that cost more as they give more away",

@@ -59,6 +59,8 @@ describe("skills", () => {
       "design",
       "scaling",
       "reliability",
+      "delivery",
+      "operability",
       "communication",
     ]);
     expect(skills.body.skills.every((skill) => skill.score === null)).toBe(
