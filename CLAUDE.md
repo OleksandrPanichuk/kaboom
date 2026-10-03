@@ -566,11 +566,16 @@ scaling, reliability, delivery, operability and communication. The review's
 transaction writes a `skill_scores` row per skill it touched. Each row is the weighted mean of
 that skill's scored items, from 0 to 1, with the weight it rests on, and
 `(interview_id, skill)` is unique, so a repeated review adds nothing. `GET
-/skills/me` averages the rows by weight, recency-agnostic, and suggests the
-next interview, once per track. Within a track it picks the problem tried
-least, then the one whose rubric leans hardest on the weakest of the skills
-that track's interviews score, then the easiest. `scoring_version` lets
-the formula change and be recomputed; decay comes later.
+/skills/me` averages the rows by weight, each row's weight halving every
+`SKILL_HALF_LIFE_DAYS` (90) since it was earned, so recent work leads and
+old work fades without vanishing. It suggests the next interview, once per
+track. Within a track it picks the problem tried least (by review or
+submission), then the one whose rubric leans hardest on the weakest of the
+skills that track's interviews score, then the one whose difficulty is
+nearest the weakest skill's level: easy below 50, medium below 75, hard
+above. The decay is applied on read, so the stored rows never change;
+`GET /skills/me/history` sends the half-life with the points, so the
+progress page draws the same averages.
 
 `GET /skills/me/history` answers every row, oldest first, so a client can
 draw how each skill moved. `progress` is a read model that owns no table:

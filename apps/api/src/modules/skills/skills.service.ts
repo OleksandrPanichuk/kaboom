@@ -84,11 +84,11 @@ export class SkillsService extends Service {
 
   public async viewFor(userId: string): Promise<SkillsView> {
     const rows = await this.scores.listFor(userId);
-    const skills = summarise(rows);
+    const skills = summarise(rows, new Date());
     const practised = new Map<string, number>();
 
     for (const key of new Set(
-      rows.map((row) => `${row.problemId}:${row.reviewId}`),
+      rows.map((row) => `${row.problemId}:${row.reviewId ?? row.submissionId}`),
     )) {
       const problemId = key.split(":")[0]!;
 

@@ -18,12 +18,15 @@ const point = (
 
 describe("skillTrends", () => {
   test("follows each skill's weighted average after every review, as /skills/me reports it", () => {
-    const [design, scaling] = skillTrends([
-      point("design", 40, 20, "2026-10-01T10:00:00Z"),
-      point("scaling", 90, 10, "2026-10-01T10:00:00Z"),
-      point("design", 100, 10, "2026-10-02T10:00:00Z"),
-      point("design", 70, 20, "2026-10-03T10:00:00Z"),
-    ]);
+    const [design, scaling] = skillTrends(
+      [
+        point("design", 40, 20, "2026-10-01T10:00:00Z"),
+        point("scaling", 90, 10, "2026-10-01T10:00:00Z"),
+        point("design", 100, 10, "2026-10-02T10:00:00Z"),
+        point("design", 70, 20, "2026-10-03T10:00:00Z"),
+      ],
+      100_000,
+    );
 
     expect(design?.points.map((item) => item.value)).toEqual([40, 60, 64]);
     expect(design).toMatchObject({ current: 64, change: 4 });
@@ -31,6 +34,20 @@ describe("skillTrends", () => {
   });
 
   test("has nothing to say before any review", () => {
-    expect(skillTrends([])).toEqual([]);
+    expect(skillTrends([], 90)).toEqual([]);
+  });
+});
+
+describe("skillTrends with decay", () => {
+  test("weighs an older review half as much per half-life, as /skills/me does", () => {
+    const [design] = skillTrends(
+      [
+        point("design", 20, 20, "2026-01-01T00:00:00Z"),
+        point("design", 80, 20, "2026-06-30T00:00:00Z"),
+      ],
+      90,
+    );
+
+    expect(design?.points.map((item) => item.value)).toEqual([20, 68]);
   });
 });

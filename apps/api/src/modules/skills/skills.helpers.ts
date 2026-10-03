@@ -10,7 +10,13 @@ import type {
   SkillScoreEntity,
   SkillSummary,
 } from "./skill.entity";
-import { DIFFICULTY_ORDER, SKILL_LABELS } from "./skills.constants";
+import {
+  DAY_MS,
+  DIFFICULTY_ORDER,
+  SKILL_HALF_LIFE_DAYS,
+  SKILL_LABELS,
+  TARGET_DIFFICULTY,
+} from "./skills.constants";
 
 export interface ScoredItem {
   dimension: InterviewDimension;
@@ -43,11 +49,23 @@ export const skillPointsOf = (items: readonly ScoredItem[]): SkillPoint[] =>
     return [{ skill, score: earned / weight, weight }];
   });
 
+export const decay = (at: Date, now: Date): number =>
+  0.5 **
+  (Math.max(0, now.getTime() - at.getTime()) / DAY_MS / SKILL_HALF_LIFE_DAYS);
+
 export const summarise = (
-  rows: ReadonlyArray<Pick<SkillScoreEntity, "skill" | "score" | "weight">>,
+  rows: ReadonlyArray<
+    Pick<SkillScoreEntity, "skill" | "score" | "weight" | "createdAt">
+  >,
+  now: Date,
 ): SkillSummary[] =>
   INTERVIEW_DIMENSIONS.map((skill) => {
-    const own = rows.filter((row) => row.skill === skill);
+    const own = rows
+      .filter((row) => row.skill === skill)
+      .map((row) => ({
+        ...row,
+        weight: row.weight * decay(row.createdAt, now),
+      }));
     const weight = own.reduce((sum, row) => sum + row.weight, 0);
 
     return {
@@ -64,6 +82,13 @@ export const summarise = (
       samples: own.length,
     };
   });
+
+export const targetDifficulty = (
+  score: number | null,
+): keyof typeof DIFFICULTY_ORDER =>
+  score === null
+    ? "easy"
+    : TARGET_DIFFICULTY.find((step) => score < step.below)!.difficulty;
 
 export interface Candidate {
   problemId: string;
@@ -93,13 +118,16 @@ export const nextProblem = (
     skills
       .filter((summary) => summary.score !== null)
       .sort((a, b) => a.score! - b.score!)[0] ?? null;
+  const target = DIFFICULTY_ORDER[targetDifficulty(weakest?.score ?? null)];
+  const leaning = (content: ProblemContent) =>
+    weakest ? Math.round(emphasis(content, weakest.skill) * 20) : 0;
+  const distance = (content: ProblemContent) =>
+    Math.abs(DIFFICULTY_ORDER[content.difficulty] - target);
   const ranked = [...interviewable].sort(
     (a, b) =>
       (practised.get(a.problemId) ?? 0) - (practised.get(b.problemId) ?? 0) ||
-      (weakest
-        ? emphasis(b.content, weakest.skill) -
-          emphasis(a.content, weakest.skill)
-        : 0) ||
+      leaning(b.content) - leaning(a.content) ||
+      distance(a.content) - distance(b.content) ||
       DIFFICULTY_ORDER[a.content.difficulty] -
         DIFFICULTY_ORDER[b.content.difficulty] ||
       a.content.title.localeCompare(b.content.title),
@@ -114,7 +142,9 @@ export const nextProblem = (
     difficulty: pick.content.difficulty,
     skill: weakest?.skill ?? null,
     reason: weakest
-      ? `${weakest.label} is your weakest skill so far, and this interview leans on it.`
+      ? emphasis(pick.content, weakest.skill) > 0
+        ? `${weakest.label} is your weakest skill so far, at ${weakest.score}, and this ${pick.content.difficulty} interview leans on it.`
+        : `${weakest.label} is your weakest skill so far, at ${weakest.score}, but this is the interview you have practised least.`
       : tried
         ? "Try it again: a second interview shows what has improved."
         : "Start here: an interview you have not tried yet.",

@@ -37,5 +37,6 @@ export type SkillHistoryPointModel = typeof SkillHistoryPointModel.static;
 
 export const SkillHistoryModel = t.Object({
   points: t.Array(SkillHistoryPointModel),
+  halfLifeDays: t.Integer(),
 });
 export type SkillHistoryModel = typeof SkillHistoryModel.static;
