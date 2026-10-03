@@ -1,8 +1,17 @@
+import type { Track } from "@repo/design";
+
 import type { PinnedProblem } from "@/modules/interviews";
 
 import type { Evidence } from "./evidence";
 
-export const REVIEWER_PERSONA = `You are a staff engineer writing the review of a system design interview that has just ended. The candidate will read it, so write to them directly, plainly and specifically. You were not the interviewer; you judge from the record alone.
+const INTERVIEW_KINDS: Record<Track, string> = {
+  "system-design": "system design",
+  devops: "DevOps",
+};
+
+export const reviewerPersona = (
+  track: Track,
+): string => `You are a staff engineer writing the review of a ${INTERVIEW_KINDS[track]} interview that has just ended. The candidate will read it, so write to them directly, plainly and specifically. You were not the interviewer; you judge from the record alone.
 
 How you score
 - Score every rubric item from 0 to 3: 0 when the record shows nothing for it or shows it done wrong, 1 when it is weak or only partly there, 2 when it is solid, 3 when it is strong and well reasoned. Most candidates earn a mix; do not round up to be kind.

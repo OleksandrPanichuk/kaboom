@@ -8,7 +8,7 @@ import type {
 } from "../interview.entity";
 import type { PinnedProblem } from "../interviews.service";
 import { describeDesign } from "./describe-design";
-import { INTERVIEWER_PERSONA } from "./persona";
+import { interviewerPersona } from "./persona";
 import type { Trigger } from "./triggers";
 
 const minutesBetween = (from: Date, to: Date) =>
@@ -70,7 +70,7 @@ export const systemBlocks = (
   pinned: PinnedProblem,
   state: string,
 ): SystemBlock[] => [
-  { text: INTERVIEWER_PERSONA, cache: true },
+  { text: interviewerPersona(pinned.content.track), cache: true },
   { text: problemBlock(pinned), cache: true },
   { text: state },
 ];

@@ -11,7 +11,7 @@ import {
   SUBMISSION_SKILL_WEIGHT,
 } from "./skills.constants";
 import {
-  nextProblem,
+  nextProblems,
   type ScoredItem,
   skillPointsOf,
   summarise,
@@ -102,6 +102,6 @@ export class SkillsService extends Service {
       }),
     );
 
-    return { skills, next: nextProblem(skills, candidates, practised) };
+    return { skills, next: nextProblems(skills, candidates, practised) };
   }
 }

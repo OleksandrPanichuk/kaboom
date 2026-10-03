@@ -1,7 +1,12 @@
 import { OFFICIAL_PROBLEMS } from "@repo/design/library";
 import { describe, expect, test } from "bun:test";
 
-import { nextProblem, skillPointsOf, summarise } from "./skills.helpers";
+import {
+  nextProblem,
+  nextProblems,
+  skillPointsOf,
+  summarise,
+} from "./skills.helpers";
 
 const problem = (slug: string) =>
   OFFICIAL_PROBLEMS.find((content) => content.slug === slug)!;
@@ -70,5 +75,44 @@ describe("nextProblem", () => {
 
   test("answers null when nothing can be interviewed", () => {
     expect(nextProblem(summarise([]), [plain], new Map())).toBeNull();
+  });
+});
+
+describe("nextProblems", () => {
+  const shortener = { problemId: "p1", content: problem("url-shortener") };
+  const rollout = {
+    problemId: "p2",
+    content: problem("zero-downtime-rollout"),
+  };
+
+  test("suggests one interview per track", () => {
+    const next = nextProblems(summarise([]), [rollout, shortener], new Map());
+
+    expect(next.map((item) => [item.track, item.slug])).toEqual([
+      ["system-design", "url-shortener"],
+      ["devops", "zero-downtime-rollout"],
+    ]);
+  });
+
+  test("weighs each track only by the skills its interviews score", () => {
+    const next = nextProblems(
+      summarise([
+        { skill: "delivery", score: 0.1, weight: 20 },
+        { skill: "scaling", score: 0.5, weight: 20 },
+        { skill: "design", score: 0.9, weight: 20 },
+      ]),
+      [rollout, shortener],
+      new Map(),
+    );
+
+    expect(next.map((item) => item.skill)).toEqual(["scaling", "delivery"]);
+  });
+
+  test("leaves out a track with nothing to interview", () => {
+    expect(
+      nextProblems(summarise([]), [shortener], new Map()).map(
+        (item) => item.track,
+      ),
+    ).toEqual(["system-design"]);
   });
 });

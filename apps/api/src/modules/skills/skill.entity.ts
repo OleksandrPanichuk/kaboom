@@ -1,4 +1,4 @@
-import type { InterviewDimension } from "@repo/design";
+import type { InterviewDimension, Track } from "@repo/design";
 
 export interface SkillScoreEntity {
   id: string;
@@ -22,6 +22,7 @@ export interface SkillSummary {
 }
 
 export interface NextProblem {
+  track: Track;
   slug: string;
   title: string;
   difficulty: string;
@@ -31,5 +32,5 @@ export interface NextProblem {
 
 export interface SkillsView {
   skills: SkillSummary[];
-  next: NextProblem | null;
+  next: NextProblem[];
 }
