@@ -27,6 +27,7 @@ export type EdgeKind = z.infer<typeof EdgeKindSchema>;
 const share = z.number().min(0).max(1);
 const fanOut = z.number().positive().max(1_000);
 const timeoutMs = z.number().positive().max(600_000);
+const retries = z.number().int().min(0).max(5);
 
 export const EdgePropsSchema = z.strictObject({
   share: prop(share.default(1), {
@@ -46,6 +47,12 @@ export const EdgePropsSchema = z.strictObject({
     description: "How long the source waits before it gives up on a call",
     unit: "ms",
   }),
+  retries: prop(retries.default(0), {
+    title: "Retries",
+    description:
+      "Times the source repeats a call that failed, before it gives up",
+    unit: "count",
+  }),
 });
 
 export type EdgeProps = z.output<typeof EdgePropsSchema>;
@@ -54,6 +61,7 @@ export const EdgePropsPatchSchema = z.strictObject({
   share: share.optional(),
   fanOut: fanOut.optional(),
   timeoutMs: timeoutMs.optional(),
+  retries: retries.optional(),
 });
 
 export const CONTROL_EDGE_KINDS = [

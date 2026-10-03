@@ -15,7 +15,7 @@ import {
   MAX_STEPS,
 } from "../scenario";
 import { evaluateAlerts } from "./alerts";
-import { type FaultState, faultStateAt } from "./conditions";
+import { active, type FaultState, faultStateAt } from "./conditions";
 import { FindingLog, percent, perSecond, round } from "./findings";
 import {
   baseLatencyOf,
@@ -142,6 +142,7 @@ interface Memory {
   aboveStreak: Map<string, number>;
   backlog: Map<string, number>;
   growth: Map<string, number>;
+  lastError: Map<string, number>;
   readShare: Map<string, number>;
   downSince: Map<string, number>;
   rollouts: Map<string, Rollout>;
@@ -149,6 +150,35 @@ interface Memory {
 }
 
 const VOLUME_SYNC_SECONDS = 60;
+
+const RETRY_STORM_FACTOR = 1.5;
+
+const RETRY_P99_SHARE = 0.01;
+
+const RETRY_P50_SHARE = 0.5;
+
+const partitionsAt = (
+  topo: Topology,
+  scenario: LoadScenario,
+  t: number,
+): Map<string, number> => {
+  const cut = new Map<string, number>();
+
+  for (const fault of scenario.faults) {
+    if (fault.kind !== "partition" || !active(fault, t)) continue;
+
+    const inside = (id: string) =>
+      (topo.groupsOf.get(id) ?? []).includes(fault.groupId);
+
+    for (const edge of topo.edges) {
+      if (inside(edge.from) !== inside(edge.to)) {
+        cut.set(edge.id, Math.min(cut.get(edge.id) ?? fault.at, fault.at));
+      }
+    }
+  }
+
+  return cut;
+};
 
 const rotationOf = (
   topo: Topology,
@@ -199,6 +229,7 @@ export const evaluateLoad = (
     growth: new Map(),
     readShare: new Map(),
     downSince: new Map(),
+    lastError: new Map(),
     rollouts: new Map(),
     triggersStarted: new Map(),
   };
@@ -248,6 +279,23 @@ const runStep = (
   }
 
   const isUp = (id: string) => !(state.get(id)?.down ?? false);
+  const cutSince = partitionsAt(topo, scenario, t);
+  const isCut = (edge: DesignEdge) => cutSince.has(edge.id);
+  const attempts = new Map<string, number>();
+  const attemptsOf = (edge: DesignEdge): number => {
+    const retries = SYNCHRONOUS.has(edge.kind) ? edge.props.retries : 0;
+
+    if (retries === 0) return 1;
+
+    const failing = isCut(edge) ? 1 : (memory.lastError.get(edge.to) ?? 0);
+    let sum = 0;
+
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      sum += failing ** attempt;
+    }
+
+    return sum;
+  };
 
   for (const node of topo.order) {
     if (isUp(node.id)) memory.downSince.delete(node.id);
@@ -451,6 +499,7 @@ const runStep = (
           admittedFraction *
             servedFraction *
             (1 - intrinsicErrorRateOf(node)) *
+            (1 - (state.get(node.id)?.errorRate ?? 0)) *
             (1 - (rollout?.failingShare ?? 0)) *
             (1 - (staleShares.get(node.id) ?? 0));
 
@@ -506,7 +555,7 @@ const runStep = (
       const limitOf = (edge: DesignEdge) => {
         const target = topo.byId.get(edge.to)!;
 
-        return isUp(target.id)
+        return isUp(target.id) && !isCut(edge)
           ? consumerLimit(capacityOf(target, conditionsOf(target)))
           : 0;
       };
@@ -585,9 +634,12 @@ const runStep = (
       const routed =
         node.kind === "dns"
           ? route(outgoing, node.props.policy, (edge) => {
-              const since = memory.downSince.get(edge.to);
+              const since = Math.min(
+                memory.downSince.get(edge.to) ?? Number.POSITIVE_INFINITY,
+                cutSince.get(edge.id) ?? Number.POSITIVE_INFINITY,
+              );
 
-              return since === undefined || t - since < node.props.ttlSeconds;
+              return t - since < node.props.ttlSeconds;
             })
           : null;
 
@@ -598,7 +650,7 @@ const runStep = (
             (!feedsOnlyChanges(node) || edge.kind === "change-feed"),
         );
         const targets = healthChecked
-          ? carrying.filter((edge) => isUp(edge.to))
+          ? carrying.filter((edge) => isUp(edge.to) && !isCut(edge))
           : carrying;
 
         for (const edge of carrying) {
@@ -611,7 +663,11 @@ const runStep = (
               : distribution === "broadcast"
                 ? 1
                 : edge.props.share;
-          const amount = forwarded[channel] * portion * edge.props.fanOut;
+          const tries = attemptsOf(edge);
+          const amount =
+            forwarded[channel] * portion * edge.props.fanOut * tries;
+
+          attempts.set(edge.id, tries);
           const previous = edges[edge.id] ?? { reads: 0, writes: 0 };
 
           edges[edge.id] = { ...previous, [channel]: amount };
@@ -619,6 +675,8 @@ const runStep = (
       }
 
       for (const edge of outgoing) {
+        if (isCut(edge)) continue;
+
         const flow = edges[edge.id] ?? { reads: 0, writes: 0 };
 
         received.set(edge.to, add(received.get(edge.to) ?? zero(), flow));
@@ -647,13 +705,18 @@ const runStep = (
     const step = nodes[node.id]!;
     const served = (step.reads + step.writes) * (1 - step.ownErrorRate);
     const calls = (topo.outbound.get(node.id) ?? [])
-      .filter((edge) => SYNCHRONOUS.has(edge.kind))
+      .filter((edge) => SYNCHRONOUS.has(edge.kind) || isCut(edge))
       .map((edge) => {
         const flow = edges[edge.id];
+        const failing = isCut(edge) ? 1 : (nodes[edge.to]?.errorRate ?? 0);
+        const retries = SYNCHRONOUS.has(edge.kind) ? edge.props.retries : 0;
 
         return {
-          weight: flow && served > 0 ? total(flow) / served : 0,
-          errorRate: nodes[edge.to]?.errorRate ?? 0,
+          weight:
+            flow && served > 0
+              ? total(flow) / (attempts.get(edge.id) ?? 1) / served
+              : 0,
+          errorRate: failing ** (retries + 1),
         };
       })
       .filter((call) => call.weight > 0);
@@ -685,7 +748,15 @@ const runStep = (
 
       if (!SYNCHRONOUS.has(edge.kind) || !flow || total(flow) === 0) continue;
 
-      const below = pathLatency.get(edge.to);
+      const reached = isCut(edge)
+        ? { p50: edge.props.timeoutMs, p99: edge.props.timeoutMs }
+        : pathLatency.get(edge.to);
+      const failing = isCut(edge) ? 1 : (nodes[edge.to]?.errorRate ?? 0);
+      const retried = edge.props.retries > 0;
+      const below = reached && {
+        p50: reached.p50 * (retried && failing > RETRY_P50_SHARE ? 2 : 1),
+        p99: reached.p99 * (retried && failing > RETRY_P99_SHARE ? 2 : 1),
+      };
       const hop = crossesRegions(topo, edge) ? CROSS_REGION_MS : 0;
 
       if (below && below.p99 + hop > slowest.p99) {
@@ -891,6 +962,27 @@ const runStep = (
       } else {
         memory.aboveStreak.set(node.id, streak);
       }
+    }
+  }
+
+  for (const [id, step] of Object.entries(nodes)) {
+    memory.lastError.set(id, step.errorRate);
+  }
+
+  for (const edge of topo.edges) {
+    const tries = attempts.get(edge.id) ?? 1;
+
+    if (tries >= RETRY_STORM_FACTOR) {
+      const from = topo.byId.get(edge.from)?.label ?? "";
+      const to = topo.byId.get(edge.to)?.label ?? "";
+
+      log.note(index, {
+        target: { type: "edge", id: edge.id },
+        kind: "retry-storm",
+        message: `${from === "" ? edge.from : from} retries its failing calls to ${to === "" ? edge.to : to}, so it sends ${round(tries, 1)}× the load it would otherwise.`,
+        data: { factor: round(tries, 2), retries: edge.props.retries },
+        worst: tries,
+      });
     }
   }
 

@@ -4,7 +4,7 @@ import type { Fault } from "../scenario";
 const FAILOVER_SECONDS = { automatic: 30, manual: 300 } as const;
 const FLUSH_RECOVERY_SECONDS = 60;
 
-const active = (fault: Fault, t: number): boolean =>
+export const active = (fault: Fault, t: number): boolean =>
   fault.at <= t &&
   (!("until" in fault) || fault.until === undefined || t < fault.until);
 
@@ -13,6 +13,7 @@ export interface FaultState {
   promoted: boolean;
   capacityFactor: number;
   addLatencyMs: number;
+  errorRate: number;
   hitRatio: number | null;
 }
 
@@ -28,7 +29,7 @@ const regionDownAt = (
 ) =>
   faults.find(
     (fault) =>
-      fault.kind === "region-down" &&
+      (fault.kind === "region-down" || fault.kind === "group-down") &&
       groups.includes(fault.groupId) &&
       active(fault, t),
   );
@@ -83,6 +84,16 @@ export const faultStateAt = (
       0,
     );
 
+  const errorRate =
+    1 -
+    mine
+      .filter((fault) => fault.kind === "error-rate" && active(fault, t))
+      .reduce(
+        (survive, fault) =>
+          survive * (1 - (fault.kind === "error-rate" ? fault.rate : 0)),
+        1,
+      );
+
   let hitRatio: number | null = null;
 
   if (node.kind === "cache" || node.kind === "cdn") {
@@ -103,6 +114,7 @@ export const faultStateAt = (
     promoted: promoted && !down,
     capacityFactor,
     addLatencyMs,
+    errorRate,
     hitRatio,
   };
 };

@@ -56,6 +56,24 @@ const resolveFault = (graph: DesignGraph, fault: DrillFault): Fault[] => {
     ];
   }
 
+  if (fault.kind === "group-down" || fault.kind === "partition") {
+    const { select: _select, kind, ...timing } = fault;
+    const groups = new Set(selected.flatMap((node) => node.groupId ?? []));
+    const loose =
+      kind === "group-down"
+        ? selected.filter((node) => node.groupId === null)
+        : [];
+
+    return [
+      ...[...groups].map((groupId): Fault => ({ kind, groupId, ...timing })),
+      ...loose.map((node): Fault => ({
+        kind: "node-down",
+        nodeId: node.id,
+        ...timing,
+      })),
+    ];
+  }
+
   return selected.map((node): Fault => {
     const { select: _select, ...rest } = fault;
 

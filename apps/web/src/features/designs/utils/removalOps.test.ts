@@ -9,7 +9,7 @@ const edge = (id: string, from: string, to: string): DesignEdge => ({
   to,
   kind: "sync-call",
   label: "",
-  props: { share: 1, fanOut: 1, timeoutMs: 1_000 },
+  props: { share: 1, fanOut: 1, timeoutMs: 1_000, retries: 0 },
 });
 
 const graph = {

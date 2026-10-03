@@ -48,6 +48,22 @@ export const FaultSchema = z.discriminatedUnion("kind", [
     at: Seconds,
   }),
   z.strictObject({
+    kind: z.literal("error-rate"),
+    nodeId: IdSchema,
+    ...window,
+    rate: z.number().min(0).max(1),
+  }),
+  z.strictObject({
+    kind: z.literal("group-down"),
+    groupId: IdSchema,
+    ...window,
+  }),
+  z.strictObject({
+    kind: z.literal("partition"),
+    groupId: IdSchema,
+    ...window,
+  }),
+  z.strictObject({
     kind: z.literal("rollout"),
     nodeId: IdSchema,
     at: Seconds,

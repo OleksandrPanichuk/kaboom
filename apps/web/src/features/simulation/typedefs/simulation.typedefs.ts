@@ -10,6 +10,7 @@ export interface FaultDraft {
   until: number | null;
   factor: number;
   addMs: number;
+  rate: number;
   release: Release;
   migrates: boolean;
 }

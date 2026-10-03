@@ -65,6 +65,7 @@ export const FINDING_KINDS = [
   "alert-fired",
   "stale-secret",
   "schema-break",
+  "retry-storm",
   "untested-deploy",
   "unscanned-deploy",
   "blocked-path",

@@ -17,6 +17,7 @@ const TITLES: Record<Finding["kind"], string> = {
   "alert-fired": "Paged",
   "stale-secret": "Old secret still in use",
   "schema-break": "Migration broke the old version",
+  "retry-storm": "Retries piling on",
   "untested-deploy": "Deploys untested code",
   "unscanned-deploy": "Deploys unscanned code",
   "blocked-path": "Cannot connect",

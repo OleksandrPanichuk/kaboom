@@ -37,6 +37,24 @@ export const FAULT_KINDS: ReadonlyArray<{
       "Every node in the region stops; DNS moves users once their cached answer expires.",
   },
   {
+    kind: "error-rate",
+    label: "Flaky node",
+    description:
+      "The node fails a share of the requests it serves; retries on the edges into it can hide that, or pile on.",
+  },
+  {
+    kind: "group-down",
+    label: "Group down",
+    description:
+      "Every node in the group stops: a whole VPC, subnet or region.",
+  },
+  {
+    kind: "partition",
+    label: "Partition",
+    description:
+      "The group is cut off: calls across its edge fail and queues behind it back up, while its nodes keep running.",
+  },
+  {
     kind: "cache-flush",
     label: "Cache flush",
     description: "The hit ratio falls to zero and recovers over a minute.",
@@ -64,6 +82,12 @@ export const RELEASES: ReadonlyArray<{ release: Release; label: string }> = [
 ];
 
 export const FLUSHABLE_KINDS = new Set(["cache", "cdn"]);
+
+export const GROUP_FAULT_KINDS = new Set([
+  "region-down",
+  "group-down",
+  "partition",
+]);
 
 export const ROLLABLE_KINDS = new Set(["k8s-deployment"]);
 
