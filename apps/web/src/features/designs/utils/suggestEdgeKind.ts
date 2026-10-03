@@ -13,7 +13,13 @@ const DATABASES = new Set<DesignNode["kind"]>([
 
 const MESSAGING = new Set<DesignNode["kind"]>(["queue", "stream"]);
 
+const MOUNTABLE = new Set<DesignNode["kind"]>(["config-map", "secret"]);
+
 const candidates = (from: DesignNode, to: DesignNode): EdgeKind[] => {
+  if (from.kind === "hpa") return ["scales"];
+  if (from.kind === "alert") return ["watches"];
+  if (MOUNTABLE.has(to.kind)) return ["mounts"];
+
   if (from.kind === to.kind && catalogue[from.kind].replicable) {
     return ["replication", "write", "read"];
   }

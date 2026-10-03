@@ -2,6 +2,7 @@ import type {
   ProblemProgressModel,
   ProblemSummaryModel,
 } from "@repo/api-client";
+import { TRACK_LABELS } from "@repo/design";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 
@@ -19,6 +20,9 @@ export function ProblemCard({ problem, progress }: ProblemCardProps) {
     <li className="relative flex min-w-0 flex-col gap-3 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] transition-colors hover:border-indigo-200 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50 sm:p-5">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
+          <p className="text-xs font-medium text-muted-foreground">
+            {TRACK_LABELS[problem.track]}
+          </p>
           <Link
             to="/problems/$slug"
             params={{ slug: problem.slug }}

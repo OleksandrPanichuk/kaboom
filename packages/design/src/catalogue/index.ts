@@ -11,6 +11,7 @@ export {
   type NodeKindDefinition,
   type NodeKindDocs,
   type Track,
+  TRACK_LABELS,
   TRACKS,
 } from "./define-node-kind";
 export {

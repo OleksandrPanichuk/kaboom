@@ -1,4 +1,4 @@
-import type { ProblemContent } from "@repo/design";
+import type { ProblemContent, Track } from "@repo/design";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
@@ -11,7 +11,7 @@ import type {
 } from "../problem.entity";
 
 export interface ProblemFilter {
-  track?: string;
+  track?: Track;
   difficulty?: ProblemDifficulty;
 }
 

@@ -72,6 +72,18 @@ describe("problems", () => {
     );
   });
 
+  test("filters by track, and refuses a track that does not exist", async () => {
+    const user = await createUser();
+
+    const devops = await user.get<{ items: Summary[] }>(`${PATH}?track=devops`);
+    const unknown = await user.get(`${PATH}?track=frontend`);
+
+    expect(devops.body.items.map((item) => item.slug)).toEqual([
+      "zero-downtime-rollout",
+    ]);
+    expect(unknown.status).toBe(422);
+  });
+
   test("shows a problem without what solvers must not see", async () => {
     const user = await createUser();
 

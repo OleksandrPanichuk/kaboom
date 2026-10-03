@@ -1,3 +1,4 @@
+import { TRACKS } from "@repo/design";
 import { t } from "elysia";
 
 import {
@@ -15,7 +16,7 @@ import type { ProblemsActions } from "../problems.routes";
 
 export const ListProblemsQuery = t.Object({
   ...PageQueryFields,
-  track: t.Optional(t.String({ maxLength: 40 })),
+  track: t.Optional(t.Union(TRACKS.map((track) => t.Literal(track)))),
   difficulty: t.Optional(
     t.Union(PROBLEM_DIFFICULTIES.map((difficulty) => t.Literal(difficulty))),
   ),

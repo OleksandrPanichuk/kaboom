@@ -1,34 +1,41 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { problemsQuery, progressQuery } from "@/features/problems/api";
-import type { Difficulty } from "@/features/problems/typedefs";
+import type { ProblemsFilter } from "@/features/problems/typedefs";
 import {
   DifficultyFilter,
   ProblemCard,
   ProblemsPage,
   RankCard,
+  TrackFilter,
 } from "@/features/problems/ui/components";
 
 interface ProblemsViewProps {
-  difficulty: Difficulty | null;
-  onDifficultyChange: (difficulty: Difficulty | null) => void;
+  filter: ProblemsFilter;
+  onFilterChange: (filter: ProblemsFilter) => void;
 }
 
-export function ProblemsView({
-  difficulty,
-  onDifficultyChange,
-}: ProblemsViewProps) {
-  const { data: problems } = useSuspenseQuery(problemsQuery(difficulty));
+export function ProblemsView({ filter, onFilterChange }: ProblemsViewProps) {
+  const { data: problems } = useSuspenseQuery(problemsQuery(filter));
   const { data: progress } = useSuspenseQuery(progressQuery);
   const bySlug = new Map(progress.problems.map((item) => [item.slug, item]));
 
   return (
     <ProblemsPage>
       <RankCard />
-      <DifficultyFilter value={difficulty} onChange={onDifficultyChange} />
+      <div className="flex flex-wrap gap-2">
+        <TrackFilter
+          value={filter.track}
+          onChange={(track) => onFilterChange({ ...filter, track })}
+        />
+        <DifficultyFilter
+          value={filter.difficulty}
+          onChange={(difficulty) => onFilterChange({ ...filter, difficulty })}
+        />
+      </div>
       {problems.items.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-black/10 px-4 py-10 text-center text-sm text-muted-foreground">
-          No problems at this difficulty yet.
+          No problems match these filters yet.
         </p>
       ) : (
         <ul className="grid gap-3 md:grid-cols-2">

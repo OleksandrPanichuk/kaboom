@@ -10,10 +10,13 @@ import {
 
 export const Route = createFileRoute("/_app/_shell/problems/")({
   validateSearch: validateProblemsSearch,
-  loaderDeps: ({ search }) => ({ difficulty: search.difficulty ?? null }),
+  loaderDeps: ({ search }) => ({
+    difficulty: search.difficulty ?? null,
+    track: search.track ?? null,
+  }),
   loader: ({ context, deps }) =>
     Promise.all([
-      context.queryClient.ensureQueryData(problemsQuery(deps.difficulty)),
+      context.queryClient.ensureQueryData(problemsQuery(deps)),
       context.queryClient.ensureQueryData(progressQuery),
     ]),
   pendingComponent: ProblemsPendingView,
@@ -21,15 +24,18 @@ export const Route = createFileRoute("/_app/_shell/problems/")({
 });
 
 function ProblemsRoute() {
-  const { difficulty } = Route.useSearch();
+  const { difficulty, track } = Route.useSearch();
   const navigate = Route.useNavigate();
 
   return (
     <ProblemsView
-      difficulty={difficulty ?? null}
-      onDifficultyChange={(next) =>
+      filter={{ difficulty: difficulty ?? null, track: track ?? null }}
+      onFilterChange={(next) =>
         void navigate({
-          search: next ? { difficulty: next } : {},
+          search: {
+            ...(next.difficulty ? { difficulty: next.difficulty } : {}),
+            ...(next.track ? { track: next.track } : {}),
+          },
           replace: true,
         })
       }

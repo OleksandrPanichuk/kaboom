@@ -197,4 +197,39 @@ describe("overlayAt", () => {
     expect(overlay?.nodes.api).toEqual({ tone: "busy", text: "82% · 1.2K/s" });
     expect(overlay?.edges.e1).toBe(1);
   });
+
+  test("tells how a rollout goes, marks a stuck one, and leaves out what serves no traffic", () => {
+    const g = {
+      ...emptyGraph(),
+      nodes: [
+        createNode("k8s-deployment", { id: "app" }),
+        createNode("k8s-deployment", { id: "stuck" }),
+        createNode("hpa", { id: "hpa" }),
+      ],
+    };
+    const rollout = (phase: "rolling" | "stalled") => ({
+      phase,
+      old: 3,
+      ready: 1,
+      starting: 1,
+      failing: 0,
+    });
+    const overlay = overlayAt(g, {
+      t: 0,
+      nodes: {
+        app: { ...step(0.5, true, 1_000), rollout: rollout("rolling") },
+        stuck: { ...step(0.5, true, 1_000), rollout: rollout("stalled") },
+        hpa: step(0, true, 0),
+      },
+      edges: {},
+      clients: {},
+    });
+
+    expect(overlay?.nodes.app?.text).toBe("Rolling · 1 new, 3 old");
+    expect(overlay?.nodes.stuck).toEqual({
+      tone: "busy",
+      text: "Rollout stuck · 1 new",
+    });
+    expect(overlay?.nodes.hpa).toBeUndefined();
+  });
 });

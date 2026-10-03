@@ -14,3 +14,4 @@ export * from "./SolutionPreview";
 export * from "./SolutionsPanel";
 export * from "./TaskPanel";
 export * from "./TestsPanel";
+export * from "./TrackFilter";

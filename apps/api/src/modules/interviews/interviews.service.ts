@@ -78,6 +78,7 @@ export class InterviewsService extends Service {
 
   public describe({ content, interview }: PinnedProblem): InterviewProblem {
     return {
+      track: content.track,
       slug: content.slug,
       title: content.title,
       difficulty: content.difficulty,

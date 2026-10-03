@@ -1,3 +1,4 @@
+import { TRACKS } from "@repo/design";
 import { t } from "elysia";
 
 import { INTERVIEW_MESSAGE_AUTHORS, INTERVIEW_STATUSES } from "@/db";
@@ -19,6 +20,7 @@ export const InterviewPhasePlanModel = t.Object({
 });
 
 export const InterviewProblemModel = t.Object({
+  track: t.UnionEnum(TRACKS),
   slug: t.String(),
   title: t.String(),
   difficulty: t.String(),

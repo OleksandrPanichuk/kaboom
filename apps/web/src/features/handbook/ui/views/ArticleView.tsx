@@ -8,14 +8,14 @@ import { Markdown } from "@/components/Markdown";
 import { buttonVariants } from "@/components/ui/Button";
 import { FALLBACK_NODE_ICON, NODE_KIND_ICONS } from "@/features/canvas";
 import { HandbookPage } from "@/features/handbook/ui/components";
-import { problemsQuery } from "@/features/problems";
+import { ALL_PROBLEMS, problemsQuery } from "@/features/problems";
 
 interface ArticleViewProps {
   article: HandbookArticle;
 }
 
 export function ArticleView({ article }: ArticleViewProps) {
-  const { data: problems } = useQuery(problemsQuery(null));
+  const { data: problems } = useQuery(problemsQuery(ALL_PROBLEMS));
   const titleOf = (slug: string) =>
     problems?.items.find((problem) => problem.slug === slug)?.title ?? slug;
 

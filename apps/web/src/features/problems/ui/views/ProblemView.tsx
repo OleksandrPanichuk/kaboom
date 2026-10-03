@@ -66,6 +66,7 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
       designId={attempt.designId}
       back={{ to: "/problems", label: "Problems" }}
       title={problem.title}
+      track={problem.track}
       simulation={false}
       initialTab="task"
       leadingTabs={({ revision }) => [

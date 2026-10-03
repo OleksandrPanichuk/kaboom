@@ -2,6 +2,7 @@ import {
   type ProblemContent,
   type PublicProblem,
   publicProblem,
+  type Track,
 } from "@repo/design";
 
 import type { ProblemDifficulty, ProblemSource, ProblemStatus } from "@/db";
@@ -14,7 +15,7 @@ export interface ProblemEntity {
   source: ProblemSource;
   authorId: string | null;
   status: ProblemStatus;
-  track: string;
+  track: Track;
   title: string;
   summary: string;
   difficulty: ProblemDifficulty;

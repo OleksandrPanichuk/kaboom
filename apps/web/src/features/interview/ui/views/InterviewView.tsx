@@ -69,6 +69,7 @@ export function InterviewView({ interviewId }: InterviewViewProps) {
       designId={interview.designId}
       back={{ to: "/interviews", label: "Interviews" }}
       title={interview.problem.title}
+      track={interview.problem.track}
       simulation={false}
       initialTab="interview"
       transport={transport}

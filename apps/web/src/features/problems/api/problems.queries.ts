@@ -1,15 +1,21 @@
 import { queryOptions } from "@tanstack/react-query";
 
-import type { Difficulty } from "@/features/problems/typedefs";
+import type { ProblemsFilter } from "@/features/problems/typedefs";
 import { api, ApiRequestError, unwrap } from "@/lib/api";
 
-export const problemsQuery = (difficulty: Difficulty | null) =>
+export const ALL_PROBLEMS: ProblemsFilter = { difficulty: null, track: null };
+
+export const problemsQuery = ({ difficulty, track }: ProblemsFilter) =>
   queryOptions({
-    queryKey: ["problems", "list", difficulty],
+    queryKey: ["problems", "list", difficulty, track],
     queryFn: async () =>
       unwrap(
         await api.api.problems.get({
-          query: difficulty ? { difficulty, limit: 100 } : { limit: 100 },
+          query: {
+            limit: 100,
+            ...(difficulty ? { difficulty } : {}),
+            ...(track ? { track } : {}),
+          },
         }),
       ),
   });

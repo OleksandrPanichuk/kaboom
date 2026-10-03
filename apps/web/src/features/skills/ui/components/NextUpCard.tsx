@@ -1,3 +1,4 @@
+import { TRACK_LABELS } from "@repo/design";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
@@ -7,7 +8,6 @@ import { useState } from "react";
 import { buttonVariants } from "@/components/ui/Button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { StartInterviewButton } from "@/features/interview";
-import { TRACK_LABELS } from "@/features/problems";
 import { skillsQuery } from "@/features/skills/api";
 
 interface NextUpCardProps {
