@@ -107,4 +107,22 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
     },
     animated: false,
   },
+  "pipeline-next": {
+    description:
+      "The target stage starts once the source stage has finished; it carries no request load.",
+    label: "Then",
+    style: { stroke: "var(--color-sky-600)", strokeWidth: 1.5 },
+    animated: false,
+  },
+  publishes: {
+    description:
+      "The stage pushes what it built to this registry; it carries no request load.",
+    label: "Publishes",
+    style: {
+      stroke: "var(--color-emerald-600)",
+      strokeWidth: 1.5,
+      strokeDasharray: "6 4",
+    },
+    animated: false,
+  },
 };

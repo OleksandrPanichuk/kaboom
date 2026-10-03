@@ -28,6 +28,8 @@ describe("suggestEdgeKind", () => {
     ["k8s-deployment", "config-map", "mounts"],
     ["hpa", "k8s-deployment", "scales"],
     ["alert", "k8s-deployment", "watches"],
+    ["pipeline-stage", "pipeline-stage", "pipeline-next"],
+    ["pipeline-stage", "artifact-registry", "publishes"],
   ] as const)("%s → %s is %s", (from, to, kind) => {
     expect(suggestEdgeKind(node(from), node(to))).toBe(kind);
   });

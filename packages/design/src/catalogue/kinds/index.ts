@@ -1,5 +1,6 @@
 export { ALERT_SIGNALS, alertKind } from "./alert";
 export { apiGatewayKind } from "./api-gateway";
+export { artifactRegistryKind } from "./artifact-registry";
 export { cacheKind } from "./cache";
 export { cdnKind } from "./cdn";
 export { clientKind } from "./client";
@@ -14,6 +15,7 @@ export { k8sServiceKind } from "./k8s-service";
 export { loadBalancerKind } from "./load-balancer";
 export { nosqlDatabaseKind } from "./nosql-database";
 export { objectStorageKind } from "./object-storage";
+export { pipelineStageKind } from "./pipeline-stage";
 export { queueKind } from "./queue";
 export { rateLimiterKind } from "./rate-limiter";
 export { schedulerKind } from "./scheduler";

@@ -76,7 +76,15 @@ export const DrillExpectationSchema = z.strictObject({
 });
 export type DrillExpectation = z.output<typeof DrillExpectationSchema>;
 
-export const DrillSchema = z.strictObject({
+const drillBase = {
+  id: IdSchema,
+  title: z.string().min(1).max(120),
+  description: z.string().max(2_000).default(""),
+  visibility: z.enum(["public", "hidden"]),
+};
+
+export const LoadDrillSchema = z.strictObject({
+  kind: z.literal("load").default("load"),
   id: IdSchema,
   title: z.string().min(1).max(120),
   description: z.string().max(2_000).default(""),
@@ -92,6 +100,21 @@ export const DrillSchema = z.strictObject({
   slo: SloSchema.default({ p99Ms: 300, availability: 0.999 }),
   expect: DrillExpectationSchema,
 });
+export type LoadDrill = z.output<typeof LoadDrillSchema>;
+
+export const PipelineDrillSchema = z.strictObject({
+  kind: z.literal("pipeline"),
+  ...drillBase,
+  changedShare: z.number().min(0).max(1).default(1),
+  expect: z.strictObject({
+    maxLeadTimeMinutes: z.number().positive().optional(),
+    minGreenRate: z.number().min(0).max(1).optional(),
+    forbid: z.array(z.enum(FINDING_KINDS)).default([]),
+  }),
+});
+export type PipelineDrill = z.output<typeof PipelineDrillSchema>;
+
+export const DrillSchema = z.union([PipelineDrillSchema, LoadDrillSchema]);
 export type Drill = z.output<typeof DrillSchema>;
 
 export const CheckRefSchema = z.discriminatedUnion("check", [

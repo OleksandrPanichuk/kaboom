@@ -1,14 +1,16 @@
 import { evaluateLoad } from "../evaluate/load";
-import type { EvaluationResult } from "../evaluate/result";
+import { evaluatePipeline } from "../evaluate/pipeline";
+import type { EvaluationResult, Finding } from "../evaluate/result";
 import type { DesignGraph } from "../graph";
 import { drillScenario } from "./resolve";
-import type { Drill } from "./schema";
+import type { Drill, LoadDrill, PipelineDrill } from "./schema";
 
 export interface DrillOutcome {
   drillId: string;
   passed: boolean;
   failures: string[];
-  result: EvaluationResult;
+  findings: Finding[];
+  result?: EvaluationResult;
 }
 
 const podsAtMost = (graph: DesignGraph): number =>
@@ -31,7 +33,61 @@ const podsAtMost = (graph: DesignGraph): number =>
 
 const percent = (value: number) => `${Math.floor(value * 10_000) / 100}%`;
 
-export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome => {
+export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome =>
+  drill.kind === "pipeline"
+    ? runPipelineDrill(drill, graph)
+    : runLoadDrill(drill, graph);
+
+const runPipelineDrill = (
+  drill: PipelineDrill,
+  graph: DesignGraph,
+): DrillOutcome => {
+  const result = evaluatePipeline(graph, {
+    kind: "pipeline",
+    changedShare: drill.changedShare,
+  });
+  const failures: string[] = [];
+  const { maxLeadTimeMinutes, minGreenRate } = drill.expect;
+  const deploys = graph.nodes.some(
+    (node) => node.kind === "pipeline-stage" && node.props.stage === "deploy",
+  );
+
+  if (result.stages.length === 0) {
+    failures.push("The design has no pipeline, so nothing builds or ships.");
+  } else if (!deploys) {
+    failures.push("Nothing in the pipeline deploys, so no change ships.");
+  }
+
+  if (
+    maxLeadTimeMinutes !== undefined &&
+    result.leadTimeMinutes > maxLeadTimeMinutes
+  ) {
+    failures.push(
+      `A change takes ${Math.round(result.leadTimeMinutes)} minutes from merge to production; the drill allows ${maxLeadTimeMinutes}.`,
+    );
+  }
+
+  if (minGreenRate !== undefined && result.greenRate < minGreenRate) {
+    failures.push(
+      `${percent(result.greenRate)} of runs go green; the drill needs ${percent(minGreenRate)}.`,
+    );
+  }
+
+  for (const kind of drill.expect.forbid) {
+    const found = result.findings.find((finding) => finding.kind === kind);
+
+    if (found) failures.push(found.message);
+  }
+
+  return {
+    drillId: drill.id,
+    passed: failures.length === 0,
+    failures,
+    findings: result.findings,
+  };
+};
+
+const runLoadDrill = (drill: LoadDrill, graph: DesignGraph): DrillOutcome => {
   const result = evaluateLoad(graph, drillScenario(drill, graph));
   const failures: string[] = [];
   const clients = graph.nodes.filter((node) => node.kind === "client");
@@ -107,5 +163,11 @@ export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome => {
     if (found) failures.push(found.message);
   }
 
-  return { drillId: drill.id, passed: failures.length === 0, failures, result };
+  return {
+    drillId: drill.id,
+    passed: failures.length === 0,
+    failures,
+    findings: result.findings,
+    result,
+  };
 };

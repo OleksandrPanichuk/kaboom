@@ -1,6 +1,6 @@
 import type { Fault, LoadScenarioInput } from "../evaluate/scenario";
 import type { DesignGraph, DesignNode } from "../graph";
-import type { Drill, DrillFault, NodeSelector } from "./schema";
+import type { DrillFault, LoadDrill, NodeSelector } from "./schema";
 
 const isReplica = (graph: DesignGraph, id: string): boolean =>
   graph.edges.some((edge) => edge.kind === "replication" && edge.to === id);
@@ -64,7 +64,7 @@ const resolveFault = (graph: DesignGraph, fault: DrillFault): Fault[] => {
 };
 
 export const drillScenario = (
-  drill: Drill,
+  drill: LoadDrill,
   graph: DesignGraph,
 ): LoadScenarioInput => ({
   kind: "load",

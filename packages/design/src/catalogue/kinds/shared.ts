@@ -86,3 +86,9 @@ export const pods = (fallback: number, meta: FieldMeta) =>
     unit: "count",
     ...meta,
   });
+
+export const minutes = (fallback: number, meta: FieldMeta) =>
+  prop(z.number().min(0).max(1_440).default(fallback), {
+    unit: "min",
+    ...meta,
+  });

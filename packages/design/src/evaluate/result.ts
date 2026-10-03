@@ -60,6 +60,8 @@ export const FINDING_KINDS = [
   "slo-breach",
   "rollout-stalled",
   "rolled-back",
+  "untested-deploy",
+  "unscanned-deploy",
 ] as const;
 
 export type FindingKind = (typeof FINDING_KINDS)[number];
@@ -74,5 +76,19 @@ export interface Finding {
 
 export interface EvaluationResult {
   steps: EvaluationStep[];
+  findings: Finding[];
+}
+
+export interface StageTiming {
+  id: string;
+  start: number;
+  end: number;
+  failChance: number;
+}
+
+export interface PipelineResult {
+  leadTimeMinutes: number;
+  greenRate: number;
+  stages: StageTiming[];
   findings: Finding[];
 }

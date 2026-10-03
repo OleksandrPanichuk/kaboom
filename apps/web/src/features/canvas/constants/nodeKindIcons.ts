@@ -5,12 +5,14 @@ import {
   Cable,
   CalendarClock,
   Cog,
+  Container,
   Database,
   DatabaseZap,
   DoorOpen,
   FileKey,
   FileSliders,
   Gauge,
+  GitBranch,
   Globe,
   KeyRound,
   type LucideIcon,
@@ -53,6 +55,8 @@ export const NODE_KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
   "config-map": FileSliders,
   secret: FileKey,
   alert: BellRing,
+  "pipeline-stage": GitBranch,
+  "artifact-registry": Container,
 };
 
 export const FALLBACK_NODE_ICON: LucideIcon = Server;
