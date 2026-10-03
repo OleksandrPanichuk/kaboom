@@ -572,6 +572,12 @@ least, then the one whose rubric leans hardest on the weakest of the skills
 that track's interviews score, then the easiest. `scoring_version` lets
 the formula change and be recomputed; decay comes later.
 
+`GET /skills/me/history` answers every row, oldest first, so a client can
+draw how each skill moved. `progress` is a read model that owns no table:
+`GET /progress/activity` merges the latest reviewed interviews and
+challenge submissions, newest first, with the number of reviews and their
+average score.
+
 ## DevOps track
 
 A problem belongs to one track, `system-design` or `devops` (`TRACKS` in

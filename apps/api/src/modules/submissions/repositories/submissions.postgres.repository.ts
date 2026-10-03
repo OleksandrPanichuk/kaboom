@@ -10,6 +10,7 @@ import {
   type BestScore,
   type CompleteReviewData,
   type CreateSubmissionData,
+  type RecentSubmission,
   type ReviewableSubmission,
   type SharedSolution,
   SubmissionsRepository,
@@ -93,6 +94,35 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
           eq(submissionsSchema.reviewStatus, "pending"),
         ),
       );
+  }
+
+  public async listRecentForUser(
+    userId: string,
+    limit: number,
+  ): Promise<RecentSubmission[]> {
+    const rows = await this.db
+      .select({
+        submissionId: submissionsSchema.id,
+        score: submissionsSchema.score,
+        counted: submissionsSchema.counted,
+        reviewStatus: submissionsSchema.reviewStatus,
+        slug: problemsSchema.slug,
+        title: problemsSchema.title,
+        at: submissionsSchema.createdAt,
+      })
+      .from(submissionsSchema)
+      .innerJoin(
+        problemsSchema,
+        eq(problemsSchema.id, submissionsSchema.problemId),
+      )
+      .where(eq(submissionsSchema.userId, userId))
+      .orderBy(desc(submissionsSchema.createdAt))
+      .limit(limit);
+
+    return rows.map(({ slug, title, ...row }) => ({
+      ...row,
+      problem: { slug, title },
+    }));
   }
 
   public async list(

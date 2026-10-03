@@ -41,7 +41,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Problems", icon: Puzzle, to: "/problems" },
       { label: "Handbook", icon: BookOpen, to: "/handbook" },
       { label: "Interviews", icon: MessagesSquare, to: "/interviews" },
-      { label: "Progress", icon: ChartNoAxesColumn, soon: true },
+      { label: "Progress", icon: ChartNoAxesColumn, to: "/progress" },
     ],
   },
 ];

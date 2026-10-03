@@ -53,7 +53,21 @@ export interface ReviewableSubmission {
   graph: DesignGraph | null;
 }
 
+export interface RecentSubmission {
+  submissionId: string;
+  score: number;
+  counted: boolean;
+  reviewStatus: SubmissionReviewStatus;
+  problem: { slug: string; title: string };
+  at: Date;
+}
+
 export abstract class SubmissionsRepository extends Repository {
+  public abstract listRecentForUser(
+    userId: string,
+    limit: number,
+  ): Promise<RecentSubmission[]>;
+
   public abstract insert(data: CreateSubmissionData): Promise<SubmissionEntity>;
 
   public abstract findById(id: string): Promise<ReviewableSubmission | null>;

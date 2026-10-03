@@ -231,6 +231,13 @@ while its status is `reviewing`, fetches the review once it is
 top bar links to it, and so does its card in the list. Home shows
 `features/skills`: *Next up* from `GET /skills/me`, and one bar per skill.
 
+`features/progress` renders `/progress`: the totals, a tile per practised
+skill with a sparkline of its running weighted average after each review
+(the same arithmetic as `/skills/me`, in `skillTrends`), a table view of
+the same points, recent activity and the challenge table. A sparkline's
+axis fits its points with a span of at least 20, since its value is
+printed beside it, and it answers hover and the arrow keys.
+
 `features/simulation` runs `evaluateLoad` in the browser while the Run tab
 is open, on a deferred graph so typing stays smooth, and turns a step into
 the canvas overlay (`overlayAt`); the canvas only draws it. A saved run posts

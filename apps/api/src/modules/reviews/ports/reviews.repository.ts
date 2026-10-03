@@ -23,7 +23,26 @@ export interface CreateReviewData {
   tokens: number;
 }
 
+export interface ReviewedInterview {
+  interviewId: string;
+  score: number | null;
+  problem: { slug: string; title: string };
+  at: Date;
+}
+
+export interface ReviewTotals {
+  reviewed: number;
+  averageScore: number | null;
+}
+
 export abstract class ReviewsRepository extends Repository {
+  public abstract listForUser(
+    userId: string,
+    limit: number,
+  ): Promise<ReviewedInterview[]>;
+
+  public abstract totalsFor(userId: string): Promise<ReviewTotals>;
+
   public abstract insert(data: CreateReviewData): Promise<ReviewEntity | null>;
 
   public abstract findByInterview(
