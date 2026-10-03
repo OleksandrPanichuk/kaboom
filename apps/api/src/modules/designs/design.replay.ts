@@ -19,7 +19,7 @@ export const replayRevisions = (
   let graph = first.snapshot;
 
   for (const revision of rest) {
-    const result = applyOps(graph, revision.ops);
+    const result = applyOps(graph, revision.ops, { derive: false });
 
     if (!result.ok) {
       throw new DesignReplayError(

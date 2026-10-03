@@ -2,7 +2,14 @@ import type z from "zod";
 
 import type { NodeKind, NodeProps } from "./catalogue";
 
-export const PROVIDERS = ["aws", "gcp", "azure"] as const;
+export const PROVIDERS = ["self-hosted", "aws", "gcp", "azure"] as const;
+
+export const PROVIDER_LABELS: Record<Provider, string> = {
+  "self-hosted": "Self-hosted",
+  aws: "AWS",
+  gcp: "Google Cloud",
+  azure: "Azure",
+};
 
 export type Provider = (typeof PROVIDERS)[number];
 
@@ -16,6 +23,7 @@ export interface TechnologyDefinition<
   provider: Provider;
   label: string;
   icon: string;
+  summary: string;
   props: Props;
   derive: (props: z.output<Props>) => Partial<NodeProps<Kind>>;
 }

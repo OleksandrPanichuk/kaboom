@@ -17,6 +17,7 @@ export {
 export {
   defineTechnology,
   type Provider,
+  PROVIDER_LABELS,
   PROVIDERS,
   type TechnologyDefinition,
 } from "./define-technology";
@@ -43,4 +44,9 @@ export {
   propMeta,
   type PropUnit,
 } from "./prop-meta";
-export { findTechnology, technologies } from "./technologies";
+export {
+  derivedProps,
+  findTechnology,
+  technologies,
+  technologiesFor,
+} from "./technologies";

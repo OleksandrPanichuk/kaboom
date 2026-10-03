@@ -1,4 +1,4 @@
-import { catalogue, isNodeKind } from "@repo/design";
+import { catalogue, findTechnology, isNodeKind } from "@repo/design";
 import { Handle, type NodeProps, Position, useConnection } from "@xyflow/react";
 import { cn } from "cn";
 import { Info, TriangleAlert } from "lucide-react";
@@ -61,7 +61,9 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
             {node.label || kindLabel}
           </span>
           <span className="truncate text-xs text-muted-foreground">
-            {node.technology ? node.technology.id : kindLabel}
+            {(node.technology &&
+              findTechnology(node.technology.id, node.kind)?.label) ??
+              kindLabel}
           </span>
         </div>
       </div>

@@ -1,8 +1,10 @@
 import {
   catalogue,
+  derivedProps,
   describeProps,
   type DesignGroup,
   type DesignNode,
+  findTechnology,
   type LintHit,
   type NodePatch,
 } from "@repo/design";
@@ -18,6 +20,7 @@ import type {
   RegionTarget,
 } from "@/features/properties/typedefs";
 
+import { DerivedField } from "./DerivedField";
 import { DraftInput } from "./DraftInput";
 import { InspectorSection } from "./InspectorSection";
 import { KindAbout } from "./KindAbout";
@@ -25,6 +28,7 @@ import { LintCallout } from "./LintCallout";
 import { type CommitResult, PropFieldControl } from "./PropFieldControl";
 import { RegionField } from "./RegionField";
 import { SubnetField } from "./SubnetField";
+import { TechnologySection } from "./TechnologySection";
 
 const LABEL_MAX_LENGTH = 80;
 const NOTES_MAX_LENGTH = 2_000;
@@ -60,6 +64,28 @@ export function NodeInspector({
   const basic = fields.filter((field) => !field.meta.advanced);
   const advanced = fields.filter((field) => field.meta.advanced);
   const props = node.props as Record<string, unknown>;
+  const derived = new Set(
+    Object.keys(derivedProps(node.kind, node.technology)),
+  );
+  const product = node.technology
+    ? findTechnology(node.technology.id, node.kind)
+    : undefined;
+  const control = (field: (typeof fields)[number]) =>
+    derived.has(field.key) && product ? (
+      <DerivedField
+        key={field.key}
+        field={field}
+        value={props[field.key]}
+        source={product.label}
+      />
+    ) : (
+      <PropFieldControl
+        key={field.key}
+        field={field}
+        value={props[field.key]}
+        onCommit={setProp(field.key)}
+      />
+    );
 
   if (notesSource !== node.notes) {
     setNotesSource(node.notes);
@@ -80,7 +106,9 @@ export function NodeInspector({
             {node.label || definition.label}
           </p>
           <p className="truncate text-xs text-muted-foreground">
-            {definition.label}
+            {product
+              ? `${definition.label} · ${product.label}`
+              : definition.label}
           </p>
         </div>
       </div>
@@ -159,15 +187,16 @@ export function NodeInspector({
         ) : null}
       </InspectorSection>
 
+      <TechnologySection node={node} onPatch={onPatch} />
+
       <InspectorSection title="Properties">
-        {basic.map((field) => (
-          <PropFieldControl
-            key={field.key}
-            field={field}
-            value={props[field.key]}
-            onCommit={setProp(field.key)}
-          />
-        ))}
+        {product ? (
+          <p className="-mt-1 text-xs leading-5 text-muted-foreground">
+            Values on the right are set by {product.label}; change them through
+            its settings above.
+          </p>
+        ) : null}
+        {basic.map(control)}
       </InspectorSection>
 
       {advanced.length > 0 ? (
@@ -180,14 +209,7 @@ export function NodeInspector({
             Advanced
           </summary>
           <div className="flex flex-col gap-4 px-4 pb-4">
-            {advanced.map((field) => (
-              <PropFieldControl
-                key={field.key}
-                field={field}
-                value={props[field.key]}
-                onCommit={setProp(field.key)}
-              />
-            ))}
+            {advanced.map(control)}
           </div>
         </details>
       ) : null}

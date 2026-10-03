@@ -1,6 +1,7 @@
 import {
   carriesLoad,
   catalogue,
+  derivedProps,
   EdgePropsSchema,
   findTechnology,
   isNodeKind,
@@ -18,7 +19,17 @@ import { type OpRejection, reject, RejectedOp } from "./rejection";
 import type { DesignOp, EdgePatch, GroupPatch, NodePatch } from "./schema";
 
 export type ApplyOpsResult =
-  { ok: true; graph: DesignGraph; inverse: DesignOp[] } | OpRejection;
+  | { ok: true; graph: DesignGraph; inverse: DesignOp[]; applied: DesignOp[] }
+  | OpRejection;
+
+export interface ApplyOpsOptions {
+  derive?: boolean;
+}
+
+interface Applied {
+  inverse: DesignOp[];
+  applied: DesignOp;
+}
 
 const idTaken = (graph: DesignGraph, id: string): boolean =>
   graph.nodes.some((node) => node.id === id) ||
@@ -396,7 +407,11 @@ const pick = <T extends object>(
     keys.map((key) => [key, (source as Record<string, unknown>)[key]]),
   ) as Partial<T>;
 
-const addNode = (graph: DesignGraph, node: DesignNode): DesignOp[] => {
+const addNode = (
+  graph: DesignGraph,
+  node: DesignNode,
+  derive: boolean,
+): Applied => {
   if (!isNodeKind(node.kind)) {
     reject("invalid-op", `Unknown node kind ${String(node.kind)}`);
   }
@@ -408,13 +423,23 @@ const addNode = (graph: DesignGraph, node: DesignNode): DesignOp[] => {
   assertFreeId(graph, node.id);
   assertGroup(graph, node.groupId);
 
-  graph.nodes.push({
-    ...structuredClone(node),
-    props: parseNodeProps(node, node.props),
-    technology: parseTechnology(node, node.technology),
-  } as DesignNode);
+  const technology = parseTechnology(node, node.technology);
 
-  return [{ op: "remove-node", id: node.id }];
+  const added = {
+    ...structuredClone(node),
+    props: parseNodeProps(node, {
+      ...(node.props as Record<string, unknown>),
+      ...(derive ? derivedProps(node.kind, technology) : {}),
+    }),
+    technology,
+  } as DesignNode;
+
+  graph.nodes.push(added);
+
+  return {
+    inverse: [{ op: "remove-node", id: node.id }],
+    applied: { op: "add-node", node: structuredClone(added) },
+  };
 };
 
 const removeNode = (graph: DesignGraph, id: string): DesignOp[] => {
@@ -438,7 +463,8 @@ const updateNode = (
   graph: DesignGraph,
   id: string,
   patch: NodePatch,
-): DesignOp[] => {
+  derive: boolean,
+): Applied => {
   const node = findNode(graph, id);
   const previous: NodePatch = {};
 
@@ -465,14 +491,37 @@ const updateNode = (
     node.technology = technology;
   }
 
-  if (patch.props !== undefined) {
-    const props = parseNodeProps(node, { ...node.props, ...patch.props });
+  const before = node.props as Record<string, unknown>;
+  let props = before;
 
-    previous.props = pick(node.props, Object.keys(patch.props));
-    node.props = props;
+  if (patch.props !== undefined) {
+    props = parseNodeProps(node, { ...props, ...patch.props });
   }
 
-  return [{ op: "update-node", id, patch: previous }];
+  const derived = derive ? derivedProps(node.kind, node.technology) : {};
+
+  if (Object.keys(derived).length > 0) {
+    props = parseNodeProps(node, { ...props, ...derived });
+  }
+
+  const changed = Object.keys(props).filter(
+    (key) => JSON.stringify(props[key]) !== JSON.stringify(before[key]),
+  );
+
+  const applied: NodePatch = { ...patch };
+
+  if (patch.props !== undefined || changed.length > 0) {
+    const keys = [...new Set([...Object.keys(patch.props ?? {}), ...changed])];
+
+    previous.props = pick(before, keys);
+    applied.props = pick(props, keys);
+    node.props = props as DesignNode["props"];
+  }
+
+  return {
+    inverse: [{ op: "update-node", id, patch: previous }],
+    applied: { op: "update-node", id, patch: applied },
+  };
 };
 
 const addEdge = (graph: DesignGraph, edge: DesignEdge): DesignOp[] => {
@@ -576,39 +625,53 @@ const updateGroup = (
   return [{ op: "update-group", id, patch: previous }];
 };
 
-const applyOne = (graph: DesignGraph, op: DesignOp): DesignOp[] => {
+const unchanged = (op: DesignOp, inverse: DesignOp[]): Applied => ({
+  inverse,
+  applied: op,
+});
+
+const applyOne = (
+  graph: DesignGraph,
+  op: DesignOp,
+  derive: boolean,
+): Applied => {
   switch (op.op) {
     case "add-node":
-      return addNode(graph, op.node);
+      return addNode(graph, op.node, derive);
     case "remove-node":
-      return removeNode(graph, op.id);
+      return unchanged(op, removeNode(graph, op.id));
     case "update-node":
-      return updateNode(graph, op.id, op.patch);
+      return updateNode(graph, op.id, op.patch, derive);
     case "add-edge":
-      return addEdge(graph, op.edge);
+      return unchanged(op, addEdge(graph, op.edge));
     case "remove-edge":
-      return removeEdge(graph, op.id);
+      return unchanged(op, removeEdge(graph, op.id));
     case "update-edge":
-      return updateEdge(graph, op.id, op.patch);
+      return unchanged(op, updateEdge(graph, op.id, op.patch));
     case "add-group":
-      return addGroup(graph, op.group);
+      return unchanged(op, addGroup(graph, op.group));
     case "remove-group":
-      return removeGroup(graph, op.id);
+      return unchanged(op, removeGroup(graph, op.id));
     case "update-group":
-      return updateGroup(graph, op.id, op.patch);
+      return unchanged(op, updateGroup(graph, op.id, op.patch));
   }
 };
 
 export const applyOps = (
   graph: DesignGraph,
   ops: readonly DesignOp[],
+  { derive = true }: ApplyOpsOptions = {},
 ): ApplyOpsResult => {
   const draft = structuredClone(graph);
   const inverse: DesignOp[][] = [];
+  const applied: DesignOp[] = [];
 
   for (const [index, op] of ops.entries()) {
     try {
-      inverse.push(applyOne(draft, op));
+      const result = applyOne(draft, op, derive);
+
+      inverse.push(result.inverse);
+      applied.push(result.applied);
     } catch (error) {
       if (!(error instanceof RejectedOp)) throw error;
 
@@ -620,5 +683,6 @@ export const applyOps = (
     ok: true,
     graph: draft,
     inverse: structuredClone(inverse.reverse().flat()),
+    applied: structuredClone(applied),
   };
 };

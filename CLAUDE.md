@@ -650,6 +650,27 @@ its own introduction, and a DevOps challenge is reviewed on design,
 delivery and operability. The palette shows a problem's own track, and a
 sandbox design shows both.
 
+## Technologies
+
+A node may name the product it runs on: `technology: { id, props }`, from
+the catalogue in `packages/design/src/catalogue/technologies/`. A product is
+one `defineTechnology` per export, with the kind it fills, its provider
+(`self-hosted`, `aws`, `gcp` or `azure`), its own settings as a zod object,
+and `derive`, which turns those settings into the kind's props: an RDS
+instance class becomes read and write capacity, Multi-AZ becomes automatic
+failover, a FIFO SQS queue becomes its throughput limit. `applyOps` writes
+what `derive` returns into the node's props whenever the node or its
+product changes, and records the old values so undo restores them. The
+evaluators and lints therefore read kind props only and never know a
+product exists. A derived number is clamped to the kind's bounds. A literal
+inside `derive`'s result needs `as const`, or it widens to `string` and no
+longer matches the kind's enum.
+
+`applyOps` also returns `applied`, the ops with what the products derived
+written into them, and that is what a revision stores. Replay applies them
+with `{ derive: false }`, so a product's numbers can change in a later
+release without a stored revision replaying to a different graph.
+
 ## Evals
 
 `bun run eval` in `apps/api` runs the interviewer against the real model.
