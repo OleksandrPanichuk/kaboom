@@ -631,6 +631,54 @@ describe("scoring the monorepo pipeline", () => {
   });
 });
 
+describe("scoring the three-tier VPC", () => {
+  const reference = OFFICIAL_PROBLEMS.find(
+    (item) => item.slug === "three-tier-vpc",
+  )!.reference.graph;
+  const moved = (id: string, groupId: string) => ({
+    ...reference,
+    nodes: reference.nodes.map((item) =>
+      item.id === id ? { ...item, groupId } : item,
+    ),
+  });
+
+  test("without a NAT gateway the shop cannot reach payments", () => {
+    const { passed } = passedItems("three-tier-vpc", {
+      ...reference,
+      nodes: reference.nodes.filter((item) => item.id !== "nat"),
+    });
+
+    expect(passed["everything-connects"]).toBe(false);
+    expect(passed["database-locked-down"]).toBe(true);
+  });
+
+  test("a database open to the whole VPC is not locked down", () => {
+    const { passed } = passedItems(
+      "three-tier-vpc",
+      withProps(reference, "security-group", { fromVpc: true }),
+    );
+
+    expect(passed["database-locked-down"]).toBe(false);
+  });
+
+  test("servers in the public subnet, behind a group open to the internet, are exposed", () => {
+    const opened = moved("app", "edge");
+    const { passed } = passedItems("three-tier-vpc", {
+      ...opened,
+      nodes: opened.nodes.map((item) =>
+        item.id === "sg-app"
+          ? ({
+              ...item,
+              props: { ...item.props, fromInternet: true },
+            } as typeof item)
+          : item,
+      ),
+    });
+
+    expect(passed["servers-hidden"]).toBe(false);
+  });
+});
+
 describe("hints", () => {
   test.each(OFFICIAL_PROBLEMS.map((problem) => [problem.slug, problem]))(
     "%s offers hints that cost more as they give more away",

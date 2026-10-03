@@ -6,6 +6,7 @@ import { newsFeed } from "./news-feed";
 import { notifications } from "./notifications";
 import { photoUploads } from "./photo-uploads";
 import { rateLimitedApi } from "./rate-limited-api";
+import { threeTierVpc } from "./three-tier-vpc";
 import { urlShortener } from "./url-shortener";
 import { zeroDowntimeRollout } from "./zero-downtime-rollout";
 
@@ -19,4 +20,5 @@ export const OFFICIAL_PROBLEMS: ProblemContent[] = [
   zeroDowntimeRollout,
   latencyRegression,
   monorepoPipeline,
+  threeTierVpc,
 ].map((problem) => ProblemContentSchema.parse(problem));
