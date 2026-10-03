@@ -1,5 +1,6 @@
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
+import type { InterviewStatus } from "@/db";
 
 import type {
   InterviewEntity,
@@ -36,6 +37,12 @@ export abstract class InterviewsRepository extends Repository {
   public abstract listActive(): Promise<InterviewEntity[]>;
 
   public abstract setPhase(id: string, phase: string): Promise<InterviewEntity>;
+
+  public abstract transition(
+    id: string,
+    from: InterviewStatus,
+    to: InterviewStatus,
+  ): Promise<InterviewEntity | null>;
 
   public abstract markReviewing(
     id: string,

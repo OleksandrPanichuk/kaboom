@@ -1,4 +1,3 @@
-import { NoopReviewScheduler } from "@/adapters/reviews/noop.review-scheduler";
 import { NodeEnv } from "@/configs";
 import { defineModule } from "@/core/module";
 import { bind, makeService, makeUseCase } from "@/core/registry";
@@ -12,7 +11,6 @@ import {
   InterviewEventsRepository,
   InterviewMessagesRepository,
   InterviewsRepository,
-  ReviewScheduler,
 } from "./ports";
 import {
   PostgresEvidenceNotesRepository,
@@ -53,10 +51,6 @@ export const interviewsModule = defineModule({
       () => new PostgresInterviewerTurnsRepository(),
     );
     bind(EvidenceNotesRepository, () => new PostgresEvidenceNotesRepository());
-
-    const reviews = new NoopReviewScheduler();
-
-    bind(ReviewScheduler, () => reviews);
 
     return { tickMs: env.NODE_ENV === NodeEnv.Test ? 0 : PHASE_TICK_MS };
   },

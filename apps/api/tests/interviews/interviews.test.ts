@@ -10,6 +10,7 @@ import {
   ProblemsService,
 } from "@/modules/problems";
 
+import { model, reviewAnswer } from "../reviews/helpers";
 import {
   type InterviewBody,
   openEvents,
@@ -183,6 +184,7 @@ describe("submitting", () => {
     const base = `${PATH}/${interview.id}`;
 
     await user.post(`${base}/ops`, { baseRevision: 0, ops: addGroup });
+    model().enqueue(reviewAnswer());
 
     const submitted = await user.post<{ status: string }>(`${base}/submit`, {});
     const again = await user.post<{ status: string }>(`${base}/submit`, {});
@@ -199,20 +201,21 @@ describe("submitting", () => {
     );
 
     expect(submitted.body.status).toBe("reviewing");
-    expect(again.body.status).toBe("reviewing");
-    expect(after.body).toMatchObject({ status: "reviewing", finalRevision: 1 });
+    expect(again.body.status).toBe("reviewed");
+    expect(after.body).toMatchObject({ status: "reviewed", finalRevision: 1 });
     expect(message.status).toBe(409);
     expect(message.body.code).toBe("INTERVIEW_NOT_ACTIVE");
     expect(direct.status).toBe(409);
     expect(direct.body.code).toBe("DESIGN_LOCKED");
     expect(design.body.locked).toBe(true);
-    expect(after.body.lastSeq).toBe(3);
+    expect(after.body.lastSeq).toBe(4);
   });
 
   test("lets a new interview start once the last one is submitted", async () => {
     const user = await createUser();
     const first = await startInterview(user);
 
+    model().enqueue(reviewAnswer());
     await user.post(`${PATH}/${first.id}/submit`, {});
 
     const second = await user.post(PATH, { slug: "url-shortener" });
@@ -223,7 +226,7 @@ describe("submitting", () => {
     expect(second.status).toBe(200);
     expect(list.body.items.map((item) => item.status)).toEqual([
       "active",
-      "reviewing",
+      "reviewed",
     ]);
   });
 });

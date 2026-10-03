@@ -17,6 +17,7 @@ import {
 import { ProblemsService } from "@/modules/problems";
 import { LanguageModel, UsageLedger } from "@/platform/llm";
 
+import { reviewAnswer } from "../reviews/helpers";
 import {
   type InterviewBody,
   openEvents,
@@ -351,22 +352,25 @@ describe("a whole scripted interview", () => {
     await say(user, interview.id, "I'm ready for the deep dive.");
     await scheduler().drain();
 
-    model().enqueue([
-      {
-        type: "tool-use",
-        id: "p2",
-        name: "set_phase",
-        input: { phase: "wrap-up" },
-      },
-      { type: "text-delta", text: "Thanks, that's all from me." },
-      {
-        type: "tool-use",
-        id: "e1",
-        name: "end_interview",
-        input: { reason: "wrapped up" },
-      },
-      { type: "stop", reason: "tool-use" },
-    ]);
+    model().enqueue(
+      [
+        {
+          type: "tool-use",
+          id: "p2",
+          name: "set_phase",
+          input: { phase: "wrap-up" },
+        },
+        { type: "text-delta", text: "Thanks, that's all from me." },
+        {
+          type: "tool-use",
+          id: "e1",
+          name: "end_interview",
+          input: { reason: "wrapped up" },
+        },
+        { type: "stop", reason: "tool-use" },
+      ],
+      reviewAnswer(),
+    );
     await say(
       user,
       interview.id,
@@ -407,8 +411,11 @@ describe("a whole scripted interview", () => {
       "clarifies-requirements",
     ]);
     expect(notes[0]!.revision).toBe(0);
-    expect(after.status).toBe("reviewing");
-    expect(events.at(-1)!.data.type).toBe("message");
+    expect(after.status).toBe("reviewed");
+    expect(events.slice(-2).map((event) => event.data.type)).toEqual([
+      "message",
+      "status",
+    ]);
     expect(events.some((event) => event.data.type === "status")).toBe(true);
     expect(design.body.locked).toBe(true);
     expect((await spoken(user, interview.id)).slice(1)).toEqual([

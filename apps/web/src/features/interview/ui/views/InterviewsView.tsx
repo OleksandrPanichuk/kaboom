@@ -14,7 +14,8 @@ interface InterviewsViewProps {
 const STATUS: Record<string, string> = {
   active: "In progress",
   reviewing: "Review pending",
-  done: "Reviewed",
+  reviewed: "Reviewed",
+  review_failed: "Review failed",
   expired: "Expired",
 };
 

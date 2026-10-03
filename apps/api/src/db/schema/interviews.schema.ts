@@ -14,7 +14,8 @@ import { usersSchema } from "./users.schema";
 export const INTERVIEW_STATUSES = [
   "active",
   "reviewing",
-  "done",
+  "reviewed",
+  "review_failed",
   "expired",
 ] as const;
 

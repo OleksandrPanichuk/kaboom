@@ -9,6 +9,7 @@ import {
   InterviewerTurnsRepository,
   InterviewMessagesRepository,
   InterviewsRepository,
+  ReviewScheduler,
 } from "../ports";
 import { publishLive } from "./live";
 import { InterviewerRunner } from "./runner";
@@ -236,6 +237,23 @@ export class TurnScheduler extends Service {
         type: "turn",
         turnId: row.id,
         state: "idle",
+      });
+      await this.reviewIfEnded(interviewId);
+    }
+  }
+
+  private async reviewIfEnded(interviewId: string): Promise<void> {
+    try {
+      const after =
+        await makeRepository(InterviewsRepository).findById(interviewId);
+
+      if (after?.status === "reviewing") {
+        await make(ReviewScheduler).schedule(interviewId);
+      }
+    } catch (error) {
+      captureException(error, {
+        source: "TurnScheduler",
+        tags: { interviewId },
       });
     }
   }

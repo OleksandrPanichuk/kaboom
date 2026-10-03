@@ -3,12 +3,14 @@ import { UseCase } from "@/core/use-case";
 import { DesignsService } from "@/modules/designs";
 
 import type { InterviewEntity } from "../interview.entity";
+import { TurnScheduler } from "../interviewer/scheduler";
 import { InterviewsService } from "../interviews.service";
 import { InterviewsRepository, ReviewScheduler } from "../ports";
 
 export interface SubmitInterviewUseCaseOptions {
   ownerId: string;
   id: string;
+  duringTurn?: boolean;
 }
 
 type Options = SubmitInterviewUseCaseOptions;
@@ -21,7 +23,11 @@ export class SubmitInterviewUseCase extends UseCase<Options, Result> {
 
   private readonly interviews = makeRepository(InterviewsRepository);
 
-  public async execute({ ownerId, id }: Options): Promise<Result> {
+  public async execute({
+    ownerId,
+    id,
+    duringTurn = false,
+  }: Options): Promise<Result> {
     const interview = await this.service.getOwned(id, ownerId);
 
     if (interview.status !== "active") return interview;
@@ -42,6 +48,8 @@ export class SubmitInterviewUseCase extends UseCase<Options, Result> {
     });
 
     if (!ended) return this.service.getOwned(id, ownerId);
+
+    if (duringTurn || makeService(TurnScheduler).interrupt(id)) return ended;
 
     await make(ReviewScheduler).schedule(id);
 

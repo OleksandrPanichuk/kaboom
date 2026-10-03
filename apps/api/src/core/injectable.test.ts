@@ -52,10 +52,10 @@ describe("this.captureException", () => {
     expect(reports()[0]?.report.requestId).toBeUndefined();
   });
 
-  test("gives a job's failure its name, queue and attempts", () => {
+  test("gives a job's failure its name, queue and attempts", async () => {
     const error = new Error("boom");
 
-    new ProbeJob().failed(error, {
+    await new ProbeJob().failed(error, {
       jobId: "42",
       name: "probe.job",
       queue: "probe-queue",

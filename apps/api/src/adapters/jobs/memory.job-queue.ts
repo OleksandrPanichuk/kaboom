@@ -29,7 +29,11 @@ export class MemoryJobQueue extends JobQueue {
       attempts: 1,
     };
 
-    await job.handle(data, meta);
+    try {
+      await job.handle(data, meta);
+    } catch (error) {
+      await job.failed(error, meta, data);
+    }
   }
 
   public process<T>(job: Job<T>): void {

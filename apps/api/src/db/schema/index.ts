@@ -10,6 +10,7 @@ export * from "./llm_usage.schema";
 export * from "./problem_attempts.schema";
 export * from "./problem_versions.schema";
 export * from "./problems.schema";
+export * from "./reviews.schema";
 export * from "./simulation_runs.schema";
 export * from "./solution_reveals.schema";
 export * from "./submissions.schema";
