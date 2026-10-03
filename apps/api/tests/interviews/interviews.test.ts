@@ -84,12 +84,15 @@ describe("starting an interview", () => {
       (problem) => problem.interview,
     );
 
-    expect(interviewable.map((problem) => problem.slug).sort()).toEqual([
-      "news-feed",
-      "rate-limited-api",
-      "url-shortener",
-      "zero-downtime-rollout",
-    ]);
+    expect(interviewable.map((problem) => problem.slug).sort()).toEqual(
+      [
+        "latency-regression",
+        "news-feed",
+        "rate-limited-api",
+        "url-shortener",
+        "zero-downtime-rollout",
+      ].sort(),
+    );
 
     for (const problem of interviewable) {
       const started = await startInterview(await createUser(), problem.slug);

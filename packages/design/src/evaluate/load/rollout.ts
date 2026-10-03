@@ -4,6 +4,8 @@ import type { Release } from "../scenario";
 
 type DeploymentProps = NodeProps<"k8s-deployment">;
 
+export const SLOWDOWN = 2;
+
 export interface Rollout {
   release: Release;
   startedAt: number;
@@ -120,7 +122,11 @@ export const rolloutStepAt = (
     old: rollout.old,
     ready,
     starting: rollout.created.length - ready,
-    failing: rollout.release === "healthy" ? 0 : serving,
+    failing:
+      rollout.release === "never-ready" || rollout.release === "broken"
+        ? serving
+        : 0,
+    slow: rollout.release === "slow" ? serving : 0,
   };
 };
 

@@ -78,9 +78,11 @@ describe("problems", () => {
     const devops = await user.get<{ items: Summary[] }>(`${PATH}?track=devops`);
     const unknown = await user.get(`${PATH}?track=frontend`);
 
-    expect(devops.body.items.map((item) => item.slug)).toEqual([
-      "zero-downtime-rollout",
-    ]);
+    expect(devops.body.items.map((item) => item.slug).sort()).toEqual(
+      OFFICIAL_PROBLEMS.filter((problem) => problem.track === "devops")
+        .map((problem) => problem.slug)
+        .sort(),
+    );
     expect(unknown.status).toBe(422);
   });
 

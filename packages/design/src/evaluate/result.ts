@@ -13,6 +13,7 @@ export interface RolloutStep {
   ready: number;
   starting: number;
   failing: number;
+  slow: number;
 }
 
 export interface NodeStep {

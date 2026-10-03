@@ -51,6 +51,7 @@ describe("rollouts", () => {
       ready: 0,
       starting: 1,
       failing: 0,
+      slow: 0,
     });
     expect(app[3]!.rollout).toMatchObject({ old: 2, ready: 1, starting: 1 });
     expect(app[9]!.rollout).toMatchObject({ phase: "complete", ready: 3 });
@@ -141,6 +142,44 @@ describe("rollouts", () => {
     });
     expect(phases(result)).toContain("complete");
     expect(Math.min(...availability(result))).toBe(1);
+  });
+
+  test("a slow release doubles p99 once one request in a hundred meets a new pod, and halves what those pods serve", () => {
+    const p99 = (result: ReturnType<typeof rollOut>, step: number) =>
+      result.steps[step]!.nodes.app!.p99;
+    const baseline = rollOut(
+      { maxSurge: 1, maxUnavailable: 0 },
+      "healthy",
+      900,
+    );
+    const slow = rollOut({ maxSurge: 1, maxUnavailable: 0 }, "slow", 900);
+    const last = slow.steps.length - 1;
+
+    expect(p99(slow, 0)).toBeCloseTo(p99(baseline, 0), 6);
+    expect(slow.steps[3]!.nodes.app!.rollout).toMatchObject({
+      slow: 1,
+      failing: 0,
+    });
+    expect(p99(slow, 3)).toBeGreaterThan(1.9 * p99(baseline, 3));
+    expect(slow.steps[last]!.nodes.app!.rho).toBeCloseTo(
+      2 * baseline.steps[last]!.nodes.app!.rho,
+      6,
+    );
+    expect(Math.min(...availability(slow))).toBe(1);
+  });
+
+  test("a canary that answers slowly is rolled back like a failing one", () => {
+    const result = rollOut({ strategy: "canary" }, "slow");
+    const healthy = rollOut({ strategy: "canary" });
+    const p99 = result.steps.map((step) => step.nodes.app!.p99);
+
+    expect(p99[3]).toBeGreaterThan(1.9 * healthy.steps[3]!.nodes.app!.p99);
+    expect(phases(result)[4]).toBe("rolled-back");
+    expect(p99[4]).toBeCloseTo(p99[0]!, 6);
+    expect(
+      result.findings.find((finding) => finding.kind === "rolled-back")
+        ?.message,
+    ).toContain("answered twice as slowly");
   });
 
   test("a pod autoscaler waits for the rollout to settle", () => {
