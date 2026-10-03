@@ -124,6 +124,22 @@ The canvas holds the search deployment as it was on Tuesday. Change how it runs,
       expect: { endAvailability: 0.999 },
     },
     {
+      id: "slow-without-a-deploy",
+      title: "Search slows down with no deploy",
+      visibility: "hidden",
+      durationSeconds: 600,
+      faults: [
+        {
+          kind: "latency",
+          select: { nodeKind: "k8s-deployment" },
+          at: 60,
+          addMs: 200,
+        },
+      ],
+      slo: { p99Ms: 250, availability: 0 },
+      expect: { detectWithinSeconds: 360 },
+    },
+    {
       id: "busy-hour",
       title: "The busy hour",
       visibility: "hidden",
@@ -167,12 +183,18 @@ The canvas holds the search deployment as it was on Tuesday. Change how it runs,
     {
       key: "pages-on-latency",
       title: "Pages someone when latency degrades",
-      weight: 15,
+      weight: 5,
       check: {
         check: "watches",
         nodeKind: "k8s-deployment",
         signal: "latency",
       },
+    },
+    {
+      key: "pages-within-minutes",
+      title: "Pages someone within minutes when search slows for any reason",
+      weight: 10,
+      check: { check: "drill-passes", drillId: "slow-without-a-deploy" },
     },
     {
       key: "no-single-point-of-failure",
@@ -218,7 +240,7 @@ The canvas holds the search deployment as it was on Tuesday. Change how it runs,
       {
         topic: "Monitoring",
         answer:
-          "Metrics for latency and errors exist for every pod, but the only alert is on the error rate.",
+          "A Prometheus scrapes latency and error metrics from whatever it is pointed at, every 15 seconds by default. The only alert today is on the error rate.",
       },
       {
         topic: "On call",
@@ -335,7 +357,7 @@ The canvas holds the search deployment as it was on Tuesday. Change how it runs,
   ],
   reference: {
     notes:
-      "Nine search pods carry 3,000 requests a second at two thirds of their capacity, which keeps p99 near 200 ms. A pod autoscaler between nine and fourteen pods covers the busy hour within the budget. Deploys go out as a canary behind a readiness probe, with a surge of one and none unavailable: a slow or broken canary is rolled back after one step, so a tenth of the requests are slow or fail for ten seconds. An alert on latency pages the on-call engineer when p99 stays high, which an error alert never would.",
+      "Nine search pods carry 3,000 requests a second at two thirds of their capacity, which keeps p99 near 200 ms. A pod autoscaler between nine and fourteen pods covers the busy hour within the budget. Deploys go out as a canary behind a readiness probe, with a surge of one and none unavailable: a slow or broken canary is rolled back after one step, so a tenth of the requests are slow or fail for ten seconds. Prometheus scrapes the search pods every 15 seconds, and an alert on latency pages the on-call engineer once p99 has stayed high for five minutes, whatever made it slow, which an error alert never would.",
     graph: graph(
       [
         searchers(),
@@ -355,11 +377,13 @@ The canvas holds the search deployment as it was on Tuesday. Change how it runs,
           signal: "latency",
           forSeconds: 300,
         }),
+        node("metrics", "monitoring", "Prometheus"),
       ],
       [
         ...wiring(),
         edge("autoscaler", "search", "scales"),
         edge("slow", "search", "watches"),
+        edge("metrics", "search", "scrapes"),
       ],
     ),
   },

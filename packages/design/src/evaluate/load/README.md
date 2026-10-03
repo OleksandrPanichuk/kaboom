@@ -238,6 +238,28 @@ neither rolls back nor goes on. Each step reports the deployment's `rollout`:
 its phase, its old, ready, starting, failing and slow pods, and how often
 its new pods have been restarted.
 
+## Alerts
+
+Alerts are evaluated once the steps have run. An alert watches nodes through
+`watches` edges, and it sees a node only if a `monitoring` node `scrapes`
+it; a node nothing scrapes is invisible to it, which the `unscraped-alert`
+lint reports. Per watched node, the alert's signal is breached on a step
+when:
+
+| Signal             | Breached when                                    |
+| ------------------ | ------------------------------------------------ |
+| `error-rate`       | the node's error rate is above 1 %               |
+| `latency`          | its p99 is above the scenario's SLO              |
+| `saturation`       | its utilisation is at least 90 %                 |
+| `rollout-progress` | its rollout is stalled                           |
+
+An alert fires once a breach has lasted `forSeconds` without a break, plus
+the scrape interval of the fastest monitoring node that scrapes the node.
+A breach that clears earlier starts the count again. The result lists every
+alert with the second it fired, or `null`, and an `alert-fired` finding for
+each page. A drill's `detectWithinSeconds` asks for a page within that many
+seconds of its first fault or traffic change.
+
 ## Findings
 
 Each finding names its target, the step it first held at, a message that
@@ -254,3 +276,4 @@ target: the first step it held, with the worst value seen.
 | `rollout-stalled` | a deployment's rollout is stalled                                    |
 | `rolled-back`     | a deployment's canary is rolled back                                 |
 | `crash-looping`   | a deployment's new pods have been restarted 3 times or more          |
+| `alert-fired`     | an alert paged; see _Alerts_                                         |

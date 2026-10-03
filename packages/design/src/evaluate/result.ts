@@ -62,6 +62,7 @@ export const FINDING_KINDS = [
   "rollout-stalled",
   "rolled-back",
   "crash-looping",
+  "alert-fired",
   "untested-deploy",
   "unscanned-deploy",
   "blocked-path",
@@ -80,9 +81,16 @@ export interface Finding {
   data: Record<string, number>;
 }
 
+export interface AlertOutcome {
+  alertId: string;
+  firedAt: number | null;
+  scraped: boolean;
+}
+
 export interface EvaluationResult {
   steps: EvaluationStep[];
   findings: Finding[];
+  alerts: AlertOutcome[];
 }
 
 export interface StageTiming {

@@ -14,6 +14,7 @@ import {
   LoadScenarioSchema,
   MAX_STEPS,
 } from "../scenario";
+import { evaluateAlerts } from "./alerts";
 import { type FaultState, faultStateAt } from "./conditions";
 import { FindingLog, percent, perSecond, round } from "./findings";
 import {
@@ -173,7 +174,15 @@ export const evaluateLoad = (
     steps.push(runStep(topo, scenario, memory, log, index));
   }
 
-  return { steps, findings: log.list() };
+  const paged = evaluateAlerts(graph, scenario, steps);
+
+  return {
+    steps,
+    findings: [...log.list(), ...paged.findings].sort(
+      (a, b) => a.atStep - b.atStep,
+    ),
+    alerts: paged.alerts,
+  };
 };
 
 const runStep = (

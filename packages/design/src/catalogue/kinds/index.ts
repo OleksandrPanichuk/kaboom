@@ -13,6 +13,7 @@ export { ingressKind } from "./ingress";
 export { k8sDeploymentKind } from "./k8s-deployment";
 export { k8sServiceKind } from "./k8s-service";
 export { loadBalancerKind } from "./load-balancer";
+export { monitoringKind } from "./monitoring";
 export { natGatewayKind } from "./nat-gateway";
 export { nosqlDatabaseKind } from "./nosql-database";
 export { objectStorageKind } from "./object-storage";

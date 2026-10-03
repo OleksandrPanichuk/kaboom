@@ -1,4 +1,5 @@
 import {
+  Activity,
   Archive,
   BellRing,
   Boxes,
@@ -57,6 +58,7 @@ export const NODE_KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
   "config-map": FileSliders,
   secret: FileKey,
   alert: BellRing,
+  monitoring: Activity,
   "pipeline-stage": GitBranch,
   "artifact-registry": Container,
   "security-group": Shield,

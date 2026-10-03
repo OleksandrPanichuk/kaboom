@@ -575,6 +575,13 @@ instead: a deployment `mounts` a config map or a secret, a pod autoscaler
 `applyOps` refuses a control edge between the wrong kinds, and any load
 edge into or out of a kind without traffic.
 
+Alerts fire in the load simulation. A `monitoring` node `scrapes` what
+it watches, an alert `watches` a node and pages once its signal has held
+for `forSeconds` plus the scrape interval, and an alert on a node nothing
+scrapes never fires. A drill's `detectWithinSeconds` asks for a page in
+time, and the `watches` rubric check passes only when the watched node is
+scraped.
+
 A rollout is a fault in the load simulation, not a separate evaluator,
 because whether it hurts users depends on the traffic it runs under. It
 replaces a deployment's pods by its strategy, and the step reports the

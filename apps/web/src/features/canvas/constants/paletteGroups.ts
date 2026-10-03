@@ -55,5 +55,9 @@ export const PALETTE_GROUPS: PaletteGroup[] = [
     label: "Network",
     kinds: ["security-group", "nat-gateway"],
   },
-  { track: "devops", label: "Operations", kinds: ["alert"] },
+  {
+    track: "devops",
+    label: "Operations",
+    kinds: ["monitoring", "alert"],
+  },
 ];

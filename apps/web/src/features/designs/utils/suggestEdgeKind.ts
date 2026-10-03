@@ -24,6 +24,7 @@ const candidates = (from: DesignNode, to: DesignNode): EdgeKind[] => {
   }
   if (from.kind === "hpa") return ["scales"];
   if (from.kind === "alert") return ["watches"];
+  if (from.kind === "monitoring") return ["scrapes"];
   if (MOUNTABLE.has(to.kind)) return ["mounts"];
 
   if (from.kind === to.kind && catalogue[from.kind].replicable) {

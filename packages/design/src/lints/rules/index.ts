@@ -7,3 +7,4 @@ export { statefulBehindRoundRobin } from "./stateful-behind-round-robin";
 export { syncFanOut } from "./sync-fan-out";
 export { syncThirdParty } from "./sync-third-party";
 export { unreachableNode } from "./unreachable-node";
+export { unscrapedAlert } from "./unscraped-alert";

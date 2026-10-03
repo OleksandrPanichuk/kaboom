@@ -308,6 +308,14 @@ const assertControlEdge = (
         );
       }
       return;
+    case "scrapes":
+      if (from.kind !== "monitoring" || !catalogue[to.kind].carriesTraffic) {
+        reject(
+          "invalid-edge",
+          `Edge ${edge.id} scrapes ${to.id}, a ${to.kind}, from ${from.id}, a ${from.kind}; monitoring scrapes a node that serves traffic`,
+        );
+      }
+      return;
     case "pipeline-next":
       if (from.kind !== "pipeline-stage" || to.kind !== "pipeline-stage") {
         reject(

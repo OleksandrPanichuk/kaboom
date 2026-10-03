@@ -10,6 +10,7 @@ import {
   syncFanOut,
   syncThirdParty,
   unreachableNode,
+  unscrapedAlert,
 } from "./rules";
 
 export const lints = {
@@ -20,6 +21,7 @@ export const lints = {
   [unreachableNode.id]: unreachableNode,
   [deadEndNode.id]: deadEndNode,
   [duplicateSchedule.id]: duplicateSchedule,
+  [unscrapedAlert.id]: unscrapedAlert,
   [dualWrite.id]: dualWrite,
   [failoverNowhere.id]: failoverNowhere,
 } as const;
