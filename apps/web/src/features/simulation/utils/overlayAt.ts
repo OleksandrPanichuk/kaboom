@@ -21,7 +21,11 @@ const rolloutText = (rollout: RolloutStep): string => {
     case "stalled":
       return `Rollout stuck · ${rollout.ready} new`;
     case "complete":
-      return "Rolled out";
+      return rollout.failing > 0
+        ? `Rolled out · ${rollout.failing} hung`
+        : rollout.restarts > 0
+          ? `Rolled out · ${rollout.restarts} restarts`
+          : "Rolled out";
     case "rolled-back":
       return "Rolled back";
   }

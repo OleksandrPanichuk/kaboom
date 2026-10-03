@@ -54,6 +54,7 @@ export const RELEASES: ReadonlyArray<{ release: Release; label: string }> = [
   { release: "never-ready", label: "A version that never gets ready" },
   { release: "broken", label: "A version that fails every request" },
   { release: "slow", label: "A version twice as slow" },
+  { release: "deadlocks", label: "A version that hangs after five minutes" },
 ];
 
 export const FLUSHABLE_KINDS = new Set(["cache", "cdn"]);

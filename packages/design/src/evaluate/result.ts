@@ -14,6 +14,7 @@ export interface RolloutStep {
   starting: number;
   failing: number;
   slow: number;
+  restarts: number;
 }
 
 export interface NodeStep {
@@ -60,6 +61,7 @@ export const FINDING_KINDS = [
   "slo-breach",
   "rollout-stalled",
   "rolled-back",
+  "crash-looping",
   "untested-deploy",
   "unscanned-deploy",
   "blocked-path",
