@@ -37,5 +37,6 @@ describe("field values", () => {
     expect(optionLabel("l7")).toBe("L7");
     expect(optionLabel("least-connections")).toBe("Least connections");
     expect(optionLabel("automatic")).toBe("Automatic");
+    expect(optionLabel("db.r6g.large")).toBe("db.r6g.large");
   });
 });

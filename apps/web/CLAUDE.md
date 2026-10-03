@@ -175,6 +175,10 @@ track's groups; a sandbox design shows every track under its name.
 `.meta()` and it appears in the form; never write a form for one kind. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
 drawn the same way.
+The *Technology* section picks a node's product from `technologiesFor(kind)`
+and draws the product's own settings the same way. Props the product
+derives (`derivedProps`) are shown read-only, with the product named, so
+each value has one place to change it.
 What a kind is for comes from the catalogue too: every kind declares `docs`
 (`summary`, `useWhen`, `pitfalls`), which the palette shows as a tooltip and
 the inspector under *About*. A kind cannot be defined without it, so a new

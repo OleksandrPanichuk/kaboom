@@ -44,6 +44,8 @@ export const checkNumber = (
 const ACRONYM_LENGTH = 3;
 
 export const optionLabel = (option: string): string => {
+  if (option.includes(".")) return option;
+
   if (option.length <= ACRONYM_LENGTH && /^[a-z0-9]+$/.test(option)) {
     return option.toUpperCase();
   }

@@ -1,6 +1,7 @@
 import {
   carriesLoad,
   catalogue,
+  derivedProps,
   EdgePropsSchema,
   findTechnology,
   isNodeKind,
@@ -408,10 +409,15 @@ const addNode = (graph: DesignGraph, node: DesignNode): DesignOp[] => {
   assertFreeId(graph, node.id);
   assertGroup(graph, node.groupId);
 
+  const technology = parseTechnology(node, node.technology);
+
   graph.nodes.push({
     ...structuredClone(node),
-    props: parseNodeProps(node, node.props),
-    technology: parseTechnology(node, node.technology),
+    props: parseNodeProps(node, {
+      ...(node.props as Record<string, unknown>),
+      ...derivedProps(node.kind, technology),
+    }),
+    technology,
   } as DesignNode);
 
   return [{ op: "remove-node", id: node.id }];
@@ -465,11 +471,28 @@ const updateNode = (
     node.technology = technology;
   }
 
-  if (patch.props !== undefined) {
-    const props = parseNodeProps(node, { ...node.props, ...patch.props });
+  const before = node.props as Record<string, unknown>;
+  let props = before;
 
-    previous.props = pick(node.props, Object.keys(patch.props));
-    node.props = props;
+  if (patch.props !== undefined) {
+    props = parseNodeProps(node, { ...props, ...patch.props });
+  }
+
+  const derived = derivedProps(node.kind, node.technology);
+
+  if (Object.keys(derived).length > 0) {
+    props = parseNodeProps(node, { ...props, ...derived });
+  }
+
+  const changed = Object.keys(props).filter(
+    (key) => JSON.stringify(props[key]) !== JSON.stringify(before[key]),
+  );
+
+  if (patch.props !== undefined || changed.length > 0) {
+    previous.props = pick(before, [
+      ...new Set([...Object.keys(patch.props ?? {}), ...changed]),
+    ]);
+    node.props = props as DesignNode["props"];
   }
 
   return [{ op: "update-node", id, patch: previous }];
