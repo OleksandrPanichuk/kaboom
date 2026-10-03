@@ -13,7 +13,7 @@ import {
   toReviewItem,
 } from "./draft";
 import type { Evidence } from "./evidence";
-import { REVIEWER_PERSONA, reviewRecord } from "./prompt";
+import { reviewerPersona, reviewRecord } from "./prompt";
 import { reviewTool, ToolConversation } from "./tool-conversation";
 
 const SUBMIT_REVIEW = reviewTool(
@@ -48,7 +48,11 @@ export class Reviewer extends Service {
   }: ReviewRequest): Promise<WrittenReview> {
     const rubric = pinned.interview.rubric;
     const conversation = new ToolConversation(
-      { system: REVIEWER_PERSONA, tool: SUBMIT_REVIEW, userId },
+      {
+        system: reviewerPersona(pinned.content.track),
+        tool: SUBMIT_REVIEW,
+        userId,
+      },
       reviewRecord(pinned, evidence, design),
     );
     const first = await conversation.ask();

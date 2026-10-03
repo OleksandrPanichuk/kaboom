@@ -17,7 +17,12 @@ interface SkillsBody {
     score: number | null;
     samples: number;
   }>;
-  next: { slug: string; skill: string | null; reason: string } | null;
+  next: Array<{
+    track: string;
+    slug: string;
+    skill: string | null;
+    reason: string;
+  }>;
 }
 
 const reviewedInterview = async (
@@ -66,10 +71,10 @@ describe("skills", () => {
     expect(skills.body.skills.every((skill) => skill.score === null)).toBe(
       true,
     );
-    expect(skills.body.next).toMatchObject({
-      slug: "url-shortener",
-      skill: null,
-    });
+    expect(skills.body.next).toMatchObject([
+      { track: "system-design", slug: "url-shortener", skill: null },
+      { track: "devops", slug: "zero-downtime-rollout", skill: null },
+    ]);
   });
 
   test("follow every review, and point at the weakest", async () => {
@@ -93,7 +98,10 @@ describe("skills", () => {
     expect(byKey.requirements).toMatchObject({ score: 100, samples: 2 });
     expect(byKey.design).toMatchObject({ score: 67, samples: 2 });
     expect(byKey.reliability).toMatchObject({ score: 50, samples: 2 });
-    expect(skills.body.next).toMatchObject({ skill: "reliability" });
+    expect(skills.body.next[0]).toMatchObject({
+      track: "system-design",
+      skill: "reliability",
+    });
   });
 
   test("are recorded once per interview, however often the review runs", async () => {

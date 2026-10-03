@@ -1,4 +1,4 @@
-import { INTERVIEW_DIMENSIONS } from "@repo/design";
+import { INTERVIEW_DIMENSIONS, TRACKS } from "@repo/design";
 import { t } from "elysia";
 
 export const SkillSummaryModel = t.Object({
@@ -10,6 +10,7 @@ export const SkillSummaryModel = t.Object({
 export type SkillSummaryModel = typeof SkillSummaryModel.static;
 
 export const NextProblemModel = t.Object({
+  track: t.UnionEnum(TRACKS),
   slug: t.String(),
   title: t.String(),
   difficulty: t.String(),
@@ -20,6 +21,6 @@ export type NextProblemModel = typeof NextProblemModel.static;
 
 export const SkillsModel = t.Object({
   skills: t.Array(SkillSummaryModel),
-  next: t.Nullable(NextProblemModel),
+  next: t.Array(NextProblemModel),
 });
 export type SkillsModel = typeof SkillsModel.static;

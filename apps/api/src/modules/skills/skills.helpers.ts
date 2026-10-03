@@ -2,6 +2,7 @@ import {
   INTERVIEW_DIMENSIONS,
   type InterviewDimension,
   type ProblemContent,
+  TRACKS,
 } from "@repo/design";
 
 import type {
@@ -107,6 +108,7 @@ export const nextProblem = (
   const tried = (practised.get(pick.problemId) ?? 0) > 0;
 
   return {
+    track: pick.content.track,
     slug: pick.content.slug,
     title: pick.content.title,
     difficulty: pick.content.difficulty,
@@ -118,3 +120,24 @@ export const nextProblem = (
         : "Start here: an interview you have not tried yet.",
   };
 };
+
+export const nextProblems = (
+  skills: readonly SkillSummary[],
+  candidates: readonly Candidate[],
+  practised: ReadonlyMap<string, number>,
+): NextProblem[] =>
+  TRACKS.flatMap((track) => {
+    const own = candidates.filter(({ content }) => content.track === track);
+    const practisedHere = new Set(
+      own.flatMap(({ content }) =>
+        (content.interview?.rubric ?? []).map((item) => item.dimension),
+      ),
+    );
+    const next = nextProblem(
+      skills.filter((summary) => practisedHere.has(summary.skill)),
+      own,
+      practised,
+    );
+
+    return next ? [next] : [];
+  });

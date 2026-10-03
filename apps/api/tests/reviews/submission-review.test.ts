@@ -97,6 +97,51 @@ describe("a challenge submission", () => {
     );
   });
 
+  test("on the DevOps track is scored on design, delivery and operability", async () => {
+    const user = await createUser();
+    const started = await user.post<{
+      designId: string;
+      problemVersion: number;
+    }>("/api/problems/zero-downtime-rollout/start");
+
+    model().enqueue([
+      {
+        type: "tool-use",
+        id: "design-review-1",
+        name: "submit_design_review",
+        input: {
+          summary: "One pod, replaced all at once.",
+          strengths: [],
+          improvements: ["Add a readiness probe."],
+          items: (["operability", "design", "delivery"] as const).map(
+            (dimension) => ({
+              dimension,
+              score: 1,
+              rationale: `The ${dimension} is weak.`,
+            }),
+          ),
+        },
+      },
+    ]);
+
+    const submitted = await user.post<Submission>(
+      "/api/problems/zero-downtime-rollout/submissions",
+      { revision: 0 },
+    );
+    const system = reviewRequests()[0]!.system[0]!.text;
+
+    expect(started.status).toBe(200);
+    expect(submitted.body.reviewStatus).toBe("reviewed");
+    expect(submitted.body.review?.items.map((item) => item.dimension)).toEqual([
+      "design",
+      "delivery",
+      "operability",
+    ]);
+    expect(system).toContain("deployment of a system");
+    expect(system).toContain("delivery (");
+    expect(system).not.toContain("scaling (");
+  });
+
   test("keeps the checks' score when the review fails", async () => {
     const user = await createUser();
     const attempt = await start(user);

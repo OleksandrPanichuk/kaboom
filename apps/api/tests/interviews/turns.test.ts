@@ -82,6 +82,29 @@ beforeEach(async () => {
 });
 
 describe("a turn", () => {
+  test("introduces the interviewer for the problem's track", async () => {
+    const user = await createUser();
+    const designInterview = await startInterview(user);
+    const other = await createUser();
+    const devopsInterview = await startInterview(
+      other,
+      "zero-downtime-rollout",
+    );
+
+    model().enqueue([{ type: "text-delta", text: "Sure." }]);
+    model().enqueue([{ type: "text-delta", text: "Sure." }]);
+    await say(user, designInterview.id, "Hello.");
+    await scheduler().drain();
+    await say(other, devopsInterview.id, "Hello.");
+    await scheduler().drain();
+
+    const [design, devops] = model().requests;
+
+    expect(design!.system[0]!.text).toContain("system design interview");
+    expect(devops!.system[0]!.text).toContain("DevOps interview");
+    expect(devops!.system[0]!.text).toContain("run_drill");
+  });
+
   test("answers a message, streaming its words as deltas tagged with the turn", async () => {
     const user = await createUser();
     const interview = await startInterview(user);
