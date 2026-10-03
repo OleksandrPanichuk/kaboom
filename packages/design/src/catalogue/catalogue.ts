@@ -3,6 +3,7 @@ import type z from "zod";
 import {
   alertKind,
   apiGatewayKind,
+  artifactRegistryKind,
   cacheKind,
   cdnKind,
   clientKind,
@@ -17,6 +18,7 @@ import {
   loadBalancerKind,
   nosqlDatabaseKind,
   objectStorageKind,
+  pipelineStageKind,
   queueKind,
   rateLimiterKind,
   schedulerKind,
@@ -54,6 +56,8 @@ export const catalogue = {
   [configMapKind.kind]: configMapKind,
   [secretKind.kind]: secretKind,
   [alertKind.kind]: alertKind,
+  [pipelineStageKind.kind]: pipelineStageKind,
+  [artifactRegistryKind.kind]: artifactRegistryKind,
 } as const;
 
 export type Catalogue = typeof catalogue;

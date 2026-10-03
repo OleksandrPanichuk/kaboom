@@ -1,5 +1,6 @@
 export { evaluate, type ScenarioInput } from "./evaluate";
 export { evaluateLoad } from "./load";
+export { evaluatePipeline, RUNNER_SETUP_MINUTES } from "./pipeline";
 export type {
   ClientStep,
   EdgeStep,
@@ -8,8 +9,10 @@ export type {
   Finding,
   FindingKind,
   NodeStep,
+  PipelineResult,
   RolloutPhase,
   RolloutStep,
+  StageTiming,
 } from "./result";
 export { FINDING_KINDS, ROLLOUT_PHASES } from "./result";
 export {
@@ -19,6 +22,9 @@ export {
   type LoadScenarioInput,
   LoadScenarioSchema,
   MAX_STEPS,
+  type PipelineScenario,
+  type PipelineScenarioInput,
+  PipelineScenarioSchema,
   type Release,
   RELEASES,
   ReleaseSchema,

@@ -535,6 +535,66 @@ describe("applyOps", () => {
       "invalid-edge",
     ],
     [
+      "a pipeline that loops back on itself",
+      [
+        { op: "add-node", node: createNode("pipeline-stage", { id: "build" }) },
+        { op: "add-node", node: createNode("pipeline-stage", { id: "ship" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "p1",
+            from: "build",
+            to: "ship",
+            kind: "pipeline-next",
+          }),
+        },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "p2",
+            from: "ship",
+            to: "build",
+            kind: "pipeline-next",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "a pipeline step from something that is not a stage",
+      [
+        { op: "add-node", node: createNode("pipeline-stage", { id: "build" }) },
+        { op: "add-node", node: createNode("pipeline-stage", { id: "ship" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "p1",
+            from: "api",
+            to: "build",
+            kind: "pipeline-next",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "publishing to something that is not a registry",
+      [
+        { op: "add-node", node: createNode("pipeline-stage", { id: "build" }) },
+        { op: "add-node", node: createNode("pipeline-stage", { id: "ship" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "p1",
+            from: "build",
+            to: "ship",
+            kind: "publishes",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
       "an edge that closes a load cycle",
       [
         {

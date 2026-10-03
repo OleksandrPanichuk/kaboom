@@ -201,6 +201,35 @@ const assertValidEdge = (graph: DesignGraph, edge: DesignEdge): void => {
   }
 };
 
+const stagesAfter = (
+  graph: DesignGraph,
+  from: string,
+  ignoring: string,
+): Set<string> => {
+  const seen = new Set<string>();
+  const stack = [from];
+
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+
+    if (seen.has(current)) continue;
+
+    seen.add(current);
+
+    for (const edge of graph.edges) {
+      if (
+        edge.id !== ignoring &&
+        edge.kind === "pipeline-next" &&
+        edge.from === current
+      ) {
+        stack.push(edge.to);
+      }
+    }
+  }
+
+  return seen;
+};
+
 const assertControlEdge = (
   graph: DesignGraph,
   edge: DesignEdge,
@@ -245,6 +274,28 @@ const assertControlEdge = (
         reject(
           "invalid-edge",
           `Edge ${edge.id} watches ${to.id}, a ${to.kind}, from ${from.id}, a ${from.kind}; an alert watches a node that serves traffic`,
+        );
+      }
+      return;
+    case "pipeline-next":
+      if (from.kind !== "pipeline-stage" || to.kind !== "pipeline-stage") {
+        reject(
+          "invalid-edge",
+          `Edge ${edge.id} runs ${to.id}, a ${to.kind}, after ${from.id}, a ${from.kind}; a pipeline joins its stages`,
+        );
+      }
+      if (stagesAfter(graph, edge.to, edge.id).has(edge.from)) {
+        reject(
+          "invalid-edge",
+          `Edge ${edge.id} closes a loop in the pipeline: ${to.id} already runs before ${from.id}`,
+        );
+      }
+      return;
+    case "publishes":
+      if (from.kind !== "pipeline-stage" || to.kind !== "artifact-registry") {
+        reject(
+          "invalid-edge",
+          `Edge ${edge.id} publishes from ${from.id}, a ${from.kind}, to ${to.id}, a ${to.kind}; a pipeline stage publishes to an artifact registry`,
         );
       }
       return;

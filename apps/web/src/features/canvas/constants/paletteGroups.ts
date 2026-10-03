@@ -45,5 +45,10 @@ export const PALETTE_GROUPS: PaletteGroup[] = [
   },
   { track: "devops", label: "Workloads", kinds: ["k8s-deployment", "hpa"] },
   { track: "devops", label: "Configuration", kinds: ["config-map", "secret"] },
+  {
+    track: "devops",
+    label: "Delivery",
+    kinds: ["pipeline-stage", "artifact-registry"],
+  },
   { track: "devops", label: "Operations", kinds: ["alert"] },
 ];

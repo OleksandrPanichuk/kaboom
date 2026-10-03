@@ -5,6 +5,7 @@ export const PROP_UNITS = [
   "msg/s",
   "ms",
   "s",
+  "min",
   "h",
   "GB",
   "KB",

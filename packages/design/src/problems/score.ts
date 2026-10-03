@@ -57,7 +57,7 @@ const judge = (
     case "no-finding-under-drill": {
       const found = context
         .drill(check.drillId)
-        ?.result.findings.find((finding) => finding.kind === check.finding);
+        ?.findings.find((finding) => finding.kind === check.finding);
 
       return found
         ? { passed: false, evidence: found.message }

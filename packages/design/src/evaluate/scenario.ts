@@ -72,3 +72,12 @@ export type LoadScenarioInput = z.input<typeof LoadScenarioSchema>;
 export type LoadScenario = z.output<typeof LoadScenarioSchema>;
 
 export const MAX_STEPS = 1_000;
+
+export const PipelineScenarioSchema = z.strictObject({
+  kind: z.literal("pipeline"),
+  changedShare: z.number().min(0).max(1).default(1),
+});
+
+export type PipelineScenarioInput = z.input<typeof PipelineScenarioSchema>;
+
+export type PipelineScenario = z.output<typeof PipelineScenarioSchema>;

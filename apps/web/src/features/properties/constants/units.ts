@@ -5,6 +5,7 @@ export const UNIT_SUFFIXES: Readonly<Record<PropUnit, string | null>> = {
   "msg/s": "msg/s",
   ms: "ms",
   s: "s",
+  min: "min",
   h: "h",
   GB: "GB",
   KB: "KB",

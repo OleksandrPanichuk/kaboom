@@ -10,7 +10,7 @@ import { defineInterviewerTool } from "../define-tool";
 export const runDrillTool = defineInterviewerTool({
   name: "run_drill",
   description:
-    "Run one of the problem's drills against the candidate's design: its traffic and faults, as the problem block lists them. With show, the candidate sees the run on the canvas; without it only you see the result.",
+    "Run one of the problem's drills against the candidate's design: its traffic and faults, or for a pipeline drill its rules, as the problem block lists them. With show, the candidate sees a traffic run on the canvas; without it only you see the result.",
   input: z.object({
     drillId: z.string(),
     show: z.boolean().default(true),
@@ -31,6 +31,16 @@ export const runDrillTool = defineInterviewerTool({
       interview.ownerId,
     );
     const outcome = runDrill(drill, design.graph);
+
+    if (drill.kind !== "load") {
+      return {
+        content: [
+          `Drill "${drill.title}" on revision ${design.revision}: ${outcome.passed ? "passed" : "failed"}. It is checked by rules, so nothing runs on the canvas.`,
+          ...outcome.failures.map((failure) => `- ${failure}`),
+        ].join("\n"),
+      };
+    }
+
     const run = await make(RunInterviewSimulationUseCase).execute({
       ownerId: interview.ownerId,
       id: interview.id,

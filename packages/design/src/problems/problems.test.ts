@@ -11,7 +11,7 @@ import {
   publicScore,
 } from "./publish";
 import { drillScenario, selectNodes } from "./resolve";
-import { ProblemContentSchema } from "./schema";
+import { type LoadDrill, ProblemContentSchema } from "./schema";
 import { runPublicDrills, scoreSubmission } from "./score";
 
 const shortener = OFFICIAL_PROBLEMS.find(
@@ -191,7 +191,8 @@ describe("drill selectors", () => {
       ],
     }).drills;
 
-    expect(drillScenario(drill!, replicated).faults).toEqual([
+    expect(drill?.kind).toBe("load");
+    expect(drillScenario(drill as LoadDrill, replicated).faults).toEqual([
       { kind: "node-down", nodeId: "primary", at: 30 },
       { kind: "node-down", nodeId: "other", at: 30 },
     ]);
@@ -372,6 +373,7 @@ describe("scoring the notification service", () => {
 
 describe("a region-down drill fault", () => {
   const drill = {
+    kind: "load" as const,
     id: "lost",
     title: "Lost",
     description: "",
