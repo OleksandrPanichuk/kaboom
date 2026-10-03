@@ -1,3 +1,4 @@
+import type { Track } from "@repo/design";
 import {
   index,
   integer,
@@ -29,7 +30,7 @@ export const problemsSchema = pgTable(
       onDelete: "set null",
     }),
     status: text("status", { enum: PROBLEM_STATUSES }).notNull(),
-    track: text("track").notNull(),
+    track: text("track").$type<Track>().notNull(),
     title: text("title").notNull(),
     summary: text("summary").notNull(),
     difficulty: text("difficulty", { enum: PROBLEM_DIFFICULTIES }).notNull(),

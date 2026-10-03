@@ -1,4 +1,9 @@
-import type { DesignGraph, EvaluationStep } from "@repo/design";
+import {
+  catalogue,
+  type DesignGraph,
+  type EvaluationStep,
+  type RolloutStep,
+} from "@repo/design";
 
 import type { HeatTone } from "@/features/simulation/typedefs";
 
@@ -8,6 +13,19 @@ export interface SimulationOverlay {
   nodes: Record<string, { tone: HeatTone; text: string }>;
   edges: Record<string, number>;
 }
+
+const rolloutText = (rollout: RolloutStep): string => {
+  switch (rollout.phase) {
+    case "rolling":
+      return `Rolling · ${rollout.ready} new, ${rollout.old} old`;
+    case "stalled":
+      return `Rollout stuck · ${rollout.ready} new`;
+    case "complete":
+      return "Rolled out";
+    case "rolled-back":
+      return "Rolled back";
+  }
+};
 
 export const overlayAt = (
   graph: DesignGraph,
@@ -21,26 +39,32 @@ export const overlayAt = (
     const numbers = step.nodes[node.id];
     const tone = heatOf(numbers);
 
-    if (!numbers) continue;
+    if (!numbers || !catalogue[node.kind].carriesTraffic) continue;
 
     const load = numbers.reads + numbers.writes;
 
     nodes[node.id] = {
-      tone,
+      tone:
+        numbers.rollout?.phase === "stalled" &&
+        (tone === "idle" || tone === "ok")
+          ? "busy"
+          : tone,
       text:
         tone === "down"
           ? "Down"
           : node.kind === "coordination"
             ? "Up"
-            : node.kind === "dns"
-              ? `Routes ${formatRate(load)}`
-              : node.kind === "client" || node.kind === "scheduler"
-                ? `Sends ${formatRate(load)}`
-                : turnedAway(numbers) > 0
-                  ? `${formatRate(load)} · ${formatRate(turnedAway(numbers))} turned away`
-                  : numbers.backlog
-                    ? `${formatShare(numbers.rho)} · ${formatRate(load)} · ${Math.round(numbers.backlog).toLocaleString("en")} waiting`
-                    : `${formatShare(numbers.rho)} · ${formatRate(load)}`,
+            : numbers.rollout
+              ? rolloutText(numbers.rollout)
+              : node.kind === "dns" || node.kind === "k8s-service"
+                ? `Routes ${formatRate(load)}`
+                : node.kind === "client" || node.kind === "scheduler"
+                  ? `Sends ${formatRate(load)}`
+                  : turnedAway(numbers) > 0
+                    ? `${formatRate(load)} · ${formatRate(turnedAway(numbers))} turned away`
+                    : numbers.backlog
+                      ? `${formatShare(numbers.rho)} · ${formatRate(load)} · ${Math.round(numbers.backlog).toLocaleString("en")} waiting`
+                      : `${formatShare(numbers.rho)} · ${formatRate(load)}`,
     };
   }
 

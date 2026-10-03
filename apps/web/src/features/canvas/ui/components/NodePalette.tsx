@@ -1,4 +1,9 @@
-import { catalogue, type NodeKind } from "@repo/design";
+import {
+  catalogue,
+  type NodeKind,
+  type Track,
+  TRACK_LABELS,
+} from "@repo/design";
 import { useReactFlow } from "@xyflow/react";
 import type { DragEvent } from "react";
 
@@ -21,10 +26,11 @@ import { findFreeSpot } from "@/features/canvas/utils";
 import { useWorkspacePanels } from "@/features/shell";
 
 interface NodePaletteProps {
+  track?: Track;
   onAdd: (kind: NodeKind, position: { x: number; y: number }) => void;
 }
 
-export function NodePalette({ onAdd }: NodePaletteProps) {
+export function NodePalette({ track, onAdd }: NodePaletteProps) {
   const flow = useReactFlow();
   const { closePanels } = useWorkspacePanels();
 
@@ -58,8 +64,18 @@ export function NodePalette({ onAdd }: NodePaletteProps) {
         <p className="px-1 text-xs leading-5 text-muted-foreground">
           Drag a node onto the canvas, or click it to place it in the middle.
         </p>
-        {PALETTE_GROUPS.map((group) => (
-          <section key={group.label} className="flex flex-col gap-1">
+        {PALETTE_GROUPS.filter(
+          (group) => track === undefined || group.track === track,
+        ).map((group, index, shown) => (
+          <section
+            key={`${group.track}:${group.label}`}
+            className="flex flex-col gap-1"
+          >
+            {track === undefined && shown[index - 1]?.track !== group.track ? (
+              <h2 className="px-1 pt-1 text-sm font-semibold">
+                {TRACK_LABELS[group.track]}
+              </h2>
+            ) : null}
             <h3 className="px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
               {group.label}
             </h3>

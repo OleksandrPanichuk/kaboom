@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { ArticleView, findArticle } from "@/features/handbook";
-import { problemsQuery } from "@/features/problems";
+import { ALL_PROBLEMS, problemsQuery } from "@/features/problems";
 
 export const Route = createFileRoute("/_app/_shell/handbook/$slug")({
   loader: async ({ context, params }) => {
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_app/_shell/handbook/$slug")({
 
     if (!article) throw notFound();
 
-    await context.queryClient.ensureQueryData(problemsQuery(null));
+    await context.queryClient.ensureQueryData(problemsQuery(ALL_PROBLEMS));
 
     return article;
   },

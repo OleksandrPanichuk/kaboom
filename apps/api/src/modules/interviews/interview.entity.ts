@@ -1,3 +1,5 @@
+import type { Track } from "@repo/design";
+
 import type {
   InterviewEventRow,
   InterviewMessageAuthor,
@@ -37,6 +39,7 @@ export interface InterviewMessageEntity {
 }
 
 export interface InterviewProblem {
+  track: Track;
   slug: string;
   title: string;
   difficulty: string;

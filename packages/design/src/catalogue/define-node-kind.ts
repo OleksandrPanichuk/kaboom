@@ -4,6 +4,11 @@ export const TRACKS = ["system-design", "devops"] as const;
 
 export type Track = (typeof TRACKS)[number];
 
+export const TRACK_LABELS: Readonly<Record<Track, string>> = {
+  "system-design": "System design",
+  devops: "DevOps",
+};
+
 export interface NodeKindDocs {
   summary: string;
   useWhen: string;

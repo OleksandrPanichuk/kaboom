@@ -1,3 +1,4 @@
+import { TRACKS } from "@repo/design";
 import { t } from "elysia";
 
 import { PROBLEM_DIFFICULTIES, PROBLEM_SOURCES } from "@/db";
@@ -6,7 +7,7 @@ export const ProblemSummaryModel = t.Object({
   id: t.String({ format: "uuid" }),
   slug: t.String(),
   source: t.UnionEnum(PROBLEM_SOURCES),
-  track: t.String(),
+  track: t.UnionEnum(TRACKS),
   title: t.String(),
   summary: t.String(),
   difficulty: t.UnionEnum(PROBLEM_DIFFICULTIES),

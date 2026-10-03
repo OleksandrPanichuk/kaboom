@@ -1,4 +1,9 @@
-import { HANDBOOK_ARTICLES } from "@repo/design";
+import {
+  catalogue,
+  HANDBOOK_ARTICLES,
+  TRACK_LABELS,
+  TRACKS,
+} from "@repo/design";
 
 import { PALETTE_GROUPS } from "@/features/canvas";
 import {
@@ -27,16 +32,29 @@ export function HandbookView() {
         <h2 id="nodes" className="text-lg font-semibold tracking-[-0.02em]">
           Nodes
         </h2>
-        {PALETTE_GROUPS.map((group) => (
-          <div key={group.label} className="flex flex-col gap-3">
-            <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              {group.label}
-            </h3>
-            <ul className="grid gap-3 md:grid-cols-2">
-              {group.kinds.map((kind) => (
-                <KindEntry key={kind} kind={kind} />
-              ))}
-            </ul>
+        {TRACKS.map((track) => (
+          <div key={track} className="flex flex-col gap-4">
+            <h3 className="font-semibold">{TRACK_LABELS[track]}</h3>
+            {PALETTE_GROUPS.filter((group) => group.track === track).map(
+              (group) => {
+                const own = group.kinds.filter(
+                  (kind) => catalogue[kind].track === track,
+                );
+
+                return own.length > 0 ? (
+                  <div key={group.label} className="flex flex-col gap-3">
+                    <h4 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                      {group.label}
+                    </h4>
+                    <ul className="grid gap-3 md:grid-cols-2">
+                      {own.map((kind) => (
+                        <KindEntry key={kind} kind={kind} />
+                      ))}
+                    </ul>
+                  </div>
+                ) : null;
+              },
+            )}
           </div>
         ))}
       </section>

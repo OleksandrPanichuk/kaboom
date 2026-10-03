@@ -1,4 +1,4 @@
-import { type Finding, type LintHit, runLints } from "@repo/design";
+import { type Finding, type LintHit, runLints, type Track } from "@repo/design";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { cn } from "cn";
 import {
@@ -65,6 +65,7 @@ interface DesignWorkspaceProps {
   initialTab?: string;
   transport?: DesignTransport;
   readOnly?: boolean;
+  track?: Track;
 }
 
 interface Selection {
@@ -87,6 +88,7 @@ export function DesignWorkspace({
   initialTab = "node",
   transport,
   readOnly = false,
+  track,
 }: DesignWorkspaceProps) {
   const { data: design } = useSuspenseQuery(designQuery(designId));
   const editor = useDesignEditor(designId, transport);
@@ -308,7 +310,7 @@ export function DesignWorkspace({
               This design is locked: it was submitted and can no longer change.
             </p>
           ) : (
-            <NodePalette onAdd={editor.addNode} />
+            <NodePalette track={track} onAdd={editor.addNode} />
           ),
         }}
         tabsLabel="Inspector"
