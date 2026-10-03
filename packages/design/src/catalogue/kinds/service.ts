@@ -10,6 +10,7 @@ export const serviceKind = defineNodeKind({
   icon: "service",
   stateful: false,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

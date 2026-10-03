@@ -11,6 +11,7 @@ export const dnsKind = defineNodeKind({
   icon: "dns",
   stateful: false,
   replicable: false,
+  carriesTraffic: true,
   distribution: "routed",
   docs: {
     summary:

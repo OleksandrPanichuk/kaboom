@@ -46,7 +46,6 @@ export {
   type ProblemTrack,
   type RubricItem,
   RubricItemSchema,
-  TRACKS,
 } from "./schema";
 export {
   type DrillScore,

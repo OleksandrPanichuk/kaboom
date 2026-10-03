@@ -10,6 +10,7 @@ export const loadBalancerKind = defineNodeKind({
   icon: "load-balancer",
   stateful: false,
   replicable: false,
+  carriesTraffic: true,
   distribution: "evenly",
   docs: {
     summary:

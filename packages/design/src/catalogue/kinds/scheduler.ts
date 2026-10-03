@@ -18,6 +18,7 @@ export const schedulerKind = defineNodeKind({
   icon: "scheduler",
   stateful: false,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

@@ -18,6 +18,7 @@ export const sqlDatabaseKind = defineNodeKind({
   icon: "sql-database",
   stateful: true,
   replicable: true,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

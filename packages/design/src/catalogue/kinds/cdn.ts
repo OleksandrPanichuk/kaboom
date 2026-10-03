@@ -11,6 +11,7 @@ export const cdnKind = defineNodeKind({
   icon: "cdn",
   stateful: false,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

@@ -10,6 +10,7 @@ export const cacheKind = defineNodeKind({
   icon: "cache",
   stateful: true,
   replicable: true,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

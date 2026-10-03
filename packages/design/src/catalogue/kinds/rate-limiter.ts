@@ -10,6 +10,7 @@ export const rateLimiterKind = defineNodeKind({
   icon: "rate-limiter",
   stateful: false,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

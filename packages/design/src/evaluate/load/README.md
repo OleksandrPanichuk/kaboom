@@ -31,14 +31,14 @@ same pull request.
   service, and 0 when every service it locks on is down.
 - An edge carries a channel by kind: `read` edges carry reads only, `write`
   edges writes only, `sync-call` and `async-message` both, `change-feed` writes
-  only. `replication` and `lock` carry none.
+  only. `replication`, `lock`, `mounts`, `scales` and `watches` carry none.
 - A database forwards its served **writes** on its `change-feed` edges and
   nothing on any other edge. A change feed is asynchronous: what is behind it
   adds no latency and no errors to the writer.
 - How a node's **forwarded** channel is split over the outgoing edges that
   carry it depends on the node kind's `distribution`:
   - `by-share`: each edge gets `share × fanOut` of it;
-  - `evenly` (load balancer): split evenly over the edges to **up** targets,
+  - `evenly` (load balancer, Kubernetes service): split evenly over the edges to **up** targets,
     times `fanOut`; `share` is ignored. A balancer without health checks
     keeps sending to targets that are down;
   - `broadcast` (stream): each edge gets all of it, times `fanOut`; every
@@ -47,12 +47,17 @@ same pull request.
 
 ## Topology
 
-- The load subgraph is every edge but `replication` and `lock`. It is acyclic, which
+- The load subgraph is every edge but `replication`, `lock` and the control
+  edges `mounts`, `scales` and `watches`. It is acyclic, which
   `applyOps` guarantees, and nodes are evaluated in its topological order.
 - A `replication` edge primary → replica declares the replica. It carries no
   load; the primary spreads its reads over itself and its up replicas.
 - A `lock` edge from a scheduler to a coordination service carries no load
   either; it only decides how many of the scheduler's replicas fire.
+- A `scales` edge from a pod autoscaler to a deployment declares its autoscaling
+  (_Autoscaling_). `mounts` and `watches` change nothing here.
+- A pod autoscaler, a config map, a secret and an alert serve no traffic:
+  `applyOps` lets no load edge touch them, so they receive nothing.
 
 ## Node behaviour
 
@@ -63,10 +68,12 @@ request it receives.
 | Kind                          | Capacity                                                                                                        | Forwards                                                               |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | `client`                      | unbounded                                                                                                       | what it emits                                                          |
-| `service`                     | `replicas × capacityRpsPerReplica`                                                                              | what it serves                                                         |
+| `service`, `k8s-deployment`   | `replicas × capacityRpsPerReplica`                                                                              | what it serves                                                         |
 | `worker`                      | `replicas × capacityMsgPerReplica`                                                                              | what it serves                                                         |
 | `load-balancer`, `cdn`        | `capacityRps`                                                                                                   | balancer: what it serves; CDN: `reads × (1 − hitRatio)` and all writes |
 | `api-gateway`, `rate-limiter` | `capacityRps`                                                                                                   | what it serves, by share                                               |
+| `ingress`                     | `capacityRps`                                                                                                   | what it serves, by share                                               |
+| `k8s-service`                 | unbounded                                                                                                       | what it serves, evenly over its up targets                             |
 | `external-api`                | unbounded, behind its rate limit                                                                                | nothing                                                                |
 | `cache`                       | reads against `readCapacityRps`, writes against `writeCapacityRps`                                              | `reads × (1 − hitRatio)` and all writes, to whatever it connects to    |
 | `sql-database`                | writes: `writeCapacityRps × shards`, on the primary only; reads: `readCapacityRps × shards × (1 + up replicas)` | its writes, on `change-feed` edges                                     |
@@ -102,7 +109,7 @@ Per node, per step:
   `ρ = 0.95`. At or above it, or when the node is down, both are pinned at the
   largest `timeoutMs` of its inbound edges (1000 ms without one): a caller
   waits no longer than it is willing to. A worker's base is `processingMs`;
-  clients, queues and streams add none.
+  clients, queues, streams and Kubernetes services add none.
 - **Own error rate**: 1 when down; otherwise `1 − admitted × served × (1 −
 intrinsic)`, where `admitted` is the throttling fraction, `served` the
   saturation fraction, and `intrinsic` an external API's `errorRate` (0 for
@@ -175,6 +182,9 @@ onset and undone at its end.
 **Autoscaling.** A service or worker with autoscaling enabled that stays above
 its `targetUtilisation` for two consecutive steps gains `ceil(replicas × 0.5)`
 replicas, up to `max`, counted from the next step. It never scales down.
+A deployment does the same with the `min`, `max` and `targetUtilisation` of the
+pod autoscaler that `scales` it, and starts at its `replicas` held between that
+`min` and `max`.
 
 ## Findings
 

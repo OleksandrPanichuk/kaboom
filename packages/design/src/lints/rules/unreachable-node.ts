@@ -1,3 +1,4 @@
+import { catalogue } from "../../catalogue";
 import { defineLint } from "../define-lint";
 import { entries, labelOf, reachable } from "../walk";
 
@@ -17,7 +18,9 @@ export const unreachableNode = defineLint({
     );
 
     return graph.nodes
-      .filter((node) => !seen.has(node.id))
+      .filter(
+        (node) => catalogue[node.kind].carriesTraffic && !seen.has(node.id),
+      )
       .map((node) => ({
         message: `${labelOf(node)} gets no traffic: nothing a client or a scheduler starts leads to it.`,
         nodeIds: [node.id],

@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { NODE_KINDS, type NodeKind } from "../catalogue";
+import { NODE_KINDS, type NodeKind, type Track, TRACKS } from "../catalogue";
 import { FINDING_KINDS } from "../evaluate/result";
 import { SloSchema } from "../evaluate/scenario";
 import { DesignGraphSchema, IdSchema } from "../graph";
@@ -9,8 +9,7 @@ import { LINT_IDS } from "../lints";
 export const DIFFICULTIES = ["easy", "medium", "hard"] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
 
-export const TRACKS = ["system-design"] as const;
-export type ProblemTrack = (typeof TRACKS)[number];
+export type ProblemTrack = Track;
 
 const NodeKindSchema = z.enum(NODE_KINDS as [NodeKind, ...NodeKind[]]);
 

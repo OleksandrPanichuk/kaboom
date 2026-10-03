@@ -11,6 +11,7 @@ export const queueKind = defineNodeKind({
   icon: "queue",
   stateful: true,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

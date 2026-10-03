@@ -14,6 +14,9 @@ const NEEDS_A_TARGET: Partial<Record<NodeKind, (label: string) => string>> = {
   queue: (label) => `${label} has no consumer; its messages pile up.`,
   stream: (label) =>
     `${label} has no consumer group; what it keeps, nobody reads.`,
+  ingress: (label) => `${label} routes nowhere; connect it to a service.`,
+  "k8s-service": (label) =>
+    `${label} selects no pods; connect it to a deployment.`,
 };
 
 export const deadEndNode = defineLint({

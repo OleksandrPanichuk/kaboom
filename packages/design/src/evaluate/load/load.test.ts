@@ -7,6 +7,39 @@ const once = (design: ReturnType<typeof graph>, extra = {}) =>
   evaluateLoad(design, { kind: "load", durationSeconds: 10, ...extra });
 
 describe("load evaluator rules", () => {
+  test("a pod autoscaler grows a deployment from its floor, and pods carry the load", () => {
+    const design = graph(
+      [
+        node("users", "client", { rps: 3_000 }),
+        node("edge", "ingress"),
+        node("web", "k8s-service"),
+        node("app", "k8s-deployment", {
+          replicas: 1,
+          capacityRpsPerReplica: 1_000,
+        }),
+        node("hpa", "hpa", { min: 2, max: 10, targetUtilisation: 0.7 }),
+        node("keys", "secret"),
+      ],
+      [
+        edge("users", "edge"),
+        edge("edge", "web"),
+        edge("web", "app"),
+        edge("hpa", "app", "scales"),
+        edge("app", "keys", "mounts"),
+      ],
+    );
+    const { steps } = evaluateLoad(design, {
+      kind: "load",
+      durationSeconds: 40,
+    });
+
+    expect(steps[0]!.nodes.app!.replicas).toBe(2);
+    expect(steps[0]!.nodes.app!.rho).toBeGreaterThan(1);
+    expect(steps[2]!.nodes.app!.replicas).toBe(3);
+    expect(steps[0]!.nodes.keys!.reads + steps[0]!.nodes.keys!.writes).toBe(0);
+    expect(steps[0]!.edges["hpa-app-scales"]).toBeUndefined();
+  });
+
   test("a stream gives every consumer group the whole stream", () => {
     const design = graph(
       [

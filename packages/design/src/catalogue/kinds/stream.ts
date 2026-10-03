@@ -11,6 +11,7 @@ export const streamKind = defineNodeKind({
   icon: "stream",
   stateful: true,
   replicable: false,
+  carriesTraffic: true,
   distribution: "broadcast",
   docs: {
     summary:

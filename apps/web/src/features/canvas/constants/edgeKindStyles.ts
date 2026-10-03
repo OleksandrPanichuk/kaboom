@@ -73,4 +73,38 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
     },
     animated: false,
   },
+  mounts: {
+    description:
+      "The source's pods read this config or secret when they start; it carries no request load.",
+    label: "Mounts",
+    style: {
+      stroke: "var(--color-emerald-600)",
+      strokeWidth: 1.5,
+      strokeDasharray: "2 4",
+    },
+    animated: false,
+  },
+  scales: {
+    description:
+      "The source adds pods to the target as it gets busy; it carries no request load.",
+    label: "Scales",
+    style: {
+      stroke: "var(--color-violet-500)",
+      strokeWidth: 1.5,
+      strokeDasharray: "2 4",
+    },
+    animated: false,
+  },
+  watches: {
+    description:
+      "The source pages someone when the target misbehaves; it carries no request load.",
+    label: "Watches",
+    style: {
+      stroke: "var(--color-rose-500)",
+      strokeWidth: 1.5,
+      strokeDasharray: "1 4",
+      strokeLinecap: "round",
+    },
+    animated: false,
+  },
 };

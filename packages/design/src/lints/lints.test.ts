@@ -108,6 +108,22 @@ describe("lints", () => {
       expect(hits(g, "spof-critical-path")).toEqual([]);
     });
 
+    test("flags a one-pod deployment unless its pod autoscaler keeps two", () => {
+      const nodes = [
+        node("users", "client"),
+        node("web", "k8s-service"),
+        node("app", "k8s-deployment", { replicas: 1 }),
+      ];
+      const edges = [edge("users", "web"), edge("web", "app")];
+      const scaled = graph(
+        [...nodes, node("hpa", "hpa", { min: 2 })],
+        [...edges, edge("hpa", "app", "scales")],
+      );
+
+      expect(hits(graph(nodes, edges), "spof-critical-path")).toEqual(["app"]);
+      expect(hits(scaled, "spof-critical-path")).toEqual([]);
+    });
+
     test("flags a SQL database without a replica, and not once it has one", () => {
       const lone = graph(
         [node("users", "client"), node("db", "sql-database")],
@@ -172,6 +188,26 @@ describe("lints", () => {
       expect(hits(g, "unreachable-node")).toEqual(["orphan"]);
     });
 
+    test("leaves out what serves no traffic, such as an autoscaler or a secret", () => {
+      const g = graph(
+        [
+          node("users", "client"),
+          node("app", "k8s-deployment"),
+          node("hpa", "hpa"),
+          node("keys", "secret"),
+          node("pager", "alert"),
+        ],
+        [
+          edge("users", "app"),
+          edge("hpa", "app", "scales"),
+          edge("app", "keys", "mounts"),
+          edge("pager", "app", "watches"),
+        ],
+      );
+
+      expect(hits(g, "unreachable-node")).toEqual([]);
+    });
+
     test("stays quiet until the design has a client", () => {
       expect(hits(graph([node("api", "service")]), "unreachable-node")).toEqual(
         [],
@@ -206,6 +242,20 @@ describe("lints", () => {
       );
 
       expect(hits(g, "dead-end-node")).toEqual(["lb", "lb2"]);
+    });
+
+    test("flags an ingress or a Kubernetes service that leads nowhere", () => {
+      const g = graph(
+        [
+          node("edge", "ingress"),
+          node("web", "k8s-service"),
+          node("app", "k8s-deployment"),
+          node("keys", "secret"),
+        ],
+        [edge("app", "keys", "mounts")],
+      );
+
+      expect(hits(g, "dead-end-node")).toEqual(["edge", "web"]);
     });
   });
 

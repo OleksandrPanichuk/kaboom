@@ -10,6 +10,7 @@ export const clientKind = defineNodeKind({
   icon: "client",
   stateful: false,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:
