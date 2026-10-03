@@ -137,6 +137,138 @@ The *Members* client is already on the canvas. Build what it talks to.`,
       check: { check: "no-lint", lint: "spof-critical-path" },
     },
   ],
+  interview: {
+    opening:
+      "Hi! Let's design the home feed of a social network. Before you draw anything: what would you like to know about how people use it?",
+    facts: [
+      {
+        topic: "Traffic",
+        answer:
+          "About 30,000 requests a second: 97 % are reads and 3 % are new posts. Of the reads, 90 % open a feed and 10 % search. A big event can double it for a few minutes.",
+      },
+      {
+        topic: "Followers",
+        answer:
+          "A member has about 100 followers. A handful of celebrities have millions; say how you would treat them, but the design only has to carry the typical member.",
+      },
+      {
+        topic: "Feed order and length",
+        answer:
+          "Newest first, no ranking. A feed shows the latest 500 posts of the people you follow.",
+      },
+      {
+        topic: "Freshness",
+        answer:
+          "A post should show up in its followers' feeds within a few seconds. Search may lag behind by a few seconds as well.",
+      },
+      {
+        topic: "Posts",
+        answer:
+          "Text of up to about 1 KB. Images live elsewhere and are out of scope. Posts are kept forever.",
+      },
+      {
+        topic: "Search",
+        answer:
+          "Members search posts by their words. Posting must never fail or slow down because search is having trouble.",
+      },
+      {
+        topic: "Latency and availability",
+        answer:
+          "A feed opens within 200 ms at p99, and 99.9 % of requests must succeed. One region is fine for this interview.",
+      },
+    ],
+    phases: [
+      {
+        id: "requirements",
+        minutes: 5,
+        goal: "Agree on the feed's order, freshness and traffic, and on what search must never break.",
+      },
+      {
+        id: "high-level",
+        minutes: 15,
+        goal: "A design that serves feed reads, posts and search end to end, with its data model.",
+      },
+      {
+        id: "deep-dive",
+        minutes: 15,
+        goal: "Choose between building feeds on write and on read, keep up with a big event, and keep posting alive while search is down.",
+      },
+      {
+        id: "wrap-up",
+        minutes: 5,
+        goal: "Summarise the design, the fan-out trade-off and what changes for celebrities.",
+      },
+    ],
+    rubric: [
+      {
+        key: "clarifies-requirements",
+        dimension: "requirements",
+        title: "Clarifies the requirements before designing",
+        signals: [
+          "Asks about the read to write ratio and the number of followers",
+          "Asks how fresh and how ordered a feed must be",
+          "States which requirements they are designing for",
+        ],
+        weight: 10,
+      },
+      {
+        key: "estimates-the-fan-out",
+        dimension: "requirements",
+        title: "Estimates the load, including the fan-out",
+        signals: [
+          "Turns the traffic into feed reads and posts a second",
+          "Multiplies posts by followers to size the fan-out",
+          "Uses the numbers to choose between push and pull",
+        ],
+        weight: 10,
+      },
+      {
+        key: "designs-the-core",
+        dimension: "design",
+        title: "Designs the read path, the write path and the data model",
+        signals: [
+          "Separates opening a feed from writing a post",
+          "Chooses stores for posts and for feeds, and says why",
+          "Explains building feeds on write against building them on read",
+        ],
+        weight: 20,
+      },
+      {
+        key: "fans-out-in-the-background",
+        dimension: "scaling",
+        title: "Fans posts out in the background and caches feeds",
+        signals: [
+          "Writes posts into feeds from workers behind a stream or queue, not while the author waits",
+          "Keeps feeds in a cache sized for the peak",
+          "Plans for the backlog a big event creates",
+        ],
+        weight: 20,
+      },
+      {
+        key: "decouples-search",
+        dimension: "reliability",
+        title: "Keeps posting and reading alive when parts fail",
+        signals: [
+          "Feeds the search index from the store's change feed instead of writing twice",
+          "Explains what members see while search is down",
+          "Removes single points of failure from the feed path",
+        ],
+        weight: 20,
+      },
+      {
+        key: "communicates",
+        dimension: "communication",
+        title: "Explains trade-offs and responds to challenges",
+        signals: [
+          "Thinks aloud and keeps the design and the explanation in step",
+          "Names the trade-off behind each choice",
+          "Changes the design when a drill or a question shows a problem",
+        ],
+        weight: 20,
+      },
+    ],
+    drillIds: ["normal-day", "big-event", "search-down"],
+  },
   hints: [
     {
       title: "Build feeds once, not on every read",

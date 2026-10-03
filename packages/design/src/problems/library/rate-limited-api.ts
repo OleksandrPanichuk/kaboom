@@ -124,6 +124,143 @@ The *Partners* client is already on the canvas. Build what it talks to.`,
       check: { check: "no-lint", lint: "spof-critical-path" },
     },
   ],
+  interview: {
+    opening:
+      "Hi! Today we're designing the public API a travel company gives its partners for looking up prices. What would you like to know before you start?",
+    facts: [
+      {
+        topic: "Traffic",
+        answer:
+          "About 4,000 requests a second from all partners together: 90 % are price lookups and 10 % report bookings.",
+      },
+      {
+        topic: "Partners",
+        answer:
+          "About 200 partners, each with its own API key. A few large ones make most of the traffic.",
+      },
+      {
+        topic: "Limits",
+        answer:
+          "Each partner's contract sets a limit: 50 requests a second by default, up to 500 for the largest. A request over the limit gets 429 with a Retry-After header.",
+      },
+      {
+        topic: "Floods",
+        answer:
+          "Every so often one partner's code goes wrong and sends five times the usual total traffic, for minutes or until someone notices.",
+      },
+      {
+        topic: "Price freshness",
+        answer:
+          "Prices change every few minutes. A lookup may answer a price up to 60 seconds old.",
+      },
+      {
+        topic: "Bookings",
+        answer:
+          "A booking report must never be lost, but it may take up to a second to acknowledge.",
+      },
+      {
+        topic: "The pricing database",
+        answer:
+          "It takes 6,000 lookups and 1,500 writes a second and is shared with other systems. It cannot be scaled for this API.",
+      },
+      {
+        topic: "Latency and availability",
+        answer:
+          "A partner that behaves gets an answer within 250 ms at p99 and 99.9 % success, even while another one floods the API.",
+      },
+    ],
+    phases: [
+      {
+        id: "requirements",
+        minutes: 5,
+        goal: "Agree on the traffic, the limits per partner and what a flood looks like.",
+      },
+      {
+        id: "high-level",
+        minutes: 15,
+        goal: "A design that serves lookups and bookings end to end and says where limits are enforced.",
+      },
+      {
+        id: "deep-dive",
+        minutes: 15,
+        goal: "Keep well-behaved partners fast during a flood without growing the pricing database, and survive losing a server.",
+      },
+      {
+        id: "wrap-up",
+        minutes: 5,
+        goal: "Summarise the design, how it fails and what changes with ten times the partners.",
+      },
+    ],
+    rubric: [
+      {
+        key: "clarifies-requirements",
+        dimension: "requirements",
+        title: "Clarifies the requirements before designing",
+        signals: [
+          "Asks about the mix of lookups and bookings",
+          "Asks about limits per partner and what happens over them",
+          "Asks how stale a price may be",
+        ],
+        weight: 15,
+      },
+      {
+        key: "estimates-capacity",
+        dimension: "requirements",
+        title: "Compares the load with what the database can take",
+        signals: [
+          "Turns the traffic into lookups and writes a second",
+          "Notices that a flood is well beyond the pricing database",
+          "Uses the numbers to size the cache and the limits",
+        ],
+        weight: 10,
+      },
+      {
+        key: "designs-the-core",
+        dimension: "design",
+        title: "Designs the API, its data path and where limits apply",
+        signals: [
+          "Defines the lookup and booking endpoints",
+          "Identifies partners by key and enforces their limits at the edge",
+          "Keeps bookings durable while lookups stay fast",
+        ],
+        weight: 20,
+      },
+      {
+        key: "protects-the-database",
+        dimension: "scaling",
+        title: "Keeps the pricing database safe under a flood",
+        signals: [
+          "Rate-limits before any expensive work happens",
+          "Caches lookups, using the 60 seconds a price may be stale",
+          "Turns the excess away quickly instead of letting everyone time out",
+        ],
+        weight: 20,
+      },
+      {
+        key: "survives-failures",
+        dimension: "reliability",
+        title: "Keeps the API up when parts fail",
+        signals: [
+          "Removes single points of failure on the request path",
+          "Leaves headroom to lose a server",
+          "Explains what partners see while something is broken",
+        ],
+        weight: 15,
+      },
+      {
+        key: "communicates",
+        dimension: "communication",
+        title: "Explains trade-offs and responds to challenges",
+        signals: [
+          "Thinks aloud and keeps the design and the explanation in step",
+          "Names the trade-off behind each choice",
+          "Changes the design when a drill or a question shows a problem",
+        ],
+        weight: 20,
+      },
+    ],
+    drillIds: ["normal-day", "flood", "api-replica-lost"],
+  },
   hints: [
     {
       title: "Why does everyone wait during a flood?",
