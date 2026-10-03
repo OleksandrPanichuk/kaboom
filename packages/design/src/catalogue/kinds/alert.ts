@@ -3,6 +3,13 @@ import z from "zod";
 import { defineNodeKind } from "../define-node-kind";
 import { choice, seconds } from "./shared";
 
+export const ALERT_SIGNALS = [
+  "error-rate",
+  "latency",
+  "saturation",
+  "rollout-progress",
+] as const;
+
 export const alertKind = defineNodeKind({
   kind: "alert",
   track: "devops",
@@ -23,14 +30,10 @@ export const alertKind = defineNodeKind({
     ],
   },
   props: z.strictObject({
-    signal: choice(
-      ["error-rate", "latency", "saturation", "rollout-progress"],
-      "error-rate",
-      {
-        title: "Signal",
-        description: "What it watches on the nodes it points at",
-      },
-    ),
+    signal: choice(ALERT_SIGNALS, "error-rate", {
+      title: "Signal",
+      description: "What it watches on the nodes it points at",
+    }),
     forSeconds: seconds(300, {
       title: "For",
       description: "How long the signal must stay bad before it pages",

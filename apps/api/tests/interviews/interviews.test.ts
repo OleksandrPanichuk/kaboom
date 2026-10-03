@@ -88,6 +88,7 @@ describe("starting an interview", () => {
       "news-feed",
       "rate-limited-api",
       "url-shortener",
+      "zero-downtime-rollout",
     ]);
 
     for (const problem of interviewable) {
