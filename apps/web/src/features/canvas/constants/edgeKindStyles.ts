@@ -107,6 +107,18 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
     },
     animated: false,
   },
+  scrapes: {
+    description:
+      "The source collects the target's metrics, so alerts on the target can fire; it carries no request load.",
+    label: "Scrapes",
+    style: {
+      stroke: "var(--color-amber-500)",
+      strokeWidth: 1.5,
+      strokeDasharray: "1 4",
+      strokeLinecap: "round",
+    },
+    animated: false,
+  },
   "pipeline-next": {
     description:
       "The target stage starts once the source stage has finished; it carries no request load.",

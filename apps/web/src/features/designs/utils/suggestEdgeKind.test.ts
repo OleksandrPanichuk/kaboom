@@ -28,6 +28,7 @@ describe("suggestEdgeKind", () => {
     ["k8s-deployment", "config-map", "mounts"],
     ["hpa", "k8s-deployment", "scales"],
     ["alert", "k8s-deployment", "watches"],
+    ["monitoring", "k8s-deployment", "scrapes"],
     ["pipeline-stage", "pipeline-stage", "pipeline-next"],
     ["pipeline-stage", "artifact-registry", "publishes"],
     ["security-group", "service", "protects"],

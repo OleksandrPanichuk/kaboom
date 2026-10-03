@@ -53,6 +53,7 @@ export const capacityOf = (
     case "config-map":
     case "secret":
     case "alert":
+    case "monitoring":
     case "pipeline-stage":
     case "artifact-registry":
     case "security-group":
@@ -165,6 +166,7 @@ export const baseLatencyOf = (node: DesignNode): number => {
     case "config-map":
     case "secret":
     case "alert":
+    case "monitoring":
     case "pipeline-stage":
     case "artifact-registry":
     case "security-group":
@@ -214,6 +216,7 @@ export const carries = (
     case "mounts":
     case "scales":
     case "watches":
+    case "scrapes":
     case "pipeline-next":
     case "publishes":
     case "protects":

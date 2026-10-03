@@ -128,6 +128,20 @@ const judge = (
         };
       }
 
+      const unscraped = watched.filter(
+        (target) =>
+          !context.graph.edges.some(
+            (edge) => edge.kind === "scrapes" && edge.to === target.id,
+          ),
+      );
+
+      if (unwatched.length === 0 && unscraped.length > 0) {
+        return {
+          passed: false,
+          evidence: `An alert watches ${unscraped.map((item) => item.label || item.id).join(", ")}, but nothing scrapes its metrics, so it can never fire.`,
+        };
+      }
+
       return unwatched.length === 0
         ? {
             passed: true,

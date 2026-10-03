@@ -179,6 +179,29 @@ const runLoadDrill = (drill: LoadDrill, graph: DesignGraph): DrillOutcome => {
     }
   }
 
+  if (drill.expect.detectWithinSeconds !== undefined) {
+    const onset = Math.min(
+      ...drill.faults.map((fault) => fault.at),
+      ...(drill.traffic ?? []).map((point) => point.at),
+      drill.durationSeconds,
+    );
+    const firedAt = result.alerts.flatMap((alert) =>
+      alert.firedAt === null ? [] : [alert.firedAt],
+    );
+    const first = firedAt.length > 0 ? Math.min(...firedAt) : null;
+    const limit = drill.expect.detectWithinSeconds;
+
+    if (first === null) {
+      failures.push(
+        `Nobody was paged: no alert fired, and the drill needs one within ${limit} s of the trouble starting.`,
+      );
+    } else if (first - onset > limit) {
+      failures.push(
+        `The first page came ${first - onset} s after the trouble started; the drill needs one within ${limit} s.`,
+      );
+    }
+  }
+
   if (drill.expect.maxPods !== undefined) {
     const pods = podsAtMost(graph);
 
