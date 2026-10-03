@@ -26,6 +26,13 @@ const toFault = (draft: FaultDraft): Fault => {
       };
     case "cache-flush":
       return { kind: "cache-flush", nodeId: draft.targetId, at: draft.at };
+    case "rollout":
+      return {
+        kind: "rollout",
+        nodeId: draft.targetId,
+        at: draft.at,
+        release: draft.release,
+      };
   }
 };
 

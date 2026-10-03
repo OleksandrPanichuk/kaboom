@@ -11,6 +11,12 @@ const TrafficPointSchema = z.strictObject({
 
 const window = { at: Seconds, until: Seconds.optional() };
 
+export const RELEASES = ["healthy", "never-ready", "broken"] as const;
+
+export type Release = (typeof RELEASES)[number];
+
+export const ReleaseSchema = z.enum(RELEASES);
+
 export const FaultSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("node-down"), nodeId: IdSchema, ...window }),
   z.strictObject({
@@ -34,6 +40,12 @@ export const FaultSchema = z.discriminatedUnion("kind", [
     kind: z.literal("cache-flush"),
     nodeId: IdSchema,
     at: Seconds,
+  }),
+  z.strictObject({
+    kind: z.literal("rollout"),
+    nodeId: IdSchema,
+    at: Seconds,
+    release: ReleaseSchema.default("healthy"),
   }),
 ]);
 

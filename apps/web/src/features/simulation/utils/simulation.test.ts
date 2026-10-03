@@ -56,6 +56,7 @@ describe("toScenario", () => {
             until: null,
             factor: 0.5,
             addMs: 100,
+            release: "healthy",
           },
           {
             key: "2",
@@ -65,6 +66,7 @@ describe("toScenario", () => {
             until: 90,
             factor: 1,
             addMs: 0,
+            release: "healthy",
           },
           {
             key: "3",
@@ -74,6 +76,7 @@ describe("toScenario", () => {
             until: null,
             factor: 1,
             addMs: 0,
+            release: "healthy",
           },
         ],
       },
@@ -83,6 +86,35 @@ describe("toScenario", () => {
     expect(scenario.faults).toEqual([
       { kind: "capacity", nodeId: "api", at: 30, factor: 0.5 },
       { kind: "cache-flush", nodeId: "cache", at: 60 },
+    ]);
+  });
+
+  test("builds a rollout with the version it ships and no end", () => {
+    const withDeployment = {
+      ...graph,
+      nodes: [...graph.nodes, createNode("k8s-deployment", { id: "app" })],
+    };
+    const scenario = toScenario(
+      {
+        ...DEFAULT_SCENARIO,
+        faults: [
+          {
+            key: "1",
+            kind: "rollout",
+            targetId: "app",
+            at: 30,
+            until: 90,
+            factor: 1,
+            addMs: 0,
+            release: "never-ready",
+          },
+        ],
+      },
+      withDeployment,
+    );
+
+    expect(scenario.faults).toEqual([
+      { kind: "rollout", nodeId: "app", at: 30, release: "never-ready" },
     ]);
   });
 
@@ -99,6 +131,7 @@ describe("toScenario", () => {
       until: 120,
       factor: 1,
       addMs: 0,
+      release: "healthy" as const,
     });
     const scenario = toScenario(
       { ...DEFAULT_SCENARIO, faults: [fault("eu"), fault("gone")] },

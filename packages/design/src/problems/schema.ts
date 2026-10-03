@@ -2,7 +2,7 @@ import z from "zod";
 
 import { NODE_KINDS, type NodeKind, type Track, TRACKS } from "../catalogue";
 import { FINDING_KINDS } from "../evaluate/result";
-import { SloSchema } from "../evaluate/scenario";
+import { ReleaseSchema, SloSchema } from "../evaluate/scenario";
 import { DesignGraphSchema, IdSchema } from "../graph";
 import { LINT_IDS } from "../lints";
 
@@ -49,6 +49,12 @@ export const DrillFaultSchema = z.discriminatedUnion("kind", [
     kind: z.literal("region-down"),
     select: NodeSelectorSchema,
     ...window,
+  }),
+  z.strictObject({
+    kind: z.literal("rollout"),
+    select: NodeSelectorSchema,
+    at: Seconds,
+    release: ReleaseSchema.default("healthy"),
   }),
 ]);
 export type DrillFault = z.output<typeof DrillFaultSchema>;

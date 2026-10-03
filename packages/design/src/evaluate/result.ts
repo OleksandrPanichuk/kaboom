@@ -1,3 +1,20 @@
+export const ROLLOUT_PHASES = [
+  "rolling",
+  "complete",
+  "stalled",
+  "rolled-back",
+] as const;
+
+export type RolloutPhase = (typeof ROLLOUT_PHASES)[number];
+
+export interface RolloutStep {
+  phase: RolloutPhase;
+  old: number;
+  ready: number;
+  starting: number;
+  failing: number;
+}
+
 export interface NodeStep {
   reads: number;
   writes: number;
@@ -10,6 +27,7 @@ export interface NodeStep {
   replicas?: number;
   backlog?: number;
   throttled?: number;
+  rollout?: RolloutStep;
 }
 
 export interface EdgeStep {
@@ -39,6 +57,8 @@ export const FINDING_KINDS = [
   "throttled",
   "backlog-growing",
   "slo-breach",
+  "rollout-stalled",
+  "rolled-back",
 ] as const;
 
 export type FindingKind = (typeof FINDING_KINDS)[number];

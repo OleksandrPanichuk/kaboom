@@ -11,6 +11,8 @@ const TITLES: Record<Finding["kind"], string> = {
   throttled: "Turning requests away",
   "backlog-growing": "Falling behind",
   "slo-breach": "SLO missed",
+  "rollout-stalled": "Rollout stuck",
+  "rolled-back": "Rolled back",
 };
 
 interface FindingsListProps {
