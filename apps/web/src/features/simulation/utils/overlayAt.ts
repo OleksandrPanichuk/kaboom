@@ -22,7 +22,7 @@ const rolloutText = (rollout: RolloutStep): string => {
       return `Rollout stuck · ${rollout.ready} new`;
     case "complete":
       return rollout.failing > 0
-        ? `Rolled out · ${rollout.failing} hung`
+        ? `Rolled out · ${rollout.failing} failing`
         : rollout.restarts > 0
           ? `Rolled out · ${rollout.restarts} restarts`
           : "Rolled out";

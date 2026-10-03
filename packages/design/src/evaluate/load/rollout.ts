@@ -71,14 +71,17 @@ export interface Rollout {
   phase: RolloutPhase;
   canaryReadyAt: number | null;
   oldFailsFrom: number | null;
-  oldFailureCause: "migration" | "rotation" | null;
+  oldFailureCause: "migration" | "rotation" | "release" | null;
 }
 
 export const startRollout = (
   release: Release,
   t: number,
   replicas: number,
-  oldFailure: { from: number; cause: "migration" | "rotation" } | null = null,
+  oldFailure: {
+    from: number;
+    cause: "migration" | "rotation" | "release";
+  } | null = null,
 ): Rollout => ({
   release,
   startedAt: t,
@@ -222,6 +225,29 @@ export const rolloutStepAt = (
     slow: fresh.slow,
     restarts: fresh.restarts,
   };
+};
+
+export const inheritedFailure = (
+  previous: Rollout,
+  props: DeploymentProps,
+  t: number,
+): { from: number; cause: Rollout["oldFailureCause"] & string } | null => {
+  if (
+    previous.phase !== "complete" &&
+    previous.oldFailsFrom !== null &&
+    previous.oldFailureCause !== null
+  ) {
+    return { from: previous.oldFailsFrom, cause: previous.oldFailureCause };
+  }
+
+  if (
+    previous.phase === "complete" &&
+    newPodsAt(previous, props, t).failing > 0
+  ) {
+    return { from: t, cause: "release" };
+  }
+
+  return null;
 };
 
 export const servingPods = (

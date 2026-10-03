@@ -180,3 +180,44 @@ describe("network evaluator rules", () => {
     expect(kinds(graph)).toEqual(["exposed-store:files"]);
   });
 });
+
+describe("review fixes", () => {
+  test("a store that carries no traffic inside the VPC is not an open store, since no security group can protect it", () => {
+    const graph = design(
+      [
+        placed("reg", "artifact-registry", "private"),
+        placed("mon", "monitoring", "private"),
+      ],
+      [],
+    );
+
+    expect(kinds(graph)).not.toContain("open-store:reg");
+    expect(kinds(graph)).not.toContain("open-store:mon");
+  });
+
+  test("a private subnet needs a NAT gateway to call another VPC, not only the internet", () => {
+    const graph: DesignGraph = {
+      ...design(
+        [
+          placed("app", "service", "private"),
+          placed("api", "service", "b-public"),
+        ],
+        [["app", "api", "sync-call"]],
+      ),
+      groups: [
+        ...groups,
+        createGroup({ id: "b", kind: "vpc", label: "B" }),
+        createGroup({
+          id: "b-public",
+          kind: "public-subnet",
+          label: "B public",
+          parentId: "b",
+        }),
+      ],
+    };
+
+    expect(evaluateNetwork(graph).connections[0]).toMatchObject({
+      allowed: false,
+    });
+  });
+});

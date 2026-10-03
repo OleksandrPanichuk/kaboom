@@ -27,8 +27,9 @@ group protects accepts any connection that can reach it.
 Every edge that carries load is a connection from its source to its
 target. It is **blocked** when:
 
-- the target is on the internet and the source sits in a private subnet
-  of a VPC with no `nat-gateway` in a public subnet;
+- the target is outside the source's VPC, on the internet or in another
+  VPC, and the source sits in a private subnet of a VPC with no
+  `nat-gateway` in a public subnet;
 - the target sits in a private subnet and the source is outside its VPC;
 - the target's security group does not admit the source: from outside
   its VPC only `fromInternet` does; from inside, `fromVpc` or an `admits`
@@ -47,7 +48,7 @@ Clients and external APIs are the internet themselves and are left out.
 | `blocked-path`    | a connection is blocked                                                           |
 | `exposed-store`   | a stateful node, other than an entry point, is reachable from the internet        |
 | `exposed-service` | a node that is neither stateful nor an entry point is reachable from the internet |
-| `open-store`      | a stateful node in a VPC has no security group, or one that admits the whole VPC  |
+| `open-store`      | a stateful node that serves traffic in a VPC has no security group, or one that admits the whole VPC |
 
 Entry points are clients, DNS, CDNs, load balancers, API gateways, rate
 limiters and ingresses: what the internet is meant to reach.
