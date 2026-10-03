@@ -1,7 +1,10 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { MessagesSquare } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { cn } from "cn";
+import { ClipboardCheck, MessagesSquare } from "lucide-react";
 import { useRef, useState } from "react";
 
+import { buttonVariants } from "@/components/ui/Button";
 import { errorMessage } from "@/features/auth";
 import {
   DesignWorkspace,
@@ -99,10 +102,21 @@ export function InterviewView({ interviewId }: InterviewViewProps) {
             ownRevisions={ownRevisions}
           />
           <PhaseClock interview={interview} />
-          <EndInterviewButton
-            disabled={!active || submit.isPending}
-            onEnd={() => submit.mutate({ id: interviewId })}
-          />
+          {active ? (
+            <EndInterviewButton
+              disabled={submit.isPending}
+              onEnd={() => submit.mutate({ id: interviewId })}
+            />
+          ) : interview.status !== "expired" ? (
+            <Link
+              to="/interviews/$interviewId/review"
+              params={{ interviewId }}
+              className={cn(buttonVariants({ size: "sm" }))}
+            >
+              <ClipboardCheck aria-hidden="true" />
+              Review
+            </Link>
+          ) : null}
         </>
       )}
     />

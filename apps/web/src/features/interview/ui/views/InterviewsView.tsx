@@ -19,6 +19,8 @@ const STATUS: Record<string, string> = {
   expired: "Expired",
 };
 
+const REVIEWED = new Set(["reviewing", "reviewed", "review_failed"]);
+
 export function InterviewsView({ onOpen }: InterviewsViewProps) {
   const { data } = useSuspenseQuery(interviewsQuery);
 
@@ -62,7 +64,11 @@ export function InterviewsView({ onOpen }: InterviewsViewProps) {
                 className="relative flex min-w-0 flex-col gap-1 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] hover:border-indigo-200 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50"
               >
                 <Link
-                  to="/interviews/$interviewId"
+                  to={
+                    REVIEWED.has(interview.status)
+                      ? "/interviews/$interviewId/review"
+                      : "/interviews/$interviewId"
+                  }
                   params={{ interviewId: interview.id }}
                   className="font-semibold tracking-[-0.02em] outline-none after:absolute after:inset-0 after:rounded-2xl"
                 >
