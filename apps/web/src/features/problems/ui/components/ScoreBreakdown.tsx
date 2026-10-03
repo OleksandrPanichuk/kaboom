@@ -1,13 +1,28 @@
 import type { SubmissionModel } from "@repo/api-client";
 import { cn } from "cn";
-import { CircleCheck, CircleX } from "lucide-react";
+import { CircleCheck, CircleX, LoaderCircle } from "lucide-react";
 
+import { ScoreDots } from "@/components/ScoreDots";
+import { useLatestSubmission } from "@/features/problems/hooks";
 import { scoreTone } from "@/features/problems/utils";
 
 import { DrillResults } from "./DrillResults";
 
 interface ScoreBreakdownProps {
   submission: SubmissionModel;
+}
+
+const DIMENSIONS: Record<string, string> = {
+  design: "Core design",
+  scaling: "Scaling",
+  reliability: "Reliability",
+};
+
+export function LatestScoreBreakdown({
+  slug,
+  submission,
+}: ScoreBreakdownProps & { slug: string }) {
+  return <ScoreBreakdown submission={useLatestSubmission(slug, submission)} />;
 }
 
 export function ScoreBreakdown({ submission }: ScoreBreakdownProps) {
@@ -26,6 +41,7 @@ export function ScoreBreakdown({ submission }: ScoreBreakdownProps) {
           / 100 · revision {submission.revision}
         </span>
       </p>
+      <DesignReviewNote submission={submission} />
       {!submission.counted ? (
         <p className="-mt-3 text-sm text-amber-800">
           Not counted toward points: you looked at other solutions within the
@@ -65,6 +81,38 @@ export function ScoreBreakdown({ submission }: ScoreBreakdownProps) {
           </li>
         ))}
       </ul>
+      {submission.review ? (
+        <div className="flex flex-col gap-3 rounded-xl border border-black/[0.07] bg-zinc-50/60 p-3">
+          <h4 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Design review
+          </h4>
+          <p className="text-sm leading-6 text-zinc-700 text-pretty">
+            {submission.review.summary}
+          </p>
+          <ul className="flex flex-col gap-2.5">
+            {submission.review.items.map((item) => (
+              <li key={item.dimension} className="flex flex-col gap-0.5">
+                <p className="flex items-center justify-between gap-3 text-sm font-medium">
+                  {DIMENSIONS[item.dimension] ?? item.dimension}
+                  <ScoreDots score={item.score} />
+                </p>
+                <p className="text-sm leading-5 text-muted-foreground text-pretty">
+                  {item.rationale}
+                </p>
+              </li>
+            ))}
+          </ul>
+          {submission.review.improvements.length > 0 ? (
+            <ul className="flex list-disc flex-col gap-1 pl-5 text-sm leading-5 text-zinc-700 marker:text-zinc-300">
+              {submission.review.improvements.map((improvement) => (
+                <li key={improvement} className="text-pretty">
+                  {improvement}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
       <div className="flex flex-col gap-2">
         <h4 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Drills
@@ -73,4 +121,41 @@ export function ScoreBreakdown({ submission }: ScoreBreakdownProps) {
       </div>
     </div>
   );
+}
+
+function DesignReviewNote({ submission }: ScoreBreakdownProps) {
+  if (submission.reviewStatus === "pending") {
+    return (
+      <p
+        role="status"
+        className="-mt-3 flex items-center gap-1.5 text-sm text-muted-foreground"
+      >
+        <LoaderCircle
+          aria-hidden="true"
+          className="size-3.5 animate-spin text-indigo-600"
+        />
+        Reviewing the design. The score may move by up to 30 points.
+      </p>
+    );
+  }
+
+  if (submission.reviewStatus === "reviewed") {
+    return (
+      <p className="-mt-3 text-sm text-muted-foreground tabular-nums">
+        Checks {submission.deterministicScore} · design review{" "}
+        {submission.reviewScore}, weighted 70 / 30
+      </p>
+    );
+  }
+
+  if (submission.reviewStatus === "failed") {
+    return (
+      <p className="-mt-3 text-sm text-muted-foreground">
+        The design review could not be written, so the score is the checks
+        alone.
+      </p>
+    );
+  }
+
+  return null;
 }

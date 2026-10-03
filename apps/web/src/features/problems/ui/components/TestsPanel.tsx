@@ -4,15 +4,21 @@ import type { ProblemOutcome } from "@/features/problems/typedefs";
 
 import { DrillResults } from "./DrillResults";
 import { PanelSection } from "./PanelSection";
-import { ScoreBreakdown } from "./ScoreBreakdown";
+import { LatestScoreBreakdown } from "./ScoreBreakdown";
 
 interface TestsPanelProps {
+  slug: string;
   outcome: ProblemOutcome | null;
   revision: number;
   error: string | null;
 }
 
-export function TestsPanel({ outcome, revision, error }: TestsPanelProps) {
+export function TestsPanel({
+  slug,
+  outcome,
+  revision,
+  error,
+}: TestsPanelProps) {
   if (!outcome) {
     return (
       <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
@@ -60,7 +66,7 @@ export function TestsPanel({ outcome, revision, error }: TestsPanelProps) {
         </PanelSection>
       ) : (
         <PanelSection title="Submission">
-          <ScoreBreakdown submission={outcome.submission} />
+          <LatestScoreBreakdown slug={slug} submission={outcome.submission} />
         </PanelSection>
       )}
     </div>
