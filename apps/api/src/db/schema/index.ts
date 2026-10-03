@@ -6,6 +6,7 @@ export * from "./interview_events.schema";
 export * from "./interview_messages.schema";
 export * from "./interviewer_turns.schema";
 export * from "./interviews.schema";
+export * from "./leaderboard_profiles.schema";
 export * from "./llm_usage.schema";
 export * from "./problem_attempts.schema";
 export * from "./problem_versions.schema";

@@ -3,6 +3,7 @@ import { accountsModule } from "@/modules/accounts";
 import { authModule } from "@/modules/auth";
 import { designsModule } from "@/modules/designs";
 import { interviewsModule } from "@/modules/interviews";
+import { leaderboardModule } from "@/modules/leaderboard";
 import { notificationsModule } from "@/modules/notifications";
 import { oauthModule } from "@/modules/oauth";
 import { problemsModule } from "@/modules/problems";
@@ -52,5 +53,6 @@ export const modules = [
   skillsModule,
   reviewsModule,
   progressModule,
+  leaderboardModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

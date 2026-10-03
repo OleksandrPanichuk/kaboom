@@ -578,6 +578,18 @@ draw how each skill moved. `progress` is a read model that owns no table:
 challenge submissions, newest first, with the number of reviews and their
 average score.
 
+## Leaderboard
+
+`leaderboard` ranks people by points, computed on read from submissions:
+each official problem's best counted score times its difficulty weight,
+the same arithmetic as `/progress`. `?period=week` counts only submissions
+of the last seven days and `?track=` only that track's problems; the rank
+name shows only all time and across tracks, where it means what the ranks
+say. Nobody is listed until they choose a handle and to be shown, in the
+module's own `leaderboard_profiles`; the board shows the handle, never the
+name or the email. Tied points share a place. `me` is the caller's own
+standing, with a position only when they are listed.
+
 ## DevOps track
 
 A problem belongs to one track, `system-design` or `devops` (`TRACKS` in
