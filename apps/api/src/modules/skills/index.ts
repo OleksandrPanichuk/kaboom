@@ -11,5 +11,9 @@ export * from "./skills.constants";
 export * from "./skills.helpers";
 export { skillsModule } from "./skills.module";
 export { type SkillsActions, skillsRoutes } from "./skills.routes";
-export { type RecordReviewSkills, SkillsService } from "./skills.service";
+export {
+  type RecordReviewSkills,
+  type RecordSubmissionSkills,
+  SkillsService,
+} from "./skills.service";
 export * from "./use-cases";

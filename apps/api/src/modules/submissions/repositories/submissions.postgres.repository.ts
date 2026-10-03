@@ -8,11 +8,13 @@ import { Keyset } from "@/db/pagination";
 
 import {
   type BestScore,
+  type CompleteReviewData,
   type CreateSubmissionData,
+  type ReviewableSubmission,
   type SharedSolution,
   SubmissionsRepository,
 } from "../ports/submissions.repository";
-import type { SubmissionEntity } from "../submission.entity";
+import type { DesignReview, SubmissionEntity } from "../submission.entity";
 
 const NEWEST_FIRST = new Keyset<SubmissionEntity>({
   sort: submissionsSchema.createdAt,
@@ -23,9 +25,12 @@ const NEWEST_FIRST = new Keyset<SubmissionEntity>({
 
 const toEntity = ({
   graph: _graph,
+  reviewModel: _model,
+  reviewPromptVersion: _version,
   ...row
 }: SubmissionRow): SubmissionEntity => ({
   ...row,
+  review: row.review as DesignReview | null,
   items: row.items as ItemScore[],
   drills: row.drills as DrillScore[],
 });
@@ -46,6 +51,48 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
       .returning();
 
     return toEntity(row!);
+  }
+
+  public async findById(id: string): Promise<ReviewableSubmission | null> {
+    const [row] = await this.db
+      .select()
+      .from(submissionsSchema)
+      .where(eq(submissionsSchema.id, id))
+      .limit(1);
+
+    return row
+      ? { submission: toEntity(row), graph: row.graph as DesignGraph | null }
+      : null;
+  }
+
+  public async completeReview(
+    id: string,
+    data: CompleteReviewData,
+  ): Promise<SubmissionEntity | null> {
+    const [row] = await this.db
+      .update(submissionsSchema)
+      .set({ ...data, reviewStatus: "reviewed" })
+      .where(
+        and(
+          eq(submissionsSchema.id, id),
+          eq(submissionsSchema.reviewStatus, "pending"),
+        ),
+      )
+      .returning();
+
+    return row ? toEntity(row) : null;
+  }
+
+  public async failReview(id: string): Promise<void> {
+    await this.db
+      .update(submissionsSchema)
+      .set({ reviewStatus: "failed" })
+      .where(
+        and(
+          eq(submissionsSchema.id, id),
+          eq(submissionsSchema.reviewStatus, "pending"),
+        ),
+      );
   }
 
   public async list(

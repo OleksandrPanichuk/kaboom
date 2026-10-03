@@ -4,6 +4,7 @@ export const REVIEWS_QUEUE = "reviews";
 
 export const ReviewQueueJobs = {
   GenerateReview: "reviews.generate",
+  ReviewSubmission: "reviews.review-submission",
 } as const;
 
 export const REVIEW_PROMPT_VERSION = 1;

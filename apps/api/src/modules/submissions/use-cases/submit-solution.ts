@@ -5,10 +5,10 @@ import {
   scoreSubmission,
 } from "@repo/design";
 
-import { makeRepository, makeService } from "@/core/registry";
+import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 
-import { SubmissionsRepository } from "../ports";
+import { SubmissionReviewScheduler, SubmissionsRepository } from "../ports";
 import type { SubmissionEntity } from "../submission.entity";
 import { SubmissionPendingChangesError } from "../submissions.errors";
 import { SubmissionsService } from "../submissions.service";
@@ -47,7 +47,7 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
     const penalty = hintPenalty(version.content, attempt.hintsRevealed);
     const lockedUntil = await this.service.lockOf(userId, attempt.problemId);
 
-    return this.submissions.insert({
+    const inserted = await this.submissions.insert({
       attemptId: attempt.id,
       userId,
       problemId: attempt.problemId,
@@ -56,11 +56,19 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       revision: design.revision,
       graphHash: design.graphHash,
       score: penalised(shown.score, penalty),
+      deterministicScore: shown.score,
+      reviewStatus: "pending",
       hintPenalty: penalty,
       counted: lockedUntil === null,
       graph: design.graph,
       items: shown.items,
       drills: shown.drills,
     });
+
+    await make(SubmissionReviewScheduler).schedule(inserted.id);
+
+    return (
+      (await this.submissions.findById(inserted.id))?.submission ?? inserted
+    );
   }
 }

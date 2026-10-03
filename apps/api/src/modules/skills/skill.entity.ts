@@ -7,6 +7,7 @@ export interface SkillScoreEntity {
   problemId: string;
   interviewId: string | null;
   reviewId: string | null;
+  submissionId: string | null;
   score: number;
   weight: number;
   scoringVersion: number;

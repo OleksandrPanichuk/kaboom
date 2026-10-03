@@ -2,6 +2,8 @@ import type { InterviewDimension } from "@repo/design";
 
 export const SKILL_SCORING_VERSION = 1;
 
+export const SUBMISSION_SKILL_WEIGHT = 10;
+
 export const SKILL_LABELS: Record<InterviewDimension, string> = {
   requirements: "Requirements",
   design: "Core design",

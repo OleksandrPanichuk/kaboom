@@ -2,9 +2,9 @@ import type { DesignGraph, DrillScore, ItemScore } from "@repo/design";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
-import type { ProblemDifficulty } from "@/db";
+import type { ProblemDifficulty, SubmissionReviewStatus } from "@/db";
 
-import type { SubmissionEntity } from "../submission.entity";
+import type { DesignReview, SubmissionEntity } from "../submission.entity";
 
 export interface CreateSubmissionData {
   attemptId: string;
@@ -15,6 +15,8 @@ export interface CreateSubmissionData {
   revision: number;
   graphHash: string;
   score: number;
+  deterministicScore: number;
+  reviewStatus: SubmissionReviewStatus;
   hintPenalty: number;
   counted: boolean;
   graph: DesignGraph;
@@ -38,8 +40,30 @@ export interface BestScore {
   submissions: number;
 }
 
+export interface CompleteReviewData {
+  score: number;
+  reviewScore: number;
+  review: DesignReview;
+  reviewModel: string;
+  reviewPromptVersion: number;
+}
+
+export interface ReviewableSubmission {
+  submission: SubmissionEntity;
+  graph: DesignGraph | null;
+}
+
 export abstract class SubmissionsRepository extends Repository {
   public abstract insert(data: CreateSubmissionData): Promise<SubmissionEntity>;
+
+  public abstract findById(id: string): Promise<ReviewableSubmission | null>;
+
+  public abstract completeReview(
+    id: string,
+    data: CompleteReviewData,
+  ): Promise<SubmissionEntity | null>;
+
+  public abstract failReview(id: string): Promise<void>;
 
   public abstract list(
     userId: string,

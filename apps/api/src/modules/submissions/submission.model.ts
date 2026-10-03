@@ -1,4 +1,7 @@
+import { INTERVIEW_DIMENSIONS } from "@repo/design";
 import { t } from "elysia";
+
+import { SUBMISSION_REVIEW_STATUSES } from "@/db";
 
 export const RevealedHintModel = t.Object({
   index: t.Integer(),
@@ -42,12 +45,30 @@ export const RunResultModel = t.Object({
 });
 export type RunResultModel = typeof RunResultModel.static;
 
+export const DesignReviewModel = t.Object({
+  summary: t.String(),
+  strengths: t.Array(t.String()),
+  improvements: t.Array(t.String()),
+  items: t.Array(
+    t.Object({
+      dimension: t.UnionEnum(INTERVIEW_DIMENSIONS),
+      score: t.Integer({ minimum: 0, maximum: 3 }),
+      rationale: t.String(),
+    }),
+  ),
+});
+export type DesignReviewModel = typeof DesignReviewModel.static;
+
 export const SubmissionModel = t.Object({
   id: t.String({ format: "uuid" }),
   designId: t.String({ format: "uuid" }),
   problemVersion: t.Integer(),
   revision: t.Integer(),
   score: t.Integer(),
+  deterministicScore: t.Integer(),
+  reviewStatus: t.UnionEnum(SUBMISSION_REVIEW_STATUSES),
+  reviewScore: t.Nullable(t.Integer()),
+  review: t.Nullable(DesignReviewModel),
   hintPenalty: t.Integer(),
   counted: t.Boolean(),
   items: t.Array(ItemResultModel),
