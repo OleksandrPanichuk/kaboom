@@ -1,7 +1,7 @@
 import z from "zod";
 
 import { defineNodeKind } from "../define-node-kind";
-import { choice } from "./shared";
+import { choice, seconds } from "./shared";
 
 export const secretKind = defineNodeKind({
   kind: "secret",
@@ -19,6 +19,7 @@ export const secretKind = defineNodeKind({
     pitfalls: [
       "A Kubernetes secret is only encoded, not encrypted, unless encryption at rest is turned on.",
       "Whoever can read secrets in a namespace can read all of them, so grant it narrowly.",
+      "A rotation that revokes the old value at once fails every pod that has not picked up the new one yet.",
     ],
   },
   props: z.strictObject({
@@ -26,6 +27,11 @@ export const secretKind = defineNodeKind({
       title: "Source",
       description:
         "Kept in the cluster, or synced from a vault or a cloud secret manager",
+    }),
+    overlapSeconds: seconds(0, {
+      title: "Rotation overlap",
+      description:
+        "How long the old value stays valid after it is rotated, so pods can switch without failing",
     }),
   }),
 });

@@ -63,6 +63,8 @@ export const FINDING_KINDS = [
   "rolled-back",
   "crash-looping",
   "alert-fired",
+  "stale-secret",
+  "schema-break",
   "untested-deploy",
   "unscanned-deploy",
   "blocked-path",

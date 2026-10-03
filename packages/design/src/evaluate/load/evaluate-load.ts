@@ -146,6 +146,37 @@ interface Memory {
   rollouts: Map<string, Rollout>;
 }
 
+const VOLUME_SYNC_SECONDS = 60;
+
+const rotationOf = (
+  topo: Topology,
+  scenario: LoadScenario,
+  node: Extract<DesignNode, { kind: "k8s-deployment" }>,
+  t: number,
+): { at: number; revokeAt: number } | null => {
+  const mounted = new Map(
+    (topo.mountsOf.get(node.id) ?? []).flatMap((id) => {
+      const secret = topo.byId.get(id);
+
+      return secret?.kind === "secret" ? [[id, secret] as const] : [];
+    }),
+  );
+  const fault = scenario.faults
+    .filter(
+      (item) =>
+        item.kind === "secret-rotation" &&
+        mounted.has(item.nodeId) &&
+        item.at <= t,
+    )
+    .sort((a, b) => a.at - b.at)[0];
+
+  if (fault?.kind !== "secret-rotation") return null;
+
+  const secret = mounted.get(fault.nodeId)!;
+
+  return { at: fault.at, revokeAt: fault.at + secret.props.overlapSeconds };
+};
+
 export const evaluateLoad = (
   graph: DesignGraph,
   input: LoadScenarioInput,
@@ -221,6 +252,7 @@ const runStep = (
   }
 
   const rollouts = new Map<string, RolloutStep>();
+  const staleShares = new Map<string, number>();
 
   for (const node of topo.order) {
     if (node.kind !== "k8s-deployment") continue;
@@ -231,12 +263,42 @@ const runStep = (
           fault.kind === "rollout" && fault.nodeId === node.id && fault.at <= t,
       )
       .sort((a, b) => a.at - b.at)[0];
+    const rotation = rotationOf(topo, scenario, node, t);
+    const restarts =
+      rotation !== null &&
+      node.props.secretDelivery === "env" &&
+      node.props.restartOnSecretChange;
 
-    if (release?.kind !== "rollout") continue;
+    if (rotation && !restarts) {
+      const pickedUp =
+        node.props.secretDelivery === "volume"
+          ? rotation.at + VOLUME_SYNC_SECONDS
+          : null;
+      const stale =
+        t >= rotation.revokeAt && (pickedUp === null || t < pickedUp);
 
-    const rollout =
-      memory.rollouts.get(node.id) ??
-      startRollout(release.release, t, memory.replicas.get(node.id) ?? 1);
+      staleShares.set(node.id, stale ? 1 : 0);
+    }
+
+    let rollout = memory.rollouts.get(node.id);
+
+    if (!rollout && release?.kind === "rollout") {
+      rollout = startRollout(
+        release.release,
+        t,
+        memory.replicas.get(node.id) ?? 1,
+        release.migrates && node.props.schemaChanges === "breaking"
+          ? { from: t, cause: "migration" }
+          : null,
+      );
+    } else if (!rollout && restarts) {
+      rollout = startRollout("healthy", t, memory.replicas.get(node.id) ?? 1, {
+        from: rotation.revokeAt,
+        cause: "rotation",
+      });
+    }
+
+    if (!rollout) continue;
 
     memory.rollouts.set(node.id, rollout);
     advanceRollout(rollout, node.props, t);
@@ -352,7 +414,8 @@ const runStep = (
           admittedFraction *
             servedFraction *
             (1 - intrinsicErrorRateOf(node)) *
-            (1 - (rollout?.failingShare ?? 0));
+            (1 - (rollout?.failingShare ?? 0)) *
+            (1 - (staleShares.get(node.id) ?? 0));
 
     const inboundTimeouts = (topo.inbound.get(node.id) ?? []).map(
       (edge) => edge.props.timeoutMs,
@@ -725,6 +788,40 @@ const runStep = (
         message: `${label} rolled its canary back: the new version ${rollout?.release === "slow" ? "answered twice as slowly" : rollout?.release === "deadlocks" ? "stopped answering after a while" : "failed the requests it was sent"}, so the old one keeps serving.`,
         data: { old: step.rollout.old },
         worst: 0,
+      });
+    }
+
+    const staleOld =
+      rollout?.oldFailureCause === "rotation" &&
+      rollout.oldFailsFrom !== null &&
+      t >= rollout.oldFailsFrom
+        ? (step.rollout?.old ?? 0)
+        : 0;
+    const staleAll = (staleShares.get(node.id) ?? 0) > 0;
+
+    if (node.kind === "k8s-deployment" && (staleOld > 0 || staleAll)) {
+      const pods = staleAll ? (memory.replicas.get(node.id) ?? 1) : staleOld;
+
+      log.note(index, {
+        target: { type: "node", id: node.id },
+        kind: "stale-secret",
+        message: `${label}'s pods still hold a secret's old value after it was revoked, so ${pods} ${pods === 1 ? "pod fails" : "pods fail"} every request until ${staleAll ? (node.props.secretDelivery === "volume" ? "the mounted volume is refreshed" : "they are restarted") : "the restart replaces them"}.`,
+        data: { pods },
+        worst: pods,
+      });
+    }
+
+    if (
+      rollout?.oldFailureCause === "migration" &&
+      step.rollout &&
+      step.rollout.old > 0
+    ) {
+      log.note(index, {
+        target: { type: "node", id: node.id },
+        kind: "schema-break",
+        message: `The release's migration broke the previous version of ${label}: ${step.rollout.old} old ${step.rollout.old === 1 ? "pod fails" : "pods fail"} every request${step.rollout.phase === "rolled-back" ? ", and rolling back brought those pods back" : " until it is replaced"}.`,
+        data: { old: step.rollout.old },
+        worst: step.rollout.old,
       });
     }
 

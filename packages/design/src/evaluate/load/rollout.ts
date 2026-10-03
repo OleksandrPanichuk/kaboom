@@ -70,12 +70,15 @@ export interface Rollout {
   created: number[];
   phase: RolloutPhase;
   canaryReadyAt: number | null;
+  oldFailsFrom: number | null;
+  oldFailureCause: "migration" | "rotation" | null;
 }
 
 export const startRollout = (
   release: Release,
   t: number,
   replicas: number,
+  oldFailure: { from: number; cause: "migration" | "rotation" } | null = null,
 ): Rollout => ({
   release,
   startedAt: t,
@@ -84,6 +87,8 @@ export const startRollout = (
   created: [],
   phase: "rolling",
   canaryReadyAt: null,
+  oldFailsFrom: oldFailure?.from ?? null,
+  oldFailureCause: oldFailure?.cause ?? null,
 });
 
 const passesReadiness = (release: Release, props: DeploymentProps) =>
@@ -141,7 +146,7 @@ export const advanceRollout = (
 
       if (rollout.canaryReadyAt === null) {
         if (ready > 0) rollout.canaryReadyAt = t;
-      } else if (misbehaves(rolloutStepAt(rollout, props, t))) {
+      } else if (misbehaves(newPodsAt(rollout, props, t))) {
         rollout.created = [];
         rollout.phase = "rolled-back";
 
@@ -163,8 +168,38 @@ export const advanceRollout = (
   }
 };
 
-const misbehaves = (step: RolloutStep) =>
-  step.failing > 0 || step.slow > 0 || step.restarts > 0;
+interface NewPods {
+  failing: number;
+  slow: number;
+  restarts: number;
+}
+
+const misbehaves = (pods: NewPods) =>
+  pods.failing > 0 || pods.slow > 0 || pods.restarts > 0;
+
+const switchedAt = (rollout: Rollout, props: DeploymentProps) =>
+  props.strategy !== "blue-green" || rollout.old === 0;
+
+const newPodsAt = (
+  rollout: Rollout,
+  props: DeploymentProps,
+  t: number,
+): NewPods => {
+  const serving = switchedAt(rollout, props) ? readyAt(rollout, props, t) : 0;
+  const pods = podsAt(rollout, props, t);
+  const hung = switchedAt(rollout, props)
+    ? pods.filter((pod) => pod.state === "hung").length
+    : 0;
+
+  return {
+    failing:
+      rollout.release === "never-ready" || rollout.release === "broken"
+        ? serving
+        : hung,
+    slow: rollout.release === "slow" ? serving : 0,
+    restarts: pods.reduce((sum, pod) => sum + pod.restarts, 0),
+  };
+};
 
 export const rolloutStepAt = (
   rollout: Rollout,
@@ -172,22 +207,20 @@ export const rolloutStepAt = (
   t: number,
 ): RolloutStep => {
   const ready = readyAt(rollout, props, t);
-  const switched = props.strategy !== "blue-green" || rollout.old === 0;
-  const serving = switched ? ready : 0;
-  const pods = podsAt(rollout, props, t);
-  const hung = switched ? pods.filter((pod) => pod.state === "hung").length : 0;
+  const fresh = newPodsAt(rollout, props, t);
+  const oldFailing =
+    rollout.oldFailsFrom !== null && t >= rollout.oldFailsFrom
+      ? rollout.old
+      : 0;
 
   return {
     phase: rollout.phase,
     old: rollout.old,
     ready,
     starting: rollout.created.length - ready,
-    failing:
-      rollout.release === "never-ready" || rollout.release === "broken"
-        ? serving
-        : hung,
-    slow: rollout.release === "slow" ? serving : 0,
-    restarts: pods.reduce((sum, pod) => sum + pod.restarts, 0),
+    failing: fresh.failing + oldFailing,
+    slow: fresh.slow,
+    restarts: fresh.restarts,
   };
 };
 

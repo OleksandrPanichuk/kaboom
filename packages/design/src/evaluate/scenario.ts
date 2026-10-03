@@ -52,6 +52,12 @@ export const FaultSchema = z.discriminatedUnion("kind", [
     nodeId: IdSchema,
     at: Seconds,
     release: ReleaseSchema.default("healthy"),
+    migrates: z.boolean().default(false),
+  }),
+  z.strictObject({
+    kind: z.literal("secret-rotation"),
+    nodeId: IdSchema,
+    at: Seconds,
   }),
 ]);
 

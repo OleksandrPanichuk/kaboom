@@ -32,6 +32,13 @@ const toFault = (draft: FaultDraft): Fault => {
         nodeId: draft.targetId,
         at: draft.at,
         release: draft.release,
+        migrates: draft.migrates,
+      };
+    case "secret-rotation":
+      return {
+        kind: "secret-rotation",
+        nodeId: draft.targetId,
+        at: draft.at,
       };
   }
 };

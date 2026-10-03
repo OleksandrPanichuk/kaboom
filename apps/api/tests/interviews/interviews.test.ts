@@ -89,6 +89,8 @@ describe("starting an interview", () => {
       "monorepo-pipeline",
       "news-feed",
       "rate-limited-api",
+      "schema-migration",
+      "secret-rotation",
       "three-tier-vpc",
       "url-shortener",
       "zero-downtime-rollout",
