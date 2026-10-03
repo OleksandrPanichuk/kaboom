@@ -34,3 +34,12 @@ export interface SkillsView {
   skills: SkillSummary[];
   next: NextProblem[];
 }
+
+export interface SkillHistoryPoint {
+  skill: InterviewDimension;
+  score: number;
+  weight: number;
+  source: "interview" | "challenge";
+  problem: { slug: string; title: string };
+  at: Date;
+}

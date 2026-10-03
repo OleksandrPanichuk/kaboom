@@ -1,3 +1,12 @@
-export * from "./interview-events.route";
+export { applyInterviewOpsRoute } from "./apply-interview-ops.route";
+export { getInterviewRoute } from "./get-interview.route";
+export { interruptInterviewerRoute } from "./interrupt-interviewer.route";
+export { interviewEventsRoute } from "./interview-events.route";
 export * from "./interview-params";
-export * from "./interview-routes";
+export { listInterviewsRoute } from "./list-interviews.route";
+export { postInterviewMessageRoute } from "./post-interview-message.route";
+export { runInterviewSimulationRoute } from "./run-interview-simulation.route";
+export { saveInterviewLayoutRoute } from "./save-interview-layout.route";
+export { startInterviewRoute } from "./start-interview.route";
+export { submitInterviewRoute } from "./submit-interview.route";
+export { triggerInterviewerRoute } from "./trigger-interviewer.route";

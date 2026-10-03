@@ -11,6 +11,7 @@ export {
   type BestScore,
   type CompleteReviewData,
   type CreateSubmissionData,
+  type RecentSubmission,
   type ReviewableSubmission,
   type SharedSolution,
   SubmissionsRepository,

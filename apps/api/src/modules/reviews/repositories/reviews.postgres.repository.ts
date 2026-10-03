@@ -1,12 +1,14 @@
 import type { DrillScore, ItemScore } from "@repo/design";
-import { eq } from "drizzle-orm";
+import { avg, count, desc, eq } from "drizzle-orm";
 
-import { type ReviewRow, reviewsSchema } from "@/db";
+import { problemsSchema, type ReviewRow, reviewsSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
 
 import {
   type CreateReviewData,
+  type ReviewedInterview,
   ReviewsRepository,
+  type ReviewTotals,
 } from "../ports/reviews.repository";
 import type { ReviewEntity, ReviewItem } from "../review.entity";
 
@@ -46,5 +48,47 @@ export class PostgresReviewsRepository extends ReviewsRepository {
       .limit(1);
 
     return row ? toEntity(row) : null;
+  }
+
+  public async listForUser(
+    userId: string,
+    limit: number,
+  ): Promise<ReviewedInterview[]> {
+    const rows = await this.db
+      .select({
+        interviewId: reviewsSchema.interviewId,
+        score: reviewsSchema.score,
+        slug: problemsSchema.slug,
+        title: problemsSchema.title,
+        at: reviewsSchema.createdAt,
+      })
+      .from(reviewsSchema)
+      .innerJoin(problemsSchema, eq(problemsSchema.id, reviewsSchema.problemId))
+      .where(eq(reviewsSchema.userId, userId))
+      .orderBy(desc(reviewsSchema.createdAt))
+      .limit(limit);
+
+    return rows.map(({ slug, title, ...row }) => ({
+      ...row,
+      problem: { slug, title },
+    }));
+  }
+
+  public async totalsFor(userId: string): Promise<ReviewTotals> {
+    const [row] = await this.db
+      .select({
+        reviewed: count(reviewsSchema.id),
+        averageScore: avg(reviewsSchema.score),
+      })
+      .from(reviewsSchema)
+      .where(eq(reviewsSchema.userId, userId));
+
+    return {
+      reviewed: row?.reviewed ?? 0,
+      averageScore:
+        row?.averageScore === null || row?.averageScore === undefined
+          ? null
+          : Math.round(Number(row.averageScore)),
+    };
   }
 }

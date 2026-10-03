@@ -1,3 +1,4 @@
+export * from "./dto";
 export * from "./ports";
 export { pointsFor, type Rank, rankFor } from "./ranking";
 export * from "./repositories";

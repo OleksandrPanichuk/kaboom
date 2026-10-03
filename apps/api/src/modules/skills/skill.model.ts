@@ -24,3 +24,18 @@ export const SkillsModel = t.Object({
   next: t.Array(NextProblemModel),
 });
 export type SkillsModel = typeof SkillsModel.static;
+
+export const SkillHistoryPointModel = t.Object({
+  skill: t.UnionEnum(INTERVIEW_DIMENSIONS),
+  score: t.Integer({ minimum: 0, maximum: 100 }),
+  weight: t.Integer(),
+  source: t.UnionEnum(["interview", "challenge"]),
+  problem: t.Object({ slug: t.String(), title: t.String() }),
+  at: t.String({ format: "date-time" }),
+});
+export type SkillHistoryPointModel = typeof SkillHistoryPointModel.static;
+
+export const SkillHistoryModel = t.Object({
+  points: t.Array(SkillHistoryPointModel),
+});
+export type SkillHistoryModel = typeof SkillHistoryModel.static;

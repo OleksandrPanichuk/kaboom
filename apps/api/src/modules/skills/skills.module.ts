@@ -4,7 +4,7 @@ import { bind, makeUseCase } from "@/core/registry";
 import { SkillScoresRepository } from "./ports";
 import { PostgresSkillScoresRepository } from "./repositories";
 import { skillsRoutes } from "./skills.routes";
-import { GetMySkillsUseCase } from "./use-cases";
+import { GetMySkillHistoryUseCase, GetMySkillsUseCase } from "./use-cases";
 
 export const skillsModule = defineModule({
   name: "skills",
@@ -15,5 +15,9 @@ export const skillsModule = defineModule({
     return {};
   },
 
-  routes: () => skillsRoutes({ getMySkills: makeUseCase(GetMySkillsUseCase) }),
+  routes: () =>
+    skillsRoutes({
+      getMySkills: makeUseCase(GetMySkillsUseCase),
+      getMySkillHistory: makeUseCase(GetMySkillHistoryUseCase),
+    }),
 });
