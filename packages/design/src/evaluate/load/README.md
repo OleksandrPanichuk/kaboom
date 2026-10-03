@@ -161,7 +161,7 @@ backlog (its lag), drained by that edge's target alone.
 
 A step runs, in order:
 
-1. fault onsets and ends, and failover timers;
+1. fault onsets and ends, failover timers, and rollouts;
 2. autoscaler decisions taken on the previous step;
 3. load propagation;
 4. utilisation, latency and errors;
@@ -177,14 +177,51 @@ onset and undone at its end.
 | `region-down` | every node in the group `groupId`, or in a group inside it, is down, as if each had its own `node-down`; a SQL primary among them fails over the same way                                                                                                                         |
 | `capacity`    | the node's capacity is multiplied by `factor`                                                                                                                                                                                                                                     |
 | `latency`     | `addMs` is added to the node's base latency                                                                                                                                                                                                                                       |
-| `cache-flush` | the cache's hit ratio drops to 0 and recovers linearly over 60 s                                                                                                                                                                                                                  |
+| `cache-flush` | the cache's hit ratio drops to 0 and recovers linearly over 60 s |
+| `rollout` | a deployment starts replacing its pods with the version `release`, from the first step at or after `at`; see _Rollouts_. It has no `until`, and only a deployment's first rollout counts |
 
 **Autoscaling.** A service or worker with autoscaling enabled that stays above
 its `targetUtilisation` for two consecutive steps gains `ceil(replicas × 0.5)`
 replicas, up to `max`, counted from the next step. It never scales down.
 A deployment does the same with the `min`, `max` and `targetUtilisation` of the
 pod autoscaler that `scales` it, and starts at its `replicas` held between that
-`min` and `max`.
+`min` and `max`. The autoscaler holds still while a rollout is under way.
+
+## Rollouts
+
+A rollout replaces a deployment's `N` pods, its replica count when the rollout
+starts, with pods of a new version. A new pod is **ready** `startupSeconds`
+after it is created. A `release` is one of:
+
+- `healthy`: the new pods serve like the old ones;
+- `never-ready`: the new pods never answer. With `readinessProbe` they are
+  never ready. Without one they count as ready anyway, take their share of
+  traffic and fail all of it;
+- `broken`: the new pods pass every check and fail every request.
+
+The Kubernetes service spreads requests evenly over **serving** pods: the old
+pods and the ready new ones. A blue-green deployment serves from the old set
+until it switches. The deployment's capacity is `serving × capacityRpsPerReplica`,
+and its own error rate adds the share of serving pods that fail. Each step, by
+`strategy`:
+
+- `rolling`: first remove old pods while the old and ready new pods together
+  stay at least `N − maxUnavailable`. Then create new pods while every pod
+  together stays at most `N + maxSurge` and the new ones at most `N`. With
+  both at 0 it never moves.
+- `recreate`: remove every old pod on the first step and create `N` new ones.
+- `blue-green`: create `N` new pods on the first step. Once all are ready,
+  remove the old ones, which switches every request to the new set at once.
+- `canary`: create one new pod. A failing canary that has served for a step
+  is removed and the rollout is **rolled back**: the old pods keep serving.
+  One that serves cleanly for `canarySeconds` after it is ready lets the rest
+  follow as `rolling`.
+
+A rollout is **complete** once no old pod is left and all `N` new pods are
+ready. One that is neither complete nor rolled back `progressDeadlineSeconds`
+after it began is **stalled**. It keeps what it has, as Kubernetes does, and
+neither rolls back nor goes on. Each step reports the deployment's `rollout`:
+its phase and its old, ready, starting and failing pods.
 
 ## Findings
 
@@ -199,3 +236,5 @@ target: the first step it held, with the worst value seen.
 | `throttled`       | a node turns away more than 1 % of what it receives                  |
 | `backlog-growing` | a queue's or consumer group's backlog grows for three steps in a row |
 | `slo-breach`      | a client's p99 or availability misses the scenario's SLO             |
+| `rollout-stalled` | a deployment's rollout is stalled |
+| `rolled-back` | a deployment's canary is rolled back |

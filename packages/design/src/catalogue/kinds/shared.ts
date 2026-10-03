@@ -80,3 +80,9 @@ export const seconds = (fallback: number, meta: FieldMeta) =>
     unit: "s",
     ...meta,
   });
+
+export const pods = (fallback: number, meta: FieldMeta) =>
+  prop(z.number().int().min(0).max(10_000).default(fallback), {
+    unit: "count",
+    ...meta,
+  });

@@ -1,3 +1,5 @@
+import type { Release } from "@repo/design";
+
 import type { FaultKind, ScenarioDraft } from "@/features/simulation/typedefs";
 
 export const STEP_SECONDS = 10;
@@ -39,9 +41,23 @@ export const FAULT_KINDS: ReadonlyArray<{
     label: "Cache flush",
     description: "The hit ratio falls to zero and recovers over a minute.",
   },
+  {
+    kind: "rollout",
+    label: "Rollout",
+    description:
+      "The deployment replaces its pods with a new version, the way its strategy says.",
+  },
+];
+
+export const RELEASES: ReadonlyArray<{ release: Release; label: string }> = [
+  { release: "healthy", label: "A healthy version" },
+  { release: "never-ready", label: "A version that never gets ready" },
+  { release: "broken", label: "A version that fails every request" },
 ];
 
 export const FLUSHABLE_KINDS = new Set(["cache", "cdn"]);
+
+export const ROLLABLE_KINDS = new Set(["k8s-deployment"]);
 
 export const DEFAULT_SCENARIO: ScenarioDraft = {
   durationSeconds: 600,

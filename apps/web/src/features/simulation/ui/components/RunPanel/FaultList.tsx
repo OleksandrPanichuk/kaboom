@@ -11,7 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import { FAULT_KINDS, FLUSHABLE_KINDS } from "@/features/simulation/constants";
+import {
+  FAULT_KINDS,
+  FLUSHABLE_KINDS,
+  RELEASES,
+  ROLLABLE_KINDS,
+} from "@/features/simulation/constants";
 import type {
   FaultDraft,
   FaultKind,
@@ -40,7 +45,9 @@ const targetsFor = (graph: DesignGraph, kind: FaultKind): FaultTarget[] =>
         .filter(
           (node) =>
             node.kind !== "client" &&
-            (kind !== "cache-flush" || FLUSHABLE_KINDS.has(node.kind)),
+            catalogue[node.kind].carriesTraffic &&
+            (kind !== "cache-flush" || FLUSHABLE_KINDS.has(node.kind)) &&
+            (kind !== "rollout" || ROLLABLE_KINDS.has(node.kind)),
         )
         .map((node) => ({
           id: node.id,
@@ -73,6 +80,7 @@ export function FaultList({ graph, draft, onChange }: FaultListProps) {
           until: null,
           factor: 0.5,
           addMs: 200,
+          release: "never-ready",
         },
       ],
     });
@@ -214,6 +222,32 @@ function FaultRow({
           </p>
         ) : null}
       </Field>
+      {fault.kind === "rollout" ? (
+        <Field>
+          <FieldLabel htmlFor={`${id}-release`} className="text-xs">
+            Version
+          </FieldLabel>
+          <Select
+            value={fault.release}
+            onValueChange={(value) => onChange({ release: value! })}
+            items={RELEASES.map((item) => ({
+              value: item.release,
+              label: item.label,
+            }))}
+          >
+            <SelectTrigger id={`${id}-release`} className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {RELEASES.map((item) => (
+                <SelectItem key={item.release} value={item.release}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      ) : null}
       <div className="flex gap-2">
         <NumberField
           label="From"
@@ -224,7 +258,7 @@ function FaultRow({
           integer
           onChange={(at) => onChange({ at })}
         />
-        {fault.kind !== "cache-flush" ? (
+        {fault.kind !== "cache-flush" && fault.kind !== "rollout" ? (
           <NumberField
             label="Until"
             value={fault.until ?? maxSeconds}

@@ -8,8 +8,10 @@ export type {
   Finding,
   FindingKind,
   NodeStep,
+  RolloutPhase,
+  RolloutStep,
 } from "./result";
-export { FINDING_KINDS } from "./result";
+export { FINDING_KINDS, ROLLOUT_PHASES } from "./result";
 export {
   type Fault,
   FaultSchema,
@@ -17,6 +19,9 @@ export {
   type LoadScenarioInput,
   LoadScenarioSchema,
   MAX_STEPS,
+  type Release,
+  RELEASES,
+  ReleaseSchema,
   type Slo,
   SloSchema,
 } from "./scenario";

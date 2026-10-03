@@ -6,6 +6,7 @@ import type {
   EvaluationResult,
   EvaluationStep,
   NodeStep,
+  RolloutStep,
 } from "../result";
 import {
   type LoadScenario,
@@ -29,6 +30,13 @@ import {
   throttleLimitOf,
   utilisation,
 } from "./node-model";
+import {
+  advanceRollout,
+  type Rollout,
+  rolloutStepAt,
+  servingPods,
+  startRollout,
+} from "./rollout";
 import { type Topology, topology } from "./topology";
 
 const DEFAULT_TIMEOUT_MS = 1_000;
@@ -131,6 +139,7 @@ interface Memory {
   growth: Map<string, number>;
   readShare: Map<string, number>;
   downSince: Map<string, number>;
+  rollouts: Map<string, Rollout>;
 }
 
 export const evaluateLoad = (
@@ -153,6 +162,7 @@ export const evaluateLoad = (
     growth: new Map(),
     readShare: new Map(),
     downSince: new Map(),
+    rollouts: new Map(),
   };
   const steps: EvaluationStep[] = [];
 
@@ -198,6 +208,44 @@ const runStep = (
     else if (!memory.downSince.has(node.id)) memory.downSince.set(node.id, t);
   }
 
+  const rollouts = new Map<string, RolloutStep>();
+
+  for (const node of topo.order) {
+    if (node.kind !== "k8s-deployment") continue;
+
+    const release = scenario.faults
+      .filter(
+        (fault) =>
+          fault.kind === "rollout" && fault.nodeId === node.id && fault.at <= t,
+      )
+      .sort((a, b) => a.at - b.at)[0];
+
+    if (release?.kind !== "rollout") continue;
+
+    const rollout =
+      memory.rollouts.get(node.id) ??
+      startRollout(release.release, t, memory.replicas.get(node.id) ?? 1);
+
+    memory.rollouts.set(node.id, rollout);
+    advanceRollout(rollout, node.props, t);
+    rollouts.set(node.id, rolloutStepAt(rollout, node.props, t));
+  }
+
+  const rolloutShape = (node: DesignNode) => {
+    const step = rollouts.get(node.id);
+
+    if (!step || node.kind !== "k8s-deployment") return null;
+
+    const serving = servingPods(step, node.props);
+    const settled = step.phase === "complete" || step.phase === "rolled-back";
+
+    return {
+      step,
+      replicas: settled ? null : serving,
+      failingShare: serving > 0 ? step.failing / serving : 0,
+    };
+  };
+
   const conditionsOf = (node: DesignNode) => {
     const fault = state.get(node.id)!;
     const replicaIds = topo.replicasOf.get(node.id) ?? [];
@@ -208,7 +256,8 @@ const runStep = (
 
     return {
       capacityFactor: fault.capacityFactor,
-      replicas: memory.replicas.get(node.id) ?? 1,
+      replicas:
+        rolloutShape(node)?.replicas ?? memory.replicas.get(node.id) ?? 1,
       upReplicas,
       hitRatio: fault.hitRatio ?? 0,
     };
@@ -279,11 +328,15 @@ const runStep = (
     const served = scaleBy(admitted, servedFraction);
     const unanswered =
       node.kind === "client" && outgoing.length === 0 && offered > 0;
+    const rollout = rolloutShape(node);
     const ownErrorRate =
       !up || unanswered
         ? 1
         : 1 -
-          admittedFraction * servedFraction * (1 - intrinsicErrorRateOf(node));
+          admittedFraction *
+            servedFraction *
+            (1 - intrinsicErrorRateOf(node)) *
+            (1 - (rollout?.failingShare ?? 0));
 
     const inboundTimeouts = (topo.inbound.get(node.id) ?? []).map(
       (edge) => edge.props.timeoutMs,
@@ -310,6 +363,7 @@ const runStep = (
         ? { throttled: offered * (1 - admittedFraction) }
         : {}),
       ...(reportsReplicas(node) ? { replicas: conditions.replicas } : {}),
+      ...(rollout ? { rollout: rollout.step } : {}),
     };
 
     if (node.kind === "queue" || node.kind === "stream") {
@@ -621,7 +675,39 @@ const runStep = (
       });
     }
 
-    const policy = autoscaled(topo, node);
+    const rollout = memory.rollouts.get(node.id);
+
+    if (
+      step.rollout?.phase === "stalled" &&
+      rollout &&
+      node.kind === "k8s-deployment"
+    ) {
+      log.note(index, {
+        target: { type: "node", id: node.id },
+        kind: "rollout-stalled",
+        message: `${label}'s rollout is stuck: ${node.props.progressDeadlineSeconds} s after it began, ${step.rollout.ready} of ${rollout.target} new pods are ready.`,
+        data: {
+          ready: step.rollout.ready,
+          replicas: rollout.target,
+          old: step.rollout.old,
+          deadlineSeconds: node.props.progressDeadlineSeconds,
+        },
+        worst: 0,
+      });
+    }
+
+    if (step.rollout?.phase === "rolled-back") {
+      log.note(index, {
+        target: { type: "node", id: node.id },
+        kind: "rolled-back",
+        message: `${label} rolled its canary back: the new version failed the requests it was sent, so the old one keeps serving.`,
+        data: { old: step.rollout.old },
+        worst: 0,
+      });
+    }
+
+    const policy =
+      step.rollout?.phase === "rolling" ? null : autoscaled(topo, node);
 
     if (policy) {
       const streak =

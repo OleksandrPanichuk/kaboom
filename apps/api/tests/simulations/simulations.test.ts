@@ -111,6 +111,55 @@ describe("simulation runs", () => {
     expect(response.body.summary.clients.users?.minAvailability).toBe(0);
   });
 
+  test("rolls out a deployment and reports the rollout that gets stuck", async () => {
+    const user = await createUser();
+    const design = await createDesign(user, "Cluster");
+
+    await applyOps(user, design.id, 0, [
+      { op: "add-node", node: createNode("client", { id: "users" }) },
+      {
+        op: "add-node",
+        node: {
+          ...createNode("k8s-deployment", { id: "app" }),
+          props: {
+            ...createNode("k8s-deployment", { id: "app" }).props,
+            maxUnavailable: 0,
+            readinessProbe: true,
+            progressDeadlineSeconds: 60,
+          },
+        },
+      },
+      {
+        op: "add-edge",
+        edge: createEdge({
+          id: "e1",
+          from: "users",
+          to: "app",
+          kind: "sync-call",
+        }),
+      },
+    ]);
+
+    const response = await run(user, design.id, {
+      scenario: {
+        kind: "load",
+        durationSeconds: 120,
+        faults: [
+          { kind: "rollout", nodeId: "app", at: 0, release: "never-ready" },
+        ],
+      },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.findings).toHaveLength(1);
+    expect(response.body.findings[0]).toMatchObject({
+      kind: "rollout-stalled",
+      target: { type: "node", id: "app" },
+      atStep: 6,
+    });
+    expect(response.body.summary.clients.users?.minAvailability).toBe(1);
+  });
+
   test("lists runs newest first and returns one by id", async () => {
     const user = await createUser();
     const { design } = await seeded(user);

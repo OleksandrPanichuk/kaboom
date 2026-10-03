@@ -1,4 +1,4 @@
-import type { Fault } from "@repo/design";
+import type { Fault, Release } from "@repo/design";
 
 export type FaultKind = Fault["kind"];
 
@@ -10,6 +10,7 @@ export interface FaultDraft {
   until: number | null;
   factor: number;
   addMs: number;
+  release: Release;
 }
 
 export interface SpikeDraft {
