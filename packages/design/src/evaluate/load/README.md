@@ -179,6 +179,9 @@ onset and undone at its end.
 | `latency`     | `addMs` is added to the node's base latency                                                                                                                                                                                                                                       |
 | `cache-flush` | the cache's hit ratio drops to 0 and recovers linearly over 60 s                                                                                                                                                                                                                  |
 | `rollout`     | a deployment starts replacing its pods with the version `release`, from the first step at or after `at`; see _Rollouts_. It has no `until`. Rollouts follow one another: a later one starts once the one under way has finished, stalled or rolled back                                                                                          |
+| `error-rate`  | the node fails `rate` of the requests it serves, on top of anything else                                                                                                                                                                                                       |
+| `group-down`  | every node in the group `groupId`, of any kind, or in a group inside it, is down, as `region-down` is for a region                                                                                                                                                            |
+| `partition`   | every edge with exactly one end inside the group `groupId` is cut; see _Partitions and retries_                                                                                                                                                                                 |
 | `secret-rotation` | the secret `nodeId` gets a new value at `at`; see _Secrets and migrations_                                                                                                                                                                                                |
 
 **Autoscaling.** A service or worker with autoscaling enabled that stays above
@@ -238,6 +241,29 @@ after it began is **stalled**. It keeps what it has, as Kubernetes does, and
 neither rolls back nor goes on. Each step reports the deployment's `rollout`:
 its phase, its old, ready, starting, failing and slow pods, and how often
 its new pods have been restarted.
+
+## Partitions and retries
+
+**Partition.** A cut edge delivers nothing: its target receives none of its
+load, though both ends stay up. A synchronous call over it fails, at its
+`timeoutMs`; a queue cannot hand messages to a consumer across it, so its
+backlog grows; a producer cannot enqueue across it, which fails the
+producer's request. A load balancer that health-checks drops a target it
+cannot reach, and DNS stops routing to one `ttlSeconds` after the cut, as
+it does for a target that is down. A load balancer left with no target it
+can reach fails every request it cannot forward. A call that retries over a
+cut waits out `timeoutMs` once per attempt. A partition is not an outage:
+it promotes no replica, and a `monitoring` node still scrapes across it.
+In a drill, a selected node in no group is cut off on its own, as
+`node-down`.
+
+**Retries.** A synchronous edge's `retries` repeats a failed call. With the
+target failing a share `e` of calls, the caller sees `e^(retries + 1)` fail,
+and sends `1 + e + … + e^retries` times the load, where `e` is the
+target's error rate on the step before, so a storm builds over steps. Once
+more than 1 % of calls fail, p99 through the edge doubles, as one retry
+lands inside it, and p50 does too past half. A cut edge counts as failing
+every call. An edge whose load grows by half or more raises `retry-storm`.
 
 ## Secrets and migrations
 
@@ -309,3 +335,4 @@ target: the first step it held, with the worst value seen.
 | `alert-fired`     | an alert paged; see _Alerts_                                         |
 | `stale-secret`    | a deployment's pods hold a secret's value after it was revoked       |
 | `schema-break`    | a breaking migration left old pods failing every request             |
+| `retry-storm`     | an edge's retries make it send 1.5× the load or more                 |

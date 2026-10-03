@@ -47,6 +47,22 @@ export const DrillFaultSchema = z.discriminatedUnion("kind", [
     addMs: z.number().min(0).max(600_000),
   }),
   z.strictObject({
+    kind: z.literal("error-rate"),
+    select: NodeSelectorSchema,
+    ...window,
+    rate: z.number().min(0).max(1),
+  }),
+  z.strictObject({
+    kind: z.literal("group-down"),
+    select: NodeSelectorSchema,
+    ...window,
+  }),
+  z.strictObject({
+    kind: z.literal("partition"),
+    select: NodeSelectorSchema,
+    ...window,
+  }),
+  z.strictObject({
     kind: z.literal("cache-flush"),
     select: NodeSelectorSchema,
     at: Seconds,

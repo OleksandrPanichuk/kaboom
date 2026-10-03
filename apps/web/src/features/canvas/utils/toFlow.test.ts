@@ -71,7 +71,7 @@ describe("toFlow", () => {
           to: "db",
           kind: "async-message" as const,
           label: "",
-          props: { share: 1, fanOut: 1, timeoutMs: 1_000 },
+          props: { share: 1, fanOut: 1, timeoutMs: 1_000, retries: 0 },
         },
       ],
     };
@@ -113,7 +113,7 @@ describe("toFlow parallel edges", () => {
     to,
     kind,
     label: "",
-    props: { share: 1, fanOut: 1, timeoutMs: 1_000 },
+    props: { share: 1, fanOut: 1, timeoutMs: 1_000, retries: 0 },
   });
 
   test("gives edges between the same two nodes their own lanes, in either direction", () => {

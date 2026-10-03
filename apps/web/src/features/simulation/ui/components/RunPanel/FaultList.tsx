@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/Switch";
 import {
   FAULT_KINDS,
   FLUSHABLE_KINDS,
+  GROUP_FAULT_KINDS,
   RELEASES,
   ROLLABLE_KINDS,
 } from "@/features/simulation/constants";
@@ -38,10 +39,10 @@ interface FaultTarget {
 }
 
 const targetsFor = (graph: DesignGraph, kind: FaultKind): FaultTarget[] =>
-  kind === "region-down"
+  GROUP_FAULT_KINDS.has(kind)
     ? graph.groups
-        .filter((group) => group.kind === "region")
-        .map((group) => ({ id: group.id, label: group.label || "Region" }))
+        .filter((group) => kind !== "region-down" || group.kind === "region")
+        .map((group) => ({ id: group.id, label: group.label || group.kind }))
     : graph.nodes
         .filter((node) =>
           kind === "secret-rotation"
@@ -82,6 +83,7 @@ export function FaultList({ graph, draft, onChange }: FaultListProps) {
           until: null,
           factor: 0.5,
           addMs: 200,
+          rate: 0.2,
           release: "never-ready",
           migrates: false,
         },
@@ -143,7 +145,12 @@ function FaultRow({
     (item) =>
       item.kind === fault.kind || targetsFor(graph, item.kind).length > 0,
   );
-  const noun = fault.kind === "region-down" ? "Region" : "Node";
+  const noun =
+    fault.kind === "region-down"
+      ? "Region"
+      : GROUP_FAULT_KINDS.has(fault.kind)
+        ? "Group"
+        : "Node";
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-black/[0.07] p-3">
@@ -297,6 +304,17 @@ function FaultRow({
             max={1}
             scale={100}
             onChange={(factor) => onChange({ factor })}
+          />
+        ) : null}
+        {fault.kind === "error-rate" ? (
+          <NumberField
+            label="Fails"
+            value={fault.rate}
+            suffix="%"
+            min={0}
+            max={1}
+            scale={100}
+            onChange={(rate) => onChange({ rate })}
           />
         ) : null}
         {fault.kind === "latency" ? (

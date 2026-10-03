@@ -110,6 +110,7 @@ describe("edge prop metadata", () => {
       "share",
       "fanOut",
       "timeoutMs",
+      "retries",
     ]);
     expect(propControl(EdgePropsSchema.shape.fanOut)).toEqual({
       type: "number",

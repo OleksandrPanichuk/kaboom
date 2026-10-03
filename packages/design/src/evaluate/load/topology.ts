@@ -3,6 +3,7 @@ import type { DesignEdge, DesignGraph, DesignNode } from "../../graph";
 
 export interface Topology {
   order: DesignNode[];
+  edges: readonly DesignEdge[];
   byId: Map<string, DesignNode>;
   inbound: Map<string, DesignEdge[]>;
   outbound: Map<string, DesignEdge[]>;
@@ -90,6 +91,7 @@ export const topology = (graph: DesignGraph): Topology => {
 
   return {
     order,
+    edges: graph.edges,
     byId,
     inbound,
     outbound,

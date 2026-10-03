@@ -1,6 +1,9 @@
 import type { DesignGraph, Fault, LoadScenarioInput } from "@repo/design";
 
-import { STEP_SECONDS } from "@/features/simulation/constants";
+import {
+  GROUP_FAULT_KINDS,
+  STEP_SECONDS,
+} from "@/features/simulation/constants";
 import type { FaultDraft, ScenarioDraft } from "@/features/simulation/typedefs";
 
 const toFault = (draft: FaultDraft): Fault => {
@@ -20,6 +23,16 @@ const toFault = (draft: FaultDraft): Fault => {
     case "region-down":
       return {
         kind: "region-down",
+        groupId: draft.targetId,
+        at: draft.at,
+        ...(draft.until !== null ? { until: draft.until } : {}),
+      };
+    case "error-rate":
+      return { kind: "error-rate", ...window, rate: draft.rate };
+    case "group-down":
+    case "partition":
+      return {
+        kind: draft.kind,
         groupId: draft.targetId,
         at: draft.at,
         ...(draft.until !== null ? { until: draft.until } : {}),
@@ -51,7 +64,7 @@ export const liveFaults = (
   const groups = new Set(graph.groups.map((group) => group.id));
 
   return draft.faults.filter((fault) =>
-    fault.kind === "region-down"
+    GROUP_FAULT_KINDS.has(fault.kind)
       ? groups.has(fault.targetId)
       : nodes.has(fault.targetId),
   );

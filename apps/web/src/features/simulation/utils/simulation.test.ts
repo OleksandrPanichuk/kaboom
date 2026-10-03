@@ -58,6 +58,7 @@ describe("toScenario", () => {
             addMs: 100,
             release: "healthy",
             migrates: false,
+            rate: 0.2,
           },
           {
             key: "2",
@@ -69,6 +70,7 @@ describe("toScenario", () => {
             addMs: 0,
             release: "healthy",
             migrates: false,
+            rate: 0.2,
           },
           {
             key: "3",
@@ -80,6 +82,7 @@ describe("toScenario", () => {
             addMs: 0,
             release: "healthy",
             migrates: false,
+            rate: 0.2,
           },
         ],
       },
@@ -111,6 +114,7 @@ describe("toScenario", () => {
             addMs: 0,
             release: "never-ready",
             migrates: false,
+            rate: 0.2,
           },
         ],
       },
@@ -147,6 +151,7 @@ describe("toScenario", () => {
             addMs: 0,
             release: "healthy",
             migrates: false,
+            rate: 0.2,
           },
         ],
       },
@@ -173,6 +178,7 @@ describe("toScenario", () => {
       addMs: 0,
       release: "healthy" as const,
       migrates: false,
+      rate: 0,
     });
     const scenario = toScenario(
       { ...DEFAULT_SCENARIO, faults: [fault("eu"), fault("gone")] },
@@ -220,7 +226,7 @@ describe("overlayAt", () => {
           to: "api",
           kind: "sync-call" as const,
           label: "",
-          props: { share: 1, fanOut: 1, timeoutMs: 1_000 },
+          props: { share: 1, fanOut: 1, timeoutMs: 1_000, retries: 0 },
         },
       ],
     };
