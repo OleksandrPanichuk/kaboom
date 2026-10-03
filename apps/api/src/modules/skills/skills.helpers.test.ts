@@ -1,3 +1,4 @@
+import type { InterviewDimension } from "@repo/design";
 import { OFFICIAL_PROBLEMS } from "@repo/design/library";
 import { describe, expect, test } from "bun:test";
 
@@ -5,8 +6,28 @@ import {
   nextProblem,
   nextProblems,
   skillPointsOf,
-  summarise,
+  summarise as summariseAt,
+  targetDifficulty,
 } from "./skills.helpers";
+
+const NOW = new Date("2026-10-01T00:00:00Z");
+
+const DAY = 86_400_000;
+
+interface Row {
+  skill: InterviewDimension;
+  score: number;
+  weight: number;
+}
+
+const summarise = (rows: Row[], daysAgo = 0) =>
+  summariseAt(
+    rows.map((row) => ({
+      ...row,
+      createdAt: new Date(NOW.getTime() - daysAgo * DAY),
+    })),
+    NOW,
+  );
 
 const problem = (slug: string) =>
   OFFICIAL_PROBLEMS.find((content) => content.slug === slug)!;
@@ -114,5 +135,64 @@ describe("nextProblems", () => {
         (item) => item.track,
       ),
     ).toEqual(["system-design"]);
+  });
+});
+
+describe("decay", () => {
+  test("weighs a review half as much every 90 days, so recent work leads the average", () => {
+    const skills = summariseAt(
+      [
+        {
+          skill: "design",
+          score: 0.2,
+          weight: 20,
+          createdAt: new Date(NOW.getTime() - 180 * DAY),
+        },
+        { skill: "design", score: 0.8, weight: 20, createdAt: NOW },
+      ],
+      NOW,
+    );
+
+    expect(skills.find((skill) => skill.skill === "design")).toMatchObject({
+      score: 68,
+      samples: 2,
+    });
+  });
+
+  test("leaves a lone old review its own score", () => {
+    expect(
+      summarise([{ skill: "scaling", score: 0.4, weight: 10 }], 400).find(
+        (skill) => skill.skill === "scaling",
+      )?.score,
+    ).toBe(40);
+  });
+});
+
+describe("targetDifficulty", () => {
+  test("starts easy and climbs with the weakest skill", () => {
+    expect(targetDifficulty(null)).toBe("easy");
+    expect(targetDifficulty(49)).toBe("easy");
+    expect(targetDifficulty(50)).toBe("medium");
+    expect(targetDifficulty(80)).toBe("hard");
+  });
+
+  test("picks a problem at the weakest skill's level when the rubrics lean on it alike", () => {
+    const strong = summarise([
+      { skill: "requirements", score: 0.9, weight: 10 },
+      { skill: "design", score: 0.9, weight: 10 },
+      { skill: "scaling", score: 0.9, weight: 10 },
+      { skill: "reliability", score: 0.8, weight: 10 },
+      { skill: "communication", score: 0.9, weight: 10 },
+    ]);
+    const candidates = ["url-shortener", "news-feed", "rate-limited-api"].map(
+      (slug, index) => ({ problemId: `p${index}`, content: problem(slug) }),
+    );
+    const next = nextProblem(strong, candidates, new Map());
+
+    expect(next?.skill).toBe("reliability");
+    expect(next?.difficulty).not.toBe("easy");
+    expect(next?.reason).toContain(
+      "Reliability is your weakest skill so far, at 80",
+    );
   });
 });

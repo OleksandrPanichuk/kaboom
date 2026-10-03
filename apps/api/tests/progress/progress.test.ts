@@ -21,6 +21,7 @@ interface Activity {
 }
 
 interface History {
+  halfLifeDays?: number;
   points: Array<{ skill: string; score: number; source: string }>;
 }
 
@@ -54,7 +55,7 @@ describe("progress", () => {
       items: [],
       totals: { interviewsReviewed: 0, averageInterviewScore: null },
     });
-    expect(history.body).toEqual({ points: [] });
+    expect(history.body).toEqual({ points: [], halfLifeDays: 90 });
   });
 
   test("lists reviewed interviews and submissions newest first, with the skills they moved", async () => {

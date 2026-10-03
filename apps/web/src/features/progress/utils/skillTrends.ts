@@ -17,7 +17,12 @@ export interface SkillTrend {
   change: number | null;
 }
 
-export const skillTrends = (points: readonly Point[]): SkillTrend[] => {
+const DAY_MS = 86_400_000;
+
+export const skillTrends = (
+  points: readonly Point[],
+  halfLifeDays: number,
+): SkillTrend[] => {
   const bySkill = new Map<Point["skill"], Point[]>();
 
   for (const point of points) {
@@ -25,11 +30,19 @@ export const skillTrends = (points: readonly Point[]): SkillTrend[] => {
   }
 
   return [...bySkill.entries()].map(([skill, own]) => {
-    let weighted = 0;
-    let weight = 0;
-    const trend = own.map((point) => {
-      weighted += point.score * point.weight;
-      weight += point.weight;
+    const trend = own.map((point, index) => {
+      const at = new Date(point.at).getTime();
+      let weighted = 0;
+      let weight = 0;
+
+      for (const earlier of own.slice(0, index + 1)) {
+        const age = (at - new Date(earlier.at).getTime()) / DAY_MS;
+        const decayed =
+          earlier.weight * 0.5 ** (Math.max(0, age) / halfLifeDays);
+
+        weighted += earlier.score * decayed;
+        weight += decayed;
+      }
 
       return {
         value: Math.round(weighted / weight),

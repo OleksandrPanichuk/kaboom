@@ -1,6 +1,7 @@
 import { defineRoute } from "@/core/route";
 
 import { SkillHistoryModel } from "../skill.model";
+import { SKILL_HALF_LIFE_DAYS } from "../skills.constants";
 import type { SkillsActions } from "../skills.routes";
 
 export const getMySkillHistoryRoute = ({ getMySkillHistory }: SkillsActions) =>
@@ -14,6 +15,7 @@ export const getMySkillHistoryRoute = ({ getMySkillHistory }: SkillsActions) =>
 
     action: ({ user }) => getMySkillHistory.execute({ userId: user.id }),
     postAction: ({ output }) => ({
+      halfLifeDays: SKILL_HALF_LIFE_DAYS,
       points: output.map((point) => ({
         ...point,
         score: Math.round(point.score * 100),

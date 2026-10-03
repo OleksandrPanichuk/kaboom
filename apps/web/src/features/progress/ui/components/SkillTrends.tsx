@@ -15,11 +15,14 @@ export function SkillTrends() {
   const { data: history } = useSuspenseQuery(skillHistoryQuery);
   const { data: skills } = useSuspenseQuery(skillsQuery);
   const order = skills.skills.map((skill) => skill.skill);
-  const trends = skillTrends(history.points).sort(
+  const trends = skillTrends(history.points, history.halfLifeDays).sort(
     (a, b) => order.indexOf(a.skill) - order.indexOf(b.skill),
   );
   const labels = new Map(
     skills.skills.map((skill) => [skill.skill, skill.label]),
+  );
+  const today = new Map(
+    skills.skills.map((skill) => [skill.skill, skill.score]),
   );
   const untouched = skills.skills.filter(
     (skill) => !trends.some((trend) => trend.skill === skill.skill),
@@ -60,7 +63,7 @@ export function SkillTrends() {
                   <div className="flex min-w-0 flex-col">
                     <p className="text-sm font-medium">{label}</p>
                     <p className="text-3xl font-semibold tracking-[-0.04em]">
-                      {trend.current}
+                      {today.get(trend.skill) ?? trend.current}
                     </p>
                   </div>
                   <p
