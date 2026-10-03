@@ -52,7 +52,7 @@ import { type Flow, mergeFlowNodes, toFlow } from "@/features/canvas/utils";
 
 import { CanvasEdgePath } from "./CanvasEdgePath";
 import { CanvasNodeCard } from "./CanvasNodeCard";
-import { RegionLayer } from "./RegionLayer";
+import { GroupLayer } from "./GroupLayer";
 
 const NODE_TYPES: NodeTypes = { "design-node": CanvasNodeCard };
 
@@ -247,7 +247,6 @@ export function DesignCanvas({
   };
 
   const empty = nodes.length === 0;
-  const regions = graph.groups.filter((group) => group.kind === "region");
 
   const selectRegion = (id: string) => {
     setNodes((current) =>
@@ -297,9 +296,9 @@ export function DesignCanvas({
         className="design-canvas bg-zinc-50"
         aria-label="Design canvas"
       >
-        {regions.length > 0 ? (
-          <RegionLayer
-            regions={regions}
+        {graph.groups.length > 0 ? (
+          <GroupLayer
+            groups={graph.groups}
             selectedId={selectedRegionId}
             onSelect={selectRegion}
           />

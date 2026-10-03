@@ -8,7 +8,11 @@ import {
 } from "@repo/design";
 import { describe, expect, test } from "bun:test";
 
-import { NEW_REGION } from "@/features/properties";
+import {
+  NEW_PRIVATE_SUBNET,
+  NEW_PUBLIC_SUBNET,
+  NEW_REGION,
+} from "@/features/properties";
 
 import { dissolveRegionOps, placementOps } from "./regionOps";
 import { removalOps } from "./removalOps";
@@ -74,5 +78,73 @@ describe("regionOps", () => {
 
     expect(next.groups).toEqual([]);
     expect(next.nodes.map((node) => node.id)).toEqual(["cache"]);
+  });
+});
+
+describe("subnet placement", () => {
+  const network = (): DesignGraph => ({
+    ...emptyGraph(),
+    groups: [
+      createGroup({ id: "vpc", kind: "vpc", label: "Shop VPC" }),
+      createGroup({
+        id: "open",
+        kind: "public-subnet",
+        label: "Public",
+        parentId: "vpc",
+      }),
+    ],
+    nodes: [
+      { ...createNode("load-balancer", { id: "lb" }), groupId: "open" },
+      { ...createNode("service", { id: "app" }), groupId: "open" },
+      createNode("client", { id: "users" }),
+    ],
+  });
+
+  test("creates a VPC with the first subnet, then puts later subnets in it", () => {
+    const first = run(emptyGraph(), [
+      { op: "add-node", node: createNode("service", { id: "app" }) },
+    ]);
+    const once = run(first, placementOps(first, ["app"], NEW_PUBLIC_SUBNET));
+    const vpc = once.groups.find((group) => group.kind === "vpc")!;
+    const withDb = run(once, [
+      { op: "add-node", node: createNode("sql-database", { id: "db" }) },
+    ]);
+    const twice = run(withDb, placementOps(withDb, ["db"], NEW_PRIVATE_SUBNET));
+
+    expect(vpc.label).toBe("VPC 1");
+    expect(
+      twice.groups.map((group) => [group.kind, group.parentId, group.label]),
+    ).toEqual([
+      ["vpc", null, "VPC 1"],
+      ["public-subnet", vpc.id, "Public subnet 1"],
+      ["private-subnet", vpc.id, "Private subnet 1"],
+    ]);
+  });
+
+  test("moving the last nodes out of a subnet removes it, and its VPC once that is empty too", () => {
+    const g = network();
+    const inside = run(g, placementOps(g, ["app"], NEW_PRIVATE_SUBNET));
+    const out = run(inside, placementOps(inside, ["lb", "app"], null));
+
+    expect(inside.groups.map((group) => group.id)).toContain("open");
+    expect(out.groups).toEqual([]);
+  });
+
+  test("a new subnet in a VPC keeps the VPC when its old subnet empties", () => {
+    const g = network();
+    const next = run(g, placementOps(g, ["lb", "app"], NEW_PRIVATE_SUBNET));
+
+    expect(next.groups.map((group) => group.kind)).toEqual([
+      "vpc",
+      "private-subnet",
+    ]);
+  });
+
+  test("dissolving a VPC dissolves its subnets and keeps every node", () => {
+    const g = network();
+    const next = run(g, dissolveRegionOps(g, "vpc"));
+
+    expect(next.groups).toEqual([]);
+    expect(next.nodes.map((node) => node.groupId)).toEqual([null, null, null]);
   });
 });

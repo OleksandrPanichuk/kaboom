@@ -23,6 +23,7 @@ export {
   DesignGroupSchema,
   type DesignNode,
   DesignNodeSchema,
+  GROUP_KIND_LABELS,
   GROUP_KINDS,
   type GroupKind,
   IdSchema,
