@@ -74,3 +74,9 @@ export const Autoscale = prop(
     advanced: true,
   },
 );
+
+export const seconds = (fallback: number, meta: FieldMeta) =>
+  prop(z.number().int().min(0).max(86_400).default(fallback), {
+    unit: "s",
+    ...meta,
+  });

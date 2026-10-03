@@ -11,6 +11,7 @@ export const apiGatewayKind = defineNodeKind({
   icon: "api-gateway",
   stateful: false,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

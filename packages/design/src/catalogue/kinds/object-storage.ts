@@ -10,6 +10,7 @@ export const objectStorageKind = defineNodeKind({
   icon: "object-storage",
   stateful: true,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

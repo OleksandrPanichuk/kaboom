@@ -9,6 +9,7 @@ export interface Topology {
   replicasOf: Map<string, string[]>;
   primaryOf: Map<string, string>;
   locksOf: Map<string, string[]>;
+  scalerOf: Map<string, string>;
   groupsOf: Map<string, string[]>;
   regionOf: Map<string, string | null>;
 }
@@ -20,6 +21,7 @@ export const topology = (graph: DesignGraph): Topology => {
   const replicasOf = new Map<string, string[]>();
   const primaryOf = new Map<string, string>();
   const locksOf = new Map<string, string[]>();
+  const scalerOf = new Map<string, string>();
 
   for (const node of graph.nodes) {
     inbound.set(node.id, []);
@@ -35,6 +37,8 @@ export const topology = (graph: DesignGraph): Topology => {
       primaryOf.set(edge.to, edge.from);
     } else if (edge.kind === "lock") {
       locksOf.set(edge.from, [...(locksOf.get(edge.from) ?? []), edge.to]);
+    } else if (edge.kind === "scales") {
+      scalerOf.set(edge.to, edge.from);
     } else if (carriesLoad(edge.kind)) {
       inbound.get(edge.to)?.push(edge);
       outbound.get(edge.from)?.push(edge);
@@ -88,6 +92,7 @@ export const topology = (graph: DesignGraph): Topology => {
     replicasOf,
     primaryOf,
     locksOf,
+    scalerOf,
     groupsOf,
     regionOf,
   };

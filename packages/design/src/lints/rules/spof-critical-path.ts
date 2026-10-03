@@ -8,7 +8,20 @@ const replicated = (graph: DesignGraph, id: string): boolean =>
       edge.kind === "replication" && (edge.from === id || edge.to === id),
   );
 
-const singleInstance = (node: DesignNode): boolean => {
+const autoscalerFloor = (graph: DesignGraph, id: string): number => {
+  const edge = graph.edges.find(
+    (candidate) => candidate.kind === "scales" && candidate.to === id,
+  );
+  const scaler = graph.nodes.find((node) => node.id === edge?.from);
+
+  return scaler?.kind === "hpa" ? scaler.props.min : 0;
+};
+
+const singleInstance = (graph: DesignGraph, node: DesignNode): boolean => {
+  if (node.kind === "k8s-deployment") {
+    return Math.max(node.props.replicas, autoscalerFloor(graph, node.id)) < 2;
+  }
+
   if (node.kind !== "service" && node.kind !== "worker") return false;
 
   const { replicas, autoscale } = node.props;
@@ -17,7 +30,7 @@ const singleInstance = (node: DesignNode): boolean => {
 };
 
 const why = (graph: DesignGraph, node: DesignNode): string | null => {
-  if (singleInstance(node)) {
+  if (singleInstance(graph, node)) {
     return `${labelOf(node)} runs a single replica; when it fails, everything behind it stops.`;
   }
 

@@ -82,16 +82,47 @@ const burstShare = (
   return covered / length;
 };
 
-const autoscaled = (node: DesignNode) =>
-  (node.kind === "service" || node.kind === "worker") &&
-  node.props.autoscale.enabled
-    ? node.props.autoscale
-    : null;
+interface ScalingPolicy {
+  min: number;
+  max: number;
+  targetUtilisation: number;
+}
 
-const initialReplicas = (node: DesignNode): number =>
-  node.kind === "service" || node.kind === "worker" || node.kind === "scheduler"
+const autoscaled = (topo: Topology, node: DesignNode): ScalingPolicy | null => {
+  if (node.kind === "service" || node.kind === "worker") {
+    return node.props.autoscale.enabled ? node.props.autoscale : null;
+  }
+
+  if (node.kind === "k8s-deployment") {
+    const scaler = topo.byId.get(topo.scalerOf.get(node.id) ?? "");
+
+    return scaler?.kind === "hpa" ? scaler.props : null;
+  }
+
+  return null;
+};
+
+const reportsReplicas = (node: DesignNode): boolean =>
+  node.kind === "service" ||
+  node.kind === "worker" ||
+  node.kind === "scheduler" ||
+  node.kind === "k8s-deployment";
+
+const initialReplicas = (topo: Topology, node: DesignNode): number => {
+  if (node.kind === "k8s-deployment") {
+    const policy = autoscaled(topo, node);
+
+    return policy
+      ? Math.min(policy.max, Math.max(policy.min, node.props.replicas))
+      : node.props.replicas;
+  }
+
+  return node.kind === "service" ||
+    node.kind === "worker" ||
+    node.kind === "scheduler"
     ? node.props.replicas
     : 1;
+};
 
 interface Memory {
   replicas: Map<string, number>;
@@ -115,7 +146,7 @@ export const evaluateLoad = (
   const log = new FindingLog();
   const memory: Memory = {
     replicas: new Map(
-      graph.nodes.map((node) => [node.id, initialReplicas(node)]),
+      graph.nodes.map((node) => [node.id, initialReplicas(topo, node)]),
     ),
     aboveStreak: new Map(),
     backlog: new Map(),
@@ -278,12 +309,7 @@ const runStep = (
       ...(limit !== null && up
         ? { throttled: offered * (1 - admittedFraction) }
         : {}),
-      ...(autoscaled(node) ||
-      node.kind === "service" ||
-      node.kind === "worker" ||
-      node.kind === "scheduler"
-        ? { replicas: conditions.replicas }
-        : {}),
+      ...(reportsReplicas(node) ? { replicas: conditions.replicas } : {}),
     };
 
     if (node.kind === "queue" || node.kind === "stream") {
@@ -595,7 +621,7 @@ const runStep = (
       });
     }
 
-    const policy = autoscaled(node);
+    const policy = autoscaled(topo, node);
 
     if (policy) {
       const streak =

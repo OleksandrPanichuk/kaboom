@@ -18,6 +18,7 @@ export const nosqlDatabaseKind = defineNodeKind({
   icon: "nosql-database",
   stateful: true,
   replicable: true,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

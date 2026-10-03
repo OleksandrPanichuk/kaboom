@@ -48,6 +48,11 @@ export const capacityOf = (
     case "scheduler":
     case "coordination":
     case "dns":
+    case "k8s-service":
+    case "hpa":
+    case "config-map":
+    case "secret":
+    case "alert":
       return shared(Number.POSITIVE_INFINITY);
     case "search-index":
       return scale(
@@ -59,6 +64,7 @@ export const capacityOf = (
         ),
       );
     case "service":
+    case "k8s-deployment":
       return scale(shared(replicas * node.props.capacityRpsPerReplica));
     case "worker":
       return scale(shared(replicas * node.props.capacityMsgPerReplica));
@@ -66,6 +72,7 @@ export const capacityOf = (
     case "cdn":
     case "api-gateway":
     case "rate-limiter":
+    case "ingress":
       return scale(shared(node.props.capacityRps));
     case "external-api":
       return shared(Number.POSITIVE_INFINITY);
@@ -149,6 +156,11 @@ export const baseLatencyOf = (node: DesignNode): number => {
     case "dns":
     case "queue":
     case "stream":
+    case "k8s-service":
+    case "hpa":
+    case "config-map":
+    case "secret":
+    case "alert":
       return 0;
     case "worker":
       return node.props.processingMs;
@@ -191,6 +203,9 @@ export const carries = (
       return { reads: false, writes: true };
     case "replication":
     case "lock":
+    case "mounts":
+    case "scales":
+    case "watches":
       return { reads: false, writes: false };
     default:
       return { reads: true, writes: true };

@@ -1,13 +1,19 @@
 import type z from "zod";
 
 import {
+  alertKind,
   apiGatewayKind,
   cacheKind,
   cdnKind,
   clientKind,
+  configMapKind,
   coordinationKind,
   dnsKind,
   externalApiKind,
+  hpaKind,
+  ingressKind,
+  k8sDeploymentKind,
+  k8sServiceKind,
   loadBalancerKind,
   nosqlDatabaseKind,
   objectStorageKind,
@@ -15,6 +21,7 @@ import {
   rateLimiterKind,
   schedulerKind,
   searchIndexKind,
+  secretKind,
   serviceKind,
   sqlDatabaseKind,
   streamKind,
@@ -40,6 +47,13 @@ export const catalogue = {
   [searchIndexKind.kind]: searchIndexKind,
   [coordinationKind.kind]: coordinationKind,
   [externalApiKind.kind]: externalApiKind,
+  [ingressKind.kind]: ingressKind,
+  [k8sServiceKind.kind]: k8sServiceKind,
+  [k8sDeploymentKind.kind]: k8sDeploymentKind,
+  [hpaKind.kind]: hpaKind,
+  [configMapKind.kind]: configMapKind,
+  [secretKind.kind]: secretKind,
+  [alertKind.kind]: alertKind,
 } as const;
 
 export type Catalogue = typeof catalogue;

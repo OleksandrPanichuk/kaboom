@@ -1,6 +1,8 @@
 import type z from "zod";
 
-export type Track = "system-design";
+export const TRACKS = ["system-design", "devops"] as const;
+
+export type Track = (typeof TRACKS)[number];
 
 export interface NodeKindDocs {
   summary: string;
@@ -18,6 +20,7 @@ export interface NodeKindDefinition<
   icon: string;
   stateful: boolean;
   replicable: boolean;
+  carriesTraffic: boolean;
   distribution: "by-share" | "evenly" | "broadcast" | "routed";
   props: Props;
   docs: NodeKindDocs;

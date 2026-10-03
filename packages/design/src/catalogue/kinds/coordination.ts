@@ -10,6 +10,7 @@ export const coordinationKind = defineNodeKind({
   icon: "coordination",
   stateful: true,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

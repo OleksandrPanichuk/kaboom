@@ -208,6 +208,32 @@ describe("applyOps", () => {
     ]);
   });
 
+  test("allows a deployment to mount a secret, be scaled and be watched", () => {
+    apply([
+      { op: "add-node", node: createNode("k8s-deployment", { id: "app" }) },
+      { op: "add-node", node: createNode("hpa", { id: "hpa" }) },
+      { op: "add-node", node: createNode("secret", { id: "keys" }) },
+      { op: "add-node", node: createNode("alert", { id: "pager" }) },
+      {
+        op: "add-edge",
+        edge: createEdge({ id: "m1", from: "app", to: "keys", kind: "mounts" }),
+      },
+      {
+        op: "add-edge",
+        edge: createEdge({ id: "s1", from: "hpa", to: "app", kind: "scales" }),
+      },
+      {
+        op: "add-edge",
+        edge: createEdge({
+          id: "w1",
+          from: "pager",
+          to: "app",
+          kind: "watches",
+        }),
+      },
+    ]);
+  });
+
   test("allows a change feed from a database and a lock on a coordination service", () => {
     apply([
       { op: "add-node", node: createNode("search-index", { id: "search" }) },
@@ -398,6 +424,111 @@ describe("applyOps", () => {
             from: "api",
             to: "search",
             kind: "change-feed",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "a mount of something other than a config map or a secret",
+      [
+        { op: "add-node", node: createNode("k8s-deployment", { id: "app" }) },
+        { op: "add-node", node: createNode("hpa", { id: "hpa" }) },
+        { op: "add-node", node: createNode("secret", { id: "keys" }) },
+        { op: "add-node", node: createNode("alert", { id: "pager" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "e9",
+            from: "app",
+            to: "api",
+            kind: "mounts",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "a pod autoscaler on something other than a deployment",
+      [
+        { op: "add-node", node: createNode("k8s-deployment", { id: "app" }) },
+        { op: "add-node", node: createNode("hpa", { id: "hpa" }) },
+        { op: "add-node", node: createNode("secret", { id: "keys" }) },
+        { op: "add-node", node: createNode("alert", { id: "pager" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "e9",
+            from: "hpa",
+            to: "api",
+            kind: "scales",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "a second pod autoscaler on one deployment",
+      [
+        { op: "add-node", node: createNode("k8s-deployment", { id: "app" }) },
+        { op: "add-node", node: createNode("hpa", { id: "hpa" }) },
+        { op: "add-node", node: createNode("secret", { id: "keys" }) },
+        { op: "add-node", node: createNode("alert", { id: "pager" }) },
+        { op: "add-node", node: createNode("hpa", { id: "hpa2" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "e7",
+            from: "hpa2",
+            to: "app",
+            kind: "scales",
+          }),
+        },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "e8",
+            from: "hpa",
+            to: "app",
+            kind: "scales",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "an alert watching something that serves no traffic",
+      [
+        { op: "add-node", node: createNode("k8s-deployment", { id: "app" }) },
+        { op: "add-node", node: createNode("hpa", { id: "hpa" }) },
+        { op: "add-node", node: createNode("secret", { id: "keys" }) },
+        { op: "add-node", node: createNode("alert", { id: "pager" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "e9",
+            from: "pager",
+            to: "keys",
+            kind: "watches",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "traffic sent through a pod autoscaler",
+      [
+        { op: "add-node", node: createNode("k8s-deployment", { id: "app" }) },
+        { op: "add-node", node: createNode("hpa", { id: "hpa" }) },
+        { op: "add-node", node: createNode("secret", { id: "keys" }) },
+        { op: "add-node", node: createNode("alert", { id: "pager" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "e9",
+            from: "api",
+            to: "hpa",
+            kind: "sync-call",
           }),
         },
       ],

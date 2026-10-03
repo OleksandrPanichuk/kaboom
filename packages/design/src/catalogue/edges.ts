@@ -10,6 +10,9 @@ export const EDGE_KINDS = [
   "replication",
   "change-feed",
   "lock",
+  "mounts",
+  "scales",
+  "watches",
 ] as const;
 
 export const EdgeKindSchema = z.enum(EDGE_KINDS);
@@ -48,5 +51,14 @@ export const EdgePropsPatchSchema = z.strictObject({
   timeoutMs: timeoutMs.optional(),
 });
 
+export const CONTROL_EDGE_KINDS = [
+  "mounts",
+  "scales",
+  "watches",
+] as const satisfies readonly EdgeKind[];
+
+export const isControlEdge = (kind: EdgeKind): boolean =>
+  (CONTROL_EDGE_KINDS as readonly EdgeKind[]).includes(kind);
+
 export const carriesLoad = (kind: EdgeKind): boolean =>
-  kind !== "replication" && kind !== "lock";
+  kind !== "replication" && kind !== "lock" && !isControlEdge(kind);

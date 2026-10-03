@@ -10,6 +10,7 @@ export const workerKind = defineNodeKind({
   icon: "worker",
   stateful: false,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

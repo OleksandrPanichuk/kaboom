@@ -10,6 +10,7 @@ export const searchIndexKind = defineNodeKind({
   icon: "search-index",
   stateful: true,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

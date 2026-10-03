@@ -11,6 +11,7 @@ export {
   type NodeKindDefinition,
   type NodeKindDocs,
   type Track,
+  TRACKS,
 } from "./define-node-kind";
 export {
   defineTechnology,
@@ -20,12 +21,14 @@ export {
 } from "./define-technology";
 export {
   carriesLoad,
+  CONTROL_EDGE_KINDS,
   EDGE_KINDS,
   type EdgeKind,
   EdgeKindSchema,
   type EdgeProps,
   EdgePropsPatchSchema,
   EdgePropsSchema,
+  isControlEdge,
 } from "./edges";
 export {
   describeProps,

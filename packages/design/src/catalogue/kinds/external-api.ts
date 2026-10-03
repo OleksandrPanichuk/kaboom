@@ -10,6 +10,7 @@ export const externalApiKind = defineNodeKind({
   icon: "external-api",
   stateful: false,
   replicable: false,
+  carriesTraffic: true,
   distribution: "by-share",
   docs: {
     summary:

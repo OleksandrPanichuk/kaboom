@@ -176,6 +176,8 @@ const assertValidEdge = (graph: DesignGraph, edge: DesignEdge): void => {
     }
   }
 
+  assertControlEdge(graph, edge, from, to);
+
   const duplicate = graph.edges.some(
     (other) =>
       other.id !== edge.id &&
@@ -196,6 +198,68 @@ const assertValidEdge = (graph: DesignGraph, edge: DesignEdge): void => {
       "load-cycle",
       `Edge ${edge.id} closes a cycle: ${edge.to} already reaches ${edge.from}`,
     );
+  }
+};
+
+const assertControlEdge = (
+  graph: DesignGraph,
+  edge: DesignEdge,
+  from: DesignNode,
+  to: DesignNode,
+): void => {
+  switch (edge.kind) {
+    case "mounts":
+      if (
+        from.kind !== "k8s-deployment" ||
+        (to.kind !== "config-map" && to.kind !== "secret")
+      ) {
+        reject(
+          "invalid-edge",
+          `Edge ${edge.id} mounts ${to.id}, a ${to.kind}, into ${from.id}, a ${from.kind}; a deployment mounts config maps and secrets`,
+        );
+      }
+      return;
+    case "scales":
+      if (from.kind !== "hpa" || to.kind !== "k8s-deployment") {
+        reject(
+          "invalid-edge",
+          `Edge ${edge.id} scales ${to.id}, a ${to.kind}, from ${from.id}, a ${from.kind}; a pod autoscaler scales a deployment`,
+        );
+      }
+      if (
+        graph.edges.some(
+          (other) =>
+            other.id !== edge.id &&
+            other.kind === "scales" &&
+            other.to === edge.to,
+        )
+      ) {
+        reject(
+          "invalid-edge",
+          `${to.id} already has a pod autoscaler; two would fight over its replicas`,
+        );
+      }
+      return;
+    case "watches":
+      if (from.kind !== "alert" || !catalogue[to.kind].carriesTraffic) {
+        reject(
+          "invalid-edge",
+          `Edge ${edge.id} watches ${to.id}, a ${to.kind}, from ${from.id}, a ${from.kind}; an alert watches a node that serves traffic`,
+        );
+      }
+      return;
+    default:
+      if (
+        !catalogue[from.kind].carriesTraffic ||
+        !catalogue[to.kind].carriesTraffic
+      ) {
+        const idle = catalogue[from.kind].carriesTraffic ? to : from;
+
+        reject(
+          "invalid-edge",
+          `Edge ${edge.id} sends ${edge.kind} traffic through ${idle.id}, a ${idle.kind}; it serves no requests`,
+        );
+      }
   }
 };
 
