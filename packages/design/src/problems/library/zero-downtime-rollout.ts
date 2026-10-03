@@ -29,6 +29,7 @@ export const zeroDowntimeRollout: ProblemContentInput = {
 
 - Last month a release could not reach the payment provider. Its pods never became ready, the rollout hung for an hour, and nobody noticed until a customer complained.
 - Some bad releases pass every health check and fail every order.
+- One release last quarter ran fine for a few minutes, then its pods hung. They kept passing their health check, so Kubernetes kept sending them orders.
 
 The cluster is already on the canvas. Change how it is deployed.`,
   baseline: graph(
@@ -115,6 +116,22 @@ The cluster is already on the canvas. Change how it is deployed.`,
       expect: { endAvailability: 0.999 },
     },
     {
+      id: "hanging-release",
+      title: "A release that hangs after a few minutes",
+      visibility: "hidden",
+      durationSeconds: 1_200,
+      faults: [
+        {
+          kind: "rollout",
+          select: { nodeKind: "k8s-deployment" },
+          at: 60,
+          release: "deadlocks",
+        },
+      ],
+      slo: { p99Ms: 300, availability: 0 },
+      expect: { minAvailability: 0.7 },
+    },
+    {
       id: "evening-peak",
       title: "The evening peak",
       visibility: "hidden",
@@ -128,7 +145,7 @@ The cluster is already on the canvas. Change how it is deployed.`,
     {
       key: "handles-a-normal-day",
       title: "Handles a normal day within the SLO",
-      weight: 15,
+      weight: 10,
       check: { check: "drill-passes", drillId: "normal-day" },
     },
     {
@@ -150,6 +167,12 @@ The cluster is already on the canvas. Change how it is deployed.`,
       check: { check: "drill-passes", drillId: "broken-release" },
     },
     {
+      key: "restarts-hung-pods",
+      title: "Takes pods that hang out of rotation",
+      weight: 10,
+      check: { check: "drill-passes", drillId: "hanging-release" },
+    },
+    {
       key: "scales-with-traffic",
       title: "Grows with the evening peak",
       weight: 10,
@@ -158,7 +181,7 @@ The cluster is already on the canvas. Change how it is deployed.`,
     {
       key: "notices-a-stuck-rollout",
       title: "Pages someone when a rollout stops making progress",
-      weight: 10,
+      weight: 5,
       check: {
         check: "watches",
         nodeKind: "k8s-deployment",
@@ -205,6 +228,11 @@ The cluster is already on the canvas. Change how it is deployed.`,
         topic: "Bad releases",
         answer:
           "Now and then a release passes every health check and fails every order, for example after a wrong feature flag.",
+      },
+      {
+        topic: "The release that hung",
+        answer:
+          "Last quarter a release ran fine for about five minutes, then its pods hung on a connection pool. They still answered the health check, so they kept getting orders until someone rolled back by hand.",
       },
       {
         topic: "Config and secrets",
@@ -271,6 +299,7 @@ The cluster is already on the canvas. Change how it is deployed.`,
           "Adds a readiness probe so a new pod gets traffic only once it answers",
           "Uses surge rather than unavailability, so capacity never drops at peak",
           "Uses a canary or another gate so a release that fails every request is stopped and rolled back",
+          "Adds a liveness probe so a pod that hangs is restarted instead of kept in rotation",
         ],
         weight: 30,
       },
@@ -328,7 +357,7 @@ The cluster is already on the canvas. Change how it is deployed.`,
   ],
   reference: {
     notes:
-      "Six checkout pods carry the 2,000 requests a second at two thirds of their capacity. A canary with a readiness probe, a surge of one and none unavailable never runs fewer than six pods. A pod that never gets ready gets no traffic, and a canary that fails orders is rolled back after one step, which costs about one request in seven for ten seconds. A pod autoscaler between six and twelve pods absorbs the evening peak a few steps late. An alert on rollout progress pages the on-call engineer when a rollout stops moving, which nothing else would.",
+      "Six checkout pods carry the 2,000 requests a second at two thirds of their capacity. A canary with a readiness probe, a surge of one and none unavailable never runs fewer than six pods. A pod that never gets ready gets no traffic, and a canary that fails orders is rolled back after one step, which costs about one request in seven for ten seconds. A pod autoscaler between six and twelve pods absorbs the evening peak a few steps late. A liveness probe restarts a pod that hangs while still passing its readiness check, so a release that deadlocks after a few minutes loses a pod at a time for half a minute instead of every pod for good. An alert on rollout progress pages the on-call engineer when a rollout stops moving, which nothing else would.",
     graph: graph(
       [
         shoppers(),
@@ -341,6 +370,7 @@ The cluster is already on the canvas. Change how it is deployed.`,
           maxSurge: 1,
           maxUnavailable: 0,
           readinessProbe: true,
+          livenessProbe: true,
           canarySeconds: 60,
         }),
         node("autoscaler", "hpa", "Autoscaler", { min: 6, max: 12 }),

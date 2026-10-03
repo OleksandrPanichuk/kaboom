@@ -199,7 +199,14 @@ after it is created. A `release` is one of:
   traffic and fail all of it;
 - `broken`: the new pods pass every check and fail every request;
 - `slow`: the new pods answer every request, but each takes `SLOWDOWN` (2)
-  times as long, so a pod also serves half as many.
+  times as long, so a pod also serves half as many;
+- `deadlocks`: the new pods serve normally for `DEADLOCK_AFTER_SECONDS`
+  (300) after they are ready, then hang. A hung pod still passes its
+  readiness check, which is shallow, so it stays ready and fails every
+  request it is sent. Without `livenessProbe` it hangs for good. With one,
+  it is restarted `LIVENESS_DETECT_SECONDS` (30) after it hangs, waits a
+  back-off of 10 s doubled on every restart up to 300 s, starts again,
+  and serves for another 300 s. A pod waiting or starting is not ready.
 
 The Kubernetes service spreads requests evenly over **serving** pods: the old
 pods and the ready new ones. A blue-green deployment serves from the old set
@@ -217,9 +224,10 @@ half of them are. Each step, by `strategy`:
 - `recreate`: remove every old pod on the first step and create `N` new ones.
 - `blue-green`: create `N` new pods on the first step. Once all are ready,
   remove the old ones, which switches every request to the new set at once.
-- `canary`: create one new pod. A canary that fails or answers slowly and
-  has served for a step is removed and the rollout is **rolled back**: the
-  old pods keep serving.
+- `canary`: create one new pod. A canary that fails, answers slowly or has
+  been restarted is removed and the rollout is **rolled back**: the old
+  pods keep serving. A canary that hangs only after `canarySeconds` is
+  never caught this way.
   One that serves cleanly for `canarySeconds` after it is ready lets the rest
   follow as `rolling`.
 
@@ -227,7 +235,8 @@ A rollout is **complete** once no old pod is left and all `N` new pods are
 ready. One that is neither complete nor rolled back `progressDeadlineSeconds`
 after it began is **stalled**. It keeps what it has, as Kubernetes does, and
 neither rolls back nor goes on. Each step reports the deployment's `rollout`:
-its phase and its old, ready, starting, failing and slow pods.
+its phase, its old, ready, starting, failing and slow pods, and how often
+its new pods have been restarted.
 
 ## Findings
 
@@ -244,3 +253,4 @@ target: the first step it held, with the worst value seen.
 | `slo-breach`      | a client's p99 or availability misses the scenario's SLO             |
 | `rollout-stalled` | a deployment's rollout is stalled                                    |
 | `rolled-back`     | a deployment's canary is rolled back                                 |
+| `crash-looping`   | a deployment's new pods have been restarted 3 times or more          |

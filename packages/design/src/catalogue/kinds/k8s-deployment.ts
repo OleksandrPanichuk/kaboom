@@ -29,6 +29,7 @@ export const k8sDeploymentKind = defineNodeKind({
       "One replica is a single point of failure, and every rollout of it is an outage.",
       "Without a readiness probe a new pod gets traffic as soon as it starts, whether or not it can answer.",
       "A rollout that cannot finish just stops; nothing rolls it back or tells anyone unless something watches it.",
+      "A pod that hangs still passes a shallow readiness check, so without a liveness probe it stays in rotation and fails everything it is sent.",
     ],
   },
   props: z.strictObject({
@@ -63,6 +64,11 @@ export const k8sDeploymentKind = defineNodeKind({
     readinessProbe: toggle(false, {
       title: "Readiness probe",
       description: "A new pod gets traffic only once it answers its check",
+    }),
+    livenessProbe: toggle(false, {
+      title: "Liveness probe",
+      description:
+        "A pod that stops answering its check is restarted instead of kept in rotation",
     }),
     startupSeconds: seconds(30, {
       title: "Startup time",

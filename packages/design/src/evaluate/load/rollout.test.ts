@@ -52,6 +52,7 @@ describe("rollouts", () => {
       starting: 1,
       failing: 0,
       slow: 0,
+      restarts: 0,
     });
     expect(app[3]!.rollout).toMatchObject({ old: 2, ready: 1, starting: 1 });
     expect(app[9]!.rollout).toMatchObject({ phase: "complete", ready: 3 });
@@ -222,5 +223,56 @@ describe("rollouts", () => {
 
     expect(result.steps[0]!.nodes.api!.rollout).toBeUndefined();
     expect(result.findings).toEqual([]);
+  });
+});
+
+describe("a release that deadlocks after a while", () => {
+  const run = (deployment: Record<string, unknown>) =>
+    evaluateLoad(cluster({ maxSurge: 1, maxUnavailable: 0, ...deployment }), {
+      kind: "load",
+      durationSeconds: 1_200,
+      faults: [{ kind: "rollout", nodeId: "app", at: 0, release: "deadlocks" }],
+    });
+
+  test("passes every check, finishes rolling out, and then stops answering for good without a liveness probe", () => {
+    const result = run({});
+    const app = result.steps.map((step) => step.nodes.app!.rollout!);
+
+    expect(app[9]).toMatchObject({ phase: "complete", ready: 3, failing: 0 });
+    expect(availability(result).at(-1)).toBe(0);
+    expect(app.at(-1)).toMatchObject({ failing: 3, restarts: 0 });
+    expect(kinds(result)).not.toContain("crash-looping");
+  });
+
+  test("is restarted by a liveness probe, which keeps most requests served but loops forever", () => {
+    const result = run({ livenessProbe: true });
+    const served = availability(result);
+    const mean = served.reduce((sum, value) => sum + value, 0) / served.length;
+
+    expect(
+      Math.max(
+        ...result.steps.map((step) => step.nodes.app!.rollout!.restarts),
+      ),
+    ).toBeGreaterThanOrEqual(3);
+    expect(kinds(result)).toContain("crash-looping");
+    expect(served.at(-1)).toBeGreaterThan(0);
+    expect(mean).toBeGreaterThan(0.85);
+  });
+
+  test("is caught by a canary only when the analysis outlasts the time it takes to hang", () => {
+    const short = run({
+      strategy: "canary",
+      canarySeconds: 120,
+      progressDeadlineSeconds: 900,
+    });
+    const long = run({
+      strategy: "canary",
+      canarySeconds: 400,
+      progressDeadlineSeconds: 900,
+    });
+
+    expect(kinds(short)).not.toContain("rolled-back");
+    expect(kinds(long)).toContain("rolled-back");
+    expect(availability(long).at(-1)).toBe(1);
   });
 });

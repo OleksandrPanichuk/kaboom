@@ -32,6 +32,7 @@ import {
 } from "./node-model";
 import {
   advanceRollout,
+  CRASH_LOOP_RESTARTS,
   type Rollout,
   rolloutStepAt,
   servingPods,
@@ -712,9 +713,19 @@ const runStep = (
       log.note(index, {
         target: { type: "node", id: node.id },
         kind: "rolled-back",
-        message: `${label} rolled its canary back: the new version ${rollout?.release === "slow" ? "answered twice as slowly" : "failed the requests it was sent"}, so the old one keeps serving.`,
+        message: `${label} rolled its canary back: the new version ${rollout?.release === "slow" ? "answered twice as slowly" : rollout?.release === "deadlocks" ? "stopped answering after a while" : "failed the requests it was sent"}, so the old one keeps serving.`,
         data: { old: step.rollout.old },
         worst: 0,
+      });
+    }
+
+    if (step.rollout && step.rollout.restarts >= CRASH_LOOP_RESTARTS) {
+      log.note(index, {
+        target: { type: "node", id: node.id },
+        kind: "crash-looping",
+        message: `${label}'s new pods keep hanging and being restarted: ${step.rollout.restarts} restarts so far. The liveness probe keeps them coming back, but the version never stays up.`,
+        data: { restarts: step.rollout.restarts },
+        worst: step.rollout.restarts,
       });
     }
 

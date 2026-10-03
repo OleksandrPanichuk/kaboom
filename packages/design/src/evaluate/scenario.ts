@@ -11,7 +11,13 @@ const TrafficPointSchema = z.strictObject({
 
 const window = { at: Seconds, until: Seconds.optional() };
 
-export const RELEASES = ["healthy", "never-ready", "broken", "slow"] as const;
+export const RELEASES = [
+  "healthy",
+  "never-ready",
+  "broken",
+  "slow",
+  "deadlocks",
+] as const;
 
 export type Release = (typeof RELEASES)[number];
 
