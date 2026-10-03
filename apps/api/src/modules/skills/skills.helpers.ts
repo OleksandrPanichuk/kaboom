@@ -142,7 +142,9 @@ export const nextProblem = (
     difficulty: pick.content.difficulty,
     skill: weakest?.skill ?? null,
     reason: weakest
-      ? `${weakest.label} is your weakest skill so far, at ${weakest.score}, and this ${pick.content.difficulty} interview leans on it.`
+      ? emphasis(pick.content, weakest.skill) > 0
+        ? `${weakest.label} is your weakest skill so far, at ${weakest.score}, and this ${pick.content.difficulty} interview leans on it.`
+        : `${weakest.label} is your weakest skill so far, at ${weakest.score}, but this is the interview you have practised least.`
       : tried
         ? "Try it again: a second interview shows what has improved."
         : "Start here: an interview you have not tried yet.",

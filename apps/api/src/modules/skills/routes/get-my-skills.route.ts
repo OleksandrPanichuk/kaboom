@@ -8,7 +8,7 @@ export const getMySkillsRoute = ({ getMySkills }: SkillsActions) =>
     response: SkillsModel,
     summary: "Get the signed-in user's skills and what to practise next",
     description:
-      "Each skill is the weighted average of every reviewed interview's rubric items for it, from 0 to 100, or null before any review touched it. next suggests the interview that practises the weakest skill, preferring problems tried least.",
+      "Each skill is the weighted average of its scores from reviewed interviews and challenge submissions, from 0 to 100, or null before any touched it. A score's weight halves every 90 days, so recent work counts most. next suggests one interview per track: the problem tried least, then the one leaning hardest on the weakest skill, then the difficulty nearest that skill's level.",
     auth: true,
 
     action: ({ user }) => getMySkills.execute({ userId: user.id }),

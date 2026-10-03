@@ -184,13 +184,17 @@ describe("targetDifficulty", () => {
       { skill: "reliability", score: 0.8, weight: 10 },
       { skill: "communication", score: 0.9, weight: 10 },
     ]);
-    const candidates = ["url-shortener", "news-feed", "rate-limited-api"].map(
-      (slug, index) => ({ problemId: `p${index}`, content: problem(slug) }),
+    const base = problem("url-shortener");
+    const candidates = (["easy", "medium", "hard"] as const).map(
+      (difficulty, index) => ({
+        problemId: `p${index}`,
+        content: { ...base, slug: difficulty, title: difficulty, difficulty },
+      }),
     );
     const next = nextProblem(strong, candidates, new Map());
 
     expect(next?.skill).toBe("reliability");
-    expect(next?.difficulty).not.toBe("easy");
+    expect(next?.difficulty).toBe("hard");
     expect(next?.reason).toContain(
       "Reliability is your weakest skill so far, at 80",
     );
