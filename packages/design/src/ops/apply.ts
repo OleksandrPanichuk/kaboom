@@ -45,6 +45,37 @@ const assertGroup = (graph: DesignGraph, groupId: string | null): void => {
   if (groupId !== null) findGroup(graph, groupId);
 };
 
+const SUBNETS = new Set<DesignGroup["kind"]>([
+  "public-subnet",
+  "private-subnet",
+]);
+
+const assertNesting = (graph: DesignGraph, group: DesignGroup): void => {
+  const parent =
+    group.parentId === null ? null : findGroup(graph, group.parentId);
+
+  if (SUBNETS.has(group.kind) && parent?.kind !== "vpc") {
+    reject(
+      "invalid-op",
+      `Group ${group.id} is a subnet; a subnet sits inside a VPC`,
+    );
+  }
+
+  if (group.kind === "vpc" && parent !== null && parent.kind !== "region") {
+    reject(
+      "invalid-op",
+      `Group ${group.id} is a VPC; a VPC sits in a region or on its own`,
+    );
+  }
+
+  if (group.kind === "region" && parent !== null) {
+    reject(
+      "invalid-op",
+      `Group ${group.id} is a region; nothing holds a region`,
+    );
+  }
+};
+
 const parseNodeProps = (
   node: DesignNode,
   props: unknown,
@@ -299,6 +330,41 @@ const assertControlEdge = (
         );
       }
       return;
+    case "protects":
+      if (
+        from.kind !== "security-group" ||
+        !catalogue[to.kind].carriesTraffic
+      ) {
+        reject(
+          "invalid-edge",
+          `Edge ${edge.id} protects ${to.id}, a ${to.kind}, with ${from.id}, a ${from.kind}; a security group protects a node that serves traffic`,
+        );
+      }
+      if (
+        graph.edges.some(
+          (other) =>
+            other.id !== edge.id &&
+            other.kind === "protects" &&
+            other.to === edge.to,
+        )
+      ) {
+        reject(
+          "invalid-edge",
+          `${to.id} already has a security group; give it one that admits everything it needs`,
+        );
+      }
+      return;
+    case "admits":
+      if (
+        from.kind !== "security-group" ||
+        (to.kind !== "security-group" && !catalogue[to.kind].carriesTraffic)
+      ) {
+        reject(
+          "invalid-edge",
+          `Edge ${edge.id} admits ${to.id}, a ${to.kind}, into ${from.id}, a ${from.kind}; a security group admits a node or the members of another security group`,
+        );
+      }
+      return;
     default:
       if (
         !catalogue[from.kind].carriesTraffic ||
@@ -464,6 +530,7 @@ const addGroup = (graph: DesignGraph, group: DesignGroup): DesignOp[] => {
 
   assertFreeId(graph, group.id);
   assertGroup(graph, group.parentId);
+  assertNesting(graph, group);
   graph.groups.push(structuredClone(group));
 
   return [{ op: "remove-group", id: group.id }];

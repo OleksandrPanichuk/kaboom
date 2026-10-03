@@ -114,7 +114,20 @@ export const PipelineDrillSchema = z.strictObject({
 });
 export type PipelineDrill = z.output<typeof PipelineDrillSchema>;
 
-export const DrillSchema = z.union([PipelineDrillSchema, LoadDrillSchema]);
+export const NetworkDrillSchema = z.strictObject({
+  kind: z.literal("network"),
+  ...drillBase,
+  expect: z.strictObject({
+    forbid: z.array(z.enum(FINDING_KINDS)).default([]),
+  }),
+});
+export type NetworkDrill = z.output<typeof NetworkDrillSchema>;
+
+export const DrillSchema = z.union([
+  PipelineDrillSchema,
+  NetworkDrillSchema,
+  LoadDrillSchema,
+]);
 export type Drill = z.output<typeof DrillSchema>;
 
 export const CheckRefSchema = z.discriminatedUnion("check", [

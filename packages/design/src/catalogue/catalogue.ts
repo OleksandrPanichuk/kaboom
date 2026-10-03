@@ -16,6 +16,7 @@ import {
   k8sDeploymentKind,
   k8sServiceKind,
   loadBalancerKind,
+  natGatewayKind,
   nosqlDatabaseKind,
   objectStorageKind,
   pipelineStageKind,
@@ -24,6 +25,7 @@ import {
   schedulerKind,
   searchIndexKind,
   secretKind,
+  securityGroupKind,
   serviceKind,
   sqlDatabaseKind,
   streamKind,
@@ -58,6 +60,8 @@ export const catalogue = {
   [alertKind.kind]: alertKind,
   [pipelineStageKind.kind]: pipelineStageKind,
   [artifactRegistryKind.kind]: artifactRegistryKind,
+  [securityGroupKind.kind]: securityGroupKind,
+  [natGatewayKind.kind]: natGatewayKind,
 } as const;
 
 export type Catalogue = typeof catalogue;

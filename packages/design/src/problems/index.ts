@@ -40,6 +40,8 @@ export {
   type LoadDrill,
   LoadDrillSchema,
   MAX_HINTS,
+  type NetworkDrill,
+  NetworkDrillSchema,
   type NodeSelector,
   NodeSelectorSchema,
   type PipelineDrill,

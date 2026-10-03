@@ -15,6 +15,8 @@ export const EDGE_KINDS = [
   "watches",
   "pipeline-next",
   "publishes",
+  "protects",
+  "admits",
 ] as const;
 
 export const EdgeKindSchema = z.enum(EDGE_KINDS);
@@ -59,6 +61,8 @@ export const CONTROL_EDGE_KINDS = [
   "watches",
   "pipeline-next",
   "publishes",
+  "protects",
+  "admits",
 ] as const satisfies readonly EdgeKind[];
 
 export const isControlEdge = (kind: EdgeKind): boolean =>

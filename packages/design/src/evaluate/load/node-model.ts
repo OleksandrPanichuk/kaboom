@@ -55,6 +55,8 @@ export const capacityOf = (
     case "alert":
     case "pipeline-stage":
     case "artifact-registry":
+    case "security-group":
+    case "nat-gateway":
       return shared(Number.POSITIVE_INFINITY);
     case "search-index":
       return scale(
@@ -165,6 +167,8 @@ export const baseLatencyOf = (node: DesignNode): number => {
     case "alert":
     case "pipeline-stage":
     case "artifact-registry":
+    case "security-group":
+    case "nat-gateway":
       return 0;
     case "worker":
       return node.props.processingMs;
@@ -212,6 +216,8 @@ export const carries = (
     case "watches":
     case "pipeline-next":
     case "publishes":
+    case "protects":
+    case "admits":
       return { reads: false, writes: false };
     default:
       return { reads: true, writes: true };

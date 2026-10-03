@@ -595,6 +595,63 @@ describe("applyOps", () => {
       "invalid-edge",
     ],
     [
+      "a subnet outside a VPC",
+      [
+        {
+          op: "add-group",
+          group: createGroup({
+            id: "sub",
+            kind: "private-subnet",
+            label: "Private",
+          }),
+        },
+      ],
+      "invalid-op",
+    ],
+    [
+      "a second security group on one node",
+      [
+        { op: "add-node", node: createNode("security-group", { id: "sg1" }) },
+        { op: "add-node", node: createNode("security-group", { id: "sg2" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "g1",
+            from: "sg1",
+            to: "api",
+            kind: "protects",
+          }),
+        },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "g2",
+            from: "sg2",
+            to: "api",
+            kind: "protects",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
+      "a security group admitting something that serves no traffic",
+      [
+        { op: "add-node", node: createNode("security-group", { id: "sg1" }) },
+        { op: "add-node", node: createNode("nat-gateway", { id: "nat" }) },
+        {
+          op: "add-edge",
+          edge: createEdge({
+            id: "a1",
+            from: "sg1",
+            to: "nat",
+            kind: "admits",
+          }),
+        },
+      ],
+      "invalid-edge",
+    ],
+    [
       "an edge that closes a load cycle",
       [
         {
