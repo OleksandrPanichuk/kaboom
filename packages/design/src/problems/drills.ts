@@ -1,9 +1,10 @@
 import { evaluateLoad } from "../evaluate/load";
+import { evaluateNetwork } from "../evaluate/network";
 import { evaluatePipeline } from "../evaluate/pipeline";
 import type { EvaluationResult, Finding } from "../evaluate/result";
 import type { DesignGraph } from "../graph";
 import { drillScenario } from "./resolve";
-import type { Drill, LoadDrill, PipelineDrill } from "./schema";
+import type { Drill, LoadDrill, NetworkDrill, PipelineDrill } from "./schema";
 
 export interface DrillOutcome {
   drillId: string;
@@ -33,10 +34,41 @@ const podsAtMost = (graph: DesignGraph): number =>
 
 const percent = (value: number) => `${Math.floor(value * 10_000) / 100}%`;
 
-export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome =>
-  drill.kind === "pipeline"
-    ? runPipelineDrill(drill, graph)
-    : runLoadDrill(drill, graph);
+export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome => {
+  switch (drill.kind) {
+    case "pipeline":
+      return runPipelineDrill(drill, graph);
+    case "network":
+      return runNetworkDrill(drill, graph);
+    case "load":
+      return runLoadDrill(drill, graph);
+  }
+};
+
+const runNetworkDrill = (
+  drill: NetworkDrill,
+  graph: DesignGraph,
+): DrillOutcome => {
+  const result = evaluateNetwork(graph);
+  const failures: string[] = [];
+
+  if (!graph.nodes.some((node) => node.kind === "client")) {
+    failures.push("The design has no client, so nothing connects through it.");
+  }
+
+  for (const kind of drill.expect.forbid) {
+    for (const found of result.findings.filter((item) => item.kind === kind)) {
+      failures.push(found.message);
+    }
+  }
+
+  return {
+    drillId: drill.id,
+    passed: failures.length === 0,
+    failures,
+    findings: result.findings,
+  };
+};
 
 const runPipelineDrill = (
   drill: PipelineDrill,

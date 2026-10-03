@@ -18,11 +18,13 @@ import {
   type LucideIcon,
   MonitorSmartphone,
   Network,
+  Router,
   Rows3,
   Scaling,
   ScrollText,
   Search,
   Server,
+  Shield,
   Signpost,
   Split,
   Waypoints,
@@ -57,6 +59,8 @@ export const NODE_KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
   alert: BellRing,
   "pipeline-stage": GitBranch,
   "artifact-registry": Container,
+  "security-group": Shield,
+  "nat-gateway": Router,
 };
 
 export const FALLBACK_NODE_ICON: LucideIcon = Server;

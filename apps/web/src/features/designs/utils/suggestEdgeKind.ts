@@ -19,6 +19,9 @@ const candidates = (from: DesignNode, to: DesignNode): EdgeKind[] => {
   if (from.kind === "pipeline-stage") {
     return to.kind === "artifact-registry" ? ["publishes"] : ["pipeline-next"];
   }
+  if (from.kind === "security-group") {
+    return to.kind === "security-group" ? ["admits"] : ["protects", "admits"];
+  }
   if (from.kind === "hpa") return ["scales"];
   if (from.kind === "alert") return ["watches"];
   if (MOUNTABLE.has(to.kind)) return ["mounts"];

@@ -1,13 +1,16 @@
 export { evaluate, type ScenarioInput } from "./evaluate";
 export { evaluateLoad } from "./load";
+export { evaluateNetwork } from "./network";
 export { evaluatePipeline, RUNNER_SETUP_MINUTES } from "./pipeline";
 export type {
   ClientStep,
+  ConnectionCheck,
   EdgeStep,
   EvaluationResult,
   EvaluationStep,
   Finding,
   FindingKind,
+  NetworkResult,
   NodeStep,
   PipelineResult,
   RolloutPhase,

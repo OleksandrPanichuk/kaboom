@@ -62,6 +62,10 @@ export const FINDING_KINDS = [
   "rolled-back",
   "untested-deploy",
   "unscanned-deploy",
+  "blocked-path",
+  "exposed-store",
+  "exposed-service",
+  "open-store",
 ] as const;
 
 export type FindingKind = (typeof FINDING_KINDS)[number];
@@ -90,5 +94,17 @@ export interface PipelineResult {
   leadTimeMinutes: number;
   greenRate: number;
   stages: StageTiming[];
+  findings: Finding[];
+}
+
+export interface ConnectionCheck {
+  edgeId: string;
+  allowed: boolean;
+  reason: string | null;
+}
+
+export interface NetworkResult {
+  connections: ConnectionCheck[];
+  exposed: string[];
   findings: Finding[];
 }

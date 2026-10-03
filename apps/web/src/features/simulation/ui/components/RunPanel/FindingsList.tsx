@@ -15,6 +15,10 @@ const TITLES: Record<Finding["kind"], string> = {
   "rolled-back": "Rolled back",
   "untested-deploy": "Deploys untested code",
   "unscanned-deploy": "Deploys unscanned code",
+  "blocked-path": "Cannot connect",
+  "exposed-store": "Data open to the internet",
+  "exposed-service": "Service open to the internet",
+  "open-store": "Data open to the whole VPC",
 };
 
 interface FindingsListProps {

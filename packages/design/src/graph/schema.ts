@@ -23,7 +23,12 @@ const LabelSchema = z.string().max(80);
 
 const NotesSchema = z.string().max(2_000);
 
-export const GROUP_KINDS = ["region"] as const;
+export const GROUP_KINDS = [
+  "region",
+  "vpc",
+  "public-subnet",
+  "private-subnet",
+] as const;
 
 export type GroupKind = (typeof GROUP_KINDS)[number];
 

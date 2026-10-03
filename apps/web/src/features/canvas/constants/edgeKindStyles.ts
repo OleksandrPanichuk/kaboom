@@ -125,4 +125,27 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
     },
     animated: false,
   },
+  protects: {
+    description:
+      "The security group decides who may connect to the target; it carries no request load.",
+    label: "Protects",
+    style: {
+      stroke: "var(--color-amber-600)",
+      strokeWidth: 1.5,
+      strokeDasharray: "2 4",
+    },
+    animated: false,
+  },
+  admits: {
+    description:
+      "The security group lets the target, or the members of the target group, connect; it carries no request load.",
+    label: "Admits",
+    style: {
+      stroke: "var(--color-amber-600)",
+      strokeWidth: 1.5,
+      strokeDasharray: "1 4",
+      strokeLinecap: "round",
+    },
+    animated: false,
+  },
 };
