@@ -8,6 +8,7 @@ import {
   Network,
   Puzzle,
   ShieldCheck,
+  Trophy,
   UserRound,
 } from "lucide-react";
 
@@ -42,6 +43,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Handbook", icon: BookOpen, to: "/handbook" },
       { label: "Interviews", icon: MessagesSquare, to: "/interviews" },
       { label: "Progress", icon: ChartNoAxesColumn, to: "/progress" },
+      { label: "Leaderboard", icon: Trophy, to: "/leaderboard" },
     ],
   },
 ];
