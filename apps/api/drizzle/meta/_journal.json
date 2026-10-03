@@ -127,6 +127,13 @@
       "when": 1790710314702,
       "tag": "0017_challenge_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791059018844,
+      "tag": "0018_leaderboard_profiles",
+      "breakpoints": true
     }
   ]
 }
