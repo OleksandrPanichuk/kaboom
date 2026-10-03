@@ -79,26 +79,30 @@ describe("starting an interview", () => {
     expect(plain.body.code).toBe("PROBLEM_NOT_INTERVIEWABLE");
   });
 
-  test("starts every official problem that has an interview", async () => {
-    const interviewable = OFFICIAL_PROBLEMS.filter(
-      (problem) => problem.interview,
-    );
+  test("offers an interview on every official problem written for one", () => {
+    expect(
+      OFFICIAL_PROBLEMS.filter((problem) => problem.interview)
+        .map((problem) => problem.slug)
+        .sort(),
+    ).toEqual([
+      "latency-regression",
+      "monorepo-pipeline",
+      "news-feed",
+      "rate-limited-api",
+      "url-shortener",
+      "zero-downtime-rollout",
+    ]);
+  });
 
-    expect(interviewable.map((problem) => problem.slug).sort()).toEqual(
-      [
-        "latency-regression",
-        "news-feed",
-        "rate-limited-api",
-        "url-shortener",
-        "zero-downtime-rollout",
-      ].sort(),
-    );
+  test.each(
+    OFFICIAL_PROBLEMS.filter((problem) => problem.interview).map((problem) => [
+      problem.slug,
+      problem,
+    ]),
+  )("starts %s with its opening", async (_, problem) => {
+    const started = await startInterview(await createUser(), problem.slug);
 
-    for (const problem of interviewable) {
-      const started = await startInterview(await createUser(), problem.slug);
-
-      expect(started.messages[0]!.body).toBe(problem.interview!.opening);
-    }
+    expect(started.messages[0]!.body).toBe(problem.interview!.opening);
   });
 
   test("keeps the version it started on after the problem changes", async () => {

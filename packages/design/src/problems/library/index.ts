@@ -1,6 +1,7 @@
 import { type ProblemContent, ProblemContentSchema } from "../schema";
 import { chat } from "./chat";
 import { latencyRegression } from "./latency-regression";
+import { monorepoPipeline } from "./monorepo-pipeline";
 import { newsFeed } from "./news-feed";
 import { notifications } from "./notifications";
 import { photoUploads } from "./photo-uploads";
@@ -17,4 +18,5 @@ export const OFFICIAL_PROBLEMS: ProblemContent[] = [
   chat,
   zeroDowntimeRollout,
   latencyRegression,
+  monorepoPipeline,
 ].map((problem) => ProblemContentSchema.parse(problem));
