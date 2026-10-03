@@ -497,6 +497,11 @@ the phases it is offered in, and a handler that goes through the module's
 own use cases. An invalid input or an `AppError` comes back to the model as
 a tool error rather than failing the turn.
 
+`ExpireStaleInterviewsJob` runs hourly and expires an active interview a
+day after its last event, or after its start when it has none: the
+interview moves to `expired`, its design is locked, and nothing is
+reviewed.
+
 ## Reviews
 
 Ending an interview moves it to `reviewing` and schedules a review through

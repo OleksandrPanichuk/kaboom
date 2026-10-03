@@ -18,6 +18,7 @@ export {
   InterviewsService,
   type PinnedProblem,
 } from "./interviews.service";
+export * from "./jobs";
 export * from "./ports";
 export * from "./repositories";
 export { InterviewParams } from "./routes/interview-params";
