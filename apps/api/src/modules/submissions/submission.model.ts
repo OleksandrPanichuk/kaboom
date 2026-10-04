@@ -36,6 +36,13 @@ export const ItemResultModel = t.Object({
   weight: t.Integer(),
   passed: t.Boolean(),
   evidence: t.String(),
+  ratio: t.Optional(
+    t.Number({
+      minimum: 0,
+      maximum: 1,
+      description: "The share of the weight earned, for an item scored in part",
+    }),
+  ),
 });
 export type ItemResultModel = typeof ItemResultModel.static;
 

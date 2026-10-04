@@ -4,6 +4,7 @@ export const SUITE_LABELS: Record<TestResultModel["suite"], string> = {
   functional: "Functional",
   load: "Load",
   faults: "Faults",
+  chaos: "Chaos",
   constraints: "Constraints",
   hidden: "Hidden",
 };

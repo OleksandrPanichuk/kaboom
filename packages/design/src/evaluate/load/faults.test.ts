@@ -217,3 +217,35 @@ describe("found in review", () => {
     );
   });
 });
+
+describe("retries upstream of a dead dependency", () => {
+  const design = (retries: number) =>
+    graph(
+      [
+        node("users", "client", { rps: 1_000, readRatio: 1 }),
+        node("lb", "load-balancer"),
+        node("api", "service", { replicas: 10 }),
+        node("db", "sql-database"),
+        node("search", "search-index"),
+      ],
+      [
+        edge("users", "lb", "sync-call", { retries }),
+        edge("lb", "api", "sync-call", { retries }),
+        edge("api", "db", "read", { share: 0.9 }),
+        edge("api", "search", "read", { share: 0.1 }),
+      ],
+    );
+
+  test("cannot rescue the requests that need it, and send it more of them", () => {
+    const faults: Fault[] = [{ kind: "node-down", nodeId: "search", at: 0 }];
+    const plain = run(design(0), faults);
+    const retried = run(design(2), faults);
+    const last = (result: ReturnType<typeof run>) => result.steps.at(-1)!;
+
+    expect(last(plain).clients.users!.availability).toBeCloseTo(0.9);
+    expect(last(retried).clients.users!.availability).toBeCloseTo(0.9);
+    expect(last(retried).nodes.search!.reads).toBeGreaterThan(
+      last(plain).nodes.search!.reads,
+    );
+  });
+});

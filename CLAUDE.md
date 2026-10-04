@@ -563,7 +563,7 @@ review leaves the deterministic score in place and marks the submission
 
 `runTests(problem, graph, { include })` in `packages/design/src/testing`
 turns a problem's drills and rubric checks into a report, grouped in the
-suites `functional`, `load`, `faults` and `constraints`. Each test carries
+suites `functional`, `load`, `faults`, `chaos` and `constraints`. Each test carries
 assertions, each with what it measured, what it expected, what it got, the
 second it happened and the nodes to blame. `runDrill` builds those
 assertions, and its `failures` are their messages, so the interviewer and
@@ -571,9 +571,31 @@ the reviews read the same sentences as before. A run includes the public
 tests only. A submission runs them all and stores the report through
 `publicReport`, which keeps a hidden test's title and status and nothing
 else. Scoring and the report share one `drillRunner`, so a drill runs once.
+Retries help with transient errors only: the load model splits a node's
+error rate into a lasting part (a node down, a cut, a dependency that is
+down) and a transient one, and a retry repeats the lasting part in vain.
+
 A public load test carries the scenario it ran, its faults resolved to
 node ids; the browser evaluates it again to replay it, rather than the
 server sending every step.
+
+The `chaos` suite is drawn from the design itself (`testing/chaos.ts`), so
+it cannot be learned by heart: a design with more parts gets more faults.
+Each case is one failure the model says a design can survive, in the SPOF
+lint's own terms: a replicated service or deployment loses one replica, a
+single one fails outright, a SQL primary fails over, a NoSQL store or a
+stream with one copy loses the partitions on a node, every group that holds
+something is lost, every dependency behind a synchronous call fails 5 % of
+requests, and every cache is emptied. Managed entry points (balancers,
+gateways, DNS, CDNs, ingresses) are taken as redundant. Partitions are left
+out: whether a design should keep writing on both sides is a choice, not a
+fault to survive. A case passes when the design serves the problem's
+`chaos.minAvailability` after `graceSeconds`, or by the end of the fault
+for a lost group or an emptied cache, and is back within the SLO
+`recoverySeconds` later. The traffic and the SLO come from the problem's
+first public load drill without faults, and the cases are skipped until
+that drill passes. A `chaos-coverage` rubric item scores the share
+survived, as part of its weight.
 
 The load model's invariants are property-based tests over random designs
 (`invariants.test.ts`): bounds, determinism, conservation, and that more

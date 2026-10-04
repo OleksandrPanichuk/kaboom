@@ -13,6 +13,7 @@ export const TEST_SUITES = [
   "functional",
   "load",
   "faults",
+  "chaos",
   "constraints",
   "hidden",
 ] as const;
@@ -54,6 +55,8 @@ const suiteOfCheck = (check: CheckRef, problem: ProblemContent): TestSuite => {
   switch (check.check) {
     case "no-lint":
       return "constraints";
+    case "chaos-coverage":
+      return "chaos";
     case "no-finding-under-drill": {
       const drill = problem.drills.find((item) => item.id === check.drillId);
 
@@ -148,7 +151,20 @@ export const runTests = (
         replay: null,
       };
     });
-  const tests = [...drills, ...checks].sort(
+  const chaos = runner
+    .chaos()
+    .map(({ chaos: item, outcome, skipped, durationMs }): TestResult => ({
+      id: item.id,
+      suite: "chaos",
+      title: item.title,
+      description: skipped ?? "",
+      visibility: "public",
+      status: outcome ? (outcome.passed ? "passed" : "failed") : "skipped",
+      assertions: outcome?.assertions ?? [],
+      durationMs: round(durationMs),
+      replay: outcome?.scenario ?? null,
+    }));
+  const tests = [...drills, ...checks, ...chaos].sort(
     (a, b) => TEST_SUITES.indexOf(a.suite) - TEST_SUITES.indexOf(b.suite),
   );
 

@@ -116,7 +116,7 @@ The apps and both providers are already on the canvas. Build what sits between t
     {
       key: "handles-a-normal-day",
       title: "Sends a normal day and its digest within the limits",
-      weight: 25,
+      weight: 20,
       check: { check: "drill-passes", drillId: "normal-day" },
     },
     {
@@ -134,7 +134,7 @@ The apps and both providers are already on the canvas. Build what sits between t
     {
       key: "absorbs-a-busy-hour",
       title: "Catches up after a busy stretch",
-      weight: 10,
+      weight: 5,
       check: { check: "drill-passes", drillId: "busy-hour" },
     },
     {
@@ -152,8 +152,14 @@ The apps and both providers are already on the canvas. Build what sits between t
     {
       key: "keeps-providers-off-the-request-path",
       title: "Keeps the providers off the request path",
-      weight: 15,
+      weight: 10,
       check: { check: "no-lint", lint: "sync-third-party" },
+    },
+    {
+      key: "survives-unseen-faults",
+      title: "Survives faults drawn from the design itself",
+      weight: 15,
+      check: { check: "chaos-coverage", min: 1 },
     },
   ],
   hints: [
@@ -200,13 +206,13 @@ The apps and both providers are already on the canvas. Build what sits between t
       ],
       [
         edge("apps", "lb", "sync-call"),
-        edge("lb", "api", "sync-call"),
-        edge("api", "db", "write"),
+        edge("lb", "api", "sync-call", { retries: 1 }),
+        edge("api", "db", "write", { retries: 1 }),
         edge("api", "queue", "async-message"),
         edge("digest", "queue", "async-message"),
         edge("queue", "workers", "async-message"),
-        edge("workers", "push", "sync-call"),
-        edge("workers", "sms", "sync-call", { share: 0.1 }),
+        edge("workers", "push", "sync-call", { retries: 1 }),
+        edge("workers", "sms", "sync-call", { retries: 1, share: 0.1 }),
       ],
     ),
   },

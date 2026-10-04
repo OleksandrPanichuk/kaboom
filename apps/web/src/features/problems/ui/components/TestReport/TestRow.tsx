@@ -37,7 +37,8 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
           closePanels();
         }
       : null;
-  const expandable = !hidden && test.assertions.length > 0;
+  const expandable =
+    !hidden && (test.assertions.length > 0 || test.description !== "");
 
   const heading = (
     <>

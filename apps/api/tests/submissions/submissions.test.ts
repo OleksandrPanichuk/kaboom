@@ -175,7 +175,7 @@ describe("running and submitting", () => {
         .filter((test) => test.visibility === "hidden")
         .every((test) => test.assertions.length === 0 && test.replay === null),
     ).toBe(true);
-    expect(raw).not.toContain("node-down");
+    expect(raw).not.toContain('"role":"primary"');
   });
 
   test("the baseline scores 0, and a stale revision is refused", async () => {

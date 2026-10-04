@@ -1,5 +1,13 @@
 import type { DesignGraph } from "../graph";
 import { runLints } from "../lints";
+import {
+  chaosBaseline,
+  type ChaosCase,
+  chaosCases,
+  type ChaosOutcome,
+  chaosSettings,
+  runChaosCase,
+} from "../testing/chaos";
 import { type DrillOutcome, runDrill } from "./drills";
 import { selectNodes } from "./resolve";
 import type { CheckRef, ProblemContent, RubricItem } from "./schema";
@@ -10,6 +18,14 @@ export interface ItemScore {
   weight: number;
   passed: boolean;
   evidence: string;
+  ratio?: number;
+}
+
+export interface ChaosResult {
+  chaos: ChaosCase;
+  outcome: ChaosOutcome | null;
+  skipped: string | null;
+  durationMs: number;
 }
 
 export interface DrillScore {
@@ -35,9 +51,10 @@ export interface DrillRunner {
   graph: DesignGraph;
   drill: (id: string) => DrillOutcome | undefined;
   durationOf: (id: string) => number;
+  chaos: () => ChaosResult[];
 }
 
-type Context = Pick<DrillRunner, "graph" | "drill">;
+type Context = Pick<DrillRunner, "graph" | "drill" | "chaos">;
 
 export const drillRunner = (
   problem: ProblemContent,
@@ -45,9 +62,47 @@ export const drillRunner = (
 ): DrillRunner => {
   const outcomes = new Map<string, DrillOutcome>();
   const durations = new Map<string, number>();
+  let chaos: ChaosResult[] | null = null;
 
-  return {
+  const runner: DrillRunner = {
     graph,
+    chaos: () => {
+      if (chaos) return chaos;
+
+      const baseline = chaosBaseline(problem);
+      const settings = chaosSettings(problem);
+
+      if (!baseline || !settings.enabled) {
+        chaos = [];
+
+        return chaos;
+      }
+
+      const ready = runner.drill(baseline.id)?.passed ?? false;
+
+      chaos = chaosCases(graph, settings).map((item) => {
+        if (!ready) {
+          return {
+            chaos: item,
+            outcome: null,
+            skipped: `Faults are drawn once “${baseline.title}” passes; a design that fails without them says nothing new with them.`,
+            durationMs: 0,
+          };
+        }
+
+        const started = performance.now();
+        const outcome = runChaosCase(graph, item, baseline, settings);
+
+        return {
+          chaos: item,
+          outcome,
+          skipped: null,
+          durationMs: performance.now() - started,
+        };
+      });
+
+      return chaos;
+    },
     drill: (id) => {
       if (!outcomes.has(id)) {
         const found = problem.drills.find((item) => item.id === id);
@@ -64,13 +119,43 @@ export const drillRunner = (
     },
     durationOf: (id) => durations.get(id) ?? 0,
   };
+
+  return runner;
 };
 
 export const judgeCheck = (
   check: CheckRef,
   context: Context,
-): { passed: boolean; evidence: string } => {
+): { passed: boolean; evidence: string; ratio?: number } => {
   switch (check.check) {
+    case "chaos-coverage": {
+      const results = context.chaos();
+      const survived = results.filter((item) => item.outcome?.passed);
+      const coverage =
+        results.length === 0 ? 0 : survived.length / results.length;
+      const ratio = Math.min(1, coverage / check.min);
+      const first = results.find((item) => !item.outcome?.passed);
+
+      if (results.length === 0) {
+        return {
+          passed: false,
+          evidence: "The design has nothing to fail yet.",
+          ratio: 0,
+        };
+      }
+
+      if (results[0]?.skipped) {
+        return { passed: false, evidence: results[0].skipped, ratio: 0 };
+      }
+
+      return {
+        passed: coverage >= check.min,
+        evidence: first
+          ? `Survives ${survived.length} of ${results.length} faults drawn from the design; not “${first.chaos.title}”.`
+          : `Survives all ${results.length} faults drawn from the design.`,
+        ratio,
+      };
+    }
     case "drill-passes": {
       const outcome = context.drill(check.drillId);
 
@@ -215,7 +300,7 @@ export const scoreSubmission = (
   }));
   const total = items.reduce((sum, item) => sum + item.weight, 0);
   const earned = items.reduce(
-    (sum, item) => sum + (item.passed ? item.weight : 0),
+    (sum, item) => sum + item.weight * (item.ratio ?? (item.passed ? 1 : 0)),
     0,
   );
 
