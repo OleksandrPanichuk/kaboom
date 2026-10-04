@@ -602,7 +602,12 @@ survived, as part of its weight.
 A check asks what a design does rather than what it has where it can.
 `serves-reads` measures the share of the clients' reads that nodes of a
 kind answer during a drill, a cache or CDN by its hit ratio, so a cache
-drawn beside the read path earns nothing. In a system-design problem every
+drawn beside the read path earns nothing. `has-node-kind` counts only the
+nodes that take part: a kind that carries traffic must carry some over its
+edges in the problem's normal-day drill (or the drill the check names),
+and any other kind must be connected to something or placed in a group, as
+a NAT gateway works from its subnet. A node dropped on the canvas and left
+there does not count. In a system-design problem every
 load drill without faults also asserts that the clients' writes reach a
 database, queue, stream or object store; a DevOps problem may run a
 stateless service on its own, so `runDrill` takes `keepsWrites` from the

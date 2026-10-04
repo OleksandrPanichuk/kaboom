@@ -12,7 +12,7 @@ import {
   publicScore,
 } from "./publish";
 import { drillScenario, selectNodes } from "./resolve";
-import { type LoadDrill, ProblemContentSchema } from "./schema";
+import { type CheckRef, type LoadDrill, ProblemContentSchema } from "./schema";
 import { scoreSubmission } from "./score";
 
 const shortener = OFFICIAL_PROBLEMS.find(
@@ -110,6 +110,110 @@ describe("scoring the URL shortener", () => {
     );
 
     expect(normal?.evidence).toContain("Users");
+  });
+});
+
+describe("a presence check", () => {
+  const presence = OFFICIAL_PROBLEMS.flatMap((problem) =>
+    problem.rubric.flatMap((item) =>
+      item.check.check === "has-node-kind"
+        ? [{ problem, key: item.key, kind: item.check.nodeKind }]
+        : [],
+    ),
+  );
+
+  test.each(
+    presence.map((entry) => [`${entry.problem.slug}: ${entry.key}`, entry]),
+  )(
+    "%s fails when its nodes are drawn but not part of anything",
+    (_, { problem, key, kind }) => {
+      const { graph: reference } = problem.reference;
+      const loose = new Set(
+        reference.nodes
+          .filter((item) => item.kind === kind)
+          .map(({ id }) => id),
+      );
+      const detached: DesignGraph = {
+        ...reference,
+        nodes: reference.nodes.map((item) =>
+          loose.has(item.id) ? { ...item, groupId: null } : item,
+        ),
+        edges: reference.edges.filter(
+          (item) => !loose.has(item.from) && !loose.has(item.to),
+        ),
+      };
+      const item = scoreSubmission(problem, detached).items.find(
+        (entry) => entry.key === key,
+      )!;
+
+      expect(loose.size).toBeGreaterThan(0);
+      expect(item.passed).toBe(false);
+      expect(item.evidence).toMatch(/but only 0/);
+    },
+  );
+});
+
+describe("taking part beside the request path", () => {
+  const notifications = OFFICIAL_PROBLEMS.find(
+    (problem) => problem.slug === "notifications",
+  )!;
+  const withCheck = (check: CheckRef) => ({
+    ...notifications,
+    rubric: [
+      ...notifications.rubric,
+      { key: "probe", title: "Probe", weight: 1, check },
+    ],
+  });
+
+  test("counts a replica the primary feeds, and a lock the scheduler takes", () => {
+    const shortener = OFFICIAL_PROBLEMS.find(
+      (problem) => problem.slug === "url-shortener",
+    )!;
+    const replicas = scoreSubmission(
+      {
+        ...shortener,
+        rubric: [
+          ...shortener.rubric,
+          {
+            key: "probe",
+            title: "Probe",
+            weight: 1,
+            check: { check: "has-node-kind", nodeKind: "sql-database", min: 3 },
+          },
+        ],
+      },
+      shortener.reference.graph,
+    ).items.find((item) => item.key === "probe")!;
+
+    expect(replicas.passed).toBe(true);
+
+    const reference = notifications.reference.graph;
+    const locked = {
+      ...reference,
+      nodes: [...reference.nodes, node("lock", "coordination", "Lock")],
+      edges: [...reference.edges, edge("digest", "lock", "lock")],
+    };
+    const coordination = scoreSubmission(
+      withCheck({ check: "has-node-kind", nodeKind: "coordination", min: 1 }),
+      locked,
+    ).items.find((item) => item.key === "probe")!;
+
+    expect(coordination.passed).toBe(true);
+  });
+
+  test("refuses a drill for a kind or a drill it cannot use", () => {
+    const broken = checkPublishable(
+      withCheck({
+        check: "has-node-kind",
+        nodeKind: "security-group",
+        min: 1,
+        drillId: "normal-day",
+      }),
+    );
+
+    expect(!broken.ok && broken.issues.join(" ")).toContain(
+      "only a load drill and a kind that carries traffic",
+    );
   });
 });
 

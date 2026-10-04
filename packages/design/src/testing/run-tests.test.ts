@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { evaluateLoad } from "../evaluate/load";
 import { OFFICIAL_PROBLEMS } from "../problems/library";
 import { edge, graph, node } from "../problems/library/build";
+import { drillOf } from "../problems/schema";
 import { publicReport, runTests, TEST_SUITES } from "./run-tests";
 
 const shortener = OFFICIAL_PROBLEMS.find(
@@ -83,9 +84,7 @@ describe("runTests", () => {
         (entry) => `check:${entry.key}` === item.id,
       )!;
 
-      expect(
-        "drillId" in rubric.check && publicDrills.has(rubric.check.drillId),
-      ).toBe(true);
+      expect(publicDrills.has(drillOf(rubric.check) ?? "")).toBe(true);
     }
   });
 

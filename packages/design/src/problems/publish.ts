@@ -1,7 +1,9 @@
+import { catalogue } from "../catalogue";
 import { type DesignGraph, emptyGraph } from "../graph";
 import { applyOps, type DesignOp } from "../ops";
 import { chaosBaseline, chaosSettings } from "../testing/chaos";
 import {
+  drillOf,
   INTERVIEW_PHASES,
   type ProblemContent,
   ProblemContentSchema,
@@ -110,9 +112,24 @@ export const checkPublishable = (input: unknown): PublishCheck => {
       );
     }
 
-    if ("drillId" in item.check && !drillIds.includes(item.check.drillId)) {
+    const named = drillOf(item.check);
+
+    if (item.check.check === "has-node-kind" && named !== undefined) {
+      const drill = problem.drills.find((entry) => entry.id === named);
+
+      if (
+        !catalogue[item.check.nodeKind].carriesTraffic ||
+        (drill && drill.kind !== "load")
+      ) {
+        issues.push(
+          `Rubric item ${item.key} names a drill for ${item.check.nodeKind}, which only a load drill and a kind that carries traffic can use.`,
+        );
+      }
+    }
+
+    if (named !== undefined && !drillIds.includes(named)) {
       issues.push(
-        `Rubric item ${item.key} names a drill, ${item.check.drillId}, the problem does not have.`,
+        `Rubric item ${item.key} names a drill, ${named}, the problem does not have.`,
       );
     }
   }
@@ -201,9 +218,7 @@ export const publicScore = (problem: ProblemContent, score: Score): Score => {
   );
   const onHidden = new Set(
     problem.rubric
-      .filter(
-        (item) => "drillId" in item.check && hidden.has(item.check.drillId),
-      )
+      .filter((item) => hidden.has(drillOf(item.check) ?? ""))
       .map((item) => item.key),
   );
 

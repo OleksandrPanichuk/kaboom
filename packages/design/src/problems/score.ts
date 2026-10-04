@@ -1,3 +1,4 @@
+import { catalogue } from "../catalogue";
 import { costOf, type NodeLoad } from "../cost";
 import type { EvaluationResult } from "../evaluate/result";
 import type { DesignGraph } from "../graph";
@@ -63,6 +64,7 @@ const serves = (graph: DesignGraph): boolean =>
 export interface DrillRunner {
   graph: DesignGraph;
   seeds: number;
+  baselineId: string | null;
   drillTitle: (id: string) => string;
   drill: (id: string) => DrillOutcome | undefined;
   variation: (id: string) => Variation | null;
@@ -72,7 +74,7 @@ export interface DrillRunner {
 
 type Context = Pick<
   DrillRunner,
-  "graph" | "drill" | "chaos" | "variation" | "drillTitle"
+  "graph" | "drill" | "chaos" | "variation" | "drillTitle" | "baselineId"
 >;
 
 export interface DrillRunnerOptions {
@@ -125,6 +127,7 @@ export const drillRunner = (
   const runner: DrillRunner = {
     graph,
     seeds,
+    baselineId: chaosBaseline(problem)?.id ?? null,
     drillTitle: (id) =>
       problem.drills.find((item) => item.id === id)?.title ?? id,
     chaos: () => {
@@ -224,6 +227,44 @@ export const drillRunner = (
 };
 
 export const FLAKY_SHARE = 0.5;
+
+const SIDE_EDGES = new Set(["lock", "replication"]);
+
+const takesPart = (
+  graph: DesignGraph,
+  id: string,
+  result: EvaluationResult | undefined,
+): boolean => {
+  const edges = graph.edges.filter(
+    (edge) => edge.from === id || edge.to === id,
+  );
+
+  if (!result) {
+    const placed = graph.nodes.find((node) => node.id === id)?.groupId;
+
+    return edges.length > 0 || (placed !== undefined && placed !== null);
+  }
+
+  const carries = (nodeId: string) =>
+    result.steps.some((step) =>
+      graph.edges.some((edge) => {
+        if (edge.from !== nodeId && edge.to !== nodeId) return false;
+
+        const flow = step.edges[edge.id];
+
+        return (flow?.reads ?? 0) + (flow?.writes ?? 0) > 0;
+      }),
+    );
+
+  return (
+    carries(id) ||
+    edges.some(
+      (edge) =>
+        SIDE_EDGES.has(edge.kind) &&
+        carries(edge.from === id ? edge.to : edge.from),
+    )
+  );
+};
 
 const labelOf = (node: { label: string; id: string }) => node.label || node.id;
 
@@ -447,20 +488,43 @@ export const judgeCheck = (
           };
     }
     case "has-node-kind": {
-      const count = selectNodes(context.graph, {
+      const drawn = selectNodes(context.graph, {
         nodeKind: check.nodeKind,
         role: "any",
-      }).length;
+      });
+      const drillId = check.drillId ?? context.baselineId;
+      const result =
+        catalogue[check.nodeKind].carriesTraffic && drillId
+          ? context.drill(drillId)?.result
+          : undefined;
+      const working = drawn.filter((node) =>
+        takesPart(context.graph, node.id, result),
+      );
+      const plural = (count: number) =>
+        `${count} ${check.nodeKind} node${count === 1 ? "" : "s"}`;
 
-      return count >= check.min
-        ? {
-            passed: true,
-            evidence: `The design has ${count} ${check.nodeKind} node${count === 1 ? "" : "s"}.`,
-          }
-        : {
-            passed: false,
-            evidence: `The design needs at least ${check.min} ${check.nodeKind} node${check.min === 1 ? "" : "s"} and has ${count}.`,
-          };
+      if (working.length >= check.min) {
+        return {
+          passed: true,
+          evidence: `The design has ${plural(working.length)} that take part.`,
+        };
+      }
+
+      if (drawn.length >= check.min) {
+        return {
+          passed: false,
+          evidence: `The design draws ${plural(drawn.length)}, but only ${working.length} ${
+            result
+              ? "receive any requests"
+              : "are connected to anything or placed anywhere"
+          }; it needs ${check.min}.`,
+        };
+      }
+
+      return {
+        passed: false,
+        evidence: `The design needs at least ${plural(check.min)} and has ${drawn.length}.`,
+      };
     }
     case "throttles": {
       const throttler = context.graph.nodes.find(

@@ -1,10 +1,11 @@
 import type { LoadScenarioInput } from "../evaluate/scenario";
 import type { DesignGraph } from "../graph";
-import type {
-  CheckRef,
-  Drill,
-  ProblemContent,
-  RubricItem,
+import {
+  type CheckRef,
+  type Drill,
+  drillOf,
+  type ProblemContent,
+  type RubricItem,
 } from "../problems/schema";
 import { type DrillRunner, drillRunner, judgeCheck } from "../problems/score";
 import { type Assertion, assertion } from "./assertion";
@@ -90,9 +91,11 @@ const visibilityOfCheck = (
   check: CheckRef,
   problem: ProblemContent,
 ): "public" | "hidden" => {
-  if (!("drillId" in check)) return "public";
+  const id = drillOf(check);
 
-  const drill = problem.drills.find((item) => item.id === check.drillId);
+  if (id === undefined) return "public";
+
+  const drill = problem.drills.find((item) => item.id === id);
 
   return drill?.visibility ?? "public";
 };
@@ -179,7 +182,7 @@ export const runTests = (
     .filter((item) =>
       include === "all"
         ? true
-        : "drillId" in item.check &&
+        : drillOf(item.check) !== undefined &&
           visibilityOfCheck(item.check, problem) === "public",
     )
     .map((item: RubricItem): TestResult => {
