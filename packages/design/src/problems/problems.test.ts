@@ -113,6 +113,46 @@ describe("scoring the URL shortener", () => {
   });
 });
 
+describe("a presence check", () => {
+  const presence = OFFICIAL_PROBLEMS.flatMap((problem) =>
+    problem.rubric.flatMap((item) =>
+      item.check.check === "has-node-kind"
+        ? [{ problem, key: item.key, kind: item.check.nodeKind }]
+        : [],
+    ),
+  );
+
+  test.each(
+    presence.map((entry) => [`${entry.problem.slug}: ${entry.key}`, entry]),
+  )(
+    "%s fails when its nodes are drawn but not part of anything",
+    (_, { problem, key, kind }) => {
+      const { graph: reference } = problem.reference;
+      const loose = new Set(
+        reference.nodes
+          .filter((item) => item.kind === kind)
+          .map(({ id }) => id),
+      );
+      const detached: DesignGraph = {
+        ...reference,
+        nodes: reference.nodes.map((item) =>
+          loose.has(item.id) ? { ...item, groupId: null } : item,
+        ),
+        edges: reference.edges.filter(
+          (item) => !loose.has(item.from) && !loose.has(item.to),
+        ),
+      };
+      const item = scoreSubmission(problem, detached).items.find(
+        (entry) => entry.key === key,
+      )!;
+
+      expect(loose.size).toBeGreaterThan(0);
+      expect(item.passed).toBe(false);
+      expect(item.evidence).toMatch(/but only 0/);
+    },
+  );
+});
+
 describe("checks that look at behaviour, not presence", () => {
   const parts = () => [
     users(),

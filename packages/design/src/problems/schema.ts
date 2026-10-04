@@ -163,6 +163,7 @@ export const CheckRefSchema = z.discriminatedUnion("check", [
   z.strictObject({
     check: z.literal("has-node-kind"),
     nodeKind: NodeKindSchema,
+    drillId: IdSchema.optional(),
     min: z.number().int().min(1).max(100).default(1),
   }),
   z.strictObject({ check: z.literal("throttles") }),
@@ -192,6 +193,9 @@ export const CheckRefSchema = z.discriminatedUnion("check", [
   }),
 ]);
 export type CheckRef = z.output<typeof CheckRefSchema>;
+
+export const drillOf = (check: CheckRef): string | undefined =>
+  "drillId" in check ? check.drillId : undefined;
 
 export const MAX_HINTS = 3;
 
