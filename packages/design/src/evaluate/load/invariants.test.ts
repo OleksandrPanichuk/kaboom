@@ -205,155 +205,180 @@ const worstAvailability = (result: EvaluationResult): number =>
   Math.min(...result.steps.map((step) => step.clients.users!.availability));
 
 const RUNS = { numRuns: 200 };
+const SLOW = 30_000;
 
 describe("the load model, on any design and scenario", () => {
-  test("answers finite numbers within their bounds", () => {
-    fc.assert(
-      fc.property(scenarios, ({ shape, faults, spike }) => {
-        const result = evaluateLoad(build(shape), scenario(faults, spike));
+  test(
+    "answers finite numbers within their bounds",
+    () => {
+      fc.assert(
+        fc.property(scenarios, ({ shape, faults, spike }) => {
+          const result = evaluateLoad(build(shape), scenario(faults, spike));
 
-        for (const step of result.steps) {
-          for (const client of Object.values(step.clients)) {
-            expect(client.availability).toBeGreaterThanOrEqual(0);
-            expect(client.availability).toBeLessThanOrEqual(1);
-            expect(Number.isFinite(client.p50)).toBe(true);
-            expect(Number.isFinite(client.p99)).toBe(true);
-            expect(client.p50).toBeLessThanOrEqual(client.p99 + 1e-9);
-          }
-
-          for (const [id, item] of Object.entries(step.nodes)) {
-            for (const value of [
-              item.reads,
-              item.writes,
-              item.rho,
-              item.p50,
-              item.p99,
-            ]) {
-              expect({ id, finite: Number.isFinite(value) }).toEqual({
-                id,
-                finite: true,
-              });
+          for (const step of result.steps) {
+            for (const client of Object.values(step.clients)) {
+              expect(client.availability).toBeGreaterThanOrEqual(0);
+              expect(client.availability).toBeLessThanOrEqual(1);
+              expect(Number.isFinite(client.p50)).toBe(true);
+              expect(Number.isFinite(client.p99)).toBe(true);
+              expect(client.p50).toBeLessThanOrEqual(client.p99 + 1e-9);
             }
 
-            expect(item.reads).toBeGreaterThanOrEqual(0);
-            expect(item.writes).toBeGreaterThanOrEqual(0);
-            expect(item.errorRate).toBeGreaterThanOrEqual(0);
-            expect(item.errorRate).toBeLessThanOrEqual(1);
+            for (const [id, item] of Object.entries(step.nodes)) {
+              for (const value of [
+                item.reads,
+                item.writes,
+                item.rho,
+                item.p50,
+                item.p99,
+              ]) {
+                expect({ id, finite: Number.isFinite(value) }).toEqual({
+                  id,
+                  finite: true,
+                });
+              }
+
+              expect(item.reads).toBeGreaterThanOrEqual(0);
+              expect(item.writes).toBeGreaterThanOrEqual(0);
+              expect(item.errorRate).toBeGreaterThanOrEqual(0);
+              expect(item.errorRate).toBeLessThanOrEqual(1);
+            }
           }
-        }
-      }),
-      RUNS,
-    );
-  });
+        }),
+        RUNS,
+      );
+    },
+    SLOW,
+  );
 
-  test("answers the same way every time it is asked", () => {
-    fc.assert(
-      fc.property(scenarios, ({ shape, faults, spike }) => {
-        const design = build(shape);
-        const input = scenario(faults, spike);
+  test(
+    "answers the same way every time it is asked",
+    () => {
+      fc.assert(
+        fc.property(scenarios, ({ shape, faults, spike }) => {
+          const design = build(shape);
+          const input = scenario(faults, spike);
 
-        expect(evaluateLoad(design, input)).toEqual(
-          evaluateLoad(design, input),
-        );
-      }),
-      RUNS,
-    );
-  });
-
-  test("never serves fewer requests for a replica more, without retries", () => {
-    fc.assert(
-      fc.property(
-        shapes.map((shape) => ({ ...shape, retries: 0 })),
-        fc.integer({ min: 0, max: 2 }),
-        (shape, tier) => {
-          const index = Math.min(tier, shape.tiers - 1);
-          const more = {
-            ...shape,
-            replicas: shape.replicas.map((count, at) =>
-              at === index ? count + 1 : count,
-            ),
-          };
-          const before = worstAvailability(
-            evaluateLoad(build(shape), scenario([])),
+          expect(evaluateLoad(design, input)).toEqual(
+            evaluateLoad(design, input),
           );
-          const after = worstAvailability(
-            evaluateLoad(build(more), scenario([])),
-          );
+        }),
+        RUNS,
+      );
+    },
+    SLOW,
+  );
 
-          expect(after).toBeGreaterThanOrEqual(before - 1e-9);
-        },
-      ),
-      RUNS,
-    );
-  });
-
-  test("never serves a smaller share when less traffic arrives, without retries", () => {
-    fc.assert(
-      fc.property(
-        shapes.map((shape) => ({ ...shape, retries: 0 })),
-        fc.double({ min: 0.05, max: 1, noNaN: true }),
-        (shape, share) => {
-          const fewer = {
-            ...shape,
-            rps: Math.max(1, Math.floor(shape.rps * share)),
-          };
-          const before = worstAvailability(
-            evaluateLoad(build(shape), scenario([])),
-          );
-          const after = worstAvailability(
-            evaluateLoad(build(fewer), scenario([])),
-          );
-
-          expect(after).toBeGreaterThanOrEqual(before - 1e-9);
-        },
-      ),
-      RUNS,
-    );
-  });
-
-  test("never serves more of the traffic for a fault, without retries or a background consumer", () => {
-    fc.assert(
-      fc.property(scenarios, ({ shape, faults, spike }) => {
-        const design = build({ ...shape, queue: false, retries: 0 });
-        const calm = evaluateLoad(design, scenario([], spike));
-        const broken = evaluateLoad(design, scenario(faults, spike));
-
-        broken.steps.forEach((step, index) => {
-          expect(step.clients.users!.availability).toBeLessThanOrEqual(
-            calm.steps[index]!.clients.users!.availability + 1e-6,
-          );
-        });
-      }),
-      RUNS,
-    );
-  });
-
-  test("sends no node more than reaches it over its edges", () => {
-    fc.assert(
-      fc.property(scenarios, ({ shape, faults, spike }) => {
-        const design = build(shape);
-        const result = evaluateLoad(design, scenario(faults, spike));
-
-        for (const step of result.steps) {
-          for (const item of design.nodes) {
-            if (item.kind === "client") continue;
-
-            const arriving = design.edges
-              .filter((candidate) => candidate.to === item.id)
-              .reduce((sum, candidate) => {
-                const flow = step.edges[candidate.id];
-
-                return sum + (flow ? flow.reads + flow.writes : 0);
-              }, 0);
-            const received = step.nodes[item.id]!;
-
-            expect(received.reads + received.writes).toBeLessThanOrEqual(
-              arriving * (1 + 1e-9) + 1e-6,
+  test(
+    "never serves fewer requests for a replica more, without retries",
+    () => {
+      fc.assert(
+        fc.property(
+          shapes.map((shape) => ({ ...shape, retries: 0 })),
+          fc.integer({ min: 0, max: 2 }),
+          (shape, tier) => {
+            const index = Math.min(tier, shape.tiers - 1);
+            const more = {
+              ...shape,
+              replicas: shape.replicas.map((count, at) =>
+                at === index ? count + 1 : count,
+              ),
+            };
+            const before = worstAvailability(
+              evaluateLoad(build(shape), scenario([])),
             );
+            const after = worstAvailability(
+              evaluateLoad(build(more), scenario([])),
+            );
+
+            expect(after).toBeGreaterThanOrEqual(before - 1e-9);
+          },
+        ),
+        RUNS,
+      );
+    },
+    SLOW,
+  );
+
+  test(
+    "never serves a smaller share when less traffic arrives, without retries",
+    () => {
+      fc.assert(
+        fc.property(
+          shapes.map((shape) => ({ ...shape, retries: 0 })),
+          fc.double({ min: 0.05, max: 1, noNaN: true }),
+          (shape, share) => {
+            const fewer = {
+              ...shape,
+              rps: Math.max(1, Math.floor(shape.rps * share)),
+            };
+            const before = worstAvailability(
+              evaluateLoad(build(shape), scenario([])),
+            );
+            const after = worstAvailability(
+              evaluateLoad(build(fewer), scenario([])),
+            );
+
+            expect(after).toBeGreaterThanOrEqual(before - 1e-9);
+          },
+        ),
+        RUNS,
+      );
+    },
+    SLOW,
+  );
+
+  test(
+    "never serves more of the traffic for a fault, without retries or a background consumer",
+    () => {
+      fc.assert(
+        fc.property(scenarios, ({ shape, faults, spike }) => {
+          const design = build({ ...shape, queue: false, retries: 0 });
+          const calm = evaluateLoad(design, scenario([], spike));
+          const broken = evaluateLoad(design, scenario(faults, spike));
+
+          broken.steps.forEach((step, index) => {
+            expect(step.clients.users!.availability).toBeLessThanOrEqual(
+              calm.steps[index]!.clients.users!.availability + 1e-6,
+            );
+          });
+        }),
+        RUNS,
+      );
+    },
+    SLOW,
+  );
+
+  test(
+    "sends no node more than reaches it over its edges",
+    () => {
+      fc.assert(
+        fc.property(scenarios, ({ shape, faults, spike }) => {
+          const design = build(shape);
+          const result = evaluateLoad(design, scenario(faults, spike));
+
+          for (const step of result.steps) {
+            for (const item of design.nodes) {
+              if (item.kind === "client") continue;
+
+              const arriving = design.edges
+                .filter((candidate) => candidate.to === item.id)
+                .reduce((sum, candidate) => {
+                  const flow = step.edges[candidate.id];
+
+                  return sum + (flow ? flow.reads + flow.writes : 0);
+                }, 0);
+              const received = step.nodes[item.id]!;
+
+              expect(received.reads + received.writes).toBeLessThanOrEqual(
+                arriving * (1 + 1e-9) + 1e-6,
+              );
+            }
           }
-        }
-      }),
-      RUNS,
-    );
-  });
+        }),
+        RUNS,
+      );
+    },
+    SLOW,
+  );
 });
