@@ -15,7 +15,11 @@ import { useId, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/Field";
 import { Textarea } from "@/components/ui/Textarea";
-import { FALLBACK_NODE_ICON, NODE_KIND_ICONS } from "@/features/canvas";
+import {
+  FALLBACK_NODE_ICON,
+  NODE_KIND_ICONS,
+  TechnologyMark,
+} from "@/features/canvas";
 import type {
   PlacementFields,
   RegionTarget,
@@ -102,9 +106,15 @@ export function NodeInspector({
   return (
     <div className="flex flex-col">
       <div className="flex items-center gap-3 border-b px-4 py-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-indigo-200/60 bg-indigo-50 text-indigo-700">
-          <Icon aria-hidden="true" className="size-4" />
-        </span>
+        {product ? (
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-black/10 bg-white">
+            <TechnologyMark technology={product} className="size-5" />
+          </span>
+        ) : (
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-indigo-200/60 bg-indigo-50 text-indigo-700">
+            <Icon aria-hidden="true" className="size-4" />
+          </span>
+        )}
         <div className="flex min-w-0 flex-col">
           <p className="truncate text-sm font-semibold">
             {node.label || definition.label}

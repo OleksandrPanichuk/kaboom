@@ -35,6 +35,7 @@ export const postgresql = defineTechnology({
   provider: "self-hosted",
   label: "PostgreSQL",
   icon: "postgresql",
+  monogram: "PG",
   summary:
     "Postgres on servers you run. Failover is yours to set up, with a tool such as Patroni.",
   props: z.strictObject({
@@ -57,6 +58,7 @@ export const amazonRds = defineTechnology({
   provider: "aws",
   label: "Amazon RDS for PostgreSQL",
   icon: "amazonrds",
+  monogram: "RDS",
   summary:
     "Managed Postgres. Multi-AZ keeps a standby in another zone and fails over to it in about a minute.",
   props: z.strictObject({
@@ -81,6 +83,7 @@ export const amazonAurora = defineTechnology({
   provider: "aws",
   label: "Amazon Aurora PostgreSQL",
   icon: "amazonrds",
+  monogram: "AUR",
   summary:
     "Postgres on Aurora's shared storage: replicas promote in seconds, and reads scale with them.",
   props: z.strictObject({
@@ -101,6 +104,7 @@ export const cloudSql = defineTechnology({
   provider: "gcp",
   label: "Cloud SQL for PostgreSQL",
   icon: "googlecloud",
+  monogram: "SQL",
   summary:
     "Managed Postgres on Google Cloud. High availability keeps a standby in another zone.",
   props: z.strictObject({
@@ -125,6 +129,7 @@ export const amazonDynamodb = defineTechnology({
   provider: "aws",
   label: "Amazon DynamoDB",
   icon: "amazondynamodb",
+  monogram: "DDB",
   summary:
     "A managed key-value store. A partition serves 3,000 reads and 1,000 writes a second, and on-demand adds partitions as traffic grows.",
   props: z.strictObject({
@@ -179,6 +184,7 @@ export const cassandra = defineTechnology({
   provider: "self-hosted",
   label: "Apache Cassandra",
   icon: "apachecassandra",
+  monogram: "C*",
   summary:
     "A wide-column store you run yourself, with no leader: capacity grows with every node you add.",
   props: z.strictObject({
@@ -203,6 +209,7 @@ export const mongodb = defineTechnology({
   provider: "self-hosted",
   label: "MongoDB",
   icon: "mongodb",
+  monogram: "MDB",
   summary:
     "A document store; each shard is a replica set with one primary taking its writes.",
   props: z.strictObject({

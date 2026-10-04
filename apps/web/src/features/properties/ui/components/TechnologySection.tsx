@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import { TechnologyMark } from "@/features/canvas";
 
 import { InspectorSection } from "./InspectorSection";
 import { type CommitResult, PropFieldControl } from "./PropFieldControl";
@@ -43,10 +44,11 @@ export function TechnologySection({ node, onPatch }: TechnologySectionProps) {
   if (options.length === 0) return null;
 
   const items = [
-    { value: GENERIC, label: "Generic" },
+    { value: GENERIC, label: "Generic", technology: undefined },
     ...options.map((option) => ({
       value: option.id,
       label: `${option.label} · ${PROVIDER_LABELS[option.provider]}`,
+      technology: option,
     })),
   ];
   const settings = chosen ? describeProps(chosen.props) : [];
@@ -82,6 +84,12 @@ export function TechnologySection({ node, onPatch }: TechnologySectionProps) {
           <SelectContent>
             {items.map((item) => (
               <SelectItem key={item.value} value={item.value}>
+                {item.technology ? (
+                  <TechnologyMark
+                    technology={item.technology}
+                    className="w-6"
+                  />
+                ) : null}
                 {item.label}
               </SelectItem>
             ))}
