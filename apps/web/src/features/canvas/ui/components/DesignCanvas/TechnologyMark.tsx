@@ -10,7 +10,7 @@ interface TechnologyMarkProps {
 }
 
 export function TechnologyMark({ technology, className }: TechnologyMarkProps) {
-  const icon = TECHNOLOGY_ICONS[technology.icon];
+  const icon = technology.icon ? TECHNOLOGY_ICONS[technology.icon] : undefined;
 
   if (icon) {
     return (

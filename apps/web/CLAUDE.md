@@ -180,10 +180,12 @@ and draws the product's own settings the same way. Props the product
 derives (`derivedProps`) are shown read-only, with the product named, so
 each value has one place to change it.
 A chosen product shows its mark on the canvas, in the inspector and in the
-list: the brand icon from `simple-icons` when the package has one (its slug
-is the technology's `icon`, imported by name in `TECHNOLOGY_ICONS` so the
-rest of the package never ships), otherwise the technology's `monogram` in
-its provider's colour. `simple-icons` carries no AWS or Microsoft marks.
+list: the brand icon named by the technology's optional `icon`, a
+`simple-icons` slug imported by name in `TECHNOLOGY_ICONS` so the rest of
+the package never ships, otherwise its `monogram` in its provider's colour.
+`simple-icons` carries no AWS or Microsoft marks, so those products name no
+icon. An option in the product list passes its `label`, or typeahead would
+read the monogram first.
 What a kind is for comes from the catalogue too: every kind declares `docs`
 (`summary`, `useWhen`, `pitfalls`), which the palette shows as a tooltip and
 the inspector under *About*. A kind cannot be defined without it, so a new

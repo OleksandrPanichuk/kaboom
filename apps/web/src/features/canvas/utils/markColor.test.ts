@@ -18,12 +18,22 @@ describe("markColor", () => {
 describe("technology marks", () => {
   test("every product has a brand icon or a monogram short enough for its tile", () => {
     for (const technology of Object.values(technologies)) {
-      const icon = TECHNOLOGY_ICONS[technology.icon];
+      const icon = technology.icon
+        ? TECHNOLOGY_ICONS[technology.icon]
+        : undefined;
 
       expect(
         icon !== undefined || technology.monogram.length <= 3,
         technology.id,
       ).toBe(true);
+    }
+  });
+
+  test("every icon a product names is one the app bundles", () => {
+    for (const technology of Object.values(technologies)) {
+      if (technology.icon === undefined) continue;
+
+      expect(TECHNOLOGY_ICONS[technology.icon], technology.id).toBeDefined();
     }
   });
 

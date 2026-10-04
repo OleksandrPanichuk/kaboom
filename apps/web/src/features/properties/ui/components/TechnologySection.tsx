@@ -83,7 +83,11 @@ export function TechnologySection({ node, onPatch }: TechnologySectionProps) {
           </SelectTrigger>
           <SelectContent>
             {items.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
+              <SelectItem
+                key={item.value}
+                value={item.value}
+                label={item.label}
+              >
                 {item.technology ? (
                   <TechnologyMark
                     technology={item.technology}

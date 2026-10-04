@@ -35,7 +35,6 @@ export const amazonSqs = defineTechnology({
   kind: "queue",
   provider: "aws",
   label: "Amazon SQS",
-  icon: "amazonsqs",
   monogram: "SQS",
   summary:
     "A managed queue. Standard queues scale almost without limit but may deliver twice and out of order; FIFO queues keep order at a few thousand messages a second.",
@@ -88,7 +87,6 @@ export const azureServiceBus = defineTechnology({
   kind: "queue",
   provider: "azure",
   label: "Azure Service Bus",
-  icon: "microsoftazure",
   monogram: "ASB",
   summary:
     "A managed broker. Standard is shared and throttled; Premium reserves messaging units that scale it.",
@@ -149,7 +147,6 @@ export const amazonMsk = defineTechnology({
   kind: "stream",
   provider: "aws",
   label: "Amazon MSK",
-  icon: "amazonwebservices",
   monogram: "MSK",
   summary: "Managed Kafka: the same log, with AWS running the brokers.",
   props: z.strictObject({
@@ -193,7 +190,6 @@ export const amazonKinesis = defineTechnology({
   kind: "stream",
   provider: "aws",
   label: "Amazon Kinesis",
-  icon: "amazonwebservices",
   monogram: "KDS",
   summary:
     "A managed stream sized in shards: each takes 1,000 records a second, and a shard is a partition.",

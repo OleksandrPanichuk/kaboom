@@ -43,7 +43,6 @@ export const amazonElasticache = defineTechnology({
   kind: "cache",
   provider: "aws",
   label: "Amazon ElastiCache for Redis",
-  icon: "amazonelasticache",
   monogram: "EC",
   summary: "Managed Redis, sized by node type and shards.",
   props: z.strictObject({
@@ -73,7 +72,6 @@ export const memcached = defineTechnology({
   kind: "cache",
   provider: "self-hosted",
   label: "Memcached",
-  icon: "memcached",
   monogram: "MC",
   summary:
     "A plain multithreaded cache: no persistence, no replication, and it scales by adding nodes.",

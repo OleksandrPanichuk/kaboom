@@ -11,7 +11,8 @@ import {
   NODE_WIDTH,
 } from "@/features/canvas/constants";
 import type { CanvasNode } from "@/features/canvas/typedefs";
-import { TechnologyMark } from "@/features/canvas/ui/components";
+
+import { TechnologyMark } from "./TechnologyMark";
 
 const HANDLE =
   "!size-3 !rounded-full !border-2 !border-white !bg-indigo-500 shadow-sm transition-opacity";
