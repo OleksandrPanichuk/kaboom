@@ -1,4 +1,5 @@
 import {
+  costOf,
   type DesignGraph,
   evaluateLoad,
   type Finding,
@@ -37,6 +38,7 @@ import type { ReplayRequest } from "@/features/designs/typedefs";
 import {
   ChecksPanel,
   EdgeInspector,
+  formatMonthly,
   GroupInspector,
   InspectorEmpty,
   NodeInspector,
@@ -141,6 +143,26 @@ export function DesignWorkspace({
   const simulation = useSimulation(editor.graph, draft, running);
   const steps = simulation.result?.steps.length ?? 0;
   const step = Math.min(stepIndex, Math.max(0, steps - 1));
+  const estimate = useMemo(() => {
+    const [steady] = evaluateLoad(editor.graph, {
+      kind: "load",
+      durationSeconds: 10,
+    }).steps;
+
+    return costOf(
+      editor.graph,
+      Object.fromEntries(
+        Object.entries(steady?.nodes ?? {}).map(([id, numbers]) => [
+          id,
+          {
+            reads: numbers.reads,
+            writes: numbers.writes,
+            replicas: numbers.replicas,
+          },
+        ]),
+      ),
+    );
+  }, [editor.graph]);
   const replayed = useMemo(() => {
     if (!replay) return null;
 
@@ -295,6 +317,9 @@ export function DesignWorkspace({
           )
           .map((edge) => labelOf(edge.to))}
         groups={graph.groups}
+        cost={
+          estimate.nodes.find((item) => item.nodeId === onlyNode.id) ?? null
+        }
         placement={placement}
         onRegionChange={(target) => editor.placeInRegion([onlyNode.id], target)}
         onPatch={(patch) => editor.updateNode(onlyNode.id, patch)}
@@ -337,6 +362,12 @@ export function DesignWorkspace({
           <span aria-live="polite">
             Revision {editor.revision}
             {editor.saving ? " · Saving…" : ""}
+            {estimate.monthlyUsd > 0 ? (
+              <span title="An estimate at the clients' steady traffic, from us-east-1 on-demand list prices">
+                {" · about "}
+                {formatMonthly(estimate.monthlyUsd)} a month
+              </span>
+            ) : null}
           </span>
         }
         actions={

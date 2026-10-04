@@ -182,6 +182,11 @@ export const CheckRefSchema = z.discriminatedUnion("check", [
     minShare: z.number().gt(0).max(1),
   }),
   z.strictObject({
+    check: z.literal("within-budget"),
+    drillId: IdSchema,
+    monthlyUsd: z.number().positive(),
+  }),
+  z.strictObject({
     check: z.literal("chaos-coverage"),
     min: z.number().gt(0).max(1).default(1),
   }),

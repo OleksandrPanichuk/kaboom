@@ -6,6 +6,7 @@ import {
   type DesignNode,
   findTechnology,
   type LintHit,
+  type NodeCost,
   type NodePatch,
 } from "@repo/design";
 import { ChevronRight, Trash2 } from "lucide-react";
@@ -19,6 +20,7 @@ import type {
   PlacementFields,
   RegionTarget,
 } from "@/features/properties/typedefs";
+import { formatMonthly } from "@/features/properties/utils";
 
 import { DerivedField } from "./DerivedField";
 import { DraftInput } from "./DraftInput";
@@ -35,6 +37,7 @@ const NOTES_MAX_LENGTH = 2_000;
 
 interface NodeInspectorProps {
   node: DesignNode;
+  cost?: NodeCost | null;
   hits: LintHit[];
   replicas?: string[];
   groups: DesignGroup[];
@@ -46,6 +49,7 @@ interface NodeInspectorProps {
 
 export function NodeInspector({
   node,
+  cost = null,
   hits,
   replicas = [],
   groups,
@@ -171,6 +175,19 @@ export function NodeInspector({
             }}
           />
         </Field>
+        {cost && cost.monthlyUsd > 0 ? (
+          <div className="flex flex-col gap-0.5">
+            <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
+              <span className="font-medium">Estimated cost</span>
+              <span className="shrink-0 text-muted-foreground tabular-nums">
+                {formatMonthly(cost.monthlyUsd)} a month
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground text-pretty">
+              {cost.basis}, at the clients' steady traffic
+            </p>
+          </div>
+        ) : null}
         {placement.regions ? (
           <RegionField
             regions={groups.filter((group) => group.kind === "region")}

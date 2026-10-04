@@ -98,6 +98,7 @@ describe("scoring the URL shortener", () => {
       "no-single-point-of-failure": false,
       "caches-redirects": false,
       "survives-unseen-faults": false,
+      "fits-the-budget": true,
     });
     expect(score.score).toBe(39);
   });

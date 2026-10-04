@@ -64,6 +64,7 @@ const suiteOfDrill = (drill: Drill): TestSuite => {
 const suiteOfCheck = (check: CheckRef, problem: ProblemContent): TestSuite => {
   switch (check.check) {
     case "no-lint":
+    case "within-budget":
       return "constraints";
     case "chaos-coverage":
       return "chaos";
@@ -193,13 +194,16 @@ export const runTests = (
         visibility: visibilityOfCheck(item.check, problem),
         status: verdict.passed ? "passed" : "failed",
         assertions: [
-          assertion({
-            label: item.title,
-            expected: "yes",
-            actual: verdict.passed ? "yes" : "no",
-            passed: verdict.passed,
+          {
+            ...assertion({
+              label: item.title,
+              expected: "yes",
+              actual: verdict.passed ? "yes" : "no",
+              passed: verdict.passed,
+              message: verdict.evidence,
+            }),
             message: verdict.evidence,
-          }),
+          },
         ],
         durationMs: round(performance.now() - checkStarted),
         replay: null,

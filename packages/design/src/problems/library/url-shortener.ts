@@ -101,7 +101,7 @@ The *Users* client is already on the canvas. Build what it talks to.`,
     {
       key: "survives-a-cache-flush",
       title: "Survives an empty cache",
-      weight: 10,
+      weight: 5,
       check: { check: "drill-passes", drillId: "cache-flush" },
     },
     {
@@ -126,6 +126,16 @@ The *Users* client is already on the canvas. Build what it talks to.`,
       title: "Survives faults drawn from the design itself",
       weight: 15,
       check: { check: "chaos-coverage", min: 1 },
+    },
+    {
+      key: "fits-the-budget",
+      title: "Runs for under $4,000 a month",
+      weight: 5,
+      check: {
+        check: "within-budget",
+        drillId: "normal-day",
+        monthlyUsd: 4_000,
+      },
     },
   ],
   hints: [
