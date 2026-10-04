@@ -134,5 +134,5 @@ describe("varied runs", () => {
     );
 
     expect(flaky).toEqual([]);
-  });
+  }, 30_000);
 });

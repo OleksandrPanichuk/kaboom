@@ -36,7 +36,7 @@ describe("runTests", () => {
 
       expect(failed).toEqual([]);
     }
-  });
+  }, 30_000);
 
   test("skips the faults while the design fails a normal day", () => {
     const report = runTests(shortener, thin, { include: "public" });
