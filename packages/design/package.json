@@ -21,6 +21,7 @@
     "@repo/typescript-config": "*",
     "@types/bun": "^1.4.2",
     "eslint": "10.11.0",
+    "fast-check": "^4.10.2",
     "typescript": "6.0.3"
   }
 }
