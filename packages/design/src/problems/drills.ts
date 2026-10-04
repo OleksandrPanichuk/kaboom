@@ -1,8 +1,20 @@
 import { evaluateLoad } from "../evaluate/load";
 import { evaluateNetwork } from "../evaluate/network";
 import { evaluatePipeline } from "../evaluate/pipeline";
-import type { EvaluationResult, Finding } from "../evaluate/result";
+import type {
+  EvaluationResult,
+  EvaluationStep,
+  Finding,
+} from "../evaluate/result";
+import type { LoadScenarioInput } from "../evaluate/scenario";
 import type { DesignGraph } from "../graph";
+import {
+  type Assertion,
+  assertion,
+  failuresOf,
+  fromFinding,
+  structural,
+} from "../testing/assertion";
 import { drillScenario, selectNodes } from "./resolve";
 import type { Drill, LoadDrill, NetworkDrill, PipelineDrill } from "./schema";
 
@@ -10,9 +22,14 @@ export interface DrillOutcome {
   drillId: string;
   passed: boolean;
   failures: string[];
+  assertions: Assertion[];
   findings: Finding[];
   result?: EvaluationResult;
+  scenario?: LoadScenarioInput;
 }
+
+const BLAMED = 3;
+const NOTICEABLE_ERRORS = 0.001;
 
 const podsAtMost = (graph: DesignGraph): number =>
   graph.nodes.reduce((sum, item) => {
@@ -34,6 +51,83 @@ const podsAtMost = (graph: DesignGraph): number =>
 
 const percent = (value: number) => `${Math.floor(value * 10_000) / 100}%`;
 
+const outcome = (
+  drillId: string,
+  assertions: Assertion[],
+  findings: Finding[],
+  extra: Pick<DrillOutcome, "result" | "scenario"> = {},
+): DrillOutcome => {
+  const failures = failuresOf(assertions);
+
+  return {
+    drillId,
+    passed: failures.length === 0,
+    failures,
+    assertions,
+    findings,
+    ...extra,
+  };
+};
+
+const forbidden = (
+  kinds: ReadonlyArray<Finding["kind"]>,
+  findings: readonly Finding[],
+  every: boolean,
+  result?: EvaluationResult,
+): Assertion[] =>
+  kinds.flatMap((kind) => {
+    const found = findings.filter((item) => item.kind === kind);
+
+    if (found.length === 0) {
+      return [
+        assertion({
+          label: `No ${kind.replaceAll("-", " ")}`,
+          expected: "none",
+          actual: "none",
+          passed: true,
+          message: "",
+        }),
+      ];
+    }
+
+    return (every ? found : found.slice(0, 1)).map((item) =>
+      fromFinding(item, result),
+    );
+  });
+
+const blame = (
+  graph: DesignGraph,
+  step: EvaluationStep | undefined,
+  by: "errors" | "latency",
+): string[] => {
+  if (!step) return [];
+
+  return graph.nodes
+    .filter((item) => item.kind !== "client" && step.nodes[item.id])
+    .map((item) => {
+      const numbers = step.nodes[item.id]!;
+      const weight =
+        by === "errors" ? (numbers.up ? numbers.ownErrorRate : 1) : numbers.p99;
+
+      return { id: item.id, weight };
+    })
+    .filter(({ weight }) =>
+      by === "errors" ? weight > NOTICEABLE_ERRORS : weight > 0,
+    )
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, BLAMED)
+    .map(({ id }) => id);
+};
+
+const worstIndex = (values: readonly number[], higherIsWorse: boolean) =>
+  values.reduce(
+    (worst, value, index) =>
+      (higherIsWorse ? value > values[worst]! : value < values[worst]!)
+        ? index
+        : worst,
+    0,
+  );
+
 export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome => {
   switch (drill.kind) {
     case "pipeline":
@@ -50,32 +144,30 @@ const runNetworkDrill = (
   graph: DesignGraph,
 ): DrillOutcome => {
   const result = evaluateNetwork(graph);
-  const failures: string[] = [];
-
+  const assertions: Assertion[] = [];
   const clients = new Set(
     graph.nodes.filter((node) => node.kind === "client").map(({ id }) => id),
   );
 
   if (clients.size === 0) {
-    failures.push("The design has no client, so nothing connects through it.");
+    assertions.push(
+      structural(
+        "A client",
+        "The design has no client, so nothing connects through it.",
+      ),
+    );
   } else if (!graph.edges.some((edge) => clients.has(edge.from))) {
-    failures.push(
-      "Nothing is connected to the clients, so no request reaches the design.",
+    assertions.push(
+      structural(
+        "Something connected to the clients",
+        "Nothing is connected to the clients, so no request reaches the design.",
+      ),
     );
   }
 
-  for (const kind of drill.expect.forbid) {
-    for (const found of result.findings.filter((item) => item.kind === kind)) {
-      failures.push(found.message);
-    }
-  }
+  assertions.push(...forbidden(drill.expect.forbid, result.findings, true));
 
-  return {
-    drillId: drill.id,
-    passed: failures.length === 0,
-    failures,
-    findings: result.findings,
-  };
+  return outcome(drill.id, assertions, result.findings);
 };
 
 const runPipelineDrill = (
@@ -86,115 +178,201 @@ const runPipelineDrill = (
     kind: "pipeline",
     changedShare: drill.changedShare,
   });
-  const failures: string[] = [];
+  const assertions: Assertion[] = [];
   const { maxLeadTimeMinutes, minGreenRate } = drill.expect;
   const deploys = graph.nodes.some(
     (node) => node.kind === "pipeline-stage" && node.props.stage === "deploy",
   );
 
   if (result.stages.length === 0) {
-    failures.push("The design has no pipeline, so nothing builds or ships.");
+    assertions.push(
+      structural(
+        "A pipeline",
+        "The design has no pipeline, so nothing builds or ships.",
+      ),
+    );
   } else if (!deploys) {
-    failures.push("Nothing in the pipeline deploys, so no change ships.");
-  }
-
-  if (
-    maxLeadTimeMinutes !== undefined &&
-    result.leadTimeMinutes > maxLeadTimeMinutes
-  ) {
-    failures.push(
-      `A change takes ${Math.round(result.leadTimeMinutes)} minutes from merge to production; the drill allows ${maxLeadTimeMinutes}.`,
+    assertions.push(
+      structural(
+        "A deploy stage",
+        "Nothing in the pipeline deploys, so no change ships.",
+      ),
     );
   }
 
-  if (minGreenRate !== undefined && result.greenRate < minGreenRate) {
-    failures.push(
-      `${percent(result.greenRate)} of runs go green; the drill needs ${percent(minGreenRate)}.`,
+  if (maxLeadTimeMinutes !== undefined) {
+    const minutes = Math.round(result.leadTimeMinutes);
+
+    assertions.push(
+      assertion({
+        label: "Lead time from merge to production",
+        expected: `≤ ${maxLeadTimeMinutes} min`,
+        actual: `${minutes} min`,
+        passed: result.leadTimeMinutes <= maxLeadTimeMinutes,
+        message: `A change takes ${minutes} minutes from merge to production; the drill allows ${maxLeadTimeMinutes}.`,
+      }),
     );
   }
 
-  for (const kind of drill.expect.forbid) {
-    const found = result.findings.find((finding) => finding.kind === kind);
-
-    if (found) failures.push(found.message);
+  if (minGreenRate !== undefined) {
+    assertions.push(
+      assertion({
+        label: "Runs that go green",
+        expected: `≥ ${percent(minGreenRate)}`,
+        actual: percent(result.greenRate),
+        passed: result.greenRate >= minGreenRate,
+        message: `${percent(result.greenRate)} of runs go green; the drill needs ${percent(minGreenRate)}.`,
+      }),
+    );
   }
 
-  return {
-    drillId: drill.id,
-    passed: failures.length === 0,
-    failures,
-    findings: result.findings,
-  };
+  assertions.push(...forbidden(drill.expect.forbid, result.findings, false));
+
+  return outcome(drill.id, assertions, result.findings);
 };
 
 const runLoadDrill = (drill: LoadDrill, graph: DesignGraph): DrillOutcome => {
-  const result = evaluateLoad(graph, drillScenario(drill, graph));
-  const failures: string[] = [];
+  const scenario = drillScenario(drill, graph);
+  const result = evaluateLoad(graph, scenario);
+  const assertions: Assertion[] = [];
   const clients = graph.nodes.filter((node) => node.kind === "client");
+  const timeOf = (index: number) => result.steps[index]?.t ?? null;
 
   if (clients.length === 0) {
-    failures.push("The design has no client, so nothing is sent through it.");
+    assertions.push(
+      structural(
+        "A client",
+        "The design has no client, so nothing is sent through it.",
+      ),
+    );
   }
 
   for (const fault of drill.faults) {
     if (fault.kind !== "rollout" && fault.kind !== "secret-rotation") continue;
 
     if (selectNodes(graph, fault.select).length === 0) {
-      failures.push(
+      assertions.push(
         fault.kind === "rollout"
-          ? "The design has no deployment to roll out, so the drill tests nothing."
-          : "The design has no secret to rotate, so the drill tests nothing.",
+          ? structural(
+              "A deployment to roll out",
+              "The design has no deployment to roll out, so the drill tests nothing.",
+            )
+          : structural(
+              "A secret to rotate",
+              "The design has no secret to rotate, so the drill tests nothing.",
+            ),
       );
     }
   }
 
+  const { maxP99Ms, minAvailability, endAvailability, endMaxP99Ms } =
+    drill.expect;
+  const lastIndex = result.steps.length - 1;
+
   for (const client of clients) {
     const label = client.label || client.id;
     const seen = result.steps.map((step) => step.clients[client.id]);
-    const worstP99 = Math.max(0, ...seen.map((step) => step?.p99 ?? 0));
-    const worstAvailability = Math.min(
-      1,
-      ...seen.map((step) => step?.availability ?? 1),
-    );
-    const { maxP99Ms, minAvailability, endAvailability, endMaxP99Ms } =
-      drill.expect;
-    const last = seen.at(-1)?.availability ?? 1;
-    const lastP99 = seen.at(-1)?.p99 ?? 0;
+    const p99s = seen.map((step) => step?.p99 ?? 0);
+    const served = seen.map((step) => step?.availability ?? 1);
+    const slowest = worstIndex(p99s, true);
+    const poorest = worstIndex(served, false);
+    const worstP99 = Math.max(0, p99s[slowest] ?? 0);
+    const worstAvailability = Math.min(1, served[poorest] ?? 1);
+    const last = served.at(-1) ?? 1;
+    const lastP99 = p99s.at(-1) ?? 0;
 
-    if (maxP99Ms !== undefined && worstP99 > maxP99Ms) {
-      failures.push(
-        `${label} saw p99 reach ${Math.round(worstP99)} ms; the drill allows ${maxP99Ms} ms.`,
+    if (maxP99Ms !== undefined) {
+      assertions.push(
+        assertion({
+          label: `Worst p99 for ${label}`,
+          expected: `≤ ${maxP99Ms} ms`,
+          actual: `${Math.round(worstP99)} ms`,
+          passed: worstP99 <= maxP99Ms,
+          at: timeOf(slowest),
+          nodeIds: [
+            client.id,
+            ...blame(graph, result.steps[slowest], "latency"),
+          ],
+          message: `${label} saw p99 reach ${Math.round(worstP99)} ms; the drill allows ${maxP99Ms} ms.`,
+        }),
       );
     }
 
-    if (minAvailability !== undefined && worstAvailability < minAvailability) {
-      failures.push(
-        `${label} had ${percent(worstAvailability)} of requests served at worst; the drill needs ${percent(minAvailability)}.`,
+    if (minAvailability !== undefined) {
+      assertions.push(
+        assertion({
+          label: `Requests served for ${label}, at worst`,
+          expected: `≥ ${percent(minAvailability)}`,
+          actual: percent(worstAvailability),
+          passed: worstAvailability >= minAvailability,
+          at: timeOf(poorest),
+          nodeIds: [
+            client.id,
+            ...blame(graph, result.steps[poorest], "errors"),
+          ],
+          message: `${label} had ${percent(worstAvailability)} of requests served at worst; the drill needs ${percent(minAvailability)}.`,
+        }),
       );
     }
 
-    if (endMaxP99Ms !== undefined && lastP99 > endMaxP99Ms) {
-      failures.push(
-        `${label} ended the drill with p99 at ${Math.round(lastP99)} ms; the drill needs ${endMaxP99Ms} ms by then.`,
+    if (endMaxP99Ms !== undefined) {
+      assertions.push(
+        assertion({
+          label: `p99 for ${label} at the end`,
+          expected: `≤ ${endMaxP99Ms} ms`,
+          actual: `${Math.round(lastP99)} ms`,
+          passed: lastP99 <= endMaxP99Ms,
+          at: timeOf(lastIndex),
+          nodeIds: [
+            client.id,
+            ...blame(graph, result.steps[lastIndex], "latency"),
+          ],
+          message: `${label} ended the drill with p99 at ${Math.round(lastP99)} ms; the drill needs ${endMaxP99Ms} ms by then.`,
+        }),
       );
     }
 
-    if (endAvailability !== undefined && last < endAvailability) {
-      failures.push(
-        `${label} ended the drill with ${percent(last)} of requests served; the drill needs ${percent(endAvailability)} by then.`,
+    if (endAvailability !== undefined) {
+      assertions.push(
+        assertion({
+          label: `Requests served for ${label} at the end`,
+          expected: `≥ ${percent(endAvailability)}`,
+          actual: percent(last),
+          passed: last >= endAvailability,
+          at: timeOf(lastIndex),
+          nodeIds: [
+            client.id,
+            ...blame(graph, result.steps[lastIndex], "errors"),
+          ],
+          message: `${label} ended the drill with ${percent(last)} of requests served; the drill needs ${percent(endAvailability)} by then.`,
+        }),
       );
     }
   }
 
   if (drill.expect.maxEndBacklog !== undefined) {
-    const last = result.steps.at(-1);
-    const waiting = graph.nodes
-      .map((item) => ({ item, backlog: last?.nodes[item.id]?.backlog ?? 0 }))
-      .filter(({ backlog }) => backlog > drill.expect.maxEndBacklog!);
+    const limit = drill.expect.maxEndBacklog;
+    const lastStep = result.steps.at(-1);
+    const queued = graph.nodes
+      .map((item) => ({ item, backlog: lastStep?.nodes[item.id]?.backlog }))
+      .filter(
+        (
+          entry,
+        ): entry is { item: (typeof graph.nodes)[number]; backlog: number } =>
+          entry.backlog !== undefined,
+      );
 
-    for (const { item, backlog } of waiting) {
-      failures.push(
-        `${item.label || item.id} still had ${Math.round(backlog).toLocaleString("en")} messages waiting at the end; the drill allows ${drill.expect.maxEndBacklog.toLocaleString("en")}.`,
+    for (const { item, backlog } of queued) {
+      assertions.push(
+        assertion({
+          label: `Messages left in ${item.label || item.id}`,
+          expected: `≤ ${limit.toLocaleString("en")}`,
+          actual: Math.round(backlog).toLocaleString("en"),
+          passed: backlog <= limit,
+          at: timeOf(lastIndex),
+          nodeIds: [item.id],
+          message: `${item.label || item.id} still had ${Math.round(backlog).toLocaleString("en")} messages waiting at the end; the drill allows ${limit.toLocaleString("en")}.`,
+        }),
       );
     }
   }
@@ -205,44 +383,56 @@ const runLoadDrill = (drill: LoadDrill, graph: DesignGraph): DrillOutcome => {
       ...(drill.traffic ?? []).map((point) => point.at),
       drill.durationSeconds,
     );
-    const firedAt = result.alerts.flatMap((alert) =>
-      alert.firedAt === null ? [] : [alert.firedAt],
+    const fired = result.alerts.flatMap((alert) =>
+      alert.firedAt === null ? [] : [alert],
     );
-    const first = firedAt.length > 0 ? Math.min(...firedAt) : null;
+    const first = fired.reduce<(typeof fired)[number] | null>(
+      (earliest, alert) =>
+        earliest === null || alert.firedAt! < earliest.firedAt!
+          ? alert
+          : earliest,
+      null,
+    );
     const limit = drill.expect.detectWithinSeconds;
 
-    if (first === null) {
-      failures.push(
-        `Nobody was paged: no alert fired, and the drill needs one within ${limit} s of the trouble starting.`,
-      );
-    } else if (first - onset > limit) {
-      failures.push(
-        `The first page came ${first - onset} s after the trouble started; the drill needs one within ${limit} s.`,
-      );
-    }
+    assertions.push(
+      first === null
+        ? assertion({
+            label: "Someone is paged",
+            expected: `within ${limit} s`,
+            actual: "never",
+            passed: false,
+            message: `Nobody was paged: no alert fired, and the drill needs one within ${limit} s of the trouble starting.`,
+          })
+        : assertion({
+            label: "Someone is paged",
+            expected: `within ${limit} s`,
+            actual: `after ${first.firedAt! - onset} s`,
+            passed: first.firedAt! - onset <= limit,
+            at: first.firedAt,
+            nodeIds: [first.alertId],
+            message: `The first page came ${first.firedAt! - onset} s after the trouble started; the drill needs one within ${limit} s.`,
+          }),
+    );
   }
 
   if (drill.expect.maxPods !== undefined) {
     const pods = podsAtMost(graph);
 
-    if (pods > drill.expect.maxPods) {
-      failures.push(
-        `The design may run ${pods} pods; the budget allows ${drill.expect.maxPods}.`,
-      );
-    }
+    assertions.push(
+      assertion({
+        label: "Pods the design may run",
+        expected: `≤ ${drill.expect.maxPods}`,
+        actual: String(pods),
+        passed: pods <= drill.expect.maxPods,
+        message: `The design may run ${pods} pods; the budget allows ${drill.expect.maxPods}.`,
+      }),
+    );
   }
 
-  for (const kind of drill.expect.forbid) {
-    const found = result.findings.find((finding) => finding.kind === kind);
+  assertions.push(
+    ...forbidden(drill.expect.forbid, result.findings, false, result),
+  );
 
-    if (found) failures.push(found.message);
-  }
-
-  return {
-    drillId: drill.id,
-    passed: failures.length === 0,
-    failures,
-    findings: result.findings,
-    result,
-  };
+  return outcome(drill.id, assertions, result.findings, { result, scenario });
 };

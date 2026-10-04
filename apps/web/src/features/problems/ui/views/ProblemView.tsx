@@ -1,3 +1,5 @@
+import type { TestReportModel } from "@repo/api-client";
+import type { DesignGraph } from "@repo/design";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import {
   FileText,
@@ -35,6 +37,12 @@ interface ProblemViewProps {
   onOpenInterview: (interviewId: string) => void;
 }
 
+const labelOf = (graph: DesignGraph, nodeId: string) => {
+  const label = graph.nodes.find((node) => node.id === nodeId)?.label;
+
+  return label === undefined || label === "" ? nodeId : label;
+};
+
 export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
   const { data: problem } = useSuspenseQuery(problemQuery(slug));
   const { data: attempt } = useSuspenseQuery(attemptQuery(slug));
@@ -44,6 +52,7 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
   const hint = useMutation(revealHintMutation);
   const solutions = useMutation(revealSolutionsMutation);
   const [outcome, setOutcome] = useState<ProblemOutcome | null>(null);
+  const [previous, setPrevious] = useState<TestReportModel | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   if (!attempt) {
@@ -69,7 +78,7 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
       track={problem.track}
       simulation={false}
       initialTab="task"
-      leadingTabs={({ revision }) => [
+      leadingTabs={({ revision, graph, replay }) => [
         {
           id: "task",
           label: "Task",
@@ -92,8 +101,11 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
             <TestsPanel
               slug={slug}
               outcome={outcome}
+              previous={previous}
               revision={revision}
               error={error}
+              labelOf={(nodeId) => labelOf(graph, nodeId)}
+              onReplay={replay}
             />
           ),
         },
@@ -131,8 +143,12 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
               run.mutate(
                 { slug },
                 {
-                  onSuccess: (result) =>
-                    setOutcome({ kind: "run", run: result }),
+                  onSuccess: (result) => {
+                    setPrevious(
+                      outcome?.kind === "run" ? outcome.run.report : null,
+                    );
+                    setOutcome({ kind: "run", run: result });
+                  },
                   onError: (failure) => setError(errorMessage(failure)),
                 },
               );

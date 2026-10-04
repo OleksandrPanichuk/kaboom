@@ -3,6 +3,7 @@ import type {
   InterviewDimension,
   ItemScore,
   RevealedHint,
+  TestReport,
 } from "@repo/design";
 
 import type { SubmissionReviewStatus } from "@/db";
@@ -57,6 +58,7 @@ export interface SubmissionEntity {
   counted: boolean;
   items: ItemScore[];
   drills: DrillScore[];
+  tests: TestReport | null;
   createdAt: Date;
 }
 
@@ -94,6 +96,7 @@ export class SubmissionEntity {
       counted: entity.counted,
       items: entity.items,
       drills: entity.drills,
+      tests: entity.tests,
       createdAt: entity.createdAt.toISOString(),
     };
   }

@@ -1,4 +1,11 @@
-import { type Finding, type LintHit, runLints, type Track } from "@repo/design";
+import {
+  type DesignGraph,
+  evaluateLoad,
+  type Finding,
+  type LintHit,
+  runLints,
+  type Track,
+} from "@repo/design";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { cn } from "cn";
 import {
@@ -25,6 +32,7 @@ import {
   useDesignEditor,
   useHistoryShortcuts,
 } from "@/features/designs/hooks";
+import type { ReplayRequest } from "@/features/designs/typedefs";
 import {
   ChecksPanel,
   EdgeInspector,
@@ -47,11 +55,15 @@ import {
   useSimulation,
 } from "@/features/simulation";
 
+import { ReplayBar } from "./ReplayBar";
+
 export interface DesignWorkspaceContext {
+  graph: DesignGraph;
   revision: number;
   saving: boolean;
   showTab: (id: string) => void;
   focusNodes: (nodeIds: string[]) => void;
+  replay: (request: ReplayRequest) => void;
   resync: () => Promise<void>;
 }
 
@@ -96,15 +108,30 @@ export function DesignWorkspace({
   const [regionId, setRegionId] = useState<string | null>(null);
   const [tab, setTab] = useState(initialTab);
   const [focus, setFocus] = useState<CanvasFocus | null>(null);
+  const [replay, setReplay] = useState<ReplayRequest | null>(null);
+  const [replayStep, setReplayStep] = useState<number | null>(null);
+  const focusingRef = useRef(false);
   const context: DesignWorkspaceContext = {
+    graph: editor.graph,
     revision: editor.revision,
     saving: editor.saving,
     showTab: setTab,
     focusNodes: (nodeIds) =>
       setFocus((current) => ({ nodeIds, token: (current?.token ?? 0) + 1 })),
+    replay: (request) => {
+      setReplay(request);
+      setReplayStep(null);
+
+      if (request.nodeIds.length > 0) {
+        setFocus((current) => ({
+          nodeIds: request.nodeIds,
+          token: (current?.token ?? 0) + 1,
+          select: false,
+        }));
+      }
+    },
     resync: editor.resync,
   };
-  const focusingRef = useRef(false);
   const hits = useMemo(() => runLints(editor.graph), [editor.graph]);
   const [draft, setDraft] = useState<ScenarioDraft>(DEFAULT_SCENARIO);
   const [stepIndex, setStepIndex] = useState(0);
@@ -113,13 +140,29 @@ export function DesignWorkspace({
   const simulation = useSimulation(editor.graph, draft, running);
   const steps = simulation.result?.steps.length ?? 0;
   const step = Math.min(stepIndex, Math.max(0, steps - 1));
-  const overlay = useMemo(
-    () =>
-      running && simulation.result
-        ? overlayAt(editor.graph, simulation.result.steps[step])
-        : null,
-    [running, simulation.result, editor.graph, step],
+  const replayed = useMemo(
+    () => (replay ? evaluateLoad(editor.graph, replay.scenario) : null),
+    [replay, editor.graph],
   );
+  const replaySeconds = replay?.scenario.stepSeconds ?? 10;
+  const replaySteps = replayed?.steps.length ?? 0;
+  const replayAt = Math.min(
+    Math.max(0, replaySteps - 1),
+    replayStep ??
+      Math.max(
+        0,
+        replayed?.steps.findIndex((item) => item.t >= (replay?.at ?? 0)) ?? 0,
+      ),
+  );
+  const overlay = useMemo(() => {
+    if (replayed && !running) {
+      return overlayAt(editor.graph, replayed.steps[replayAt]);
+    }
+
+    return running && simulation.result
+      ? overlayAt(editor.graph, simulation.result.steps[step])
+      : null;
+  }, [replayed, running, replayAt, simulation.result, editor.graph, step]);
   const saveRun = useMutation(saveRunMutation);
 
   useHistoryShortcuts(editor.undo, editor.redo);
@@ -394,6 +437,16 @@ export function DesignWorkspace({
           selectedRegionId={region?.id ?? null}
           onSelectRegion={selectRegion}
         />
+        {replay && replayed && !running ? (
+          <ReplayBar
+            title={replay.title}
+            step={replayAt}
+            steps={replaySteps}
+            stepSeconds={replaySeconds}
+            onStepChange={setReplayStep}
+            onClose={() => setReplay(null)}
+          />
+        ) : null}
         {editor.error ? (
           <CanvasNotice
             message={editor.error}

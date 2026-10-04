@@ -1,4 +1,9 @@
-import type { DesignGraph, DrillScore, ItemScore } from "@repo/design";
+import type {
+  DesignGraph,
+  DrillScore,
+  ItemScore,
+  TestReport,
+} from "@repo/design";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
@@ -22,6 +27,7 @@ export interface CreateSubmissionData {
   graph: DesignGraph;
   items: ItemScore[];
   drills: DrillScore[];
+  tests: TestReport;
 }
 
 export interface SharedSolution {

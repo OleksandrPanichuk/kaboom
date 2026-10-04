@@ -559,6 +559,30 @@ hint penalty, so the model can move a score but never decide it. A failed
 review leaves the deterministic score in place and marks the submission
 `failed`.
 
+## Tests on a problem
+
+`runTests(problem, graph, { include })` in `packages/design/src/testing`
+turns a problem's drills and rubric checks into a report, grouped in the
+suites `functional`, `load`, `faults` and `constraints`. Each test carries
+assertions, each with what it measured, what it expected, what it got, the
+second it happened and the nodes to blame. `runDrill` builds those
+assertions, and its `failures` are their messages, so the interviewer and
+the reviews read the same sentences as before. A run includes the public
+tests only. A submission runs them all and stores the report through
+`publicReport`, which keeps a hidden test's title and status and nothing
+else. Scoring and the report share one `drillRunner`, so a drill runs once.
+A public load test carries the scenario it ran, its faults resolved to
+node ids; the browser evaluates it again to replay it, rather than the
+server sending every step.
+
+The load model's invariants are property-based tests over random designs
+(`invariants.test.ts`): bounds, determinism, conservation, and that more
+replicas, less traffic or no fault never serve less. A counterexample that
+is the model behaving as real systems do (a background consumer competing
+for a store, a retry storm's memory) narrows the property and says why in
+its name; one that is a bug gets fixed. Every official problem's reference
+passes every drill, and the same nodes with no edges pass none.
+
 ## Skills
 
 A skill is one of the rubric's dimensions: requirements, core design,

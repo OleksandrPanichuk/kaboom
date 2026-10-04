@@ -8,3 +8,4 @@ export * from "./DesignsPage";
 export * from "./DesignWorkspace";
 export * from "./PanelPlaceholder";
 export * from "./RenameDesignDialog";
+export * from "./ReplayBar";

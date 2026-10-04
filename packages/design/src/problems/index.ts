@@ -54,6 +54,8 @@ export {
   RubricItemSchema,
 } from "./schema";
 export {
+  type DrillRunner,
+  drillRunner,
   type DrillScore,
   type ItemScore,
   runPublicDrills,
