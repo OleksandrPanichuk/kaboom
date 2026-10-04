@@ -5,6 +5,7 @@ import { perMillion, PRICES } from "./prices";
 export interface NodeLoad {
   reads: number;
   writes: number;
+  replicas?: number;
 }
 
 export interface NodeCost {
@@ -20,6 +21,8 @@ export interface CostEstimate {
 
 const IDLE: NodeLoad = { reads: 0, writes: 0 };
 
+const round = (value: number) => Math.round(value * 10) / 10;
+
 const usd = (value: number) => `$${Math.round(value).toLocaleString("en")}`;
 
 const kindCost = (
@@ -31,28 +34,40 @@ const kindCost = (
 
   switch (node.kind) {
     case "service":
-    case "worker":
+    case "worker": {
+      const replicas = load.replicas ?? node.props.replicas;
+
       return {
-        monthlyUsd: node.props.replicas * PRICES.replica,
-        basis: `${node.props.replicas} × ${usd(PRICES.replica)} a replica`,
+        monthlyUsd: replicas * PRICES.replica,
+        basis: `${round(replicas)} × ${usd(PRICES.replica)} a replica`,
       };
+    }
     case "k8s-deployment": {
       const scaler = graph.edges.find(
         (edge) => edge.kind === "scales" && edge.to === node.id,
       );
       const hpa = graph.nodes.find((item) => item.id === scaler?.from);
       const pods =
-        hpa?.kind === "hpa"
-          ? Math.max(hpa.props.min, node.props.replicas)
-          : node.props.replicas;
+        load.replicas ??
+        (hpa?.kind === "hpa"
+          ? Math.min(
+              hpa.props.max,
+              Math.max(hpa.props.min, node.props.replicas),
+            )
+          : node.props.replicas);
 
       return {
         monthlyUsd: pods * PRICES.pod,
-        basis: `${pods} × ${usd(PRICES.pod)} a pod`,
+        basis: `${round(pods)} × ${usd(PRICES.pod)} a pod`,
       };
     }
     case "sql-database": {
-      const copies = node.props.failover === "automatic" ? 2 : 1;
+      const standby =
+        node.props.failover === "automatic" &&
+        !graph.edges.some(
+          (edge) => edge.kind === "replication" && edge.from === node.id,
+        );
+      const copies = standby ? 2 : 1;
       const instances = node.props.shards * copies;
 
       return {

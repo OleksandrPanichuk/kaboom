@@ -67,6 +67,35 @@ describe("costOf", () => {
   });
 });
 
+describe("found in review", () => {
+  test("a primary charges a standby only when no replica can take over", () => {
+    const primary = node("db", "sql-database", "Orders", {
+      failover: "automatic",
+      storageGb: 0,
+    });
+    const alone = graph([primary], []);
+    const replicated = graph(
+      [primary, node("replica", "sql-database", "Replica", { storageGb: 0 })],
+      [edge("db", "replica", "replication")],
+    );
+
+    expect(nodeCost(alone, primary).monthlyUsd).toBe(2 * PRICES.sqlInstance);
+    expect(nodeCost(replicated, primary).monthlyUsd).toBe(PRICES.sqlInstance);
+  });
+
+  test("prices the replicas a service ran, and an autoscaler's pods within its bounds", () => {
+    const api = node("api", "service", "API", { replicas: 2 });
+    const pods = node("pods", "k8s-deployment", "Pods", { replicas: 50 });
+    const scaler = node("hpa", "hpa", "Autoscaler", { min: 2, max: 10 });
+    const design = graph([api, pods, scaler], [edge("hpa", "pods", "scales")]);
+
+    expect(
+      nodeCost(design, api, { reads: 0, writes: 0, replicas: 6.5 }).monthlyUsd,
+    ).toBe(6.5 * PRICES.replica);
+    expect(nodeCost(design, pods).monthlyUsd).toBe(10 * PRICES.pod);
+  });
+});
+
 describe("a budget on a problem", () => {
   const shortener = OFFICIAL_PROBLEMS.find(
     (problem) => problem.slug === "url-shortener",

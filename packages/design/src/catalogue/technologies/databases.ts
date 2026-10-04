@@ -16,8 +16,8 @@ const CLOUD_SQL_PER_VCPU = 49;
 const DYNAMODB = {
   readUnit: 0.095,
   writeUnit: 0.475,
-  readsPerMillion: 0.25,
-  writesPerMillion: 1.25,
+  readsPerMillion: 0.125,
+  writesPerMillion: 0.625,
 };
 
 type RdsClass = keyof typeof RDS_CLASSES;
@@ -92,7 +92,7 @@ export const amazonAurora = defineTechnology({
     failover: "automatic" as const,
   }),
   monthlyUsd: ({ instanceClass }) =>
-    RDS_CLASSES[instanceClass].hourly * HOURS_PER_MONTH * AURORA_PREMIUM * 2,
+    RDS_CLASSES[instanceClass].hourly * HOURS_PER_MONTH * AURORA_PREMIUM,
 });
 
 export const cloudSql = defineTechnology({

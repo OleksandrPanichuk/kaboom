@@ -154,7 +154,11 @@ export function DesignWorkspace({
       Object.fromEntries(
         Object.entries(steady?.nodes ?? {}).map(([id, numbers]) => [
           id,
-          { reads: numbers.reads, writes: numbers.writes },
+          {
+            reads: numbers.reads,
+            writes: numbers.writes,
+            replicas: numbers.replicas,
+          },
         ]),
       ),
     );

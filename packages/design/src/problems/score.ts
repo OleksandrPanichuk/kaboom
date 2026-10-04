@@ -241,6 +241,10 @@ export const averageLoads = (
 
       load.reads += numbers.reads / count;
       load.writes += numbers.writes / count;
+
+      if (numbers.replicas !== undefined) {
+        load.replicas = (load.replicas ?? 0) + numbers.replicas / count;
+      }
     }
   }
 
