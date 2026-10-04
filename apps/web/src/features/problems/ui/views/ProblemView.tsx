@@ -53,6 +53,7 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
   const solutions = useMutation(revealSolutionsMutation);
   const [outcome, setOutcome] = useState<ProblemOutcome | null>(null);
   const [previous, setPrevious] = useState<TestReportModel | null>(null);
+  const [runs, setRuns] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   if (!attempt) {
@@ -102,6 +103,7 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
               slug={slug}
               outcome={outcome}
               previous={previous}
+              runKey={runs}
               revision={revision}
               error={error}
               labelOf={(nodeId) => labelOf(graph, nodeId)}
@@ -148,6 +150,7 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
                       outcome?.kind === "run" ? outcome.run.report : null,
                     );
                     setOutcome({ kind: "run", run: result });
+                    setRuns((count) => count + 1);
                   },
                   onError: (failure) => setError(errorMessage(failure)),
                 },

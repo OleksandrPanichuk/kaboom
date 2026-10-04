@@ -42,6 +42,9 @@ describe("runTests", () => {
     expect(report.tests.map((item) => item.id)).not.toContain(
       "drill:primary-fails",
     );
+    expect(report.tests.filter((item) => item.id.startsWith("check:"))).toEqual(
+      [],
+    );
   });
 
   test("groups the tests by suite, in suite order", () => {
@@ -95,6 +98,8 @@ describe("runTests", () => {
       expect(item.assertions).toEqual([]);
       expect(item.replay).toBeNull();
       expect(item.description).toBe("");
+      expect(item.suite).toBe("hidden");
+      expect(item.durationMs).toBe(0);
     }
   });
 });

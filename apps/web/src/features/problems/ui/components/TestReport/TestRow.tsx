@@ -39,52 +39,61 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
       : null;
   const expandable = !hidden && test.assertions.length > 0;
 
+  const heading = (
+    <>
+      <ChevronRight
+        aria-hidden="true"
+        className={cn(
+          "size-3.5 shrink-0 text-muted-foreground transition-transform",
+          open && "rotate-90",
+          !expandable && "invisible",
+        )}
+      />
+      <StatusIcon status={test.status} />
+      <span className="min-w-0 flex-1 truncate text-sm font-medium">
+        {test.title}
+      </span>
+      {hidden ? (
+        <EyeOff
+          aria-label="Hidden test"
+          className="size-3.5 shrink-0 text-muted-foreground"
+        />
+      ) : null}
+      {change ? (
+        <span
+          className={cn(
+            "shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium",
+            change === "fixed"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-red-50 text-red-700",
+          )}
+        >
+          {change === "fixed" ? "Fixed" : "New failure"}
+        </span>
+      ) : null}
+      <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+        {formatDuration(test.durationMs)}
+      </span>
+    </>
+  );
+
   return (
     <li className="flex flex-col">
-      <button
-        type="button"
-        className={cn(
-          "flex min-w-0 items-center gap-2.5 rounded-lg px-2 py-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-          expandable ? "hover:bg-zinc-50" : "cursor-default",
-        )}
-        aria-expanded={expandable ? open : undefined}
-        aria-controls={expandable ? id : undefined}
-        onClick={() => expandable && setOpen((value) => !value)}
-      >
-        <ChevronRight
-          aria-hidden="true"
-          className={cn(
-            "size-3.5 shrink-0 text-muted-foreground transition-transform",
-            open && "rotate-90",
-            !expandable && "invisible",
-          )}
-        />
-        <StatusIcon status={test.status} />
-        <span className="min-w-0 flex-1 truncate text-sm font-medium">
-          {test.title}
-        </span>
-        {hidden ? (
-          <EyeOff
-            aria-label="Hidden test"
-            className="size-3.5 shrink-0 text-muted-foreground"
-          />
-        ) : null}
-        {change ? (
-          <span
-            className={cn(
-              "shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium",
-              change === "fixed"
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-red-50 text-red-700",
-            )}
-          >
-            {change === "fixed" ? "Fixed" : "New failure"}
-          </span>
-        ) : null}
-        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-          {formatDuration(test.durationMs)}
-        </span>
-      </button>
+      {expandable ? (
+        <button
+          type="button"
+          className="flex min-w-0 items-center gap-2.5 rounded-lg px-2 py-2 text-left outline-none hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-ring/50"
+          aria-expanded={open}
+          aria-controls={id}
+          onClick={() => setOpen((value) => !value)}
+        >
+          {heading}
+        </button>
+      ) : (
+        <div className="flex min-w-0 items-center gap-2.5 px-2 py-2">
+          {heading}
+        </div>
+      )}
       {expandable && open ? (
         <div
           id={id}

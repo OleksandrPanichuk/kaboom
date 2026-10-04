@@ -12,6 +12,7 @@ interface TestsPanelProps {
   slug: string;
   outcome: ProblemOutcome | null;
   previous: TestReportModel | null;
+  runKey: number;
   revision: number;
   error: string | null;
   labelOf: (nodeId: string) => string;
@@ -22,6 +23,7 @@ export function TestsPanel({
   slug,
   outcome,
   previous,
+  runKey,
   revision,
   error,
   labelOf,
@@ -65,6 +67,7 @@ export function TestsPanel({
       {outcome.kind === "run" ? (
         <PanelSection title="Public tests">
           <TestReport
+            key={runKey}
             report={outcome.run.report}
             previous={previous}
             labelOf={labelOf}

@@ -14,6 +14,7 @@ export const TEST_SUITES = [
   "load",
   "faults",
   "constraints",
+  "hidden",
 ] as const;
 export type TestSuite = (typeof TEST_SUITES)[number];
 
@@ -117,7 +118,12 @@ export const runTests = (
     });
   const checks = problem.rubric
     .filter((item) => item.check.check !== "drill-passes")
-    .filter((item) => shown(visibilityOfCheck(item.check, problem)))
+    .filter((item) =>
+      include === "all"
+        ? true
+        : "drillId" in item.check &&
+          visibilityOfCheck(item.check, problem) === "public",
+    )
     .map((item: RubricItem): TestResult => {
       const checkStarted = performance.now();
       const verdict = judgeCheck(item.check, runner);
@@ -162,7 +168,14 @@ export const publicReport = (report: TestReport): TestReport => ({
   ...report,
   tests: report.tests.map((test) =>
     test.visibility === "hidden"
-      ? { ...test, description: "", assertions: [], replay: null }
+      ? {
+          ...test,
+          suite: "hidden",
+          description: "",
+          assertions: [],
+          durationMs: 0,
+          replay: null,
+        }
       : test,
   ),
 });

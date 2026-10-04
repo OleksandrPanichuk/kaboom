@@ -5,6 +5,7 @@ export const SUITE_LABELS: Record<TestResultModel["suite"], string> = {
   load: "Load",
   faults: "Faults",
   constraints: "Constraints",
+  hidden: "Hidden",
 };
 
 export const STATUS_LABELS: Record<TestResultModel["status"], string> = {
