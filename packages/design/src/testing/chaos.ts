@@ -109,7 +109,15 @@ const lostInstance = (
   });
   const failing = (title: string, rate: number) => ({
     title,
-    faults: [{ kind: "error-rate" as const, nodeId: node.id, rate, ...window }],
+    faults: [
+      {
+        kind: "error-rate" as const,
+        nodeId: node.id,
+        rate,
+        lasting: true,
+        ...window,
+      },
+    ],
   });
   const lose = (count: number, unit: string) =>
     count < 2
@@ -159,16 +167,29 @@ const lostInstance = (
   }
 };
 
+export const loadedNodes = (result: EvaluationResult): Set<string> =>
+  new Set(
+    result.steps.flatMap((step) =>
+      Object.entries(step.nodes)
+        .filter(([, numbers]) => numbers.reads + numbers.writes > 0)
+        .map(([id]) => id),
+    ),
+  );
+
 export const chaosCases = (
   graph: DesignGraph,
   settings: ChaosSettings,
+  loaded?: ReadonlySet<string>,
 ): ChaosCase[] => {
   const window = {
     at: settings.faultAt,
     until: settings.faultAt + settings.faultSeconds,
   };
   const serving = graph.nodes.filter(
-    (node) => node.kind !== "client" && catalogue[node.kind].carriesTraffic,
+    (node) =>
+      node.kind !== "client" &&
+      catalogue[node.kind].carriesTraffic &&
+      (loaded?.has(node.id) ?? true),
   );
   const servingIds = new Set(serving.map((node) => node.id));
   const chains = new Map(
@@ -176,9 +197,20 @@ export const chaosCases = (
   );
   const inside = (groupId: string, nodeId: string) =>
     chains.get(nodeId)?.includes(groupId) ?? false;
-  const occupied = graph.groups.filter((group) =>
-    serving.some((node) => inside(group.id, node.id)),
-  );
+  const seenMembers = new Set<string>();
+  const occupied = graph.groups.filter((group) => {
+    const members = serving
+      .filter((node) => inside(group.id, node.id))
+      .map((node) => node.id)
+      .sort()
+      .join(",");
+
+    if (members === "" || seenMembers.has(members)) return false;
+
+    seenMembers.add(members);
+
+    return true;
+  });
   const called = [
     ...new Set(
       graph.edges
@@ -195,13 +227,6 @@ export const chaosCases = (
   ].flatMap((id) => serving.filter((node) => node.id === id));
 
   const cases: ChaosCase[] = [
-    ...occupied.map((group): ChaosCase => ({
-      id: `chaos:group-down:${group.id}`,
-      kind: "group-down",
-      title: `${nameOf(group)} is lost`,
-      targetId: group.id,
-      faults: [{ kind: "group-down", groupId: group.id, ...window }],
-    })),
     ...serving.flatMap((node): ChaosCase[] => {
       const lost = lostInstance(graph, node, window);
 
@@ -216,6 +241,13 @@ export const chaosCases = (
           ]
         : [];
     }),
+    ...occupied.map((group): ChaosCase => ({
+      id: `chaos:group-down:${group.id}`,
+      kind: "group-down",
+      title: `${nameOf(group)} is lost`,
+      targetId: group.id,
+      faults: [{ kind: "group-down", groupId: group.id, ...window }],
+    })),
     ...called.map((node): ChaosCase => ({
       id: `chaos:flaky:${node.id}`,
       kind: "flaky",

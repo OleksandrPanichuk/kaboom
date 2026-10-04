@@ -6,6 +6,7 @@ import {
   chaosCases,
   type ChaosOutcome,
   chaosSettings,
+  loadedNodes,
   runChaosCase,
 } from "../testing/chaos";
 import { type DrillOutcome, runDrill } from "./drills";
@@ -78,9 +79,11 @@ export const drillRunner = (
         return chaos;
       }
 
-      const ready = runner.drill(baseline.id)?.passed ?? false;
+      const base = runner.drill(baseline.id);
+      const ready = base?.passed ?? false;
+      const loaded = base?.result ? loadedNodes(base.result) : undefined;
 
-      chaos = chaosCases(graph, settings).map((item) => {
+      chaos = chaosCases(graph, settings, loaded).map((item) => {
         if (!ready) {
           return {
             chaos: item,

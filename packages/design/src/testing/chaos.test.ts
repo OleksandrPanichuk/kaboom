@@ -82,7 +82,7 @@ describe("chaos cases", () => {
   test("stop at the problem's limit", () => {
     expect(
       chaosCases(shop(4), { ...settings, maxCases: 2 }).map((item) => item.id),
-    ).toEqual(["chaos:group-down:eu", "chaos:instance:api"]);
+    ).toEqual(["chaos:instance:api", "chaos:instance:db"]);
   });
 });
 
@@ -105,5 +105,90 @@ describe("running a chaos case", () => {
     expect(failed.at).toBeGreaterThanOrEqual(settings.faultAt);
     expect(failed.nodeIds).toEqual(["users", "api"]);
     expect(failed.message).toContain("Shop API's only replica fails");
+  });
+});
+
+describe("found in review", () => {
+  const store = (retries: number): DesignGraph =>
+    graph(
+      [
+        node("users", "client", "Users", { rps: 1_000, readRatio: 0.9 }),
+        node("api", "service", "API", {
+          replicas: 4,
+          capacityRpsPerReplica: 1_000,
+        }),
+        node("kv", "nosql-database", "KV", {
+          partitions: 8,
+          replicationFactor: 1,
+        }),
+      ],
+      [
+        edge("users", "api", "sync-call"),
+        edge("api", "kv", "read", { retries }),
+        edge("api", "kv", "write", { retries }),
+      ],
+    );
+
+  test("retries do not bring back partitions a single-copy store has lost", () => {
+    for (const retries of [0, 3]) {
+      expect(outcome(store(retries), "chaos:instance:kv").passed).toBe(false);
+    }
+  });
+
+  test("nodes nothing calls add no faults to survive", () => {
+    const padded: DesignGraph = {
+      ...shop(1),
+      nodes: [
+        ...shop(1).nodes,
+        ...Array.from({ length: 45 }, (_, index) => ({
+          ...node(`idle-${index}`, "service", `Idle ${index}`, {
+            replicas: 2,
+          }),
+          groupId: `zone-${index}`,
+        })),
+      ],
+      groups: [
+        ...shop(1).groups,
+        ...Array.from({ length: 45 }, (_, index) =>
+          createGroup({
+            id: `zone-${index}`,
+            kind: "region",
+            label: `Zone ${index}`,
+          }),
+        ),
+      ],
+    };
+    const loaded = new Set(["lb", "api", "db"]);
+
+    expect(chaosCases(padded, settings, loaded).map((item) => item.id)).toEqual(
+      chaosCases(shop(1), settings, loaded).map((item) => item.id),
+    );
+  });
+
+  test("counts groups holding the same nodes once", () => {
+    const nested: DesignGraph = {
+      ...shop(4),
+      groups: [
+        createGroup({ id: "eu", kind: "region", label: "Europe" }),
+        createGroup({ id: "vpc", kind: "vpc", label: "VPC", parentId: "eu" }),
+      ],
+      nodes: shop(4).nodes.map((item) =>
+        item.groupId === "eu" ? { ...item, groupId: "vpc" } : item,
+      ),
+    };
+
+    expect(
+      chaosCases(nested, settings).filter((item) => item.kind === "group-down"),
+    ).toHaveLength(1);
+  });
+
+  test("refuse settings that leave nothing to measure", () => {
+    expect(
+      ChaosSettingsSchema.safeParse({ faultSeconds: 30, graceSeconds: 45 })
+        .success,
+    ).toBe(false);
+    expect(ChaosSettingsSchema.safeParse({ recoverySeconds: 0 }).success).toBe(
+      false,
+    );
   });
 });

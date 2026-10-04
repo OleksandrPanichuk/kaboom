@@ -748,7 +748,9 @@ const runStep = (
 
     const downstream = combine(calls, (call) => call.errorRate);
     const downstreamLasting = combine(calls, (call) => call.lasting);
-    const ownLasting = step.up ? 0 : step.ownErrorRate;
+    const ownLasting = step.up
+      ? Math.min(step.ownErrorRate, state.get(node.id)?.lastingErrorRate ?? 0)
+      : step.ownErrorRate;
 
     step.errorRate = Math.min(
       1,
