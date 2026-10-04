@@ -13,3 +13,5 @@ self.onmessage = (event: MessageEvent<DesignTestRequest>) => {
     });
   }
 };
+
+postMessage({ ready: true });

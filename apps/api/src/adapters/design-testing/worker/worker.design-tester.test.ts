@@ -2,6 +2,7 @@ import { OFFICIAL_PROBLEMS } from "@repo/design/library";
 import { afterEach, describe, expect, test } from "bun:test";
 
 import {
+  DesignTestsBusyError,
   DesignTestsTimedOutError,
   DesignTestsUnavailableError,
 } from "@/platform/design-testing/design-testing.errors";
@@ -49,11 +50,16 @@ const withoutTimings = (value: unknown): unknown =>
 
 let pools: WorkerDesignTester[] = [];
 
-const pool = (size: number, timeoutMs = 30_000) => {
-  const tester = new WorkerDesignTester({ size, timeoutMs, script: SCRIPT });
+const pool = async (size: number, timeoutMs = 30_000, maxQueued?: number) => {
+  const tester = new WorkerDesignTester({
+    size,
+    timeoutMs,
+    script: SCRIPT,
+    maxQueued,
+  });
 
-  tester.start();
   pools.push(tester);
+  await tester.start();
 
   return tester;
 };
@@ -65,7 +71,7 @@ afterEach(async () => {
 
 describe("WorkerDesignTester", () => {
   test("answers what the tests answer in-process", async () => {
-    const result = await pool(1).test(request());
+    const result = await (await pool(1)).test(request());
 
     expect(withoutTimings(result)).toEqual(
       withoutTimings(testDesign(request())),
@@ -73,7 +79,7 @@ describe("WorkerDesignTester", () => {
   }, 30_000);
 
   test("leaves the event loop free while a large design is scored", async () => {
-    const tester = pool(1);
+    const tester = await pool(1);
     const ticks: number[] = [];
     const timer = setInterval(() => ticks.push(performance.now()), 10);
     const started = performance.now();
@@ -92,30 +98,80 @@ describe("WorkerDesignTester", () => {
   }, 60_000);
 
   test("queues past its size and answers every test", async () => {
+    const tester = await pool(2);
     const results = await Promise.all(
-      Array.from({ length: 4 }, () => pool(2).test(request())),
+      Array.from({ length: 4 }, () => tester.test(request())),
     );
 
     expect(results.every((result) => result.score.score === 100)).toBe(true);
   }, 60_000);
 
   test("gives up on a test past its timeout, and keeps working", async () => {
-    const tester = pool(1, 1_000);
+    const tester = await pool(1, 1_000);
 
-    const slow = tester.test(request(60));
-    const next = tester.test({ ...request(), seeds: 0 });
+    await expect(tester.test(request(60))).rejects.toBeInstanceOf(
+      DesignTestsTimedOutError,
+    );
+    await Bun.sleep(1_050);
 
-    expect(slow).rejects.toBeInstanceOf(DesignTestsTimedOutError);
-    expect((await next).score.score).toBe(100);
+    expect((await tester.test({ ...request(), seeds: 0 })).score.score).toBe(
+      100,
+    );
   }, 60_000);
 
   test("refuses tests once closed", async () => {
-    const tester = pool(1);
+    const tester = await pool(1);
 
     await tester.close();
 
-    expect(tester.test(request())).rejects.toBeInstanceOf(
+    await expect(tester.test(request())).rejects.toBeInstanceOf(
       DesignTestsUnavailableError,
     );
   });
+
+  test("counts the time a test waits in the queue", async () => {
+    const tester = await pool(1, 1_000);
+    const slow = tester.test(request(60));
+    const queued = tester.test({ ...request(), seeds: 0 });
+
+    await expect(slow).rejects.toBeInstanceOf(DesignTestsTimedOutError);
+    await expect(queued).rejects.toBeInstanceOf(DesignTestsTimedOutError);
+    await Promise.allSettled([slow, queued]);
+  }, 30_000);
+
+  test("answers busy rather than queueing without end", async () => {
+    const tester = await pool(1, 30_000, 1);
+    const running = tester.test(request());
+    const waiting = tester.test(request());
+
+    await expect(tester.test(request())).rejects.toBeInstanceOf(
+      DesignTestsBusyError,
+    );
+    await Promise.all([running, waiting]);
+  }, 30_000);
+
+  test("answers the tests in flight when it closes", async () => {
+    const tester = await pool(1);
+    const running = tester.test(request(30));
+
+    await Bun.sleep(50);
+    await tester.close();
+
+    await expect(running).rejects.toBeInstanceOf(DesignTestsUnavailableError);
+  }, 30_000);
+
+  test("refuses to start when its worker cannot load", async () => {
+    const broken = new WorkerDesignTester({
+      size: 1,
+      timeoutMs: 30_000,
+      script: new URL("./missing.worker", import.meta.url),
+      bootTimeoutMs: 2_000,
+    });
+
+    pools.push(broken);
+
+    await expect(broken.start()).rejects.toBeInstanceOf(
+      DesignTestsUnavailableError,
+    );
+  }, 10_000);
 });

@@ -639,9 +639,12 @@ Scoring a design runs in a pool of worker threads, so a large design does
 not block the API. Run, submit and the review job ask the `DesignTester`
 port (`platform/design-testing`), whose `testDesign` scores and reports
 from one runner. Under `NODE_ENV=test` it is `InlineDesignTester`;
-otherwise `WorkerDesignTester` keeps `DESIGN_TEST_WORKERS` workers, queues
-past them, and answers `503 DESIGN_TESTS_TIMED_OUT` after
-`DESIGN_TEST_TIMEOUT_MS`, replacing the worker. The worker is found beside
+otherwise `WorkerDesignTester` keeps `DESIGN_TEST_WORKERS` workers. It
+waits for each to report ready at `start`, so a missing worker file fails
+the boot rather than every request, and replaces one that dies. It queues
+up to four tests a worker, answers `503 DESIGN_TESTS_BUSY` past that, and
+`503 DESIGN_TESTS_TIMED_OUT` once a test has waited and run for
+`DESIGN_TEST_TIMEOUT_MS`, replacing a worker it had to stop. The worker is found beside
 the entry point (`Bun.main`), which is why `build` names it as a second
 entry: `dist/adapters/design-testing/worker/tester.worker.js` sits where
 `src/…/tester.worker.ts` does.

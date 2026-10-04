@@ -10,3 +10,8 @@ export class DesignTestsUnavailableError extends ModuleError {
   public readonly status = HttpStatus.ServiceUnavailable;
   public readonly code = "DESIGN_TESTS_UNAVAILABLE";
 }
+
+export class DesignTestsBusyError extends ModuleError {
+  public readonly status = HttpStatus.ServiceUnavailable;
+  public readonly code = "DESIGN_TESTS_BUSY";
+}

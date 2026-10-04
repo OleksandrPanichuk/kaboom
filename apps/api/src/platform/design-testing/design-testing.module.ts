@@ -32,5 +32,6 @@ export const designTestingModule = defineModule({
   },
 
   start: ({ state }) => state.pool?.start(),
+  ready: ({ state }) => state.pool?.healthy() ?? true,
   shutdown: ({ state }) => state.tester.close(),
 });

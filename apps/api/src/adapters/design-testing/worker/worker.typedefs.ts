@@ -4,16 +4,22 @@ import type {
 } from "@/platform/design-testing/ports";
 
 export type WorkerReply =
-  { ok: true; result: DesignTestResult } | { ok: false; message: string };
+  | { ready: true }
+  | { ok: true; result: DesignTestResult }
+  | { ok: false; message: string };
 
 export interface PendingTest {
   request: DesignTestRequest;
   resolve: (result: DesignTestResult) => void;
   reject: (error: Error) => void;
+  timer: ReturnType<typeof setTimeout> | null;
+  worker: Worker | null;
 }
 
 export interface WorkerDesignTesterOptions {
   size: number;
   timeoutMs: number;
   script: URL;
+  bootTimeoutMs?: number;
+  maxQueued?: number;
 }
