@@ -33,6 +33,18 @@ export const random = (seed: number) => {
   };
 };
 
+const MAX_MULTIPLIER = 1_000;
+
+const streamOf = (seed: number, key: string) => {
+  let hash = 0x811c9dc5;
+
+  for (const char of `${seed}:${key}`) {
+    hash = Math.imul(hash ^ char.charCodeAt(0), 0x01000193);
+  }
+
+  return random(hash >>> 0);
+};
+
 const between = (next: () => number, [low, high]: readonly [number, number]) =>
   low + (high - low) * next();
 
@@ -73,10 +85,12 @@ const variedTraffic = (
     .slice(0, MAX_TRAFFIC_POINTS)
     .map((t) => ({
       at: t,
-      multiplier:
+      multiplier: Math.min(
+        MAX_MULTIPLIER,
         multiplierAt(traffic, t) *
-        noiseAt(t) *
-        (t >= burstAt && t < burstAt + VARIATION.burstSeconds ? burst : 1),
+          noiseAt(t) *
+          (t >= burstAt && t < burstAt + VARIATION.burstSeconds ? burst : 1),
+      ),
     }));
 };
 
@@ -97,7 +111,7 @@ const variedFault = (fault: Fault, next: () => number): Fault => {
 };
 
 const variedNode = (node: DesignNode, next: () => number): DesignNode => {
-  if (node.kind === "client") return node;
+  if (node.kind === "client" || node.kind === "scheduler") return node;
 
   const capacity = 1 + (next() * 2 - 1) * VARIATION.capacityNoise;
   const latency = between(next, VARIATION.latencyFactor);
@@ -129,29 +143,32 @@ export const vary = (
 ): { graph: DesignGraph; scenario: LoadScenarioInput } => {
   if (seed === 0) return { graph, scenario };
 
-  const next = random(seed);
   const durationSeconds = scenario.durationSeconds ?? 600;
 
   return {
     graph: {
       ...graph,
-      nodes: graph.nodes.map((node) => variedNode(node, next)),
+      nodes: graph.nodes.map((node) =>
+        variedNode(node, streamOf(seed, `node:${node.id}`)),
+      ),
     },
     scenario: {
       ...scenario,
-      traffic: variedTraffic(scenario.traffic ?? [], durationSeconds, next),
-      faults: (scenario.faults ?? []).map((fault) => {
-        const shifted = variedFault(fault, next);
-
-        return faults ? shifted : fault;
-      }),
+      traffic: variedTraffic(
+        scenario.traffic ?? [],
+        durationSeconds,
+        streamOf(seed, "traffic"),
+      ),
+      faults: (scenario.faults ?? []).map((fault, index) =>
+        faults ? variedFault(fault, streamOf(seed, `fault:${index}`)) : fault,
+      ),
     },
   };
 };
 
 export const HOLDS_SHARE = 0.95;
 export const CHAOS_SEEDS = 5;
-export const VARIATION_BUDGET = 600_000;
+export const VARIATION_BUDGET = 300_000;
 
 export interface Variation {
   passed: number;
@@ -176,19 +193,8 @@ export const runCost = (graph: DesignGraph, scenario: LoadScenarioInput) =>
   Math.max(1, graph.nodes.length) *
   Math.ceil((scenario.durationSeconds ?? 600) / (scenario.stepSeconds ?? 10));
 
-export const budget = (total = VARIATION_BUDGET) => {
-  let remaining = total;
-
-  return {
-    seedsFor: (wanted: number, cost: number) => {
-      const affordable = Math.min(wanted, Math.floor(remaining / cost));
-
-      remaining -= Math.max(0, affordable) * cost;
-
-      return Math.max(0, affordable);
-    },
-  };
-};
+export const affordable = (wanted: number, share: number): number =>
+  Math.max(0, Math.floor(wanted * Math.min(1, share)));
 
 export const varied = (
   seeds: number,

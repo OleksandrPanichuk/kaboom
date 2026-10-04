@@ -77,6 +77,7 @@ export const TestResultModel = t.Object({
       passed: t.Integer(),
       total: t.Integer(),
       worstSeed: t.Nullable(t.Integer()),
+      varyFaults: t.Boolean(),
     }),
   ),
 });

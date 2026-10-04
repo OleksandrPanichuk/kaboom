@@ -39,6 +39,7 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
             at,
             nodeIds,
             seed,
+            varyFaults: test.variation?.varyFaults ?? true,
           });
           closePanels();
         }

@@ -97,6 +97,25 @@ describe("vary", () => {
   });
 });
 
+describe("seeds", () => {
+  test("give every seed its own run, and every node its own draw", () => {
+    const runs = new Set(
+      Array.from({ length: 200 }, (_, seed) =>
+        JSON.stringify(vary(design, scenario, seed + 1)),
+      ),
+    );
+    const reordered = { ...design, nodes: [...design.nodes].reverse() };
+    const api = (graphOf: typeof design) =>
+      vary(graphOf, scenario, 5).graph.nodes.find((item) => item.id === "api");
+
+    expect(runs.size).toBe(200);
+    expect(api(reordered)).toEqual(api(design));
+    expect(vary(reordered, scenario, 5).scenario).toEqual(
+      vary(design, scenario, 5).scenario,
+    );
+  });
+});
+
 describe("varied runs", () => {
   test("call a test flaky when it passes as drawn and not when varied", () => {
     expect(statusOf(false, null)).toBe("failed");
@@ -123,7 +142,12 @@ describe("varied runs", () => {
     expect(holds.label).toBe("Holds when traffic and capacity vary");
     expect(holds.passed).toBe(false);
     expect(roomy.status).toBe("passed");
-    expect(roomy.variation).toEqual({ passed: 20, total: 20, worstSeed: null });
+    expect(roomy.variation).toEqual({
+      passed: 20,
+      total: 20,
+      worstSeed: null,
+      varyFaults: true,
+    });
   });
 
   test("hold for every reference, on every seed", () => {

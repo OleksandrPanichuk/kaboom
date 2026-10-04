@@ -6,4 +6,5 @@ export interface ReplayRequest {
   at: number | null;
   nodeIds: string[];
   seed?: number;
+  varyFaults?: boolean;
 }

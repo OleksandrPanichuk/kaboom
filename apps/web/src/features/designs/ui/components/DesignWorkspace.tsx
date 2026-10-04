@@ -144,7 +144,9 @@ export function DesignWorkspace({
   const replayed = useMemo(() => {
     if (!replay) return null;
 
-    const run = vary(editor.graph, replay.scenario, replay.seed ?? 0);
+    const run = vary(editor.graph, replay.scenario, replay.seed ?? 0, {
+      faults: replay.varyFaults ?? true,
+    });
 
     return evaluateLoad(run.graph, run.scenario);
   }, [replay, editor.graph]);

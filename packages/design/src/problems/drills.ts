@@ -389,7 +389,7 @@ const runLoadDrill = (
 
   if (drill.expect.detectWithinSeconds !== undefined) {
     const onset = Math.min(
-      ...drill.faults.map((fault) => fault.at),
+      ...(varied.scenario.faults ?? []).map((fault) => fault.at),
       ...(drill.traffic ?? []).map((point) => point.at),
       drill.durationSeconds,
     );

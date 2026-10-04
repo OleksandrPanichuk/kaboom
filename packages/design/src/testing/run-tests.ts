@@ -40,6 +40,7 @@ export interface TestVariation {
   passed: number;
   total: number;
   worstSeed: number | null;
+  varyFaults: boolean;
 }
 
 export interface TestReport {
@@ -94,12 +95,16 @@ export const HOLDS_LABEL = "Holds when traffic and capacity vary";
 
 const round = (ms: number) => Math.round(ms * 100) / 100;
 
-const summary = (variation: Variation | null): TestVariation | null =>
+const summary = (
+  variation: Variation | null,
+  varyFaults: boolean,
+): TestVariation | null =>
   variation && variation.total > 0
     ? {
         passed: variation.passed,
         total: variation.total,
         worstSeed: variation.worstSeed,
+        varyFaults,
       }
     : null;
 
@@ -160,7 +165,7 @@ export const runTests = (
         durationMs: round(runner.durationOf(drill.id)),
         replay:
           drill.visibility === "public" ? (outcome.scenario ?? null) : null,
-        variation: summary(variation),
+        variation: summary(variation, true),
       };
     });
   const checks = problem.rubric
@@ -215,7 +220,7 @@ export const runTests = (
         assertions: [...(outcome?.assertions ?? []), ...holds(variation)],
         durationMs: round(durationMs),
         replay: outcome?.scenario ?? null,
-        variation: summary(variation),
+        variation: summary(variation, false),
       }),
     );
   const tests = [...drills, ...checks, ...chaos].sort(

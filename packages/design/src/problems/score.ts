@@ -10,15 +10,16 @@ import {
   runChaosCase,
 } from "../testing/chaos";
 import {
-  budget,
+  affordable,
   CHAOS_SEEDS,
   runCost,
   statusOf,
   type Variation,
+  VARIATION_BUDGET,
   varied,
 } from "../testing/variation";
 import { type DrillOutcome, runDrill } from "./drills";
-import { selectNodes } from "./resolve";
+import { drillScenario, selectNodes } from "./resolve";
 import type { CheckRef, ProblemContent, RubricItem } from "./schema";
 
 export interface ItemScore {
@@ -80,7 +81,38 @@ export const drillRunner = (
   const outcomes = new Map<string, DrillOutcome>();
   const durations = new Map<string, number>();
   const variations = new Map<string, Variation | null>();
-  const spend = budget();
+  let share: number | null = null;
+  const shareOf = (): number => {
+    if (share !== null) return share;
+
+    const drillCost = problem.drills.reduce(
+      (sum, item) =>
+        item.kind === "load"
+          ? sum + runCost(graph, drillScenario(item, graph)) * seeds
+          : sum,
+      0,
+    );
+    const baseline = chaosBaseline(problem);
+    const settings = chaosSettings(problem);
+    const base = baseline ? runner.drill(baseline.id) : undefined;
+    const chaosCost =
+      baseline && settings.enabled && base?.passed && base.result
+        ? chaosCases(graph, settings, loadedNodes(base.result)).length *
+          runCost(graph, {
+            kind: "load",
+            durationSeconds:
+              settings.faultAt +
+              settings.faultSeconds +
+              settings.recoverySeconds,
+          }) *
+          Math.min(seeds, CHAOS_SEEDS)
+        : 0;
+    const total = drillCost + chaosCost;
+
+    share = total === 0 ? 1 : VARIATION_BUDGET / total;
+
+    return share;
+  };
   let chaos: ChaosResult[] | null = null;
 
   const runner: DrillRunner = {
@@ -118,9 +150,8 @@ export const drillRunner = (
         const wanted = Math.min(seeds, CHAOS_SEEDS);
         const variation =
           outcome.passed && wanted > 0
-            ? varied(
-                spend.seedsFor(wanted, runCost(graph, outcome.scenario)),
-                (seed) => runChaosCase(graph, item, baseline, settings, seed),
+            ? varied(affordable(wanted, shareOf()), (seed) =>
+                runChaosCase(graph, item, baseline, settings, seed),
               )
             : null;
 
@@ -164,9 +195,8 @@ export const drillRunner = (
       ) {
         const started = performance.now();
 
-        variation = varied(
-          spend.seedsFor(seeds, runCost(graph, outcome.scenario)),
-          (seed) => runDrill(found, graph, seed),
+        variation = varied(affordable(seeds, shareOf()), (seed) =>
+          runDrill(found, graph, seed),
         );
         durations.set(
           id,
@@ -396,7 +426,9 @@ export const scoreSubmission = (
         id: item.id,
         title: item.title,
         visibility: item.visibility,
-        passed: outcome.passed,
+        passed:
+          outcome.passed &&
+          statusOf(true, runner.variation(item.id)) === "passed",
         failures: outcome.failures,
       };
     }),
