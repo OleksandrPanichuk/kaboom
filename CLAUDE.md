@@ -582,10 +582,12 @@ server sending every step.
 The `chaos` suite is drawn from the design itself (`testing/chaos.ts`), so
 it cannot be learned by heart: a design with more parts gets more faults.
 Each case is one failure the model says a design can survive, in the SPOF
-lint's own terms: a replicated service or deployment loses one replica, a
+lint's own terms, drawn only from the nodes the baseline drill loads, so a
+node nothing calls adds nothing to survive: a replicated service or deployment loses one replica, a
 single one fails outright, a SQL primary fails over, a NoSQL store or a
-stream with one copy loses the partitions on a node, every group that holds
-something is lost, every dependency behind a synchronous call fails 5 % of
+stream with one copy loses the partitions on a node as a lasting error,
+every group that holds something is lost (groups holding the same nodes
+once), every dependency behind a synchronous call fails 5 % of
 requests, and every cache is emptied. Managed entry points (balancers,
 gateways, DNS, CDNs, ingresses) are taken as redundant. Partitions are left
 out: whether a design should keep writing on both sides is a choice, not a
@@ -624,10 +626,13 @@ short burst, a fault starts up to 30 s off and lasts a quarter more or
 less, and each node's capacity moves by 5 % and its latency by up to 15 %;
 seed 0 is the drill as drawn. A test that passes as drawn but holds in
 fewer than 95 % of its seeds is `flaky`, scores half its weight, and names
-its worst seed, which the browser replays with the same `vary`. A run uses
-8 seeds and a submission 20, chaos cases at most 5 and with their fault
-timing fixed, all inside a budget of node-steps so a large design runs
-fewer seeds rather than longer. Every reference holds on every seed; give
+its worst seed, which the browser replays with the same `vary`. A node's
+variation is seeded from its id, and the traffic and each fault from their
+own streams, so an edit elsewhere keeps run N the same. A run and a
+submission both use 20 seeds, chaos cases at most 5 and with their fault
+timing fixed. Every varied test gets the same share of a budget of
+node-steps, worked out before anything runs, so a large design runs fewer
+seeds rather than longer, and the order of the tests changes nothing. Every reference holds on every seed; give
 a reference headroom rather than loosen a drill when one does not.
 
 The load model's invariants are property-based tests over random designs
