@@ -176,6 +176,12 @@ export const CheckRefSchema = z.discriminatedUnion("check", [
     lint: z.enum(LINT_IDS as [string, ...string[]]),
   }),
   z.strictObject({
+    check: z.literal("serves-reads"),
+    drillId: IdSchema,
+    nodeKind: NodeKindSchema,
+    minShare: z.number().gt(0).max(1),
+  }),
+  z.strictObject({
     check: z.literal("chaos-coverage"),
     min: z.number().gt(0).max(1).default(1),
   }),

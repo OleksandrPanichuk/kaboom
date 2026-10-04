@@ -116,7 +116,12 @@ The *Members* client is already on the canvas. Build what it talks to.`,
       key: "offers-search",
       title: "Offers search from an index",
       weight: 5,
-      check: { check: "has-node-kind", nodeKind: "search-index" },
+      check: {
+        check: "serves-reads",
+        drillId: "normal-day",
+        nodeKind: "search-index",
+        minShare: 0.09,
+      },
     },
     {
       key: "feeds-the-index-from-the-store",

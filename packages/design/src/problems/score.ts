@@ -1,3 +1,4 @@
+import type { EvaluationResult } from "../evaluate/result";
 import type { DesignGraph } from "../graph";
 import { runLints } from "../lints";
 import {
@@ -113,6 +114,7 @@ export const drillRunner = (
 
     return share;
   };
+  const options = { keepsWrites: problem.track === "system-design" };
   let chaos: ChaosResult[] | null = null;
 
   const runner: DrillRunner = {
@@ -173,7 +175,7 @@ export const drillRunner = (
         if (found) {
           const started = performance.now();
 
-          outcomes.set(id, runDrill(found, graph));
+          outcomes.set(id, runDrill(found, graph, 0, options));
           durations.set(id, performance.now() - started);
         }
       }
@@ -196,7 +198,7 @@ export const drillRunner = (
         const started = performance.now();
 
         variation = varied(affordable(seeds, shareOf()), (seed) =>
-          runDrill(found, graph, seed),
+          runDrill(found, graph, seed, options),
         );
         durations.set(
           id,
@@ -216,6 +218,43 @@ export const drillRunner = (
 
 export const FLAKY_SHARE = 0.5;
 
+const labelOf = (node: { label: string; id: string }) => node.label || node.id;
+
+const HIT_RATIO_KINDS = new Set(["cache", "cdn"]);
+
+export const readShare = (
+  graph: DesignGraph,
+  result: EvaluationResult,
+  kind: string,
+): number => {
+  const shares = result.steps.map((step) => {
+    const asked = graph.nodes
+      .filter((node) => node.kind === "client")
+      .reduce((sum, node) => {
+        const client = step.clients[node.id];
+        const readRatio = (node.props as { readRatio?: number }).readRatio ?? 1;
+
+        return sum + (client?.emitted ?? 0) * readRatio;
+      }, 0);
+    const answered = graph.nodes
+      .filter((node) => node.kind === kind)
+      .reduce((sum, node) => {
+        const reads = step.nodes[node.id]?.reads ?? 0;
+        const hit = HIT_RATIO_KINDS.has(node.kind)
+          ? ((node.props as { hitRatio?: number }).hitRatio ?? 1)
+          : 1;
+
+        return sum + reads * hit;
+      }, 0);
+
+    return asked > 0 ? Math.min(1, answered / asked) : 0;
+  });
+
+  return shares.length === 0
+    ? 0
+    : shares.reduce((sum, value) => sum + value, 0) / shares.length;
+};
+
 const unsteady = (variation: Variation) =>
   `Passes as drawn, but fails ${variation.total - variation.passed} of ${variation.total} runs with traffic and capacity varied${variation.worst?.message ? `; in run ${variation.worstSeed}: ${variation.worst.message}` : "."}`;
 
@@ -224,6 +263,36 @@ export const judgeCheck = (
   context: Context,
 ): { passed: boolean; evidence: string; ratio?: number } => {
   switch (check.check) {
+    case "serves-reads": {
+      const outcome = context.drill(check.drillId);
+
+      if (!outcome?.result) {
+        return { passed: false, evidence: `No load drill ${check.drillId}.` };
+      }
+
+      const share = readShare(context.graph, outcome.result, check.nodeKind);
+      const shown = `${Math.round(share * 100)}%`;
+      const servers = context.graph.nodes.filter(
+        (node) => node.kind === check.nodeKind,
+      );
+
+      if (servers.length === 0) {
+        return {
+          passed: false,
+          evidence: `No ${check.nodeKind} answers any reads; the design has none.`,
+        };
+      }
+
+      return share >= check.minShare
+        ? {
+            passed: true,
+            evidence: `${servers.map(labelOf).join(", ")} answer${servers.length === 1 ? "s" : ""} ${shown} of the reads.`,
+          }
+        : {
+            passed: false,
+            evidence: `${servers.map(labelOf).join(", ")} answer${servers.length === 1 ? "s" : ""} ${shown} of the reads; the check needs ${Math.round(check.minShare * 100)}%.`,
+          };
+    }
     case "chaos-coverage": {
       const results = context.chaos();
       const statuses = results.map((item) =>
@@ -434,21 +503,3 @@ export const scoreSubmission = (
     }),
   };
 };
-
-export const runPublicDrills = (
-  problem: ProblemContent,
-  graph: DesignGraph,
-): DrillScore[] =>
-  problem.drills
-    .filter((item) => item.visibility === "public")
-    .map((item) => {
-      const outcome = runDrill(item, graph);
-
-      return {
-        id: item.id,
-        title: item.title,
-        visibility: item.visibility,
-        passed: outcome.passed,
-        failures: outcome.failures,
-      };
-    });

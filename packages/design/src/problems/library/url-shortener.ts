@@ -114,7 +114,12 @@ The *Users* client is already on the canvas. Build what it talks to.`,
       key: "caches-redirects",
       title: "Caches redirects",
       weight: 10,
-      check: { check: "has-node-kind", nodeKind: "cache" },
+      check: {
+        check: "serves-reads",
+        drillId: "normal-day",
+        nodeKind: "cache",
+        minShare: 0.8,
+      },
     },
     {
       key: "survives-unseen-faults",

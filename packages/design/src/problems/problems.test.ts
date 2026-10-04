@@ -13,7 +13,7 @@ import {
 } from "./publish";
 import { drillScenario, selectNodes } from "./resolve";
 import { type LoadDrill, ProblemContentSchema } from "./schema";
-import { runPublicDrills, scoreSubmission } from "./score";
+import { scoreSubmission } from "./score";
 
 const shortener = OFFICIAL_PROBLEMS.find(
   (problem) => problem.slug === "url-shortener",
@@ -110,15 +110,65 @@ describe("scoring the URL shortener", () => {
 
     expect(normal?.evidence).toContain("Users");
   });
+});
 
-  test("runs only the public drills for a Run", () => {
-    const drills = runPublicDrills(shortener, shortener.reference.graph);
+describe("checks that look at behaviour, not presence", () => {
+  const parts = () => [
+    users(),
+    node("api", "service", "API", {
+      replicas: 10,
+      capacityRpsPerReplica: 2_500,
+    }),
+    node("cache", "cache", "Cache", {
+      hitRatio: 0.9,
+      readCapacityRps: 100_000,
+    }),
+    node("db", "sql-database", "Links", {
+      readCapacityRps: 20_000,
+      writeCapacityRps: 4_000,
+    }),
+  ];
+  const caches = (design: DesignGraph) =>
+    scoreSubmission(shortener, design).items.find(
+      (item) => item.key === "caches-redirects",
+    )!;
 
-    expect(drills.map((drill) => drill.id)).toEqual([
-      "normal-day",
-      "viral-link",
+  test("a cache on the canvas that no read goes through does not cache redirects", () => {
+    const beside = graph(parts(), [
+      edge("users", "api", "sync-call"),
+      edge("api", "db", "read"),
+      edge("api", "db", "write"),
+      edge("api", "cache", "write"),
     ]);
-    expect(drills.every((drill) => drill.passed)).toBe(true);
+    const through = graph(parts(), [
+      edge("users", "api", "sync-call"),
+      edge("api", "cache", "read"),
+      edge("cache", "db", "read"),
+      edge("api", "db", "write"),
+    ]);
+
+    expect(caches(beside)).toMatchObject({ passed: false });
+    expect(caches(beside).evidence).toContain("answers 0% of the reads");
+    expect(caches(through)).toMatchObject({ passed: true });
+    expect(caches(through).evidence).toContain(
+      "Cache answers 90% of the reads",
+    );
+  });
+
+  test("writes that reach no store fail a normal day", () => {
+    const forgetful = graph(parts(), [
+      edge("users", "api", "sync-call"),
+      edge("api", "cache", "read"),
+      edge("cache", "db", "read"),
+    ]);
+    const day = scoreSubmission(shortener, forgetful).drills.find(
+      (item) => item.id === "normal-day",
+    )!;
+
+    expect(day.passed).toBe(false);
+    expect(day.failures).toContain(
+      "The clients write 500/s, but only 0/s reaches a database, queue, stream or object store.",
+    );
   });
 });
 

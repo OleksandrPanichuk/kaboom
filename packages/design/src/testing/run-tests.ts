@@ -67,6 +67,11 @@ const suiteOfCheck = (check: CheckRef, problem: ProblemContent): TestSuite => {
       return "constraints";
     case "chaos-coverage":
       return "chaos";
+    case "serves-reads": {
+      const drill = problem.drills.find((item) => item.id === check.drillId);
+
+      return drill ? suiteOfDrill(drill) : "functional";
+    }
     case "no-finding-under-drill": {
       const drill = problem.drills.find((item) => item.id === check.drillId);
 
