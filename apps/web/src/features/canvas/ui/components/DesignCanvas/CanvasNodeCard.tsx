@@ -12,6 +12,8 @@ import {
 } from "@/features/canvas/constants";
 import type { CanvasNode } from "@/features/canvas/typedefs";
 
+import { TechnologyMark } from "./TechnologyMark";
+
 const HANDLE =
   "!size-3 !rounded-full !border-2 !border-white !bg-indigo-500 shadow-sm transition-opacity";
 
@@ -27,6 +29,9 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
   const definition = isNodeKind(node.kind) ? catalogue[node.kind] : null;
   const Icon = NODE_KIND_ICONS[definition?.icon ?? ""] ?? FALLBACK_NODE_ICON;
   const kindLabel = definition?.label ?? node.kind;
+  const product = node.technology
+    ? findTechnology(node.technology.id, node.kind)
+    : undefined;
   const { hits } = data;
   const warns = hits.some((hit) => hit.severity === "warning");
   const BadgeIcon = warns ? TriangleAlert : Info;
@@ -53,17 +58,21 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
         </span>
       ) : null}
       <div className="flex items-center gap-2.5 p-2.5">
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-indigo-200/60 bg-indigo-50 text-indigo-700">
-          <Icon aria-hidden="true" className="size-4" />
-        </span>
+        {product ? (
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-black/10 bg-white">
+            <TechnologyMark technology={product} className="size-5" />
+          </span>
+        ) : (
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-indigo-200/60 bg-indigo-50 text-indigo-700">
+            <Icon aria-hidden="true" className="size-4" />
+          </span>
+        )}
         <div className="flex min-w-0 flex-col">
           <span className="truncate text-sm font-semibold tracking-[-0.01em]">
             {node.label || kindLabel}
           </span>
           <span className="truncate text-xs text-muted-foreground">
-            {(node.technology &&
-              findTechnology(node.technology.id, node.kind)?.label) ??
-              kindLabel}
+            {product?.label ?? kindLabel}
           </span>
         </div>
       </div>

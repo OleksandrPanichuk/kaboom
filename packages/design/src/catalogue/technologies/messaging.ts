@@ -13,6 +13,7 @@ export const rabbitmq = defineTechnology({
   provider: "self-hosted",
   label: "RabbitMQ",
   icon: "rabbitmq",
+  monogram: "RMQ",
   summary:
     "A broker you run yourself; a quorum queue lives on one leader node, so it grows by splitting work over queues.",
   props: z.strictObject({
@@ -34,7 +35,7 @@ export const amazonSqs = defineTechnology({
   kind: "queue",
   provider: "aws",
   label: "Amazon SQS",
-  icon: "amazonsqs",
+  monogram: "SQS",
   summary:
     "A managed queue. Standard queues scale almost without limit but may deliver twice and out of order; FIFO queues keep order at a few thousand messages a second.",
   props: z.strictObject({
@@ -64,6 +65,7 @@ export const bullmq = defineTechnology({
   provider: "self-hosted",
   label: "BullMQ",
   icon: "redis",
+  monogram: "BMQ",
   summary:
     "A job queue on Redis. One Redis thread carries every queue, so it is simple and fast up to a point, with no partitions.",
   props: z.strictObject({
@@ -85,7 +87,7 @@ export const azureServiceBus = defineTechnology({
   kind: "queue",
   provider: "azure",
   label: "Azure Service Bus",
-  icon: "microsoftazure",
+  monogram: "ASB",
   summary:
     "A managed broker. Standard is shared and throttled; Premium reserves messaging units that scale it.",
   props: z.strictObject({
@@ -110,6 +112,7 @@ export const kafka = defineTechnology({
   provider: "self-hosted",
   label: "Apache Kafka",
   icon: "apachekafka",
+  monogram: "K",
   summary:
     "An event log you run yourself. Throughput grows with brokers, and parallelism with partitions.",
   props: z.strictObject({
@@ -144,7 +147,7 @@ export const amazonMsk = defineTechnology({
   kind: "stream",
   provider: "aws",
   label: "Amazon MSK",
-  icon: "amazonwebservices",
+  monogram: "MSK",
   summary: "Managed Kafka: the same log, with AWS running the brokers.",
   props: z.strictObject({
     brokerType: choice(
@@ -187,7 +190,7 @@ export const amazonKinesis = defineTechnology({
   kind: "stream",
   provider: "aws",
   label: "Amazon Kinesis",
-  icon: "amazonwebservices",
+  monogram: "KDS",
   summary:
     "A managed stream sized in shards: each takes 1,000 records a second, and a shard is a partition.",
   props: z.strictObject({

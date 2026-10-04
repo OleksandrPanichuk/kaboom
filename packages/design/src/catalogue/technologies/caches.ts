@@ -18,6 +18,7 @@ export const redis = defineTechnology({
   provider: "self-hosted",
   label: "Redis",
   icon: "redis",
+  monogram: "R",
   summary:
     "An in-memory store on one thread per shard; a cluster spreads keys over shards.",
   props: z.strictObject({
@@ -42,7 +43,7 @@ export const amazonElasticache = defineTechnology({
   kind: "cache",
   provider: "aws",
   label: "Amazon ElastiCache for Redis",
-  icon: "amazonelasticache",
+  monogram: "EC",
   summary: "Managed Redis, sized by node type and shards.",
   props: z.strictObject({
     nodeType: choice(
@@ -71,7 +72,7 @@ export const memcached = defineTechnology({
   kind: "cache",
   provider: "self-hosted",
   label: "Memcached",
-  icon: "memcached",
+  monogram: "MC",
   summary:
     "A plain multithreaded cache: no persistence, no replication, and it scales by adding nodes.",
   props: z.strictObject({

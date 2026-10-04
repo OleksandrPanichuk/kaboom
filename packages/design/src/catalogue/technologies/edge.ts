@@ -8,7 +8,7 @@ export const amazonS3 = defineTechnology({
   kind: "object-storage",
   provider: "aws",
   label: "Amazon S3",
-  icon: "amazons3",
+  monogram: "S3",
   summary:
     "Object storage that serves 5,500 reads and 3,500 writes a second per key prefix, so spreading keys over prefixes scales it.",
   props: z.strictObject({
@@ -29,6 +29,7 @@ export const googleCloudStorage = defineTechnology({
   provider: "gcp",
   label: "Cloud Storage",
   icon: "googlecloudstorage",
+  monogram: "GCS",
   summary:
     "Object storage that ramps up per bucket as traffic grows; start near 5,000 reads and 1,000 writes a second.",
   props: z.strictObject({
@@ -48,7 +49,7 @@ export const amazonCloudfront = defineTechnology({
   kind: "cdn",
   provider: "aws",
   label: "Amazon CloudFront",
-  icon: "amazoncloudfront",
+  monogram: "CF",
   summary:
     "A CDN with edge locations worldwide; a request at an edge answers in milliseconds.",
   props: z.strictObject({
@@ -68,7 +69,7 @@ export const awsAlb = defineTechnology({
   kind: "load-balancer",
   provider: "aws",
   label: "Application Load Balancer",
-  icon: "amazonwebservices",
+  monogram: "ALB",
   summary:
     "AWS's HTTP balancer: routes by path and host, and checks its targets' health.",
   props: z.strictObject({}),
@@ -85,7 +86,7 @@ export const awsNlb = defineTechnology({
   kind: "load-balancer",
   provider: "aws",
   label: "Network Load Balancer",
-  icon: "amazonwebservices",
+  monogram: "NLB",
   summary:
     "AWS's TCP balancer: millions of connections, in under a millisecond, without reading HTTP.",
   props: z.strictObject({}),
@@ -103,6 +104,7 @@ export const nginx = defineTechnology({
   provider: "self-hosted",
   label: "NGINX",
   icon: "nginx",
+  monogram: "NGX",
   summary: "A reverse proxy you run yourself; its capacity is its servers'.",
   props: z.strictObject({
     servers: count(2, {

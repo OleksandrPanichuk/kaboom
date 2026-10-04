@@ -22,7 +22,8 @@ export interface TechnologyDefinition<
   kind: Kind;
   provider: Provider;
   label: string;
-  icon: string;
+  icon?: string;
+  monogram: string;
   summary: string;
   props: Props;
   derive: (props: z.output<Props>) => Partial<NodeProps<Kind>>;
