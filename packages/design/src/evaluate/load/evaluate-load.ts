@@ -483,11 +483,7 @@ const runStep = (
     const admittedFraction =
       up && limit !== null && offered > limit ? limit / offered : 1;
     const admitted = scaleBy(load, admittedFraction);
-    const rho = up
-      ? utilisation(admitted, capacity)
-      : offered > 0
-        ? Number.POSITIVE_INFINITY
-        : 0;
+    const rho = up ? utilisation(admitted, capacity) : 0;
     const servedFraction = !up ? 0 : rho <= SATURATION ? 1 : SATURATION / rho;
     const served = scaleBy(admitted, servedFraction);
     const unanswered =

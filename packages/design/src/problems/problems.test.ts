@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { createNode, type DesignGraph, emptyGraph } from "../graph";
+import { runDrill } from "./drills";
 import { hintPenalty, penalised, revealedHints } from "./hints";
 import { OFFICIAL_PROBLEMS } from "./library";
 import { edge, graph, node, region, within } from "./library/build";
@@ -27,6 +28,30 @@ describe("official problems", () => {
     (_, problem) => {
       expect(checkPublishable(problem)).toMatchObject({ ok: true });
       expect(scoreSubmission(problem, problem.reference.graph).score).toBe(100);
+    },
+  );
+
+  test.each(OFFICIAL_PROBLEMS.map((problem) => [problem.slug, problem]))(
+    "%s: its reference solution passes every drill, hidden ones included",
+    (_, problem) => {
+      const failed = problem.drills
+        .map((drill) => runDrill(drill, problem.reference.graph))
+        .filter((outcome) => !outcome.passed);
+
+      expect(failed).toEqual([]);
+    },
+  );
+
+  test.each(OFFICIAL_PROBLEMS.map((problem) => [problem.slug, problem]))(
+    "%s: the reference's nodes with no edges between them pass no drill",
+    (_, problem) => {
+      const hollow = { ...problem.reference.graph, edges: [] };
+      const passed = problem.drills
+        .map((drill) => runDrill(drill, hollow))
+        .filter((outcome) => outcome.passed)
+        .map((outcome) => outcome.drillId);
+
+      expect(passed).toEqual([]);
     },
   );
 

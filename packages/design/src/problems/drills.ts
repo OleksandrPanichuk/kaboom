@@ -52,8 +52,16 @@ const runNetworkDrill = (
   const result = evaluateNetwork(graph);
   const failures: string[] = [];
 
-  if (!graph.nodes.some((node) => node.kind === "client")) {
+  const clients = new Set(
+    graph.nodes.filter((node) => node.kind === "client").map(({ id }) => id),
+  );
+
+  if (clients.size === 0) {
     failures.push("The design has no client, so nothing connects through it.");
+  } else if (!graph.edges.some((edge) => clients.has(edge.from))) {
+    failures.push(
+      "Nothing is connected to the clients, so no request reaches the design.",
+    );
   }
 
   for (const kind of drill.expect.forbid) {

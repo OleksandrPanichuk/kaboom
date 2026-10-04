@@ -171,18 +171,18 @@ A step runs, in order:
 A fault is an event with `at` and an optional `until`, in seconds, applied at
 onset and undone at its end.
 
-| Fault         | Effect                                                                                                                                                                                                                                                                            |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `node-down`   | the node is down. A SQL primary with `failover` `automatic` recovers 30 s later, `manual` 300 s later, if it has at least one replica outside every region that is down; one replica is then spent on the promotion. With `none`, or no such replica, it stays down until `until` |
-| `region-down` | every node in the group `groupId`, or in a group inside it, is down, as if each had its own `node-down`; a SQL primary among them fails over the same way                                                                                                                         |
-| `capacity`    | the node's capacity is multiplied by `factor`                                                                                                                                                                                                                                     |
-| `latency`     | `addMs` is added to the node's base latency                                                                                                                                                                                                                                       |
-| `cache-flush` | the cache's hit ratio drops to 0 and recovers linearly over 60 s                                                                                                                                                                                                                  |
-| `rollout`     | a deployment starts replacing its pods with the version `release`, from the first step at or after `at`; see _Rollouts_. It has no `until`. Rollouts follow one another: a later one starts once the one under way has finished, stalled or rolled back                                                                                          |
-| `error-rate`  | the node fails `rate` of the requests it serves, on top of anything else                                                                                                                                                                                                       |
-| `group-down`  | every node in the group `groupId`, of any kind, or in a group inside it, is down, as `region-down` is for a region                                                                                                                                                            |
-| `partition`   | every edge with exactly one end inside the group `groupId` is cut; see _Partitions and retries_                                                                                                                                                                                 |
-| `secret-rotation` | the secret `nodeId` gets a new value at `at`; see _Secrets and migrations_                                                                                                                                                                                                |
+| Fault             | Effect                                                                                                                                                                                                                                                                            |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node-down`       | the node is down. A SQL primary with `failover` `automatic` recovers 30 s later, `manual` 300 s later, if it has at least one replica outside every region that is down; one replica is then spent on the promotion. With `none`, or no such replica, it stays down until `until` |
+| `region-down`     | every node in the group `groupId`, or in a group inside it, is down, as if each had its own `node-down`; a SQL primary among them fails over the same way                                                                                                                         |
+| `capacity`        | the node's capacity is multiplied by `factor`                                                                                                                                                                                                                                     |
+| `latency`         | `addMs` is added to the node's base latency                                                                                                                                                                                                                                       |
+| `cache-flush`     | the cache's hit ratio drops to 0 and recovers linearly over 60 s                                                                                                                                                                                                                  |
+| `rollout`         | a deployment starts replacing its pods with the version `release`, from the first step at or after `at`; see _Rollouts_. It has no `until`. Rollouts follow one another: a later one starts once the one under way has finished, stalled or rolled back                           |
+| `error-rate`      | the node fails `rate` of the requests it serves, on top of anything else                                                                                                                                                                                                          |
+| `group-down`      | every node in the group `groupId`, of any kind, or in a group inside it, is down, as `region-down` is for a region                                                                                                                                                                |
+| `partition`       | every edge with exactly one end inside the group `groupId` is cut; see _Partitions and retries_                                                                                                                                                                                   |
+| `secret-rotation` | the secret `nodeId` gets a new value at `at`; see _Secrets and migrations_                                                                                                                                                                                                        |
 
 **Autoscaling.** A service or worker with autoscaling enabled that stays above
 its `targetUtilisation` for two consecutive steps gains `ceil(replicas × 0.5)`
@@ -302,12 +302,12 @@ it; a node nothing scrapes is invisible to it, which the `unscraped-alert`
 lint reports. Per watched node, the alert's signal is breached on a step
 when:
 
-| Signal             | Breached when                                    |
-| ------------------ | ------------------------------------------------ |
-| `error-rate`       | the node's error rate is above 1 %               |
-| `latency`          | its p99 is above the scenario's SLO              |
-| `saturation`       | its utilisation is at least 90 %                 |
-| `rollout-progress` | its rollout is stalled                           |
+| Signal             | Breached when                                                      |
+| ------------------ | ------------------------------------------------------------------ |
+| `error-rate`       | the node's error rate is above 1 %                                 |
+| `latency`          | its p99 is above the scenario's SLO                                |
+| `saturation`       | its utilisation is at least 90 %; a node that is down reports none |
+| `rollout-progress` | its rollout is stalled                                             |
 
 An alert fires once a breach has lasted `forSeconds` without a break, plus
 the scrape interval of the fastest monitoring node that scrapes the node.
