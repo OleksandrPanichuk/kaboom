@@ -228,6 +228,8 @@ export const drillRunner = (
 
 export const FLAKY_SHARE = 0.5;
 
+const SIDE_EDGES = new Set(["lock", "replication"]);
+
 const takesPart = (
   graph: DesignGraph,
   id: string,
@@ -243,12 +245,24 @@ const takesPart = (
     return edges.length > 0 || (placed !== undefined && placed !== null);
   }
 
-  return result.steps.some((step) =>
-    edges.some((edge) => {
-      const flow = step.edges[edge.id];
+  const carries = (nodeId: string) =>
+    result.steps.some((step) =>
+      graph.edges.some((edge) => {
+        if (edge.from !== nodeId && edge.to !== nodeId) return false;
 
-      return (flow?.reads ?? 0) + (flow?.writes ?? 0) > 0;
-    }),
+        const flow = step.edges[edge.id];
+
+        return (flow?.reads ?? 0) + (flow?.writes ?? 0) > 0;
+      }),
+    );
+
+  return (
+    carries(id) ||
+    edges.some(
+      (edge) =>
+        SIDE_EDGES.has(edge.kind) &&
+        carries(edge.from === id ? edge.to : edge.from),
+    )
   );
 };
 

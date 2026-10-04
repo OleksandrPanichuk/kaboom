@@ -1,3 +1,4 @@
+import { catalogue } from "../catalogue";
 import { type DesignGraph, emptyGraph } from "../graph";
 import { applyOps, type DesignOp } from "../ops";
 import { chaosBaseline, chaosSettings } from "../testing/chaos";
@@ -112,6 +113,19 @@ export const checkPublishable = (input: unknown): PublishCheck => {
     }
 
     const named = drillOf(item.check);
+
+    if (item.check.check === "has-node-kind" && named !== undefined) {
+      const drill = problem.drills.find((entry) => entry.id === named);
+
+      if (
+        !catalogue[item.check.nodeKind].carriesTraffic ||
+        (drill && drill.kind !== "load")
+      ) {
+        issues.push(
+          `Rubric item ${item.key} names a drill for ${item.check.nodeKind}, which only a load drill and a kind that carries traffic can use.`,
+        );
+      }
+    }
 
     if (named !== undefined && !drillIds.includes(named)) {
       issues.push(
