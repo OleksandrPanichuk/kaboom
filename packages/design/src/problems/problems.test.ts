@@ -553,16 +553,47 @@ describe("scoring the public pricing API", () => {
   )!.reference.graph;
 
   test("without throttling a flood makes every partner wait for the timeout", () => {
-    const { score, passed } = passedItems(
-      "rate-limited-api",
-      withProps(reference, "api-gateway", {
-        throttle: { enabled: false, limitRps: 5_000 },
-      }),
-    );
+    const unlimited: DesignGraph = {
+      ...reference,
+      nodes: reference.nodes.filter((item) => item.id !== "limiter"),
+      edges: [
+        ...reference.edges.filter(
+          (item) => item.from !== "limiter" && item.to !== "limiter",
+        ),
+        edge("lb", "api", "sync-call", { retries: 1 }),
+      ],
+    };
+    const { passed } = passedItems("rate-limited-api", unlimited);
 
     expect(passed["stays-fast-in-a-flood"]).toBe(false);
     expect(passed.throttles).toBe(false);
-    expect(score).toBe(45);
+  });
+
+  test("a managed gateway throttles as well, and bills the flood to the budget", () => {
+    const gated: DesignGraph = {
+      ...reference,
+      nodes: [
+        ...reference.nodes.filter(
+          (item) => item.id !== "limiter" && item.id !== "lb",
+        ),
+        node("gateway", "api-gateway", "Gateway", {
+          throttle: { enabled: true, limitRps: 5_000 },
+        }),
+      ],
+      edges: [
+        ...reference.edges.filter(
+          (item) =>
+            !["limiter", "lb"].includes(item.from) &&
+            !["limiter", "lb"].includes(item.to),
+        ),
+        edge("partners", "gateway", "sync-call"),
+        edge("gateway", "api", "sync-call", { retries: 1 }),
+      ],
+    };
+    const { passed } = passedItems("rate-limited-api", gated);
+
+    expect(passed["stays-fast-in-a-flood"]).toBe(true);
+    expect(passed["fits-the-budget"]).toBe(false);
   });
 });
 

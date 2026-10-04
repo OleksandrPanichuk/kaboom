@@ -128,7 +128,7 @@ The apps and both providers are already on the canvas. Build what sits between t
     {
       key: "ignores-slow-providers",
       title: "Stays fast when the providers are slow",
-      weight: 15,
+      weight: 10,
       check: { check: "drill-passes", drillId: "providers-slow" },
     },
     {
@@ -160,6 +160,16 @@ The apps and both providers are already on the canvas. Build what sits between t
       title: "Survives faults drawn from the design itself",
       weight: 15,
       check: { check: "chaos-coverage", min: 1 },
+    },
+    {
+      key: "fits-the-budget",
+      title: "Runs for under $5,000 a month",
+      weight: 5,
+      check: {
+        check: "within-budget",
+        drillId: "normal-day",
+        monthlyUsd: 5_000,
+      },
     },
   ],
   hints: [
