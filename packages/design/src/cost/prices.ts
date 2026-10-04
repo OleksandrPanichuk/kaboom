@@ -5,6 +5,8 @@ export const PRICES = {
   replica: 56,
   pod: 28,
   sqlInstance: 165,
+  sqlInstanceReadRps: 5_000,
+  sqlInstanceWriteRps: 1_000,
   sqlStoragePerGb: 0.115,
   nosqlPartition: 25,
   nosqlStoragePerGb: 0.25,

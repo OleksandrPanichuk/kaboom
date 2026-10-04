@@ -85,9 +85,12 @@ describe("starting an interview", () => {
         .map((problem) => problem.slug)
         .sort(),
     ).toEqual([
+      "card-payments",
+      "fare-search",
       "latency-regression",
       "monorepo-pipeline",
       "news-feed",
+      "product-catalogue",
       "rate-limited-api",
       "schema-migration",
       "secret-rotation",

@@ -146,7 +146,7 @@ The *People* client is already on the canvas. Build what it talks to.`,
     {
       key: "chats-without-push",
       title: "Keeps chatting while the push provider is down",
-      weight: 10,
+      weight: 5,
       check: { check: "drill-passes", drillId: "push-down" },
     },
     {
@@ -172,6 +172,16 @@ The *People* client is already on the canvas. Build what it talks to.`,
       title: "Survives faults drawn from the design itself",
       weight: 15,
       check: { check: "chaos-coverage", min: 1 },
+    },
+    {
+      key: "fits-the-budget",
+      title: "Runs for under $7,000 a month",
+      weight: 5,
+      check: {
+        check: "within-budget",
+        drillId: "normal-day",
+        monthlyUsd: 7_000,
+      },
     },
   ],
   hints: [

@@ -102,7 +102,7 @@ The *Partners* client is already on the canvas. Build what it talks to.`,
     {
       key: "survives-a-long-flood",
       title: "Holds up when the flood does not stop",
-      weight: 10,
+      weight: 5,
       check: { check: "drill-passes", drillId: "long-flood" },
     },
     {
@@ -128,6 +128,16 @@ The *Partners* client is already on the canvas. Build what it talks to.`,
       title: "Survives faults drawn from the design itself",
       weight: 15,
       check: { check: "chaos-coverage", min: 1 },
+    },
+    {
+      key: "fits-the-budget",
+      title: "Runs for under $3,000 a month",
+      weight: 5,
+      check: {
+        check: "within-budget",
+        drillId: "normal-day",
+        monthlyUsd: 3_000,
+      },
     },
   ],
   interview: {
@@ -286,13 +296,12 @@ The *Partners* client is already on the canvas. Build what it talks to.`,
   ],
   reference: {
     notes:
-      "A gateway throttles at 5,000 requests a second, above the normal 4,000 and below what the pricing database can take (4,500 lookups and 500 bookings at the limit, against 6,000 and 1,500). Behind it, a service with room to lose a quarter of its replicas, and the database with a replica and automatic failover. During a flood the gateway turns most of it away at once, so the requests it admits never queue.",
+      "A balancer in front of a rate limiter that lets 5,000 requests a second through, above the normal 4,000 and below what the pricing database can take (4,500 lookups and 500 bookings at the limit, against 6,000 and 1,500). Behind it, a service with room to lose a quarter of its replicas, and the database with a replica and automatic failover. During a flood the limiter turns most of it away at once, so the requests it admits never queue. A managed API gateway would throttle as well, but it bills every request, flood included: at this traffic it alone costs more than the budget.",
     graph: graph(
       [
         partners(),
-        node("gateway", "api-gateway", "Gateway", {
-          throttle: { enabled: true, limitRps: 5_000 },
-        }),
+        node("lb", "load-balancer", "Load balancer"),
+        node("limiter", "rate-limiter", "Rate limiter", { limitRps: 5_000 }),
         node("api", "service", "Pricing API", {
           replicas: 8,
           capacityRpsPerReplica: 1_000,
@@ -305,8 +314,9 @@ The *Partners* client is already on the canvas. Build what it talks to.`,
         node("replica", "sql-database", "Prices replica"),
       ],
       [
-        edge("partners", "gateway", "sync-call"),
-        edge("gateway", "api", "sync-call", { retries: 1 }),
+        edge("partners", "lb", "sync-call"),
+        edge("lb", "limiter", "sync-call"),
+        edge("limiter", "api", "sync-call", { retries: 1 }),
         edge("api", "db", "read", { retries: 1 }),
         edge("api", "db", "write", { retries: 1 }),
         edge("db", "replica", "replication"),

@@ -69,12 +69,18 @@ const kindCost = (
         );
       const copies = standby ? 2 : 1;
       const instances = node.props.shards * copies;
+      const size = Math.max(
+        1,
+        node.props.readCapacityRps / PRICES.sqlInstanceReadRps,
+        node.props.writeCapacityRps / PRICES.sqlInstanceWriteRps,
+      );
+      const sized = size > 1 ? `, each ${round(size)}× the base size,` : "";
 
       return {
         monthlyUsd:
-          instances * PRICES.sqlInstance +
+          instances * size * PRICES.sqlInstance +
           node.props.storageGb * node.props.shards * PRICES.sqlStoragePerGb,
-        basis: `${instances} instance${instances === 1 ? "" : "s"} and ${node.props.storageGb} GB`,
+        basis: `${instances} instance${instances === 1 ? "" : "s"}${sized} and ${node.props.storageGb} GB`,
       };
     }
     case "nosql-database":

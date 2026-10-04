@@ -615,7 +615,8 @@ track.
 
 `costOf(graph, loads)` (`packages/design/src/cost`) estimates what a
 design costs a month at us-east-1 on-demand list prices: a kind by its
-replicas, instances, partitions or shards, a per-request service (gateway,
+replicas, instances, partitions or shards, a SQL instance by the capacity
+it is sized for (an instance class twice as large costs twice as much), a per-request service (gateway,
 CDN, queue, object store) by the traffic it carries, and a product from the
 technology catalogue by its own `monthlyUsd`. The prices sit in
 `cost/prices.ts`, one place to change. The editor shows the total in the
