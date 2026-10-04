@@ -1,5 +1,6 @@
 import { type DesignGraph, emptyGraph } from "../graph";
 import { applyOps, type DesignOp } from "../ops";
+import { chaosBaseline, chaosSettings } from "../testing/chaos";
 import {
   INTERVIEW_PHASES,
   type ProblemContent,
@@ -100,6 +101,15 @@ export const checkPublishable = (input: unknown): PublishCheck => {
   }
 
   for (const item of problem.rubric) {
+    if (
+      item.check.check === "chaos-coverage" &&
+      (!chaosBaseline(problem) || !chaosSettings(problem).enabled)
+    ) {
+      issues.push(
+        `Rubric item ${item.key} scores chaos, which needs a public load drill without faults to set the traffic.`,
+      );
+    }
+
     if ("drillId" in item.check && !drillIds.includes(item.check.drillId)) {
       issues.push(
         `Rubric item ${item.key} names a drill, ${item.check.drillId}, the problem does not have.`,

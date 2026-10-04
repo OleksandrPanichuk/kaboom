@@ -14,6 +14,7 @@ export interface FaultState {
   capacityFactor: number;
   addLatencyMs: number;
   errorRate: number;
+  lastingErrorRate: number;
   hitRatio: number | null;
 }
 
@@ -94,6 +95,21 @@ export const faultStateAt = (
         1,
       );
 
+  const lastingErrorRate =
+    1 -
+    mine
+      .filter(
+        (fault) =>
+          fault.kind === "error-rate" &&
+          fault.lasting === true &&
+          active(fault, t),
+      )
+      .reduce(
+        (survive, fault) =>
+          survive * (1 - (fault.kind === "error-rate" ? fault.rate : 0)),
+        1,
+      );
+
   let hitRatio: number | null = null;
 
   if (node.kind === "cache" || node.kind === "cdn") {
@@ -115,6 +131,7 @@ export const faultStateAt = (
     capacityFactor,
     addLatencyMs,
     errorRate,
+    lastingErrorRate,
     hitRatio,
   };
 };

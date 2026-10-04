@@ -89,7 +89,10 @@ export function ScoreBreakdown({
               <p className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
                 <span className="min-w-0 font-medium">{item.title}</span>
                 <span className="shrink-0 text-muted-foreground tabular-nums">
-                  {item.passed ? item.weight : 0} / {item.weight}
+                  {Math.round(
+                    item.weight * (item.ratio ?? (item.passed ? 1 : 0)),
+                  )}{" "}
+                  / {item.weight}
                 </span>
               </p>
               <p className="text-sm leading-5 text-muted-foreground text-pretty">

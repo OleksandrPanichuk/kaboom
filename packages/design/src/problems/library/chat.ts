@@ -31,12 +31,12 @@ const regionalSide = (id: "eu" | "us", label: string) => [
 
 const regionalEdges = (id: "eu" | "us") => [
   edge("dns", `lb-${id}`, "sync-call", { share: 0.5 }),
-  edge(`lb-${id}`, `api-${id}`, "sync-call"),
-  edge(`api-${id}`, "db", "read"),
-  edge(`api-${id}`, "db", "write"),
-  edge(`api-${id}`, `events-${id}`, "write"),
+  edge(`lb-${id}`, `api-${id}`, "sync-call", { retries: 1 }),
+  edge(`api-${id}`, "db", "read", { retries: 1 }),
+  edge(`api-${id}`, "db", "write", { retries: 1 }),
+  edge(`api-${id}`, `events-${id}`, "write", { retries: 1 }),
   edge(`events-${id}`, `delivery-${id}`, "async-message"),
-  edge(`delivery-${id}`, "push", "sync-call"),
+  edge(`delivery-${id}`, "push", "sync-call", { retries: 1 }),
 ];
 
 export const chat: ProblemContentInput = {
@@ -128,7 +128,7 @@ The *People* client is already on the canvas. Build what it talks to.`,
     {
       key: "handles-a-normal-day",
       title: "Serves a normal day within the SLO",
-      weight: 25,
+      weight: 20,
       check: { check: "drill-passes", drillId: "normal-day" },
     },
     {
@@ -140,7 +140,7 @@ The *People* client is already on the canvas. Build what it talks to.`,
     {
       key: "absorbs-a-busy-hour",
       title: "Absorbs twice the usual traffic",
-      weight: 15,
+      weight: 10,
       check: { check: "drill-passes", drillId: "busy-hour" },
     },
     {
@@ -164,8 +164,14 @@ The *People* client is already on the canvas. Build what it talks to.`,
     {
       key: "no-single-point-of-failure",
       title: "Has no single point of failure",
-      weight: 10,
+      weight: 5,
       check: { check: "no-lint", lint: "spof-critical-path" },
+    },
+    {
+      key: "survives-unseen-faults",
+      title: "Survives faults drawn from the design itself",
+      weight: 15,
+      check: { check: "chaos-coverage", min: 1 },
     },
   ],
   hints: [

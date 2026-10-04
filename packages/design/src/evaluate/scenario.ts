@@ -52,6 +52,7 @@ export const FaultSchema = z.discriminatedUnion("kind", [
     nodeId: IdSchema,
     ...window,
     rate: z.number().min(0).max(1),
+    lasting: z.boolean().optional(),
   }),
   z.strictObject({
     kind: z.literal("group-down"),

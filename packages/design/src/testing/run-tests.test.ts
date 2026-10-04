@@ -22,15 +22,43 @@ const thin = graph(
 );
 
 describe("runTests", () => {
-  test("passes every test of a reference solution, hidden ones included", () => {
+  test("passes every test of a reference solution that the rubric scores", () => {
     for (const problem of OFFICIAL_PROBLEMS) {
-      const report = runTests(problem, problem.reference.graph, {
+      const scoresChaos = problem.rubric.some(
+        (item) => item.check.check === "chaos-coverage",
+      );
+      const failed = runTests(problem, problem.reference.graph, {
         include: "all",
-      });
+      })
+        .tests.filter((item) => scoresChaos || item.suite !== "chaos")
+        .filter((item) => item.status !== "passed")
+        .map((item) => `${problem.slug}: ${item.title}`);
 
-      expect(report.summary.failed).toBe(0);
-      expect(report.summary.passed).toBe(report.tests.length);
+      expect(failed).toEqual([]);
     }
+  });
+
+  test("skips the faults while the design fails a normal day", () => {
+    const report = runTests(shortener, thin, { include: "public" });
+    const chaos = report.tests.filter((item) => item.id.startsWith("chaos:"));
+
+    expect(chaos.length).toBeGreaterThan(0);
+    expect(chaos.every((item) => item.status === "skipped")).toBe(true);
+    expect(chaos[0]?.description).toContain("A normal day");
+    expect(report.summary.skipped).toBe(chaos.length);
+  });
+
+  test("draws faults from the design, in a suite of their own", () => {
+    const report = runTests(shortener, shortener.reference.graph, {
+      include: "public",
+    });
+    const chaos = report.tests.filter((item) => item.id.startsWith("chaos:"));
+
+    expect(chaos.map((item) => item.id)).toContain("chaos:instance:api");
+    expect(chaos.every((item) => item.replay !== null)).toBe(true);
+    expect(chaos.find((item) => item.id === "chaos:instance:api")?.title).toBe(
+      "Shortener API loses one of its 20 replicas",
+    );
   });
 
   test("runs only what a solver may see on a run", () => {

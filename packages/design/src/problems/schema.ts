@@ -175,6 +175,10 @@ export const CheckRefSchema = z.discriminatedUnion("check", [
     check: z.literal("no-lint"),
     lint: z.enum(LINT_IDS as [string, ...string[]]),
   }),
+  z.strictObject({
+    check: z.literal("chaos-coverage"),
+    min: z.number().gt(0).max(1).default(1),
+  }),
 ]);
 export type CheckRef = z.output<typeof CheckRefSchema>;
 
@@ -245,6 +249,25 @@ export const InterviewContentSchema = z.strictObject({
 });
 export type InterviewContent = z.output<typeof InterviewContentSchema>;
 
+export const ChaosSettingsSchema = z
+  .strictObject({
+    enabled: z.boolean().default(true),
+    faultAt: Seconds.default(60),
+    faultSeconds: z.number().int().min(10).max(1_800).default(120),
+    graceSeconds: z.number().int().min(0).max(600).default(45),
+    recoverySeconds: z.number().int().min(0).max(1_800).default(60),
+    minAvailability: z.number().min(0).max(1).default(0.99),
+    errorRate: z.number().min(0).max(1).default(0.05),
+    maxCases: z.number().int().min(1).max(60).default(40),
+  })
+  .refine(
+    (settings) =>
+      settings.graceSeconds + 10 <= settings.faultSeconds &&
+      settings.recoverySeconds >= 10,
+    "Chaos needs at least 10 s of fault after its grace, and 10 s to recover in.",
+  );
+export type ChaosSettings = z.output<typeof ChaosSettingsSchema>;
+
 export const ProblemContentSchema = z.strictObject({
   slug: z
     .string()
@@ -262,6 +285,7 @@ export const ProblemContentSchema = z.strictObject({
   rubric: z.array(RubricItemSchema).min(1).max(40),
   hints: z.array(HintSchema).max(MAX_HINTS).default([]),
   interview: InterviewContentSchema.optional(),
+  chaos: ChaosSettingsSchema.optional(),
   reference: z.strictObject({
     graph: DesignGraphSchema,
     notes: z.string().max(20_000).default(""),

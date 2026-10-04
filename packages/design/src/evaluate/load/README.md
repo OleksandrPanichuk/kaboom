@@ -257,10 +257,16 @@ it promotes no replica, and a `monitoring` node still scrapes across it.
 In a drill, a selected node in no group is cut off on its own, as
 `node-down`.
 
-**Retries.** A synchronous edge's `retries` repeats a failed call. With the
-target failing a share `e` of calls, the caller sees `e^(retries + 1)` fail,
-and sends `1 + e + … + e^retries` times the load, where `e` is the
-target's error rate on the step before, so a storm builds over steps. Once
+**Retries.** A synchronous edge's `retries` repeats a failed call. A
+target's error rate `e` has a lasting part `p`, the calls that fail however
+often they are made: those of a node that is down, over a cut, or that need
+a dependency that is down. The rest, saturation and flaky faults, fail at
+random, at a rate `t = (e - p) / (1 - p)` among the calls that could
+succeed. The caller sees `p + (1 - p) t^(retries + 1)` fail, and sends
+`1 + Σ (p + (1 - p) t^k)` for `k` from 1 to `retries` times the load, from
+the target's rates on the step before, so a storm builds over steps. The
+lasting part travels upstream with the error it explains, so a retry
+further up does not rescue a request a dead dependency fails. Once
 more than 1 % of calls fail, p99 through the edge doubles, as one retry
 lands inside it, and p50 does too past half. A cut edge counts as failing
 every call. An edge whose load grows by half or more raises `retry-storm`.

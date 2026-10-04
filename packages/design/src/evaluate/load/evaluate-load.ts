@@ -143,6 +143,7 @@ interface Memory {
   backlog: Map<string, number>;
   growth: Map<string, number>;
   lastError: Map<string, number>;
+  lastPersistent: Map<string, number>;
   readShare: Map<string, number>;
   downSince: Map<string, number>;
   rollouts: Map<string, Rollout>;
@@ -230,6 +231,7 @@ export const evaluateLoad = (
     readShare: new Map(),
     downSince: new Map(),
     lastError: new Map(),
+    lastPersistent: new Map(),
     rollouts: new Map(),
     triggersStarted: new Map(),
   };
@@ -283,16 +285,22 @@ const runStep = (
   const isCut = (edge: DesignEdge) => cutSince.has(edge.id);
   const attempts = new Map<string, number>();
   const stranded = new Map<string, number>();
+  const persistent = new Map<string, number>();
   const attemptsOf = (edge: DesignEdge): number => {
     const retries = SYNCHRONOUS.has(edge.kind) ? edge.props.retries : 0;
 
     if (retries === 0) return 1;
 
-    const failing = isCut(edge) ? 1 : (memory.lastError.get(edge.to) ?? 0);
-    let sum = 0;
+    const { lasting, transient } = isCut(edge)
+      ? { lasting: 1, transient: 0 }
+      : split(
+          memory.lastError.get(edge.to) ?? 0,
+          memory.lastPersistent.get(edge.to) ?? 0,
+        );
+    let sum = 1;
 
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      sum += failing ** attempt;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      sum += lasting + (1 - lasting) * transient ** attempt;
     }
 
     return sum;
@@ -717,7 +725,9 @@ const runStep = (
       .filter((edge) => SYNCHRONOUS.has(edge.kind) || isCut(edge))
       .map((edge) => {
         const flow = edges[edge.id];
-        const failing = isCut(edge) ? 1 : (nodes[edge.to]?.errorRate ?? 0);
+        const { lasting, transient } = isCut(edge)
+          ? { lasting: 1, transient: 0 }
+          : split(nodes[edge.to]?.errorRate ?? 0, persistent.get(edge.to) ?? 0);
         const retries = SYNCHRONOUS.has(edge.kind) ? edge.props.retries : 0;
 
         return {
@@ -725,30 +735,33 @@ const runStep = (
             flow && served > 0
               ? total(flow) / (attempts.get(edge.id) ?? 1) / served
               : 0,
-          errorRate: failing ** (retries + 1),
+          errorRate: lasting + (1 - lasting) * transient ** (retries + 1),
+          lasting,
         };
       })
       .filter((call) => call.weight > 0);
     const lost = stranded.get(node.id) ?? 0;
 
     if (lost > 0 && served > 0) {
-      calls.push({ weight: lost / served, errorRate: 1 });
+      calls.push({ weight: lost / served, errorRate: 1, lasting: 1 });
     }
 
-    const weights = calls.reduce((sum, call) => sum + call.weight, 0);
-    const downstream =
-      weights <= 1 + 1e-9
-        ? calls.reduce((sum, call) => sum + call.weight * call.errorRate, 0)
-        : 1 -
-          calls.reduce(
-            (product, call) =>
-              product * (1 - Math.min(1, call.weight) * call.errorRate),
-            1,
-          );
+    const downstream = combine(calls, (call) => call.errorRate);
+    const downstreamLasting = combine(calls, (call) => call.lasting);
+    const ownLasting = step.up
+      ? Math.min(step.ownErrorRate, state.get(node.id)?.lastingErrorRate ?? 0)
+      : step.ownErrorRate;
 
     step.errorRate = Math.min(
       1,
       step.ownErrorRate + (1 - step.ownErrorRate) * downstream,
+    );
+    persistent.set(
+      node.id,
+      Math.min(
+        step.errorRate,
+        ownLasting + (1 - step.ownErrorRate) * downstreamLasting,
+      ),
     );
   }
 
@@ -983,6 +996,7 @@ const runStep = (
 
   for (const [id, step] of Object.entries(nodes)) {
     memory.lastError.set(id, step.errorRate);
+    memory.lastPersistent.set(id, persistent.get(id) ?? 0);
   }
 
   for (const edge of topo.edges) {
@@ -1003,6 +1017,31 @@ const runStep = (
   }
 
   return { t, nodes, edges, clients };
+};
+
+const split = (
+  errorRate: number,
+  lasting: number,
+): { lasting: number; transient: number } => ({
+  lasting,
+  transient:
+    lasting >= 1 ? 0 : Math.max(0, (errorRate - lasting) / (1 - lasting)),
+});
+
+const combine = <Call extends { weight: number }>(
+  calls: readonly Call[],
+  rate: (call: Call) => number,
+): number => {
+  const weights = calls.reduce((sum, call) => sum + call.weight, 0);
+
+  return weights <= 1 + 1e-9
+    ? calls.reduce((sum, call) => sum + call.weight * rate(call), 0)
+    : 1 -
+        calls.reduce(
+          (product, call) =>
+            product * (1 - Math.min(1, call.weight) * rate(call)),
+          1,
+        );
 };
 
 const crossesRegions = (topo: Topology, edge: DesignEdge): boolean => {

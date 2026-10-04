@@ -38,7 +38,7 @@ export function AssertionItem({
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
           <p className="min-w-0 text-sm text-pretty">{assertion.label}</p>
-          <p className="shrink-0 text-xs tabular-nums">
+          <p className="min-w-0 text-xs tabular-nums text-pretty">
             <span
               className={cn(
                 "font-medium",

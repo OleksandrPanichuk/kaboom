@@ -97,8 +97,9 @@ describe("scoring the URL shortener", () => {
       "survives-a-cache-flush": true,
       "no-single-point-of-failure": false,
       "caches-redirects": false,
+      "survives-unseen-faults": false,
     });
-    expect(score.score).toBe(40);
+    expect(score.score).toBe(39);
   });
 
   test("explains each missed item in the design's own terms", () => {
@@ -158,7 +159,7 @@ describe("scoring the photo upload pipeline", () => {
     );
     const score = scoreSubmission(uploads, synchronous);
 
-    expect(score.score).toBe(10);
+    expect(score.score).toBe(5);
     expect(
       score.items.find((item) => item.key === "handles-a-normal-day")?.evidence,
     ).toContain("p99");
@@ -302,6 +303,7 @@ describe("publishing", () => {
     });
 
     expect(!broken.ok && broken.issues).toEqual([
+      "Rubric item survives-unseen-faults scores chaos, which needs a public load drill without faults to set the traffic.",
       "Rubric item ghost names a drill, ghost, the problem does not have.",
       "A problem needs at least one public drill for solvers to run.",
     ]);

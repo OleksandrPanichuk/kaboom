@@ -51,13 +51,14 @@ export function TestReport({
       </div>
       {suites.map(({ suite, tests }) => {
         const passed = tests.filter((test) => test.status === "passed").length;
+        const ran = tests.filter((test) => test.status !== "skipped").length;
 
         return (
           <section key={suite} className="flex flex-col gap-1">
             <h4 className="flex items-baseline justify-between px-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
               {SUITE_LABELS[suite]}
               <span className="font-normal tracking-normal normal-case tabular-nums">
-                {passed} of {tests.length} passed
+                {ran === 0 ? "Not run" : `${passed} of ${ran} passed`}
               </span>
             </h4>
             <ul className="flex flex-col">
