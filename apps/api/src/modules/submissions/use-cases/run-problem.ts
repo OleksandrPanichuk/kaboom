@@ -1,7 +1,8 @@
-import { runTests, type TestReport } from "@repo/design";
+import type { TestReport } from "@repo/design";
 
-import { makeService } from "@/core/registry";
+import { make, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
+import { DesignTester } from "@/platform/design-testing";
 
 import { RUN_SEEDS } from "../submissions.constants";
 import { SubmissionsService } from "../submissions.service";
@@ -21,15 +22,18 @@ interface Result {
 export class RunProblemUseCase extends UseCase<Options, Result> {
   private readonly service = makeService(SubmissionsService);
 
+  private readonly tester = make(DesignTester);
+
   public async execute({ userId, slug }: Options): Promise<Result> {
     const { version, design } = await this.service.attempt(userId, slug);
 
-    return {
-      revision: design.revision,
-      report: runTests(version.content, design.graph, {
-        include: "public",
-        seeds: RUN_SEEDS,
-      }),
-    };
+    const { report } = await this.tester.test({
+      problem: version.content,
+      graph: design.graph,
+      include: "public",
+      seeds: RUN_SEEDS,
+    });
+
+    return { revision: design.revision, report };
   }
 }

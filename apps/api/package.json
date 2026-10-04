@@ -6,7 +6,7 @@
   "main": "src/main.ts",
   "scripts": {
     "dev": "bun --watch src/main.ts",
-    "build": "bun build src/main.ts --target bun --outdir dist",
+    "build": "bun build src/main.ts src/adapters/design-testing/worker/tester.worker.ts --target bun --outdir dist",
     "start": "bun dist/main.js",
     "db:generate": "bunx --bun drizzle-kit generate",
     "db:migrate": "bun src/db/migrate.ts",

@@ -146,6 +146,14 @@ export const EnvSchema = z.object({
     .max(100_000_000)
     .default(500_000),
 
+  DESIGN_TEST_WORKERS: z.coerce.number().int().min(1).max(32).default(2),
+  DESIGN_TEST_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .min(1_000)
+    .max(300_000)
+    .default(30_000),
+
   CLOUDWATCH_METRICS_NAMESPACE: z.preprocess(
     emptyAsUnset,
     z.string().trim().min(1).max(255).optional(),

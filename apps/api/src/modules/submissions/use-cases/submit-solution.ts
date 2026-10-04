@@ -1,15 +1,13 @@
 import {
-  drillRunner,
   hintPenalty,
   penalised,
   publicReport,
   publicScore,
-  runTests,
-  scoreSubmission,
 } from "@repo/design";
 
 import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
+import { DesignTester } from "@/platform/design-testing";
 
 import { SubmissionReviewScheduler, SubmissionsRepository } from "../ports";
 import type { SubmissionEntity } from "../submission.entity";
@@ -29,6 +27,8 @@ type Result = SubmissionEntity;
 export class SubmitSolutionUseCase extends UseCase<Options, Result> {
   private readonly service = makeService(SubmissionsService);
 
+  private readonly tester = make(DesignTester);
+
   private readonly submissions = makeRepository(SubmissionsRepository);
 
   public async execute({ userId, slug, revision }: Options): Promise<Result> {
@@ -44,16 +44,14 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       );
     }
 
-    const runner = drillRunner(version.content, design.graph, {
+    const { score, report } = await this.tester.test({
+      problem: version.content,
+      graph: design.graph,
+      include: "all",
       seeds: SUBMIT_SEEDS,
     });
-    const shown = publicScore(
-      version.content,
-      scoreSubmission(version.content, design.graph, runner),
-    );
-    const tests = publicReport(
-      runTests(version.content, design.graph, { include: "all", runner }),
-    );
+    const shown = publicScore(version.content, score);
+    const tests = publicReport(report);
     const penalty = hintPenalty(version.content, attempt.hintsRevealed);
     const lockedUntil = await this.service.lockOf(userId, attempt.problemId);
 
