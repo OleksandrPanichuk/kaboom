@@ -285,7 +285,7 @@ The *Shoppers* client is already on the canvas. Build what it talks to.`,
   },
   reference: {
     notes:
-      "A balancer in front of an API that autoscales from fourteen replicas, so the sale is paid for only while it lasts. Reads go through a cache with a 95 % hit ratio, one node of it, which answers the sale's reads too; the database sees the misses and the updates, with a replica and automatic failover. About $1,500 a month. A CDN would answer the same reads, but at 20,000 requests a second it bills about $39,000 a month, and a database large enough to skip the cache costs more than the budget.",
+      "A balancer in front of an API that autoscales from fourteen replicas, so the sale is paid for only while it lasts. Reads go through a cache with a 95 % hit ratio, one node of it, which answers the sale's reads too; the database sees the misses and the updates, with a replica and automatic failover. About $1,700 a month. A CDN would answer the same reads, but at 20,000 requests a second it bills about $39,000 a month, and a SQL primary sized to take every read itself costs about $1,400 alone, which takes the design over the budget.",
     graph: graph(
       [
         shoppers(),

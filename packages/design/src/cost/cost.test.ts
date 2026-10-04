@@ -83,6 +83,25 @@ describe("found in review", () => {
     expect(nodeCost(replicated, primary).monthlyUsd).toBe(PRICES.sqlInstance);
   });
 
+  test("prices a SQL instance by the capacity it is sized for", () => {
+    const base = node("db", "sql-database", "Orders", { storageGb: 0 });
+    const large = node("db", "sql-database", "Orders", {
+      storageGb: 0,
+      readCapacityRps: 40_000,
+      shards: 2,
+    });
+
+    expect(nodeCost(graph([base], []), base).monthlyUsd).toBe(
+      PRICES.sqlInstance,
+    );
+    expect(nodeCost(graph([large], []), large).monthlyUsd).toBe(
+      2 * 8 * PRICES.sqlInstance,
+    );
+    expect(nodeCost(graph([large], []), large).basis).toBe(
+      "2 instances, each 8× the base size, and 0 GB",
+    );
+  });
+
   test("prices the replicas a service ran, and an autoscaler's pods within its bounds", () => {
     const api = node("api", "service", "API", { replicas: 2 });
     const pods = node("pods", "k8s-deployment", "Pods", { replicas: 50 });

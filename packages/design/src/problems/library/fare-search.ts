@@ -45,7 +45,7 @@ export const fareSearch: ProblemContentInput = {
   difficulty: "hard",
   tags: ["multi-region", "cost", "capacity", "chaos"],
   summary:
-    "Run a compute-heavy fare search in several regions so that losing any one of them costs nothing, for under $17,000 a month.",
+    "Run a compute-heavy fare search in several regions so that losing any one of them costs nothing, for under $18,000 a month.",
   statement: `Design the fare search for a travel site with travellers all over the world.
 
 **What it does**
@@ -63,7 +63,7 @@ export const fareSearch: ProblemContentInput = {
 
 - One search replica prices about 200 searches a second, and it costs $56 a month.
 - Any cloud region can go down, not only the one with the database. Besides the drills, the tests take each region you draw away in turn, and travellers must be served again within a minute or so.
-- The whole thing must run for **under $17,000 a month**. Every region you add carries a share of the traffic and must carry more when another goes down: work out how much more before you size it.
+- The whole thing must run for **under $18,000 a month**. Every region you add carries a share of the traffic and must carry more when another goes down: work out how much more, and whether to keep it running or let it scale in, before you size it.
 - A call from one region to another adds about 70 ms.
 
 The *Travellers* client is already on the canvas. Build what it talks to.`,
@@ -142,12 +142,12 @@ The *Travellers* client is already on the canvas. Build what it talks to.`,
     },
     {
       key: "fits-the-budget",
-      title: "Runs for under $17,000 a month",
+      title: "Runs for under $18,000 a month",
       weight: 25,
       check: {
         check: "within-budget",
         drillId: "normal-day",
-        monthlyUsd: 17_000,
+        monthlyUsd: 18_000,
       },
     },
   ],
@@ -164,7 +164,7 @@ The *Travellers* client is already on the canvas. Build what it talks to.`,
     },
     {
       title: "Counting replicas",
-      body: "30,000 requests at 200 a replica is 150 replicas busy. Two regions that can each carry all of it need about 340; three that can each carry half need about 270.",
+      body: "30,000 requests at 200 a replica is 150 replicas busy. Two regions that keep enough running to carry all of it need about 340, over the budget; three that can each carry half need at least 240. A region that autoscales pays only for what it runs, if it can grow before travellers notice.",
       cost: 15,
     },
   ],
@@ -193,7 +193,7 @@ The *Travellers* client is already on the canvas. Build what it talks to.`,
       },
       {
         topic: "Budget",
-        answer: "Everything must run for under $17,000 a month.",
+        answer: "Everything must run for under $18,000 a month.",
       },
       {
         topic: "Latency and availability",
@@ -283,7 +283,7 @@ The *Travellers* client is already on the canvas. Build what it talks to.`,
   },
   reference: {
     notes:
-      "Three regions, each with a balancer, ninety search replicas and a fare cache, and DNS splitting travellers by latency. A region carries a third of the traffic on a normal day and half once another is lost, so ninety replicas are 56 % busy normally and 83 % busy after a loss. Saved searches live in one SQL primary in Europe with automatic failover and a replica in each other region. Two regions that could each carry everything would need about 340 replicas and cost about $19,000 a month; three need 270 and cost about $15,500.",
+      "Three regions, each with a balancer, ninety search replicas and a fare cache, and DNS splitting travellers by latency. A region carries a third of the traffic on a normal day and half once another is lost, so ninety replicas are 56 % busy normally and 83 % busy after a loss, a little more while the database fails over. Saved searches live in one SQL primary in Europe with automatic failover and a replica in each other region. About $17,000 a month. Two regions that keep enough running to carry everything need about 340 replicas and cost about $20,500. Two regions that autoscale from what a normal day needs pass as well, and cost less: the budget pays for the floor, and the autoscaler adds replicas within seconds of a region going down.",
     graph: graph(
       [
         travellers(),

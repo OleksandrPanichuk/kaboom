@@ -22,7 +22,7 @@ export const cardPayments: ProblemContentInput = {
 
 **What it does**
 
-- Checkout asks to authorise a payment; the service asks the card network and records the result.
+- Checkout asks to authorise a payment and waits for the answer; the service asks the card network and records the result.
 
 **How it is used**
 
@@ -233,6 +233,7 @@ The *Checkout* client and the *Card network* are already on the canvas. Build wh
         signals: [
           "Records each payment and its result",
           "Uses the idempotency key on every call",
+          "Keeps the authorisation on the request path, since checkout waits for it",
           "Removes single points of failure",
         ],
         weight: 20,
