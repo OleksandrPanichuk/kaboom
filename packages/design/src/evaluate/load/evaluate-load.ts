@@ -530,7 +530,7 @@ const runStep = (
     const step: NodeStep = {
       reads: load.reads,
       writes: load.writes,
-      rho: Math.min(rho, MAX_REPORTED_RHO),
+      rho: Number.isFinite(rho) ? rho : MAX_REPORTED_RHO,
       p50,
       p99,
       ownErrorRate,

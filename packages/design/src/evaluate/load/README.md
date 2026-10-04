@@ -252,9 +252,10 @@ producer's request. A load balancer that health-checks drops a target it
 cannot reach, and DNS stops routing to one `ttlSeconds` after the cut, as
 it does for a target that is down. A load balancer left with no target it
 can reach fails every request it cannot forward. A call that retries over a
-cut waits out `timeoutMs` once per attempt. A step reports a node's utilisation up to 10 (1000 %): a deployment with no
-pod ready yet takes load it has no capacity for, which the model treats as
-saturated, and a saved run must stay finite. A partition is not an outage:
+cut waits out `timeoutMs` once per attempt. A node with no capacity at all,
+such as a deployment with no pod ready yet, reports a utilisation of 10
+(1000 %) rather than infinity, so a saved run stays finite; any other
+overload is reported as it is. A partition is not an outage:
 it promotes no replica, and a `monitoring` node still scrapes across it.
 In a drill, a selected node in no group is cut off on its own, as
 `node-down`.

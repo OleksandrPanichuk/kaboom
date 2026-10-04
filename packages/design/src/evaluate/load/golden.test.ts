@@ -614,4 +614,20 @@ describe("golden fixtures", () => {
       expect(run("eu")).toEqual([false, false, false, false, false, false]);
     });
   });
+
+  test("reports an overload as it is, however large", () => {
+    const design = graph(
+      [
+        node("users", "client", { rps: 30_000, readRatio: 1 }),
+        service("api", 1, 1_000),
+      ],
+      [edge("users", "api", "sync-call")],
+    );
+    const result = evaluateLoad(design, { kind: "load", durationSeconds: 10 });
+
+    expect(result.steps[0]!.nodes.api!.rho).toBeCloseTo(30, 6);
+    expect(
+      result.findings.find((finding) => finding.kind === "saturated")?.message,
+    ).toContain("3000%");
+  });
 });

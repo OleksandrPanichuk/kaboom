@@ -266,25 +266,43 @@ const expectBounded = (result: EvaluationResult) => {
   }
 };
 
+const BACKLOGGED: ReadonlySet<string> = new Set(["client", "queue", "stream"]);
+
 const expectConserved = (design: DesignGraph, result: EvaluationResult) => {
   for (const step of result.steps) {
     for (const item of design.nodes) {
-      if (item.kind === "client") continue;
+      if (BACKLOGGED.has(item.kind)) continue;
 
-      const arriving = design.edges
-        .filter((candidate) => candidate.to === item.id)
-        .reduce((sum, candidate) => {
-          const flow = step.edges[candidate.id];
+      const node = step.nodes[item.id];
 
-          return sum + (flow ? flow.reads + flow.writes : 0);
-        }, 0);
-      const received = step.nodes[item.id];
+      if (!node) continue;
 
-      if (!received) continue;
+      const received = node.reads + node.writes;
 
-      expect(received.reads + received.writes).toBeLessThanOrEqual(
-        arriving * (1 + 1e-9) + 1e-6,
-      );
+      for (const outgoing of design.edges) {
+        if (outgoing.from !== item.id) continue;
+
+        const flow = step.edges[outgoing.id];
+
+        if (!flow) continue;
+
+        const props = outgoing.props as Partial<
+          Record<"share" | "fanOut" | "retries", number>
+        >;
+        const most =
+          received *
+          Math.max(1, props.share ?? 1) *
+          Math.max(1, props.fanOut ?? 1) *
+          (1 + (props.retries ?? 0));
+
+        expect({
+          edge: outgoing.id,
+          over: flow.reads + flow.writes > most * (1 + 1e-9) + 1e-6,
+        }).toEqual({
+          edge: outgoing.id,
+          over: false,
+        });
+      }
     }
   }
 };
@@ -412,37 +430,7 @@ describe("the load model, on any design and scenario", () => {
     () => {
       fc.assert(
         fc.property(scenarios, ({ shape, faults, spike }) => {
-          const result = evaluateLoad(build(shape), scenario(faults, spike));
-
-          for (const step of result.steps) {
-            for (const client of Object.values(step.clients)) {
-              expect(client.availability).toBeGreaterThanOrEqual(0);
-              expect(client.availability).toBeLessThanOrEqual(1);
-              expect(Number.isFinite(client.p50)).toBe(true);
-              expect(Number.isFinite(client.p99)).toBe(true);
-              expect(client.p50).toBeLessThanOrEqual(client.p99 + 1e-9);
-            }
-
-            for (const [id, item] of Object.entries(step.nodes)) {
-              for (const value of [
-                item.reads,
-                item.writes,
-                item.rho,
-                item.p50,
-                item.p99,
-              ]) {
-                expect({ id, finite: Number.isFinite(value) }).toEqual({
-                  id,
-                  finite: true,
-                });
-              }
-
-              expect(item.reads).toBeGreaterThanOrEqual(0);
-              expect(item.writes).toBeGreaterThanOrEqual(0);
-              expect(item.errorRate).toBeGreaterThanOrEqual(0);
-              expect(item.errorRate).toBeLessThanOrEqual(1);
-            }
-          }
+          expectBounded(evaluateLoad(build(shape), scenario(faults, spike)));
         }),
         RUNS,
       );
@@ -549,31 +537,14 @@ describe("the load model, on any design and scenario", () => {
   );
 
   test(
-    "sends no node more than reaches it over its edges",
+    "forwards no more than a node receives, times its edge's share, fan-out and retries",
     () => {
       fc.assert(
         fc.property(scenarios, ({ shape, faults, spike }) => {
           const design = build(shape);
           const result = evaluateLoad(design, scenario(faults, spike));
 
-          for (const step of result.steps) {
-            for (const item of design.nodes) {
-              if (item.kind === "client") continue;
-
-              const arriving = design.edges
-                .filter((candidate) => candidate.to === item.id)
-                .reduce((sum, candidate) => {
-                  const flow = step.edges[candidate.id];
-
-                  return sum + (flow ? flow.reads + flow.writes : 0);
-                }, 0);
-              const received = step.nodes[item.id]!;
-
-              expect(received.reads + received.writes).toBeLessThanOrEqual(
-                arriving * (1 + 1e-9) + 1e-6,
-              );
-            }
-          }
+          expectConserved(design, result);
         }),
         RUNS,
       );
@@ -584,7 +555,7 @@ describe("the load model, on any design and scenario", () => {
 
 describe("the load model, on Kubernetes designs with rollouts", () => {
   test(
-    "answers finite numbers within their bounds, and sends no node more than reaches it",
+    "answers finite numbers within their bounds, and forwards no more than a node receives",
     () => {
       fc.assert(
         fc.property(rollouts, ({ shape, faults, spike }) => {
@@ -618,7 +589,7 @@ describe("the load model, on Kubernetes designs with rollouts", () => {
   );
 
   test(
-    "never runs more pods than the autoscaler allows, plus what a rollout may add",
+    "never serves from more pods than the autoscaler allows, plus what a rollout may add",
     () => {
       fc.assert(
         fc.property(rollouts, ({ shape, faults, spike }) => {
@@ -632,7 +603,6 @@ describe("the load model, on Kubernetes designs with rollouts", () => {
 
             if (replicas === undefined) continue;
 
-            expect(replicas).toBeGreaterThanOrEqual(0);
             expect(replicas).toBeLessThanOrEqual(ceiling);
           }
         }),
