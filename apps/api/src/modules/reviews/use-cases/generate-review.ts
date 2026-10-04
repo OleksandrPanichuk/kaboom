@@ -1,7 +1,7 @@
-import { publicScore, scoreSubmission } from "@repo/design";
+import { publicScore } from "@repo/design";
 
 import { getEnv } from "@/configs";
-import { makeRepository, makeService } from "@/core/registry";
+import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { DesignsService } from "@/modules/designs";
 import {
@@ -14,6 +14,7 @@ import {
 import { NotificationsService } from "@/modules/notifications";
 import { SkillsService } from "@/modules/skills";
 import { UsersService } from "@/modules/users";
+import { DesignTester } from "@/platform/design-testing";
 
 import { ReviewsRepository } from "../ports";
 import type { ReviewEntity } from "../review.entity";
@@ -39,6 +40,8 @@ export class GenerateReviewUseCase extends UseCase<Options, Result> {
 
   private readonly interviews = makeService(InterviewsService);
 
+  private readonly tester = make(DesignTester);
+
   private readonly designs = makeService(DesignsService);
 
   private readonly reviewer = makeService(Reviewer);
@@ -57,10 +60,13 @@ export class GenerateReviewUseCase extends UseCase<Options, Result> {
       interview.designId,
       interview.ownerId,
     );
-    const shown = publicScore(
-      pinned.content,
-      scoreSubmission(pinned.content, design.graph),
-    );
+    const { score } = await this.tester.test({
+      problem: pinned.content,
+      graph: design.graph,
+      include: "all",
+      seeds: 0,
+    });
+    const shown = publicScore(pinned.content, score);
     const evidence = collectEvidence({
       messages: await this.messages.listFor(interviewId),
       notes: await this.notes.listFor(interviewId),

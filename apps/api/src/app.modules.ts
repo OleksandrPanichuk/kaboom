@@ -18,6 +18,7 @@ import { verificationTokensModule } from "@/modules/verification-tokens";
 import { cacheModule } from "@/platform/cache";
 import { captchaModule } from "@/platform/captcha";
 import { databaseModule } from "@/platform/database";
+import { designTestingModule } from "@/platform/design-testing";
 import { errorReportingModule } from "@/platform/error-reporting";
 import { healthModule } from "@/platform/health";
 import { jobsModule } from "@/platform/jobs";
@@ -36,6 +37,7 @@ export const modules = [
   cacheModule,
   realtimeModule,
   llmModule,
+  designTestingModule,
   rateLimitModule,
   captchaModule,
   storageModule,

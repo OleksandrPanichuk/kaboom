@@ -635,6 +635,20 @@ node-steps, worked out before anything runs, so a large design runs fewer
 seeds rather than longer, and the order of the tests changes nothing. Every reference holds on every seed; give
 a reference headroom rather than loosen a drill when one does not.
 
+Scoring a design runs in a pool of worker threads, so a large design does
+not block the API. Run, submit and the review job ask the `DesignTester`
+port (`platform/design-testing`), whose `testDesign` scores and reports
+from one runner. Under `NODE_ENV=test` it is `InlineDesignTester`;
+otherwise `WorkerDesignTester` keeps `DESIGN_TEST_WORKERS` workers. It
+waits for each to report ready at `start`, so a missing worker file fails
+the boot rather than every request, and replaces one that dies. It queues
+up to four tests a worker, answers `503 DESIGN_TESTS_BUSY` past that, and
+`503 DESIGN_TESTS_TIMED_OUT` once a test has waited and run for
+`DESIGN_TEST_TIMEOUT_MS`, replacing a worker it had to stop. The worker is found beside
+the entry point (`Bun.main`), which is why `build` names it as a second
+entry: `dist/adapters/design-testing/worker/tester.worker.js` sits where
+`src/…/tester.worker.ts` does.
+
 The load model's invariants are property-based tests over random designs
 (`invariants.test.ts`): bounds, determinism, conservation, and that more
 replicas, less traffic or no fault never serve less. A counterexample that
