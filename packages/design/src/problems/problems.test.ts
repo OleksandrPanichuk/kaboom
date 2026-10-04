@@ -155,6 +155,45 @@ describe("checks that look at behaviour, not presence", () => {
     );
   });
 
+  test("a cache read through many times answers only what it does not pass on", () => {
+    const fanned = graph(
+      [
+        ...parts().filter((item) => item.id !== "cache"),
+        node("cache", "cache", "Cache", {
+          hitRatio: 0.2,
+          readCapacityRps: 1_000_000,
+        }),
+      ],
+      [
+        edge("users", "api", "sync-call"),
+        edge("api", "cache", "read", { fanOut: 5 }),
+        edge("cache", "db", "read"),
+        edge("api", "db", "write"),
+      ],
+    );
+
+    expect(caches(fanned).evidence).toContain("Cache answers 20% of the reads");
+  });
+
+  test("writes a store passes on are not counted twice", () => {
+    const halved = graph(
+      [...parts(), node("feed", "stream", "Changes")],
+      [
+        edge("users", "api", "sync-call"),
+        edge("api", "cache", "read"),
+        edge("cache", "db", "read"),
+        edge("api", "db", "write", { share: 0.5 }),
+        edge("db", "feed", "change-feed"),
+      ],
+    );
+    const day = scoreSubmission(shortener, halved).drills.find(
+      (item) => item.id === "normal-day",
+    )!;
+
+    expect(day.passed).toBe(false);
+    expect(day.failures.join(" ")).toContain("only 250/s reaches");
+  });
+
   test("writes that reach no store fail a normal day", () => {
     const forgetful = graph(parts(), [
       edge("users", "api", "sync-call"),

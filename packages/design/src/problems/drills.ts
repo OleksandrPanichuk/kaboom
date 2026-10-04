@@ -1,3 +1,4 @@
+import { carriesLoad } from "../catalogue";
 import { evaluateLoad } from "../evaluate/load";
 import { evaluateNetwork } from "../evaluate/network";
 import { evaluatePipeline } from "../evaluate/pipeline";
@@ -163,10 +164,34 @@ const persisted = (
   if (writes <= 0) return [];
 
   const stores = graph.nodes.filter((node) => DURABLE_KINDS.has(node.kind));
-  const kept = stores.reduce(
-    (sum, node) => sum + (step.nodes[node.id]?.writes ?? 0),
-    0,
-  );
+  const durable = new Set(stores.map((node) => node.id));
+  const downstream = new Set<string>();
+  const queue = [...durable];
+
+  while (queue.length > 0) {
+    const id = queue.pop()!;
+
+    for (const edge of graph.edges) {
+      if (
+        edge.from === id &&
+        carriesLoad(edge.kind) &&
+        !downstream.has(edge.to)
+      ) {
+        downstream.add(edge.to);
+        queue.push(edge.to);
+      }
+    }
+  }
+
+  const kept = graph.nodes
+    .filter((node) => !durable.has(node.id) && !downstream.has(node.id))
+    .reduce((sum, source) => {
+      const into = graph.edges
+        .filter((edge) => edge.from === source.id && durable.has(edge.to))
+        .map((edge) => (step.edges[edge.id]?.writes ?? 0) / edge.props.fanOut);
+
+      return sum + Math.max(0, ...into);
+    }, 0);
   const perSecond = (value: number) =>
     `${Math.round(value).toLocaleString("en")}/s`;
 

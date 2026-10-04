@@ -70,9 +70,23 @@ describe("runTests", () => {
     expect(report.tests.map((item) => item.id)).not.toContain(
       "drill:primary-fails",
     );
-    expect(report.tests.filter((item) => item.id.startsWith("check:"))).toEqual(
-      [],
+    const publicDrills = new Set(
+      shortener.drills
+        .filter((drill) => drill.visibility === "public")
+        .map((drill) => drill.id),
     );
+
+    for (const item of report.tests.filter((test) =>
+      test.id.startsWith("check:"),
+    )) {
+      const rubric = shortener.rubric.find(
+        (entry) => `check:${entry.key}` === item.id,
+      )!;
+
+      expect(
+        "drillId" in rubric.check && publicDrills.has(rubric.check.drillId),
+      ).toBe(true);
+    }
   });
 
   test("groups the tests by suite, in suite order", () => {

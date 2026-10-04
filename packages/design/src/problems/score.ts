@@ -227,32 +227,46 @@ export const readShare = (
   result: EvaluationResult,
   kind: string,
 ): number => {
-  const shares = result.steps.map((step) => {
-    const asked = graph.nodes
-      .filter((node) => node.kind === "client")
-      .reduce((sum, node) => {
-        const client = step.clients[node.id];
-        const readRatio = (node.props as { readRatio?: number }).readRatio ?? 1;
+  const servers = graph.nodes.filter((node) => node.kind === kind);
+  const ids = new Set(servers.map((node) => node.id));
+  let asked = 0;
+  let answered = 0;
 
-        return sum + (client?.emitted ?? 0) * readRatio;
-      }, 0);
-    const answered = graph.nodes
-      .filter((node) => node.kind === kind)
-      .reduce((sum, node) => {
-        const reads = step.nodes[node.id]?.reads ?? 0;
-        const hit = HIT_RATIO_KINDS.has(node.kind)
-          ? ((node.props as { hitRatio?: number }).hitRatio ?? 1)
+  for (const step of result.steps) {
+    for (const node of graph.nodes) {
+      if (node.kind !== "client") continue;
+
+      const readRatio = (node.props as { readRatio?: number }).readRatio ?? 1;
+
+      asked += (step.clients[node.id]?.emitted ?? 0) * readRatio;
+    }
+
+    for (const server of servers) {
+      const reads = (from: boolean) =>
+        graph.edges
+          .filter((edge) =>
+            from
+              ? edge.from === server.id && !ids.has(edge.to)
+              : edge.to === server.id && !ids.has(edge.from),
+          )
+          .reduce(
+            (sum, edge) =>
+              sum +
+              (step.edges[edge.id]?.reads ?? 0) /
+                (from ? 1 : edge.props.fanOut),
+            0,
+          );
+      const load = step.nodes[server.id]?.reads ?? 0;
+      const hit =
+        HIT_RATIO_KINDS.has(server.kind) && load > 0
+          ? Math.max(0, 1 - reads(true) / load)
           : 1;
 
-        return sum + reads * hit;
-      }, 0);
+      answered += reads(false) * hit;
+    }
+  }
 
-    return asked > 0 ? Math.min(1, answered / asked) : 0;
-  });
-
-  return shares.length === 0
-    ? 0
-    : shares.reduce((sum, value) => sum + value, 0) / shares.length;
+  return asked > 0 ? Math.min(1, answered / asked) : 0;
 };
 
 const unsteady = (variation: Variation) =>
