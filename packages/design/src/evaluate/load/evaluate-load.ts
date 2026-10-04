@@ -153,6 +153,7 @@ interface Memory {
 const VOLUME_SYNC_SECONDS = 60;
 
 const RETRY_STORM_FACTOR = 1.5;
+const MAX_REPORTED_RHO = 10;
 
 const RETRY_P99_SHARE = 0.01;
 
@@ -529,7 +530,7 @@ const runStep = (
     const step: NodeStep = {
       reads: load.reads,
       writes: load.writes,
-      rho,
+      rho: Math.min(rho, MAX_REPORTED_RHO),
       p50,
       p99,
       ownErrorRate,

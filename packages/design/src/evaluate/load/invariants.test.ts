@@ -8,7 +8,7 @@ import {
   type DesignNode,
 } from "../../graph";
 import type { EvaluationResult } from "../result";
-import type { Fault, LoadScenarioInput } from "../scenario";
+import { type Fault, type LoadScenarioInput, RELEASES } from "../scenario";
 import { evaluateLoad } from "./evaluate-load";
 import { edge, graph, node } from "./fixtures";
 
@@ -28,6 +28,11 @@ interface Shape {
   retries: number;
   timeoutMs: number;
   zones: number[];
+  autoscale: boolean;
+  headroom: number;
+  target: number;
+  limiter: boolean;
+  limitRps: number;
 }
 
 const shapes = fc.record({
@@ -52,9 +57,14 @@ const shapes = fc.record({
   retries: fc.integer({ min: 0, max: 3 }),
   timeoutMs: fc.integer({ min: 50, max: 3_000 }),
   zones: fc.array(fc.integer({ min: 0, max: 2 }), {
-    minLength: 9,
-    maxLength: 9,
+    minLength: 10,
+    maxLength: 10,
   }),
+  autoscale: fc.boolean(),
+  headroom: fc.integer({ min: 0, max: 12 }),
+  target: fc.double({ min: 0.3, max: 0.95, noNaN: true }),
+  limiter: fc.boolean(),
+  limitRps: fc.integer({ min: 100, max: 30_000 }),
 });
 
 const ZONES = ["eu", "us"] as const;
@@ -79,13 +89,26 @@ const build = (shape: Shape): DesignGraph => {
     previous = "lb";
   }
 
+  if (shape.limiter) {
+    nodes.push(node("limiter", "rate-limiter", { limitRps: shape.limitRps }));
+    call(previous, "limiter");
+    previous = "limiter";
+  }
+
   for (let tier = 0; tier < shape.tiers; tier += 1) {
     const id = `tier-${tier}`;
+    const replicas = shape.replicas[tier]!;
 
     nodes.push(
       node(id, "service", {
-        replicas: shape.replicas[tier]!,
+        replicas,
         capacityRpsPerReplica: shape.capacity[tier]!,
+        autoscale: {
+          enabled: shape.autoscale,
+          min: replicas,
+          max: replicas + shape.headroom,
+          targetUtilisation: shape.target,
+        },
       }),
     );
     call(previous, id);
@@ -143,6 +166,7 @@ const build = (shape: Shape): DesignGraph => {
 
 const targets = (shape: Shape): string[] => [
   ...(shape.balanced ? ["lb"] : []),
+  ...(shape.limiter ? ["limiter"] : []),
   ...Array.from({ length: shape.tiers }, (_, tier) => `tier-${tier}`),
   ...(shape.cache ? ["cache"] : []),
   "db",
@@ -171,7 +195,11 @@ const faultsFor = (shape: Shape) =>
         addMs: fc.integer({ min: 1, max: 2_000 }),
       }),
       fc.record({
-        kind: fc.constantFrom("group-down" as const, "partition" as const),
+        kind: fc.constantFrom(
+          "group-down" as const,
+          "partition" as const,
+          "region-down" as const,
+        ),
         groupId: fc.constantFrom(...ZONES),
         at: fc.integer({ min: 0, max: 200 }),
         until: fc.integer({ min: 210, max: 300 }),
@@ -205,6 +233,177 @@ const worstAvailability = (result: EvaluationResult): number =>
   Math.min(...result.steps.map((step) => step.clients.users!.availability));
 
 const RUNS = { numRuns: 200 };
+
+const expectBounded = (result: EvaluationResult) => {
+  for (const step of result.steps) {
+    for (const client of Object.values(step.clients)) {
+      expect(client.availability).toBeGreaterThanOrEqual(0);
+      expect(client.availability).toBeLessThanOrEqual(1);
+      expect(Number.isFinite(client.p50)).toBe(true);
+      expect(Number.isFinite(client.p99)).toBe(true);
+      expect(client.p50).toBeLessThanOrEqual(client.p99 + 1e-9);
+    }
+
+    for (const [id, item] of Object.entries(step.nodes)) {
+      for (const value of [
+        item.reads,
+        item.writes,
+        item.rho,
+        item.p50,
+        item.p99,
+      ]) {
+        expect({ id, finite: Number.isFinite(value) }).toEqual({
+          id,
+          finite: true,
+        });
+      }
+
+      expect(item.reads).toBeGreaterThanOrEqual(0);
+      expect(item.writes).toBeGreaterThanOrEqual(0);
+      expect(item.errorRate).toBeGreaterThanOrEqual(0);
+      expect(item.errorRate).toBeLessThanOrEqual(1);
+    }
+  }
+};
+
+const expectConserved = (design: DesignGraph, result: EvaluationResult) => {
+  for (const step of result.steps) {
+    for (const item of design.nodes) {
+      if (item.kind === "client") continue;
+
+      const arriving = design.edges
+        .filter((candidate) => candidate.to === item.id)
+        .reduce((sum, candidate) => {
+          const flow = step.edges[candidate.id];
+
+          return sum + (flow ? flow.reads + flow.writes : 0);
+        }, 0);
+      const received = step.nodes[item.id];
+
+      if (!received) continue;
+
+      expect(received.reads + received.writes).toBeLessThanOrEqual(
+        arriving * (1 + 1e-9) + 1e-6,
+      );
+    }
+  }
+};
+
+interface Kube {
+  rps: number;
+  replicas: number;
+  capacity: number;
+  strategy: "rolling" | "recreate" | "blue-green" | "canary";
+  readiness: boolean;
+  liveness: boolean;
+  maxSurge: number;
+  maxUnavailable: number;
+  startupSeconds: number;
+  progressDeadlineSeconds: number;
+  canarySeconds: number;
+  hpa: boolean;
+  hpaMax: number;
+  retries: number;
+}
+
+const kubes = fc.record({
+  rps: fc.integer({ min: 10, max: 20_000 }),
+  replicas: fc.integer({ min: 1, max: 10 }),
+  capacity: fc.integer({ min: 100, max: 5_000 }),
+  strategy: fc.constantFrom(
+    "rolling" as const,
+    "recreate" as const,
+    "blue-green" as const,
+    "canary" as const,
+  ),
+  readiness: fc.boolean(),
+  liveness: fc.boolean(),
+  maxSurge: fc.integer({ min: 0, max: 3 }),
+  maxUnavailable: fc.integer({ min: 0, max: 3 }),
+  startupSeconds: fc.integer({ min: 0, max: 120 }),
+  progressDeadlineSeconds: fc.integer({ min: 30, max: 600 }),
+  canarySeconds: fc.integer({ min: 10, max: 300 }),
+  hpa: fc.boolean(),
+  hpaMax: fc.integer({ min: 1, max: 20 }),
+  retries: fc.integer({ min: 0, max: 2 }),
+});
+
+const buildKube = (shape: Kube): DesignGraph => {
+  const nodes: DesignNode[] = [
+    node("users", "client", { rps: shape.rps, readRatio: 0.9 }),
+    node("ingress", "ingress"),
+    node("svc", "k8s-service"),
+    node("app", "k8s-deployment", {
+      replicas: shape.replicas,
+      capacityRpsPerReplica: shape.capacity,
+      strategy: shape.strategy,
+      readinessProbe: shape.readiness,
+      livenessProbe: shape.liveness,
+      maxSurge: shape.maxSurge,
+      maxUnavailable: shape.maxUnavailable,
+      startupSeconds: shape.startupSeconds,
+      progressDeadlineSeconds: shape.progressDeadlineSeconds,
+      canarySeconds: shape.canarySeconds,
+    }),
+    node("db", "sql-database"),
+  ];
+  const edges: DesignEdge[] = [
+    edge("users", "ingress"),
+    edge("ingress", "svc"),
+    edge("svc", "app", "sync-call", { retries: shape.retries }),
+    edge("app", "db", "sync-call", { retries: shape.retries }),
+  ];
+
+  if (shape.hpa) {
+    nodes.push(
+      node("hpa", "hpa", {
+        min: shape.replicas,
+        max: shape.replicas + shape.hpaMax,
+      }),
+    );
+    edges.push(edge("hpa", "app", "scales"));
+  }
+
+  return graph(nodes, edges);
+};
+
+const rollouts = kubes.chain((shape) =>
+  fc.record({
+    shape: fc.constant(shape),
+    faults: fc.array(
+      fc.oneof(
+        fc.record({
+          kind: fc.constant("rollout" as const),
+          nodeId: fc.constant("app"),
+          at: fc.integer({ min: 0, max: 400 }),
+          release: fc.constantFrom(...RELEASES),
+          migrates: fc.boolean(),
+        }),
+        fc.record({
+          kind: fc.constant("node-down" as const),
+          nodeId: fc.constantFrom("ingress", "svc", "app", "db"),
+          at: fc.integer({ min: 0, max: 400 }),
+          until: fc.integer({ min: 410, max: 600 }),
+        }),
+        fc.record({
+          kind: fc.constant("capacity" as const),
+          nodeId: fc.constantFrom("app", "db"),
+          at: fc.integer({ min: 0, max: 400 }),
+          factor: fc.double({ min: 0.05, max: 1, noNaN: true }),
+        }),
+      ),
+      { maxLength: 3 },
+    ),
+    spike: fc.double({ min: 0, max: 4, noNaN: true }),
+  }),
+);
+
+const long = (faults: Fault[], spike = 1): LoadScenarioInput => ({
+  kind: "load",
+  durationSeconds: 900,
+  traffic: spike === 1 ? [] : [{ at: 200, multiplier: spike }],
+  faults,
+});
 const SLOW = 30_000;
 
 describe("the load model, on any design and scenario", () => {
@@ -374,6 +573,67 @@ describe("the load model, on any design and scenario", () => {
                 arriving * (1 + 1e-9) + 1e-6,
               );
             }
+          }
+        }),
+        RUNS,
+      );
+    },
+    SLOW,
+  );
+});
+
+describe("the load model, on Kubernetes designs with rollouts", () => {
+  test(
+    "answers finite numbers within their bounds, and sends no node more than reaches it",
+    () => {
+      fc.assert(
+        fc.property(rollouts, ({ shape, faults, spike }) => {
+          const design = buildKube(shape);
+          const result = evaluateLoad(design, long(faults, spike));
+
+          expectBounded(result);
+          expectConserved(design, result);
+        }),
+        RUNS,
+      );
+    },
+    SLOW,
+  );
+
+  test(
+    "answers the same way every time it is asked",
+    () => {
+      fc.assert(
+        fc.property(rollouts, ({ shape, faults, spike }) => {
+          const design = buildKube(shape);
+
+          expect(evaluateLoad(design, long(faults, spike))).toEqual(
+            evaluateLoad(design, long(faults, spike)),
+          );
+        }),
+        RUNS,
+      );
+    },
+    SLOW,
+  );
+
+  test(
+    "never runs more pods than the autoscaler allows, plus what a rollout may add",
+    () => {
+      fc.assert(
+        fc.property(rollouts, ({ shape, faults, spike }) => {
+          const design = buildKube({ ...shape, hpa: true });
+          const result = evaluateLoad(design, long(faults, spike));
+          const ceiling =
+            shape.replicas + shape.hpaMax + Math.max(shape.maxSurge, 1);
+
+          for (const step of result.steps) {
+            const replicas = step.nodes.app?.replicas;
+
+            if (replicas === undefined) continue;
+
+            expect(replicas).toBeGreaterThanOrEqual(0);
+            expect(replicas).toBeLessThanOrEqual(ceiling);
           }
         }),
         RUNS,

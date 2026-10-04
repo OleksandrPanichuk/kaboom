@@ -656,7 +656,11 @@ entry: `dist/adapters/design-testing/worker/tester.worker.js` sits where
 
 The load model's invariants are property-based tests over random designs
 (`invariants.test.ts`): bounds, determinism, conservation, and that more
-replicas, less traffic or no fault never serve less. A counterexample that
+replicas, less traffic or no fault never serve less. The generator draws
+balancers, rate limiters, autoscaled tiers, caches, queues and regions,
+with node, capacity, latency, error, group, region and partition faults,
+and a second one draws Kubernetes deployments with every strategy and
+release, probes and a pod autoscaler. A counterexample that
 is the model behaving as real systems do (a background consumer competing
 for a store, a retry storm's memory) narrows the property and says why in
 its name; one that is a bug gets fixed. Every official problem's reference
