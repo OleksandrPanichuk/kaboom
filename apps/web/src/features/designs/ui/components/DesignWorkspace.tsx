@@ -5,6 +5,7 @@ import {
   type LintHit,
   runLints,
   type Track,
+  vary,
 } from "@repo/design";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { cn } from "cn";
@@ -140,10 +141,15 @@ export function DesignWorkspace({
   const simulation = useSimulation(editor.graph, draft, running);
   const steps = simulation.result?.steps.length ?? 0;
   const step = Math.min(stepIndex, Math.max(0, steps - 1));
-  const replayed = useMemo(
-    () => (replay ? evaluateLoad(editor.graph, replay.scenario) : null),
-    [replay, editor.graph],
-  );
+  const replayed = useMemo(() => {
+    if (!replay) return null;
+
+    const run = vary(editor.graph, replay.scenario, replay.seed ?? 0, {
+      faults: replay.varyFaults ?? true,
+    });
+
+    return evaluateLoad(run.graph, run.scenario);
+  }, [replay, editor.graph]);
   const replaySeconds = replay?.scenario.stepSeconds ?? 10;
   const replaySteps = replayed?.steps.length ?? 0;
   const replayAt = Math.min(

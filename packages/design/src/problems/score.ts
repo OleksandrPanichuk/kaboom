@@ -9,8 +9,17 @@ import {
   loadedNodes,
   runChaosCase,
 } from "../testing/chaos";
+import {
+  affordable,
+  CHAOS_SEEDS,
+  runCost,
+  statusOf,
+  type Variation,
+  VARIATION_BUDGET,
+  varied,
+} from "../testing/variation";
 import { type DrillOutcome, runDrill } from "./drills";
-import { selectNodes } from "./resolve";
+import { drillScenario, selectNodes } from "./resolve";
 import type { CheckRef, ProblemContent, RubricItem } from "./schema";
 
 export interface ItemScore {
@@ -25,6 +34,7 @@ export interface ItemScore {
 export interface ChaosResult {
   chaos: ChaosCase;
   outcome: ChaosOutcome | null;
+  variation: Variation | null;
   skipped: string | null;
   durationMs: number;
 }
@@ -50,23 +60,64 @@ const serves = (graph: DesignGraph): boolean =>
 
 export interface DrillRunner {
   graph: DesignGraph;
+  seeds: number;
   drill: (id: string) => DrillOutcome | undefined;
+  variation: (id: string) => Variation | null;
   durationOf: (id: string) => number;
   chaos: () => ChaosResult[];
 }
 
-type Context = Pick<DrillRunner, "graph" | "drill" | "chaos">;
+type Context = Pick<DrillRunner, "graph" | "drill" | "chaos" | "variation">;
+
+export interface DrillRunnerOptions {
+  seeds?: number;
+}
 
 export const drillRunner = (
   problem: ProblemContent,
   graph: DesignGraph,
+  { seeds = 0 }: DrillRunnerOptions = {},
 ): DrillRunner => {
   const outcomes = new Map<string, DrillOutcome>();
   const durations = new Map<string, number>();
+  const variations = new Map<string, Variation | null>();
+  let share: number | null = null;
+  const shareOf = (): number => {
+    if (share !== null) return share;
+
+    const drillCost = problem.drills.reduce(
+      (sum, item) =>
+        item.kind === "load"
+          ? sum + runCost(graph, drillScenario(item, graph)) * seeds
+          : sum,
+      0,
+    );
+    const baseline = chaosBaseline(problem);
+    const settings = chaosSettings(problem);
+    const base = baseline ? runner.drill(baseline.id) : undefined;
+    const chaosCost =
+      baseline && settings.enabled && base?.passed && base.result
+        ? chaosCases(graph, settings, loadedNodes(base.result)).length *
+          runCost(graph, {
+            kind: "load",
+            durationSeconds:
+              settings.faultAt +
+              settings.faultSeconds +
+              settings.recoverySeconds,
+          }) *
+          Math.min(seeds, CHAOS_SEEDS)
+        : 0;
+    const total = drillCost + chaosCost;
+
+    share = total === 0 ? 1 : VARIATION_BUDGET / total;
+
+    return share;
+  };
   let chaos: ChaosResult[] | null = null;
 
   const runner: DrillRunner = {
     graph,
+    seeds,
     chaos: () => {
       if (chaos) return chaos;
 
@@ -88,6 +139,7 @@ export const drillRunner = (
           return {
             chaos: item,
             outcome: null,
+            variation: null,
             skipped: `Faults are drawn once “${baseline.title}” passes; a design that fails without them says nothing new with them.`,
             durationMs: 0,
           };
@@ -95,10 +147,18 @@ export const drillRunner = (
 
         const started = performance.now();
         const outcome = runChaosCase(graph, item, baseline, settings);
+        const wanted = Math.min(seeds, CHAOS_SEEDS);
+        const variation =
+          outcome.passed && wanted > 0
+            ? varied(affordable(wanted, shareOf()), (seed) =>
+                runChaosCase(graph, item, baseline, settings, seed),
+              )
+            : null;
 
         return {
           chaos: item,
           outcome,
+          variation,
           skipped: null,
           durationMs: performance.now() - started,
         };
@@ -120,11 +180,44 @@ export const drillRunner = (
 
       return outcomes.get(id);
     },
+    variation: (id) => {
+      if (variations.has(id)) return variations.get(id) ?? null;
+
+      const found = problem.drills.find((item) => item.id === id);
+      const outcome = runner.drill(id);
+      let variation: Variation | null = null;
+
+      if (
+        found?.kind === "load" &&
+        outcome?.passed &&
+        outcome.scenario &&
+        seeds > 0
+      ) {
+        const started = performance.now();
+
+        variation = varied(affordable(seeds, shareOf()), (seed) =>
+          runDrill(found, graph, seed),
+        );
+        durations.set(
+          id,
+          (durations.get(id) ?? 0) + performance.now() - started,
+        );
+      }
+
+      variations.set(id, variation);
+
+      return variation;
+    },
     durationOf: (id) => durations.get(id) ?? 0,
   };
 
   return runner;
 };
+
+export const FLAKY_SHARE = 0.5;
+
+const unsteady = (variation: Variation) =>
+  `Passes as drawn, but fails ${variation.total - variation.passed} of ${variation.total} runs with traffic and capacity varied${variation.worst?.message ? `; in run ${variation.worstSeed}: ${variation.worst.message}` : "."}`;
 
 export const judgeCheck = (
   check: CheckRef,
@@ -133,11 +226,17 @@ export const judgeCheck = (
   switch (check.check) {
     case "chaos-coverage": {
       const results = context.chaos();
-      const survived = results.filter((item) => item.outcome?.passed);
+      const statuses = results.map((item) =>
+        statusOf(item.outcome?.passed ?? false, item.variation),
+      );
+      const survived = statuses.filter((status) => status === "passed").length;
+      const unsure = statuses.filter((status) => status === "flaky").length;
       const coverage =
-        results.length === 0 ? 0 : survived.length / results.length;
+        results.length === 0
+          ? 0
+          : (survived + unsure * FLAKY_SHARE) / results.length;
       const ratio = Math.min(1, coverage / check.min);
-      const first = results.find((item) => !item.outcome?.passed);
+      const first = results.find((_, index) => statuses[index] !== "passed");
 
       if (results.length === 0) {
         return {
@@ -154,7 +253,7 @@ export const judgeCheck = (
       return {
         passed: coverage >= check.min,
         evidence: first
-          ? `Survives ${survived.length} of ${results.length} faults drawn from the design; not “${first.chaos.title}”.`
+          ? `Survives ${survived} of ${results.length} faults drawn from the design${unsure > 0 ? `, and ${unsure} only sometimes` : ""}; not always “${first.chaos.title}”.`
           : `Survives all ${results.length} faults drawn from the design.`,
         ratio,
       };
@@ -165,12 +264,22 @@ export const judgeCheck = (
       if (!outcome)
         return { passed: false, evidence: `No drill ${check.drillId}.` };
 
-      return outcome.passed
-        ? { passed: true, evidence: "The drill passed." }
-        : {
+      if (!outcome.passed) {
+        return {
+          passed: false,
+          evidence: outcome.failures[0] ?? "The drill failed.",
+        };
+      }
+
+      const variation = context.variation(check.drillId);
+
+      return statusOf(true, variation) === "flaky"
+        ? {
             passed: false,
-            evidence: outcome.failures[0] ?? "The drill failed.",
-          };
+            evidence: unsteady(variation!),
+            ratio: FLAKY_SHARE,
+          }
+        : { passed: true, evidence: "The drill passed." };
     }
     case "no-finding-under-drill": {
       const found = context
@@ -317,7 +426,9 @@ export const scoreSubmission = (
         id: item.id,
         title: item.title,
         visibility: item.visibility,
-        passed: outcome.passed,
+        passed:
+          outcome.passed &&
+          statusOf(true, runner.variation(item.id)) === "passed",
         failures: outcome.failures,
       };
     }),

@@ -357,13 +357,13 @@ The canvas holds the search deployment as it was on Tuesday. Change how it runs,
   ],
   reference: {
     notes:
-      "Nine search pods carry 3,000 requests a second at two thirds of their capacity, which keeps p99 near 200 ms. A pod autoscaler between nine and fourteen pods covers the busy hour within the budget. Deploys go out as a canary behind a readiness probe, with a surge of one and none unavailable: a slow or broken canary is rolled back after one step, so a tenth of the requests are slow or fail for ten seconds. Prometheus scrapes the search pods every 15 seconds, and an alert on latency pages the on-call engineer once p99 has stayed high for five minutes, whatever made it slow, which an error alert never would.",
+      "Eleven search pods carry 3,000 requests a second at just over half of their capacity, which keeps p99 under 200 ms with room for a bad minute. A pod autoscaler between eleven and fourteen pods covers the busy hour within the budget. Deploys go out as a canary behind a readiness probe, with a surge of one and none unavailable: a slow or broken canary is rolled back after one step, so a tenth of the requests are slow or fail for ten seconds. Prometheus scrapes the search pods every 15 seconds, and an alert on latency pages the on-call engineer once p99 has stayed high for five minutes, whatever made it slow, which an error alert never would.",
     graph: graph(
       [
         searchers(),
         ...front(),
         node("search", "k8s-deployment", "Search", {
-          replicas: 9,
+          replicas: 11,
           capacityRpsPerReplica: 500,
           baseLatencyMs: 40,
           strategy: "canary",
@@ -372,7 +372,7 @@ The canvas holds the search deployment as it was on Tuesday. Change how it runs,
           readinessProbe: true,
           canarySeconds: 60,
         }),
-        node("autoscaler", "hpa", "Autoscaler", { min: 9, max: 14 }),
+        node("autoscaler", "hpa", "Autoscaler", { min: 11, max: 14 }),
         node("slow", "alert", "Search is slow", {
           signal: "latency",
           forSeconds: 300,

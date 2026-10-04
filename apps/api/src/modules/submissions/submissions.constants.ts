@@ -31,6 +31,10 @@ export const SOLUTION_LOCK_MS = 7 * DAY;
 
 export const MIN_SOLUTION_SCORE = 80;
 
+export const RUN_SEEDS = 20;
+
+export const SUBMIT_SEEDS = 20;
+
 export const SOLUTIONS_SHOWN = 20;
 
 export const REVEAL_RATE_LIMIT = {

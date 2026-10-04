@@ -597,6 +597,19 @@ first public load drill without faults, and the cases are skipped until
 that drill passes. A `chaos-coverage` rubric item scores the share
 survived, as part of its weight.
 
+A load test also runs on varied inputs, so a design sized to the letter
+of the spec shows it. `vary(graph, scenario, seed)` (`testing/variation.ts`)
+is deterministic per seed: traffic moves by up to 5 % a minute with one
+short burst, a fault starts up to 30 s off and lasts a quarter more or
+less, and each node's capacity moves by 5 % and its latency by up to 15 %;
+seed 0 is the drill as drawn. A test that passes as drawn but holds in
+fewer than 95 % of its seeds is `flaky`, scores half its weight, and names
+its worst seed, which the browser replays with the same `vary`. A run uses
+8 seeds and a submission 20, chaos cases at most 5 and with their fault
+timing fixed, all inside a budget of node-steps so a large design runs
+fewer seeds rather than longer. Every reference holds on every seed; give
+a reference headroom rather than loosen a drill when one does not.
+
 The load model's invariants are property-based tests over random designs
 (`invariants.test.ts`): bounds, determinism, conservation, and that more
 replicas, less traffic or no fault never serve less. A counterexample that

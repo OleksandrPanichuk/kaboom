@@ -8,6 +8,7 @@ import type {
 } from "../problems/schema";
 import { type DrillRunner, drillRunner, judgeCheck } from "../problems/score";
 import { type Assertion, assertion } from "./assertion";
+import { HOLDS_SHARE, statusOf, type Variation } from "./variation";
 
 export const TEST_SUITES = [
   "functional",
@@ -32,6 +33,14 @@ export interface TestResult {
   assertions: Assertion[];
   durationMs: number;
   replay: LoadScenarioInput | null;
+  variation: TestVariation | null;
+}
+
+export interface TestVariation {
+  passed: number;
+  total: number;
+  worstSeed: number | null;
+  varyFaults: boolean;
 }
 
 export interface TestReport {
@@ -42,6 +51,7 @@ export interface TestReport {
 
 export interface RunTestsOptions {
   include: "public" | "all";
+  seeds?: number;
   runner?: DrillRunner;
 }
 
@@ -81,7 +91,40 @@ const visibilityOfCheck = (
   return drill?.visibility ?? "public";
 };
 
+export const HOLDS_LABEL = "Holds when traffic and capacity vary";
+
 const round = (ms: number) => Math.round(ms * 100) / 100;
+
+const summary = (
+  variation: Variation | null,
+  varyFaults: boolean,
+): TestVariation | null =>
+  variation && variation.total > 0
+    ? {
+        passed: variation.passed,
+        total: variation.total,
+        worstSeed: variation.worstSeed,
+        varyFaults,
+      }
+    : null;
+
+const holds = (variation: Variation | null): Assertion[] => {
+  if (!variation || variation.total === 0) return [];
+
+  const needed = Math.ceil(variation.total * HOLDS_SHARE);
+
+  return [
+    assertion({
+      label: HOLDS_LABEL,
+      expected: `${needed} of ${variation.total} runs`,
+      actual: `${variation.passed} of ${variation.total}`,
+      passed: variation.passed >= needed,
+      at: variation.worst?.at ?? null,
+      nodeIds: variation.worst?.nodeIds ?? [],
+      message: `Fails ${variation.total - variation.passed} of ${variation.total} runs with traffic, faults and capacity varied${variation.worst?.message ? `; in run ${variation.worstSeed}: ${variation.worst.message}` : "."}`,
+    }),
+  ];
+};
 
 export const summarise = (
   tests: readonly TestResult[],
@@ -96,7 +139,11 @@ export const summarise = (
 export const runTests = (
   problem: ProblemContent,
   graph: DesignGraph,
-  { include, runner = drillRunner(problem, graph) }: RunTestsOptions,
+  {
+    include,
+    seeds = 0,
+    runner = drillRunner(problem, graph, { seeds }),
+  }: RunTestsOptions,
 ): TestReport => {
   const started = performance.now();
   const shown = (visibility: "public" | "hidden") =>
@@ -105,6 +152,7 @@ export const runTests = (
     .filter((drill) => shown(drill.visibility))
     .map((drill): TestResult => {
       const outcome = runner.drill(drill.id)!;
+      const variation = runner.variation(drill.id);
 
       return {
         id: `drill:${drill.id}`,
@@ -112,11 +160,12 @@ export const runTests = (
         title: drill.title,
         description: drill.description,
         visibility: drill.visibility,
-        status: outcome.passed ? "passed" : "failed",
-        assertions: outcome.assertions,
+        status: statusOf(outcome.passed, variation),
+        assertions: [...outcome.assertions, ...holds(variation)],
         durationMs: round(runner.durationOf(drill.id)),
         replay:
           drill.visibility === "public" ? (outcome.scenario ?? null) : null,
+        variation: summary(variation, true),
       };
     });
   const checks = problem.rubric
@@ -149,21 +198,31 @@ export const runTests = (
         ],
         durationMs: round(performance.now() - checkStarted),
         replay: null,
+        variation: null,
       };
     });
   const chaos = runner
     .chaos()
-    .map(({ chaos: item, outcome, skipped, durationMs }): TestResult => ({
-      id: item.id,
-      suite: "chaos",
-      title: item.title,
-      description: skipped ?? "",
-      visibility: "public",
-      status: outcome ? (outcome.passed ? "passed" : "failed") : "skipped",
-      assertions: outcome?.assertions ?? [],
-      durationMs: round(durationMs),
-      replay: outcome?.scenario ?? null,
-    }));
+    .map(
+      ({
+        chaos: item,
+        outcome,
+        variation,
+        skipped,
+        durationMs,
+      }): TestResult => ({
+        id: item.id,
+        suite: "chaos",
+        title: item.title,
+        description: skipped ?? "",
+        visibility: "public",
+        status: outcome ? statusOf(outcome.passed, variation) : "skipped",
+        assertions: [...(outcome?.assertions ?? []), ...holds(variation)],
+        durationMs: round(durationMs),
+        replay: outcome?.scenario ?? null,
+        variation: summary(variation, false),
+      }),
+    );
   const tests = [...drills, ...checks, ...chaos].sort(
     (a, b) => TEST_SUITES.indexOf(a.suite) - TEST_SUITES.indexOf(b.suite),
   );
@@ -191,6 +250,7 @@ export const publicReport = (report: TestReport): TestReport => ({
           assertions: [],
           durationMs: 0,
           replay: null,
+          variation: test.variation && { ...test.variation, worstSeed: null },
         }
       : test,
   ),

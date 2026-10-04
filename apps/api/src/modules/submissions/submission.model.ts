@@ -72,6 +72,14 @@ export const TestResultModel = t.Object({
         "The load scenario the test ran, faults resolved to node ids, for evaluating it again in the browser",
     }),
   ),
+  variation: t.Nullable(
+    t.Object({
+      passed: t.Integer(),
+      total: t.Integer(),
+      worstSeed: t.Nullable(t.Integer()),
+      varyFaults: t.Boolean(),
+    }),
+  ),
 });
 export type TestResultModel = typeof TestResultModel.static;
 

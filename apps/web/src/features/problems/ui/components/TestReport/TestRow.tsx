@@ -1,5 +1,5 @@
 import type { TestResultModel } from "@repo/api-client";
-import type { LoadScenarioInput } from "@repo/design";
+import { HOLDS_LABEL, type LoadScenarioInput } from "@repo/design";
 import { cn } from "cn";
 import { ChevronRight, EyeOff, Play } from "lucide-react";
 import { useId, useState } from "react";
@@ -30,13 +30,21 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
   const [open, setOpen] = useState(test.status === "failed" && !hidden);
   const scenario: LoadScenarioInput | null =
     hidden || !onReplay ? null : replayScenario(test.replay);
-  const replay = (at: number | null, nodeIds: string[]) =>
+  const replay = (at: number | null, nodeIds: string[], seed?: number) =>
     scenario
       ? () => {
-          onReplay?.({ title: test.title, scenario, at, nodeIds });
+          onReplay?.({
+            title: seed ? `${test.title}, run ${seed}` : test.title,
+            scenario,
+            at,
+            nodeIds,
+            seed,
+            varyFaults: test.variation?.varyFaults ?? true,
+          });
           closePanels();
         }
       : null;
+  const worstSeed = test.variation?.worstSeed ?? null;
   const expandable =
     !hidden && (test.assertions.length > 0 || test.description !== "");
 
@@ -59,6 +67,19 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
           aria-label="Hidden test"
           className="size-3.5 shrink-0 text-muted-foreground"
         />
+      ) : null}
+      {test.variation ? (
+        <span
+          className={cn(
+            "shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
+            test.variation.passed === test.variation.total
+              ? "bg-zinc-100 text-zinc-600"
+              : "bg-amber-50 text-amber-800",
+          )}
+          title="Runs that passed with traffic, faults and capacity varied"
+        >
+          {test.variation.passed}/{test.variation.total}
+        </span>
       ) : null}
       {change ? (
         <span
@@ -114,7 +135,9 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
                 onShow={
                   assertion.passed
                     ? null
-                    : replay(assertion.at, assertion.nodeIds)
+                    : assertion.label === HOLDS_LABEL && worstSeed !== null
+                      ? replay(assertion.at, assertion.nodeIds, worstSeed)
+                      : replay(assertion.at, assertion.nodeIds)
                 }
               />
             ))}

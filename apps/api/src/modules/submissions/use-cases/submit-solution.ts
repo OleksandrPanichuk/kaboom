@@ -13,6 +13,7 @@ import { UseCase } from "@/core/use-case";
 
 import { SubmissionReviewScheduler, SubmissionsRepository } from "../ports";
 import type { SubmissionEntity } from "../submission.entity";
+import { SUBMIT_SEEDS } from "../submissions.constants";
 import { SubmissionPendingChangesError } from "../submissions.errors";
 import { SubmissionsService } from "../submissions.service";
 
@@ -43,7 +44,9 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       );
     }
 
-    const runner = drillRunner(version.content, design.graph);
+    const runner = drillRunner(version.content, design.graph, {
+      seeds: SUBMIT_SEEDS,
+    });
     const shown = publicScore(
       version.content,
       scoreSubmission(version.content, design.graph, runner),
