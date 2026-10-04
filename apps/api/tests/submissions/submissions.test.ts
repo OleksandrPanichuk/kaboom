@@ -24,6 +24,26 @@ interface DrillResult {
   failures: string[];
 }
 
+interface TestResult {
+  id: string;
+  suite: string;
+  visibility: string;
+  status: string;
+  assertions: Array<{
+    label: string;
+    expected: string;
+    actual: string;
+    passed: boolean;
+    message: string | null;
+  }>;
+  replay: unknown;
+}
+
+interface TestReport {
+  tests: TestResult[];
+  summary: Record<string, number>;
+}
+
 interface Submission {
   id: string;
   score: number;
@@ -31,6 +51,7 @@ interface Submission {
   problemVersion: number;
   items: Array<{ key: string; passed: boolean; evidence: string }>;
   drills: DrillResult[];
+  tests: TestReport | null;
 }
 
 interface Progress {
@@ -93,21 +114,32 @@ describe("problem attempts", () => {
 });
 
 describe("running and submitting", () => {
-  test("a run shows the public drills only, with their failures", async () => {
+  test("a run reports the public tests only, with what each expected and got", async () => {
     const user = await createUser();
 
     await start(user);
 
-    const run = await user.post<{ revision: number; drills: DrillResult[] }>(
+    const run = await user.post<{ revision: number; report: TestReport }>(
       `${PATH}/runs`,
+    );
+    const drills = run.body.report.tests.filter((test) =>
+      test.id.startsWith("drill:"),
     );
 
     expect(run.status).toBe(200);
-    expect(run.body.drills.map((drill) => [drill.id, drill.passed])).toEqual([
-      ["normal-day", false],
-      ["viral-link", false],
+    expect(drills.map((test) => [test.id, test.status])).toEqual([
+      ["drill:normal-day", "failed"],
+      ["drill:viral-link", "failed"],
     ]);
-    expect(run.body.drills[0]!.failures[0]).toContain("Users");
+    expect(
+      run.body.report.tests.every((test) => test.visibility === "public"),
+    ).toBe(true);
+    const broken = drills[0]!.assertions.find((item) => !item.passed)!;
+
+    expect(broken.expected).not.toBe(broken.actual);
+    expect(broken.message).toContain("Users");
+    expect(drills[0]!.replay).toMatchObject({ kind: "load" });
+    expect(run.body.report.summary.failed).toBeGreaterThan(0);
   });
 
   test("the reference solution scores 100, and hidden drills say nothing but their outcome", async () => {
@@ -136,6 +168,12 @@ describe("running and submitting", () => {
       submitted.body.drills
         .filter((drill) => drill.visibility === "hidden")
         .every((drill) => drill.failures.length === 0),
+    ).toBe(true);
+    expect(submitted.body.tests?.summary).toMatchObject({ failed: 0 });
+    expect(
+      submitted.body.tests?.tests
+        .filter((test) => test.visibility === "hidden")
+        .every((test) => test.assertions.length === 0 && test.replay === null),
     ).toBe(true);
     expect(raw).not.toContain("node-down");
   });

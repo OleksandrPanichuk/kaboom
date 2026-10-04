@@ -31,12 +31,42 @@ const serves = (graph: DesignGraph): boolean =>
     graph.nodes.some((node) => node.kind === "client" && node.id === edge.from),
   );
 
-interface Context {
+export interface DrillRunner {
   graph: DesignGraph;
   drill: (id: string) => DrillOutcome | undefined;
+  durationOf: (id: string) => number;
 }
 
-const judge = (
+type Context = Pick<DrillRunner, "graph" | "drill">;
+
+export const drillRunner = (
+  problem: ProblemContent,
+  graph: DesignGraph,
+): DrillRunner => {
+  const outcomes = new Map<string, DrillOutcome>();
+  const durations = new Map<string, number>();
+
+  return {
+    graph,
+    drill: (id) => {
+      if (!outcomes.has(id)) {
+        const found = problem.drills.find((item) => item.id === id);
+
+        if (found) {
+          const started = performance.now();
+
+          outcomes.set(id, runDrill(found, graph));
+          durations.set(id, performance.now() - started);
+        }
+      }
+
+      return outcomes.get(id);
+    },
+    durationOf: (id) => durations.get(id) ?? 0,
+  };
+};
+
+export const judgeCheck = (
   check: CheckRef,
   context: Context,
 ): { passed: boolean; evidence: string } => {
@@ -174,23 +204,14 @@ const judge = (
 export const scoreSubmission = (
   problem: ProblemContent,
   graph: DesignGraph,
+  runner: DrillRunner = drillRunner(problem, graph),
 ): Score => {
-  const outcomes = new Map<string, DrillOutcome>();
-  const drill = (id: string) => {
-    if (!outcomes.has(id)) {
-      const found = problem.drills.find((item) => item.id === id);
-
-      if (found) outcomes.set(id, runDrill(found, graph));
-    }
-
-    return outcomes.get(id);
-  };
-  const context: Context = { graph, drill };
+  const { drill } = runner;
   const items = problem.rubric.map((item: RubricItem): ItemScore => ({
     key: item.key,
     title: item.title,
     weight: item.weight,
-    ...judge(item.check, context),
+    ...judgeCheck(item.check, runner),
   }));
   const total = items.reduce((sum, item) => sum + item.weight, 0);
   const earned = items.reduce(

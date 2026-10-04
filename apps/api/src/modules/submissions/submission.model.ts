@@ -1,4 +1,4 @@
-import { INTERVIEW_DIMENSIONS } from "@repo/design";
+import { INTERVIEW_DIMENSIONS, TEST_STATUSES, TEST_SUITES } from "@repo/design";
 import { t } from "elysia";
 
 import { SUBMISSION_REVIEW_STATUSES } from "@/db";
@@ -39,9 +39,50 @@ export const ItemResultModel = t.Object({
 });
 export type ItemResultModel = typeof ItemResultModel.static;
 
+export const AssertionModel = t.Object({
+  label: t.String(),
+  expected: t.String(),
+  actual: t.String(),
+  passed: t.Boolean(),
+  at: t.Nullable(t.Number()),
+  nodeIds: t.Array(t.String()),
+  message: t.Nullable(t.String()),
+});
+export type AssertionModel = typeof AssertionModel.static;
+
+export const TestResultModel = t.Object({
+  id: t.String(),
+  suite: t.UnionEnum(TEST_SUITES),
+  title: t.String(),
+  description: t.String(),
+  visibility: t.UnionEnum(["public", "hidden"]),
+  status: t.UnionEnum(TEST_STATUSES),
+  assertions: t.Array(AssertionModel),
+  durationMs: t.Number(),
+  replay: t.Nullable(
+    t.Unknown({
+      description:
+        "The load scenario the test ran, faults resolved to node ids, for evaluating it again in the browser",
+    }),
+  ),
+});
+export type TestResultModel = typeof TestResultModel.static;
+
+export const TestReportModel = t.Object({
+  tests: t.Array(TestResultModel),
+  summary: t.Object({
+    passed: t.Integer(),
+    failed: t.Integer(),
+    flaky: t.Integer(),
+    skipped: t.Integer(),
+  }),
+  durationMs: t.Number(),
+});
+export type TestReportModel = typeof TestReportModel.static;
+
 export const RunResultModel = t.Object({
   revision: t.Integer(),
-  drills: t.Array(DrillResultModel),
+  report: TestReportModel,
 });
 export type RunResultModel = typeof RunResultModel.static;
 
@@ -73,6 +114,7 @@ export const SubmissionModel = t.Object({
   counted: t.Boolean(),
   items: t.Array(ItemResultModel),
   drills: t.Array(DrillResultModel),
+  tests: t.Nullable(TestReportModel),
   createdAt: t.String({ format: "date-time" }),
 });
 export type SubmissionModel = typeof SubmissionModel.static;

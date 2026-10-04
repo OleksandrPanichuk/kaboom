@@ -6,3 +6,4 @@ export * from "./handbook";
 export * from "./lints";
 export * from "./ops";
 export * from "./problems";
+export * from "./testing";

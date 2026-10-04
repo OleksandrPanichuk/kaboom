@@ -194,6 +194,14 @@ a started problem with Task, Tests and History tabs, and Run tests and Submit
 beside undo. Submit sends the revision on screen, so the server scores the
 design the solver saw and answers 409 if it has moved on.
 
+The Tests tab renders a `TestReport`: a summary, the suites, and each test's
+assertions with expected and actual values. A failed assertion of a public
+load test can be shown on the canvas: `DesignWorkspaceContext.replay`
+evaluates its scenario in the browser on the live graph, draws that run's
+overlay with a `ReplayBar` to scrub time, and pans to the blamed nodes
+without selecting them, so the Tests tab stays open. On a phone it closes
+the sheet first. A second run marks what newly failed and what was fixed.
+
 A problem is started explicitly, from a screen with a Start button: the route
 only reads the attempt (`null` when there is none), because a link preloads
 its loader on hover and must never create anything.

@@ -1,4 +1,9 @@
-import type { DesignGraph, DrillScore, ItemScore } from "@repo/design";
+import type {
+  DesignGraph,
+  DrillScore,
+  ItemScore,
+  TestReport,
+} from "@repo/design";
 import { and, count, desc, eq, gte, isNotNull, ne, sql } from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";
@@ -34,6 +39,7 @@ const toEntity = ({
   review: row.review as DesignReview | null,
   items: row.items as ItemScore[],
   drills: row.drills as DrillScore[],
+  tests: row.tests as TestReport | null,
 });
 
 export class PostgresSubmissionsRepository extends SubmissionsRepository {

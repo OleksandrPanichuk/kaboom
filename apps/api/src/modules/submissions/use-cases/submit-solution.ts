@@ -1,7 +1,10 @@
 import {
+  drillRunner,
   hintPenalty,
   penalised,
+  publicReport,
   publicScore,
+  runTests,
   scoreSubmission,
 } from "@repo/design";
 
@@ -40,9 +43,13 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       );
     }
 
+    const runner = drillRunner(version.content, design.graph);
     const shown = publicScore(
       version.content,
-      scoreSubmission(version.content, design.graph),
+      scoreSubmission(version.content, design.graph, runner),
+    );
+    const tests = publicReport(
+      runTests(version.content, design.graph, { include: "all", runner }),
     );
     const penalty = hintPenalty(version.content, attempt.hintsRevealed);
     const lockedUntil = await this.service.lockOf(userId, attempt.problemId);
@@ -63,6 +70,7 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       graph: design.graph,
       items: shown.items,
       drills: shown.drills,
+      tests,
     });
 
     await make(SubmissionReviewScheduler).schedule(inserted.id);

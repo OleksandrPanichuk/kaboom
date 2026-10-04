@@ -3,14 +3,20 @@ import { cn } from "cn";
 import { CircleCheck, CircleX, LoaderCircle } from "lucide-react";
 
 import { ScoreDots } from "@/components/ScoreDots";
+import type { ReplayRequest } from "@/features/designs";
 import { useLatestSubmission } from "@/features/problems/hooks";
 import { scoreTone } from "@/features/problems/utils";
 
 import { DrillResults } from "./DrillResults";
+import { TestReport } from "./TestReport";
 
 interface ScoreBreakdownProps {
   submission: SubmissionModel;
+  labelOf?: (nodeId: string) => string;
+  onReplay?: (request: ReplayRequest) => void;
 }
+
+const asIs = (nodeId: string) => nodeId;
 
 const DIMENSIONS: Record<string, string> = {
   design: "Core design",
@@ -23,11 +29,21 @@ const DIMENSIONS: Record<string, string> = {
 export function LatestScoreBreakdown({
   slug,
   submission,
+  ...rest
 }: ScoreBreakdownProps & { slug: string }) {
-  return <ScoreBreakdown submission={useLatestSubmission(slug, submission)} />;
+  return (
+    <ScoreBreakdown
+      submission={useLatestSubmission(slug, submission)}
+      {...rest}
+    />
+  );
 }
 
-export function ScoreBreakdown({ submission }: ScoreBreakdownProps) {
+export function ScoreBreakdown({
+  submission,
+  labelOf = asIs,
+  onReplay,
+}: ScoreBreakdownProps) {
   return (
     <div className="flex flex-col gap-4">
       <p className="flex items-baseline gap-1.5">
@@ -115,12 +131,25 @@ export function ScoreBreakdown({ submission }: ScoreBreakdownProps) {
           ) : null}
         </div>
       ) : null}
-      <div className="flex flex-col gap-2">
-        <h4 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Drills
-        </h4>
-        <DrillResults drills={submission.drills} />
-      </div>
+      {submission.tests ? (
+        <div className="flex flex-col gap-2">
+          <h4 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Tests
+          </h4>
+          <TestReport
+            report={submission.tests}
+            labelOf={labelOf}
+            onReplay={onReplay}
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <h4 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Drills
+          </h4>
+          <DrillResults drills={submission.drills} />
+        </div>
+      )}
     </div>
   );
 }

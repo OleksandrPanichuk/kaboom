@@ -75,6 +75,7 @@ const CONNECTION_LINE = {
 export interface CanvasFocus {
   nodeIds: string[];
   token: number;
+  select?: boolean;
 }
 
 interface DesignCanvasProps {
@@ -139,7 +140,7 @@ export function DesignCanvas({
 
   const [focused, setFocused] = useState(focus?.token ?? null);
 
-  if (focus && focused !== focus.token) {
+  if (focus && focused !== focus.token && focus.select !== false) {
     setFocused(focus.token);
 
     const wanted = new Set(focus.nodeIds);

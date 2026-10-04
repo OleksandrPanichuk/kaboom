@@ -1,23 +1,33 @@
+import type { TestReportModel } from "@repo/api-client";
 import { FlaskConical } from "lucide-react";
 
+import type { ReplayRequest } from "@/features/designs";
 import type { ProblemOutcome } from "@/features/problems/typedefs";
 
-import { DrillResults } from "./DrillResults";
 import { PanelSection } from "./PanelSection";
 import { LatestScoreBreakdown } from "./ScoreBreakdown";
+import { TestReport } from "./TestReport";
 
 interface TestsPanelProps {
   slug: string;
   outcome: ProblemOutcome | null;
+  previous: TestReportModel | null;
+  runKey: number;
   revision: number;
   error: string | null;
+  labelOf: (nodeId: string) => string;
+  onReplay: (request: ReplayRequest) => void;
 }
 
 export function TestsPanel({
   slug,
   outcome,
+  previous,
+  runKey,
   revision,
   error,
+  labelOf,
+  onReplay,
 }: TestsPanelProps) {
   if (!outcome) {
     return (
@@ -27,8 +37,8 @@ export function TestsPanel({
         </span>
         <p className="text-sm font-medium">No results yet</p>
         <p className="text-sm leading-5 text-muted-foreground text-pretty">
-          Run tests to try your design against the public drills. Submit to
-          score it against every drill, hidden ones included.
+          Run tests to try your design against the public tests. Submit to score
+          it against every test, hidden ones included.
         </p>
         {error ? (
           <p role="alert" className="text-sm text-destructive">
@@ -41,10 +51,6 @@ export function TestsPanel({
 
   const tested =
     outcome.kind === "run" ? outcome.run.revision : outcome.submission.revision;
-  const passed =
-    outcome.kind === "run"
-      ? outcome.run.drills.filter((drill) => drill.passed).length
-      : 0;
 
   return (
     <div className="flex flex-col">
@@ -59,14 +65,23 @@ export function TestsPanel({
         </p>
       ) : null}
       {outcome.kind === "run" ? (
-        <PanelSection
-          title={`Public drills · ${passed} of ${outcome.run.drills.length} passed`}
-        >
-          <DrillResults drills={outcome.run.drills} />
+        <PanelSection title="Public tests">
+          <TestReport
+            key={runKey}
+            report={outcome.run.report}
+            previous={previous}
+            labelOf={labelOf}
+            onReplay={onReplay}
+          />
         </PanelSection>
       ) : (
         <PanelSection title="Submission">
-          <LatestScoreBreakdown slug={slug} submission={outcome.submission} />
+          <LatestScoreBreakdown
+            slug={slug}
+            submission={outcome.submission}
+            labelOf={labelOf}
+            onReplay={onReplay}
+          />
         </PanelSection>
       )}
     </div>

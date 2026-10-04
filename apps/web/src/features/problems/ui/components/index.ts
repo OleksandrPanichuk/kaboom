@@ -13,5 +13,6 @@ export * from "./ScoreBreakdown";
 export * from "./SolutionPreview";
 export * from "./SolutionsPanel";
 export * from "./TaskPanel";
+export * from "./TestReport";
 export * from "./TestsPanel";
 export * from "./TrackFilter";

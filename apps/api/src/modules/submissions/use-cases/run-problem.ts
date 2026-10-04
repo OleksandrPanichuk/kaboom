@@ -1,4 +1,4 @@
-import { type DrillScore, runPublicDrills } from "@repo/design";
+import { runTests, type TestReport } from "@repo/design";
 
 import { makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
@@ -14,7 +14,7 @@ type Options = RunProblemUseCaseOptions;
 
 interface Result {
   revision: number;
-  drills: DrillScore[];
+  report: TestReport;
 }
 
 export class RunProblemUseCase extends UseCase<Options, Result> {
@@ -25,7 +25,7 @@ export class RunProblemUseCase extends UseCase<Options, Result> {
 
     return {
       revision: design.revision,
-      drills: runPublicDrills(version.content, design.graph),
+      report: runTests(version.content, design.graph, { include: "public" }),
     };
   }
 }
