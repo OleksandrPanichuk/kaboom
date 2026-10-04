@@ -1,3 +1,4 @@
+import { carriesLoad } from "../catalogue";
 import { evaluateLoad } from "../evaluate/load";
 import { evaluateNetwork } from "../evaluate/network";
 import { evaluatePipeline } from "../evaluate/pipeline";
@@ -129,10 +130,96 @@ const worstIndex = (values: readonly number[], higherIsWorse: boolean) =>
     0,
   );
 
+const DURABLE_KINDS = new Set<string>([
+  "sql-database",
+  "nosql-database",
+  "object-storage",
+  "queue",
+  "stream",
+]);
+
+const KEPT_SHARE = 0.99;
+
+const persisted = (
+  graph: DesignGraph,
+  result: EvaluationResult,
+): Assertion[] => {
+  const index = result.steps.length - 1;
+  const step = result.steps[index];
+
+  if (!step) return [];
+
+  const writes = graph.nodes
+    .filter((node) => node.kind === "client")
+    .reduce((sum, node) => {
+      const client = step.clients[node.id];
+      const readRatio = (node.props as { readRatio?: number }).readRatio ?? 1;
+
+      return (
+        sum +
+        (client?.emitted ?? 0) * (1 - readRatio) * (client?.availability ?? 1)
+      );
+    }, 0);
+
+  if (writes <= 0) return [];
+
+  const stores = graph.nodes.filter((node) => DURABLE_KINDS.has(node.kind));
+  const durable = new Set(stores.map((node) => node.id));
+  const downstream = new Set<string>();
+  const queue = [...durable];
+
+  while (queue.length > 0) {
+    const id = queue.pop()!;
+
+    for (const edge of graph.edges) {
+      if (
+        edge.from === id &&
+        carriesLoad(edge.kind) &&
+        !downstream.has(edge.to)
+      ) {
+        downstream.add(edge.to);
+        queue.push(edge.to);
+      }
+    }
+  }
+
+  const kept = graph.nodes
+    .filter((node) => !durable.has(node.id) && !downstream.has(node.id))
+    .reduce((sum, source) => {
+      const into = graph.edges
+        .filter((edge) => edge.from === source.id && durable.has(edge.to))
+        .map((edge) => (step.edges[edge.id]?.writes ?? 0) / edge.props.fanOut);
+
+      return sum + Math.max(0, ...into);
+    }, 0);
+  const perSecond = (value: number) =>
+    `${Math.round(value).toLocaleString("en")}/s`;
+
+  return [
+    assertion({
+      label: "Writes reach a store that keeps them",
+      expected: `≥ ${perSecond(writes * KEPT_SHARE)}`,
+      actual: perSecond(kept),
+      passed: kept >= writes * KEPT_SHARE,
+      at: step.t,
+      nodeIds: stores.map((node) => node.id),
+      message:
+        stores.length === 0
+          ? `The clients write ${perSecond(writes)}, and no database, queue, stream or object store keeps any of it.`
+          : `The clients write ${perSecond(writes)}, but only ${perSecond(kept)} reaches a database, queue, stream or object store.`,
+    }),
+  ];
+};
+
+export interface RunDrillOptions {
+  keepsWrites?: boolean;
+}
+
 export const runDrill = (
   drill: Drill,
   graph: DesignGraph,
   seed = 0,
+  { keepsWrites = false }: RunDrillOptions = {},
 ): DrillOutcome => {
   switch (drill.kind) {
     case "pipeline":
@@ -140,7 +227,7 @@ export const runDrill = (
     case "network":
       return runNetworkDrill(drill, graph);
     case "load":
-      return runLoadDrill(drill, graph, seed);
+      return runLoadDrill(drill, graph, seed, keepsWrites);
   }
 };
 
@@ -240,6 +327,7 @@ const runLoadDrill = (
   drill: LoadDrill,
   graph: DesignGraph,
   seed: number,
+  keepsWrites: boolean,
 ): DrillOutcome => {
   const scenario = drillScenario(drill, graph);
   const varied = vary(graph, scenario, seed);
@@ -438,6 +526,10 @@ const runLoadDrill = (
         message: `The design may run ${pods} pods; the budget allows ${drill.expect.maxPods}.`,
       }),
     );
+  }
+
+  if (keepsWrites && drill.faults.length === 0) {
+    assertions.push(...persisted(graph, result));
   }
 
   assertions.push(

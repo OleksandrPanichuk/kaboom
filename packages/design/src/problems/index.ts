@@ -58,7 +58,6 @@ export {
   drillRunner,
   type DrillScore,
   type ItemScore,
-  runPublicDrills,
   type Score,
   scoreSubmission,
 } from "./score";

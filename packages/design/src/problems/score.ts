@@ -1,3 +1,4 @@
+import type { EvaluationResult } from "../evaluate/result";
 import type { DesignGraph } from "../graph";
 import { runLints } from "../lints";
 import {
@@ -113,6 +114,7 @@ export const drillRunner = (
 
     return share;
   };
+  const options = { keepsWrites: problem.track === "system-design" };
   let chaos: ChaosResult[] | null = null;
 
   const runner: DrillRunner = {
@@ -173,7 +175,7 @@ export const drillRunner = (
         if (found) {
           const started = performance.now();
 
-          outcomes.set(id, runDrill(found, graph));
+          outcomes.set(id, runDrill(found, graph, 0, options));
           durations.set(id, performance.now() - started);
         }
       }
@@ -196,7 +198,7 @@ export const drillRunner = (
         const started = performance.now();
 
         variation = varied(affordable(seeds, shareOf()), (seed) =>
-          runDrill(found, graph, seed),
+          runDrill(found, graph, seed, options),
         );
         durations.set(
           id,
@@ -216,6 +218,57 @@ export const drillRunner = (
 
 export const FLAKY_SHARE = 0.5;
 
+const labelOf = (node: { label: string; id: string }) => node.label || node.id;
+
+const HIT_RATIO_KINDS = new Set(["cache", "cdn"]);
+
+export const readShare = (
+  graph: DesignGraph,
+  result: EvaluationResult,
+  kind: string,
+): number => {
+  const servers = graph.nodes.filter((node) => node.kind === kind);
+  const ids = new Set(servers.map((node) => node.id));
+  let asked = 0;
+  let answered = 0;
+
+  for (const step of result.steps) {
+    for (const node of graph.nodes) {
+      if (node.kind !== "client") continue;
+
+      const readRatio = (node.props as { readRatio?: number }).readRatio ?? 1;
+
+      asked += (step.clients[node.id]?.emitted ?? 0) * readRatio;
+    }
+
+    for (const server of servers) {
+      const reads = (from: boolean) =>
+        graph.edges
+          .filter((edge) =>
+            from
+              ? edge.from === server.id && !ids.has(edge.to)
+              : edge.to === server.id && !ids.has(edge.from),
+          )
+          .reduce(
+            (sum, edge) =>
+              sum +
+              (step.edges[edge.id]?.reads ?? 0) /
+                (from ? 1 : edge.props.fanOut),
+            0,
+          );
+      const load = step.nodes[server.id]?.reads ?? 0;
+      const hit =
+        HIT_RATIO_KINDS.has(server.kind) && load > 0
+          ? Math.max(0, 1 - reads(true) / load)
+          : 1;
+
+      answered += reads(false) * hit;
+    }
+  }
+
+  return asked > 0 ? Math.min(1, answered / asked) : 0;
+};
+
 const unsteady = (variation: Variation) =>
   `Passes as drawn, but fails ${variation.total - variation.passed} of ${variation.total} runs with traffic and capacity varied${variation.worst?.message ? `; in run ${variation.worstSeed}: ${variation.worst.message}` : "."}`;
 
@@ -224,6 +277,36 @@ export const judgeCheck = (
   context: Context,
 ): { passed: boolean; evidence: string; ratio?: number } => {
   switch (check.check) {
+    case "serves-reads": {
+      const outcome = context.drill(check.drillId);
+
+      if (!outcome?.result) {
+        return { passed: false, evidence: `No load drill ${check.drillId}.` };
+      }
+
+      const share = readShare(context.graph, outcome.result, check.nodeKind);
+      const shown = `${Math.round(share * 100)}%`;
+      const servers = context.graph.nodes.filter(
+        (node) => node.kind === check.nodeKind,
+      );
+
+      if (servers.length === 0) {
+        return {
+          passed: false,
+          evidence: `No ${check.nodeKind} answers any reads; the design has none.`,
+        };
+      }
+
+      return share >= check.minShare
+        ? {
+            passed: true,
+            evidence: `${servers.map(labelOf).join(", ")} answer${servers.length === 1 ? "s" : ""} ${shown} of the reads.`,
+          }
+        : {
+            passed: false,
+            evidence: `${servers.map(labelOf).join(", ")} answer${servers.length === 1 ? "s" : ""} ${shown} of the reads; the check needs ${Math.round(check.minShare * 100)}%.`,
+          };
+    }
     case "chaos-coverage": {
       const results = context.chaos();
       const statuses = results.map((item) =>
@@ -434,21 +517,3 @@ export const scoreSubmission = (
     }),
   };
 };
-
-export const runPublicDrills = (
-  problem: ProblemContent,
-  graph: DesignGraph,
-): DrillScore[] =>
-  problem.drills
-    .filter((item) => item.visibility === "public")
-    .map((item) => {
-      const outcome = runDrill(item, graph);
-
-      return {
-        id: item.id,
-        title: item.title,
-        visibility: item.visibility,
-        passed: outcome.passed,
-        failures: outcome.failures,
-      };
-    });

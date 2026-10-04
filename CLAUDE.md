@@ -597,6 +597,15 @@ first public load drill without faults, and the cases are skipped until
 that drill passes. A `chaos-coverage` rubric item scores the share
 survived, as part of its weight.
 
+A check asks what a design does rather than what it has where it can.
+`serves-reads` measures the share of the clients' reads that nodes of a
+kind answer during a drill, a cache or CDN by its hit ratio, so a cache
+drawn beside the read path earns nothing. In a system-design problem every
+load drill without faults also asserts that the clients' writes reach a
+database, queue, stream or object store; a DevOps problem may run a
+stateless service on its own, so `runDrill` takes `keepsWrites` from the
+track.
+
 A load test also runs on varied inputs, so a design sized to the letter
 of the spec shows it. `vary(graph, scenario, seed)` (`testing/variation.ts`)
 is deterministic per seed: traffic moves by up to 5 % a minute with one

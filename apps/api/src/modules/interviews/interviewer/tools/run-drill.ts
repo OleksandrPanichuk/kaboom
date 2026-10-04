@@ -30,7 +30,9 @@ export const runDrillTool = defineInterviewerTool({
       interview.designId,
       interview.ownerId,
     );
-    const outcome = runDrill(drill, design.graph);
+    const outcome = runDrill(drill, design.graph, 0, {
+      keepsWrites: pinned.content.track === "system-design",
+    });
 
     if (drill.kind !== "load") {
       return {
