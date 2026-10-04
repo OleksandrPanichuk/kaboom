@@ -48,6 +48,12 @@ const withoutTimings = (value: unknown): unknown =>
     ),
   );
 
+const rejection = (promise: Promise<unknown>): Promise<unknown> =>
+  promise.then(
+    () => null,
+    (error: unknown) => error,
+  );
+
 let pools: WorkerDesignTester[] = [];
 
 const pool = async (size: number, timeoutMs = 30_000, maxQueued?: number) => {
@@ -109,7 +115,7 @@ describe("WorkerDesignTester", () => {
   test("gives up on a test past its timeout, and keeps working", async () => {
     const tester = await pool(1, 1_000);
 
-    await expect(tester.test(request(60))).rejects.toBeInstanceOf(
+    expect(await rejection(tester.test(request(60)))).toBeInstanceOf(
       DesignTestsTimedOutError,
     );
     await Bun.sleep(1_050);
@@ -124,7 +130,7 @@ describe("WorkerDesignTester", () => {
 
     await tester.close();
 
-    await expect(tester.test(request())).rejects.toBeInstanceOf(
+    expect(await rejection(tester.test(request()))).toBeInstanceOf(
       DesignTestsUnavailableError,
     );
   });
@@ -134,8 +140,8 @@ describe("WorkerDesignTester", () => {
     const slow = tester.test(request(60));
     const queued = tester.test({ ...request(), seeds: 0 });
 
-    await expect(slow).rejects.toBeInstanceOf(DesignTestsTimedOutError);
-    await expect(queued).rejects.toBeInstanceOf(DesignTestsTimedOutError);
+    expect(await rejection(slow)).toBeInstanceOf(DesignTestsTimedOutError);
+    expect(await rejection(queued)).toBeInstanceOf(DesignTestsTimedOutError);
     await Promise.allSettled([slow, queued]);
   }, 30_000);
 
@@ -144,7 +150,7 @@ describe("WorkerDesignTester", () => {
     const running = tester.test(request());
     const waiting = tester.test(request());
 
-    await expect(tester.test(request())).rejects.toBeInstanceOf(
+    expect(await rejection(tester.test(request()))).toBeInstanceOf(
       DesignTestsBusyError,
     );
     await Promise.all([running, waiting]);
@@ -157,7 +163,9 @@ describe("WorkerDesignTester", () => {
     await Bun.sleep(50);
     await tester.close();
 
-    await expect(running).rejects.toBeInstanceOf(DesignTestsUnavailableError);
+    expect(await rejection(running)).toBeInstanceOf(
+      DesignTestsUnavailableError,
+    );
   }, 30_000);
 
   test("refuses to start when its worker cannot load", async () => {
@@ -170,7 +178,7 @@ describe("WorkerDesignTester", () => {
 
     pools.push(broken);
 
-    await expect(broken.start()).rejects.toBeInstanceOf(
+    expect(await rejection(broken.start())).toBeInstanceOf(
       DesignTestsUnavailableError,
     );
   }, 10_000);
