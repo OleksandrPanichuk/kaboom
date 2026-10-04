@@ -1,8 +1,11 @@
 import z from "zod";
 
+import { HOURS_PER_MONTH, perMillion } from "../../cost/prices";
 import { defineTechnology } from "../define-technology";
 import { choice, count, toggle } from "../kinds/shared";
 import { prop } from "../prop-meta";
+
+const KINESIS_SHARD_HOURLY = 0.015;
 
 export const rabbitmq = defineTechnology({
   id: "rabbitmq",
@@ -51,6 +54,8 @@ export const amazonSqs = defineTechnology({
       type === "fifo" ? ("exactly-once" as const) : ("at-least-once" as const),
     retentionHours: 96,
   }),
+  monthlyUsd: ({ type }, load) =>
+    perMillion(load.reads + load.writes, type === "fifo" ? 0.5 : 0.4),
 });
 
 export const bullmq = defineTechnology({
@@ -167,6 +172,14 @@ export const amazonMsk = defineTechnology({
     partitions,
     replicationFactor: Math.min(3, brokers),
   }),
+  monthlyUsd: ({ brokerType, brokers }) =>
+    brokers *
+    HOURS_PER_MONTH *
+    {
+      "kafka.m5.large": 0.21,
+      "kafka.m5.xlarge": 0.42,
+      "kafka.m5.2xlarge": 0.84,
+    }[brokerType],
 });
 
 export const amazonKinesis = defineTechnology({
@@ -194,4 +207,5 @@ export const amazonKinesis = defineTechnology({
     retentionHours,
     replicationFactor: 3,
   }),
+  monthlyUsd: ({ shards }) => shards * KINESIS_SHARD_HOURLY * HOURS_PER_MONTH,
 });

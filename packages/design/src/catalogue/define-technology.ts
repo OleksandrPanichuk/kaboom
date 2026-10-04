@@ -26,6 +26,10 @@ export interface TechnologyDefinition<
   summary: string;
   props: Props;
   derive: (props: z.output<Props>) => Partial<NodeProps<Kind>>;
+  monthlyUsd?: (
+    props: z.output<Props>,
+    load: { reads: number; writes: number },
+  ) => number;
 }
 
 export const defineTechnology = <

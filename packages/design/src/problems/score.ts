@@ -1,3 +1,4 @@
+import { costOf, type NodeLoad } from "../cost";
 import type { EvaluationResult } from "../evaluate/result";
 import type { DesignGraph } from "../graph";
 import { runLints } from "../lints";
@@ -62,13 +63,17 @@ const serves = (graph: DesignGraph): boolean =>
 export interface DrillRunner {
   graph: DesignGraph;
   seeds: number;
+  drillTitle: (id: string) => string;
   drill: (id: string) => DrillOutcome | undefined;
   variation: (id: string) => Variation | null;
   durationOf: (id: string) => number;
   chaos: () => ChaosResult[];
 }
 
-type Context = Pick<DrillRunner, "graph" | "drill" | "chaos" | "variation">;
+type Context = Pick<
+  DrillRunner,
+  "graph" | "drill" | "chaos" | "variation" | "drillTitle"
+>;
 
 export interface DrillRunnerOptions {
   seeds?: number;
@@ -120,6 +125,8 @@ export const drillRunner = (
   const runner: DrillRunner = {
     graph,
     seeds,
+    drillTitle: (id) =>
+      problem.drills.find((item) => item.id === id)?.title ?? id,
     chaos: () => {
       if (chaos) return chaos;
 
@@ -220,6 +227,26 @@ export const FLAKY_SHARE = 0.5;
 
 const labelOf = (node: { label: string; id: string }) => node.label || node.id;
 
+const dollars = (value: number) => `$${Math.round(value).toLocaleString("en")}`;
+
+export const averageLoads = (
+  result: EvaluationResult,
+): Record<string, NodeLoad> => {
+  const loads: Record<string, NodeLoad> = {};
+  const count = Math.max(1, result.steps.length);
+
+  for (const step of result.steps) {
+    for (const [id, numbers] of Object.entries(step.nodes)) {
+      const load = (loads[id] ??= { reads: 0, writes: 0 });
+
+      load.reads += numbers.reads / count;
+      load.writes += numbers.writes / count;
+    }
+  }
+
+  return loads;
+};
+
 const HIT_RATIO_KINDS = new Set(["cache", "cdn"]);
 
 export const readShare = (
@@ -305,6 +332,45 @@ export const judgeCheck = (
         : {
             passed: false,
             evidence: `${servers.map(labelOf).join(", ")} answer${servers.length === 1 ? "s" : ""} ${shown} of the reads; the check needs ${Math.round(check.minShare * 100)}%.`,
+          };
+    }
+    case "within-budget": {
+      const outcome = context.drill(check.drillId);
+
+      if (!outcome?.result) {
+        return { passed: false, evidence: `No load drill ${check.drillId}.` };
+      }
+
+      if (!outcome.passed) {
+        const drill = context.drillTitle(check.drillId);
+
+        return {
+          passed: false,
+          evidence: `The budget is checked once “${drill}” passes; a design that does not work yet costs nothing worth comparing.`,
+        };
+      }
+
+      const estimate = costOf(context.graph, averageLoads(outcome.result));
+      const top = [...estimate.nodes]
+        .filter((item) => item.monthlyUsd > 0)
+        .sort((a, b) => b.monthlyUsd - a.monthlyUsd)
+        .slice(0, 2)
+        .map((item) => {
+          const found = context.graph.nodes.find(
+            (node) => node.id === item.nodeId,
+          );
+
+          return `${found ? labelOf(found) : item.nodeId} ${dollars(item.monthlyUsd)}`;
+        });
+
+      return estimate.monthlyUsd <= check.monthlyUsd
+        ? {
+            passed: true,
+            evidence: `Costs about ${dollars(estimate.monthlyUsd)} a month, within ${dollars(check.monthlyUsd)}.`,
+          }
+        : {
+            passed: false,
+            evidence: `Costs about ${dollars(estimate.monthlyUsd)} a month, over the ${dollars(check.monthlyUsd)} budget; most of it is ${top.join(" and ")}.`,
           };
     }
     case "chaos-coverage": {

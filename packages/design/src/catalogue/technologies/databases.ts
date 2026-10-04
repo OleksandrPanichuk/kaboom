@@ -1,14 +1,24 @@
 import z from "zod";
 
+import { HOURS_PER_MONTH, perMillion } from "../../cost/prices";
 import { defineTechnology } from "../define-technology";
 import { choice, count, toggle } from "../kinds/shared";
 
 const RDS_CLASSES = {
-  "db.t4g.medium": { reads: 1_500, writes: 400 },
-  "db.r6g.large": { reads: 4_000, writes: 1_000 },
-  "db.r6g.2xlarge": { reads: 12_000, writes: 3_000 },
-  "db.r6g.8xlarge": { reads: 40_000, writes: 9_000 },
+  "db.t4g.medium": { reads: 1_500, writes: 400, hourly: 0.065 },
+  "db.r6g.large": { reads: 4_000, writes: 1_000, hourly: 0.225 },
+  "db.r6g.2xlarge": { reads: 12_000, writes: 3_000, hourly: 0.899 },
+  "db.r6g.8xlarge": { reads: 40_000, writes: 9_000, hourly: 3.596 },
 } as const;
+
+const AURORA_PREMIUM = 1.2;
+const CLOUD_SQL_PER_VCPU = 49;
+const DYNAMODB = {
+  readUnit: 0.095,
+  writeUnit: 0.475,
+  readsPerMillion: 0.25,
+  writesPerMillion: 1.25,
+};
 
 type RdsClass = keyof typeof RDS_CLASSES;
 
@@ -61,6 +71,8 @@ export const amazonRds = defineTechnology({
     writeCapacityRps: RDS_CLASSES[instanceClass].writes,
     failover: multiAz ? ("automatic" as const) : ("manual" as const),
   }),
+  monthlyUsd: ({ instanceClass, multiAz }) =>
+    RDS_CLASSES[instanceClass].hourly * HOURS_PER_MONTH * (multiAz ? 2 : 1),
 });
 
 export const amazonAurora = defineTechnology({
@@ -79,6 +91,8 @@ export const amazonAurora = defineTechnology({
     writeCapacityRps: Math.round(RDS_CLASSES[instanceClass].writes * 1.5),
     failover: "automatic" as const,
   }),
+  monthlyUsd: ({ instanceClass }) =>
+    RDS_CLASSES[instanceClass].hourly * HOURS_PER_MONTH * AURORA_PREMIUM * 2,
 });
 
 export const cloudSql = defineTechnology({
@@ -101,6 +115,8 @@ export const cloudSql = defineTechnology({
     writeCapacityRps: vcpus * 250,
     failover: highAvailability ? ("automatic" as const) : ("manual" as const),
   }),
+  monthlyUsd: ({ vcpus, highAvailability }) =>
+    vcpus * CLOUD_SQL_PER_VCPU * (highAvailability ? 2 : 1),
 });
 
 export const amazonDynamodb = defineTechnology({
@@ -150,6 +166,11 @@ export const amazonDynamodb = defineTechnology({
       replicationFactor: 3,
     };
   },
+  monthlyUsd: ({ mode, readUnits, writeUnits }, load) =>
+    mode === "provisioned"
+      ? readUnits * DYNAMODB.readUnit + writeUnits * DYNAMODB.writeUnit
+      : perMillion(load.reads, DYNAMODB.readsPerMillion) +
+        perMillion(load.writes, DYNAMODB.writesPerMillion),
 });
 
 export const cassandra = defineTechnology({

@@ -606,6 +606,17 @@ database, queue, stream or object store; a DevOps problem may run a
 stateless service on its own, so `runDrill` takes `keepsWrites` from the
 track.
 
+`costOf(graph, loads)` (`packages/design/src/cost`) estimates what a
+design costs a month at us-east-1 on-demand list prices: a kind by its
+replicas, instances, partitions or shards, a per-request service (gateway,
+CDN, queue, object store) by the traffic it carries, and a product from the
+technology catalogue by its own `monthlyUsd`. The prices sit in
+`cost/prices.ts`, one place to change. The editor shows the total in the
+top bar and each node's share in the inspector, at the clients' steady
+traffic from a one-step simulation. A `within-budget` rubric item prices
+the design at the traffic of a named drill, and only once that drill
+passes, since a design that does not work costs nothing worth comparing.
+
 A load test also runs on varied inputs, so a design sized to the letter
 of the spec shows it. `vary(graph, scenario, seed)` (`testing/variation.ts`)
 is deterministic per seed: traffic moves by up to 5 % a minute with one
