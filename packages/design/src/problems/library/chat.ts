@@ -15,7 +15,7 @@ const regionalSide = (id: "eu" | "us", label: string) => [
   within(
     id,
     node(`api-${id}`, "service", `Chat API ${label}`, {
-      replicas: 8,
+      replicas: 10,
       capacityRpsPerReplica: 1_500,
     }),
   ),
@@ -204,7 +204,7 @@ The *People* client is already on the canvas. Build what it talks to.`,
           "eu",
           node("db", "sql-database", "Messages", {
             failover: "automatic",
-            shards: 10,
+            shards: 12,
           }),
         ),
         within("eu", node("replica-eu", "sql-database", "Messages replica EU")),

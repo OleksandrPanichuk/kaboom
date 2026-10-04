@@ -283,9 +283,9 @@ The *Users* client is already on the canvas. Build what it talks to.`,
     graph: graph(
       [
         users(),
-        node("lb", "load-balancer", "Load balancer"),
+        node("lb", "load-balancer", "Load balancer", { capacityRps: 60_000 }),
         node("api", "service", "Shortener API", {
-          replicas: 20,
+          replicas: 24,
           capacityRpsPerReplica: 2_500,
         }),
         node("cache", "cache", "Link cache", {

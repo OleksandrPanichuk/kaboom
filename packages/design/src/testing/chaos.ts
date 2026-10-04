@@ -11,6 +11,7 @@ import {
   type ProblemContent,
 } from "../problems/schema";
 import { type Assertion, assertion } from "./assertion";
+import { vary } from "./variation";
 
 export type ChaosKind =
   "instance" | "group-down" | "partition" | "flaky" | "cache-flush";
@@ -299,10 +300,11 @@ const blame = (
 };
 
 export const runChaosCase = (
-  graph: DesignGraph,
+  design: DesignGraph,
   chaos: ChaosCase,
   baseline: LoadDrill,
   settings: ChaosSettings,
+  seed = 0,
 ): ChaosOutcome => {
   const until = settings.faultAt + settings.faultSeconds;
   const scenario: LoadScenarioInput = {
@@ -312,7 +314,10 @@ export const runChaosCase = (
     faults: chaos.faults,
     slo: baseline.slo,
   };
-  const result = evaluateLoad(graph, scenario);
+  const { graph, scenario: run } = vary(design, scenario, seed, {
+    faults: false,
+  });
+  const result = evaluateLoad(graph, run);
   const from = settings.faultAt + settings.graceSeconds;
   const during = result.steps
     .map((step, index) => ({ step, index }))

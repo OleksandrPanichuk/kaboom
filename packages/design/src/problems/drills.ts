@@ -15,6 +15,7 @@ import {
   fromFinding,
   structural,
 } from "../testing/assertion";
+import { vary } from "../testing/variation";
 import { drillScenario, selectNodes } from "./resolve";
 import type { Drill, LoadDrill, NetworkDrill, PipelineDrill } from "./schema";
 
@@ -128,14 +129,18 @@ const worstIndex = (values: readonly number[], higherIsWorse: boolean) =>
     0,
   );
 
-export const runDrill = (drill: Drill, graph: DesignGraph): DrillOutcome => {
+export const runDrill = (
+  drill: Drill,
+  graph: DesignGraph,
+  seed = 0,
+): DrillOutcome => {
   switch (drill.kind) {
     case "pipeline":
       return runPipelineDrill(drill, graph);
     case "network":
       return runNetworkDrill(drill, graph);
     case "load":
-      return runLoadDrill(drill, graph);
+      return runLoadDrill(drill, graph, seed);
   }
 };
 
@@ -231,9 +236,14 @@ const runPipelineDrill = (
   return outcome(drill.id, assertions, result.findings);
 };
 
-const runLoadDrill = (drill: LoadDrill, graph: DesignGraph): DrillOutcome => {
+const runLoadDrill = (
+  drill: LoadDrill,
+  graph: DesignGraph,
+  seed: number,
+): DrillOutcome => {
   const scenario = drillScenario(drill, graph);
-  const result = evaluateLoad(graph, scenario);
+  const varied = vary(graph, scenario, seed);
+  const result = evaluateLoad(varied.graph, varied.scenario);
   const assertions: Assertion[] = [];
   const clients = graph.nodes.filter((node) => node.kind === "client");
   const timeOf = (index: number) => result.steps[index]?.t ?? null;
@@ -368,7 +378,7 @@ const runLoadDrill = (drill: LoadDrill, graph: DesignGraph): DrillOutcome => {
           label: `Messages left in ${item.label || item.id}`,
           expected: `≤ ${limit.toLocaleString("en")}`,
           actual: Math.round(backlog).toLocaleString("en"),
-          passed: backlog <= limit,
+          passed: Math.round(backlog) <= limit,
           at: timeOf(lastIndex),
           nodeIds: [item.id],
           message: `${item.label || item.id} still had ${Math.round(backlog).toLocaleString("en")} messages waiting at the end; the drill allows ${limit.toLocaleString("en")}.`,

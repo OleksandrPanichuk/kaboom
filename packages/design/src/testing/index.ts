@@ -1,5 +1,6 @@
 export { type Assertion } from "./assertion";
 export {
+  HOLDS_LABEL,
   publicReport,
   runTests,
   type RunTestsOptions,
@@ -10,4 +11,12 @@ export {
   type TestResult,
   type TestStatus,
   type TestSuite,
+  type TestVariation,
 } from "./run-tests";
+export {
+  HOLDS_SHARE,
+  statusOf,
+  VARIATION,
+  type Variation,
+  vary,
+} from "./variation";

@@ -5,4 +5,5 @@ export interface ReplayRequest {
   scenario: LoadScenarioInput;
   at: number | null;
   nodeIds: string[];
+  seed?: number;
 }

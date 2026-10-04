@@ -3,6 +3,7 @@ import { runTests, type TestReport } from "@repo/design";
 import { makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 
+import { RUN_SEEDS } from "../submissions.constants";
 import { SubmissionsService } from "../submissions.service";
 
 export interface RunProblemUseCaseOptions {
@@ -25,7 +26,10 @@ export class RunProblemUseCase extends UseCase<Options, Result> {
 
     return {
       revision: design.revision,
-      report: runTests(version.content, design.graph, { include: "public" }),
+      report: runTests(version.content, design.graph, {
+        include: "public",
+        seeds: RUN_SEEDS,
+      }),
     };
   }
 }

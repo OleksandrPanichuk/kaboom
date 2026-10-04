@@ -57,7 +57,7 @@ describe("runTests", () => {
     expect(chaos.map((item) => item.id)).toContain("chaos:instance:api");
     expect(chaos.every((item) => item.replay !== null)).toBe(true);
     expect(chaos.find((item) => item.id === "chaos:instance:api")?.title).toBe(
-      "Shortener API loses one of its 20 replicas",
+      "Shortener API loses one of its 24 replicas",
     );
   });
 

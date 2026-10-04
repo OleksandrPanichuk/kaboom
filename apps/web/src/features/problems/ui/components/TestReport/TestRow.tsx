@@ -1,5 +1,5 @@
 import type { TestResultModel } from "@repo/api-client";
-import type { LoadScenarioInput } from "@repo/design";
+import { HOLDS_LABEL, type LoadScenarioInput } from "@repo/design";
 import { cn } from "cn";
 import { ChevronRight, EyeOff, Play } from "lucide-react";
 import { useId, useState } from "react";
@@ -30,13 +30,20 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
   const [open, setOpen] = useState(test.status === "failed" && !hidden);
   const scenario: LoadScenarioInput | null =
     hidden || !onReplay ? null : replayScenario(test.replay);
-  const replay = (at: number | null, nodeIds: string[]) =>
+  const replay = (at: number | null, nodeIds: string[], seed?: number) =>
     scenario
       ? () => {
-          onReplay?.({ title: test.title, scenario, at, nodeIds });
+          onReplay?.({
+            title: seed ? `${test.title}, run ${seed}` : test.title,
+            scenario,
+            at,
+            nodeIds,
+            seed,
+          });
           closePanels();
         }
       : null;
+  const worstSeed = test.variation?.worstSeed ?? null;
   const expandable =
     !hidden && (test.assertions.length > 0 || test.description !== "");
 
@@ -80,6 +87,7 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
 
   return (
     <li className="flex flex-col">
+<<<<<<< HEAD
       {expandable ? (
         <button
           type="button"
@@ -95,6 +103,65 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
           {heading}
         </div>
       )}
+=======
+      <button
+        type="button"
+        className={cn(
+          "flex min-w-0 items-center gap-2.5 rounded-lg px-2 py-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+          expandable ? "hover:bg-zinc-50" : "cursor-default",
+        )}
+        aria-expanded={expandable ? open : undefined}
+        aria-controls={expandable ? id : undefined}
+        onClick={() => expandable && setOpen((value) => !value)}
+      >
+        <ChevronRight
+          aria-hidden="true"
+          className={cn(
+            "size-3.5 shrink-0 text-muted-foreground transition-transform",
+            open && "rotate-90",
+            !expandable && "invisible",
+          )}
+        />
+        <StatusIcon status={test.status} />
+        <span className="min-w-0 flex-1 truncate text-sm font-medium">
+          {test.title}
+        </span>
+        {hidden ? (
+          <EyeOff
+            aria-label="Hidden test"
+            className="size-3.5 shrink-0 text-muted-foreground"
+          />
+        ) : null}
+        {test.variation ? (
+          <span
+            className={cn(
+              "shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
+              test.variation.passed === test.variation.total
+                ? "bg-zinc-100 text-zinc-600"
+                : "bg-amber-50 text-amber-800",
+            )}
+            title="Runs that passed with traffic, faults and capacity varied"
+          >
+            {test.variation.passed}/{test.variation.total}
+          </span>
+        ) : null}
+        {change ? (
+          <span
+            className={cn(
+              "shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium",
+              change === "fixed"
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-red-50 text-red-700",
+            )}
+          >
+            {change === "fixed" ? "Fixed" : "New failure"}
+          </span>
+        ) : null}
+        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+          {formatDuration(test.durationMs)}
+        </span>
+      </button>
+>>>>>>> fc0f579 (feat: run every load test on varied traffic, faults and capacity)
       {expandable && open ? (
         <div
           id={id}
@@ -114,7 +181,9 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
                 onShow={
                   assertion.passed
                     ? null
-                    : replay(assertion.at, assertion.nodeIds)
+                    : assertion.label === HOLDS_LABEL && worstSeed !== null
+                      ? replay(assertion.at, assertion.nodeIds, worstSeed)
+                      : replay(assertion.at, assertion.nodeIds)
                 }
               />
             ))}
