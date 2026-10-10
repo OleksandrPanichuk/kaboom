@@ -102,7 +102,7 @@ describe("schema drills", () => {
 
     expect(outcome.assertions.map((item) => [item.label, item.passed])).toEqual(
       [
-        ["Each users has many posts", true],
+        ["users to posts, one to many", true],
         ["A user's posts", true],
         ["No keyless table", true],
       ],

@@ -1,8 +1,16 @@
-import type { EdgeKind, EdgeProps, NodeKind } from "../../catalogue";
+import type {
+  Column,
+  ColumnType,
+  EdgeKind,
+  EdgeProps,
+  NodeKind,
+  OnDeleteAction,
+} from "../../catalogue";
 import {
   createEdge,
   createGroup,
   createNode,
+  type DesignEdge,
   type DesignGraph,
   type DesignGroup,
   type DesignNode,
@@ -33,7 +41,7 @@ export const edge = (
 
 export const graph = (
   nodes: DesignNode[],
-  edges: Array<ReturnType<typeof edge>> = [],
+  edges: DesignEdge[] = [],
   groups: DesignGroup[] = [],
 ): DesignGraph => ({ ...emptyGraph(), nodes, edges, groups });
 
@@ -53,4 +61,47 @@ export const subnet = (
 export const within = (groupId: string, placed: DesignNode): DesignNode => ({
   ...placed,
   groupId,
+});
+
+type ColumnFlag = "key" | "unique" | "null";
+
+export const column = (
+  name: string,
+  type: ColumnType,
+  ...flags: ColumnFlag[]
+): Column => ({
+  id: name,
+  name,
+  type,
+  nullable: flags.includes("null"),
+  primaryKey: flags.includes("key"),
+  unique: flags.includes("unique"),
+});
+
+export const id = (): Column => column("id", "bigint", "key");
+
+export const index = (
+  columns: string[],
+  unique = false,
+): { id: string; columns: string[]; unique: boolean } => ({
+  id: `${columns.join("_")}${unique ? "_unique" : ""}_idx`,
+  columns,
+  unique,
+});
+
+export const table = (
+  tableId: string,
+  columns: Column[],
+  indexes: Array<ReturnType<typeof index>> = [],
+): DesignNode => node(tableId, "table", tableId, { columns, indexes });
+
+export const references = (
+  from: string,
+  fromColumn: string,
+  to: string,
+  onDelete: OnDeleteAction = "restrict",
+  toColumn = "id",
+): DesignEdge => ({
+  ...createEdge({ id: `${from}-${fromColumn}-fk`, from, to, kind: "relation" }),
+  relation: { fromColumn, toColumn, onDelete },
 });
