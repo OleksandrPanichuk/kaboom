@@ -420,7 +420,7 @@ const assertRelation = (
   if (from.kind !== "table" || to.kind !== "table") {
     return reject(
       "invalid-edge",
-      `Edge ${edge.id} relates ${from.id}, a ${from.kind}, to ${to.id}, a ${to.kind}; a relation joins two tables`,
+      `A relation joins two tables, and ${from.kind === "table" ? to.label || to.id : from.label || from.id} is a ${from.kind === "table" ? to.kind : from.kind}`,
     );
   }
 
@@ -451,14 +451,14 @@ const assertRelation = (
   if (!wholeKey && !referenced.unique) {
     reject(
       "invalid-edge",
-      `Relation ${edge.id} references ${to.label || to.id}.${referenced.name}, which is neither its primary key nor unique; a foreign key references one row`,
+      `${to.label || to.id}.${referenced.name} is neither the primary key of ${to.label || to.id} nor unique, so a foreign key cannot reference it`,
     );
   }
 
   if (from.id === to.id && foreignKey.id === referenced.id) {
     reject(
       "invalid-edge",
-      `Relation ${edge.id} makes ${foreignKey.name} reference itself`,
+      `${from.label || from.id}.${foreignKey.name} cannot reference itself`,
     );
   }
 

@@ -40,7 +40,12 @@ describe("describeConnectionRefusal", () => {
       ),
     ).toBe("Edge LB is already connected to API this way.");
     expect(
-      describeConnectionRefusal(graph, "api", "api", refusal("invalid-edge")),
+      describeConnectionRefusal(
+        graph,
+        "api",
+        "api",
+        refusal("invalid-edge", "Edge e1 connects api to itself"),
+      ),
     ).toBe("A node cannot connect to itself.");
     expect(
       describeConnectionRefusal(

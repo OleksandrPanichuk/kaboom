@@ -113,7 +113,7 @@ describe("relations", () => {
   test("refuse anything but two tables, and a relation without columns", () => {
     expect(
       refusal([relation("r1", "api", "author_id", "users", "id")]),
-    ).toContain("a relation joins two tables");
+    ).toContain("A relation joins two tables, and Service is a service");
     expect(
       refusal([
         {
@@ -135,7 +135,7 @@ describe("relations", () => {
     ).toContain("does not have");
     expect(
       refusal([relation("r1", "posts", "author_id", "users", "name")]),
-    ).toContain("neither its primary key nor unique");
+    ).toContain("is neither the primary key of users nor unique");
   });
 
   test("refuse a second foreign key on one column, and a column referencing itself", () => {

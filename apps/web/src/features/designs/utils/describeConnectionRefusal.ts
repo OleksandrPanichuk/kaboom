@@ -13,7 +13,9 @@ export const describeConnectionRefusal = (
     case "load-cycle":
       return `${label(to)} already sends load on to ${label(from)}, so this connection would make a loop.`;
     case "invalid-edge":
-      if (from === to) return "A node cannot connect to itself.";
+      if (rejection.message.includes("to itself")) {
+        return "A node cannot connect to itself.";
+      }
 
       if (rejection.message.includes("a client")) {
         return `${label(to)} is a client: clients only send requests, so nothing connects into one.`;

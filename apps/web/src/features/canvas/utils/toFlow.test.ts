@@ -1,4 +1,4 @@
-import { createGroup, createNode, emptyGraph } from "@repo/design";
+import { createEdge, createGroup, createNode, emptyGraph } from "@repo/design";
 import { describe, expect, test } from "bun:test";
 
 import { toFlow } from "./toFlow";
@@ -138,5 +138,84 @@ describe("toFlow parallel edges", () => {
       ["back", 2, 3],
       ["c", 0, 1],
     ]);
+  });
+});
+
+describe("toFlow with tables", () => {
+  const column = (name: string, primaryKey = false, unique = false) => ({
+    id: name,
+    name,
+    type: "bigint" as const,
+    nullable: false,
+    primaryKey,
+    unique,
+  });
+  const table = (id: string, columns: Array<ReturnType<typeof column>>) => {
+    const node = createNode("table", { id, label: id });
+
+    node.props.columns = columns;
+
+    return node;
+  };
+  const relation = (
+    id: string,
+    from: string,
+    fromColumn: string,
+    to: string,
+  ) => ({
+    ...createEdge({ id, from, to, kind: "relation" }),
+    relation: { fromColumn, toColumn: "id", onDelete: "restrict" as const },
+  });
+  const graph = () => ({
+    ...emptyGraph(),
+    nodes: [
+      table("users", [column("id", true)]),
+      table("posts", [
+        column("id", true),
+        column("author_id"),
+        column("editor_id", false, true),
+      ]),
+    ],
+    edges: [
+      relation("author", "posts", "author_id", "users"),
+      relation("editor", "posts", "editor_id", "users"),
+    ],
+  });
+
+  test("draws a table as a table, knowing which of its columns are foreign keys", () => {
+    const { nodes } = toFlow(graph(), {});
+
+    expect(nodes.map((node) => [node.type, node.data.foreignKeys])).toEqual([
+      ["table-node", []],
+      ["table-node", ["author_id", "editor_id"]],
+    ]);
+  });
+
+  test("joins a relation column to column, with its cardinality, and no lanes", () => {
+    const { edges } = toFlow(graph(), {});
+
+    expect(
+      edges.map((edge) => [
+        edge.sourceHandle,
+        edge.targetHandle,
+        edge.data?.cardinality,
+        edge.data?.lanes,
+      ]),
+    ).toEqual([
+      ["author_id:out:left", "id:in:right", "many-to-one", 1],
+      ["editor_id:out:left", "id:in:right", "one-to-one", 1],
+    ]);
+  });
+
+  test("leaves room under a tall table before the next row", () => {
+    const tall = graph();
+
+    tall.nodes.push(
+      ...["a", "b", "c"].map((id) => table(id, [column("id", true)])),
+    );
+
+    const { nodes } = toFlow(tall, {});
+
+    expect(nodes.at(-1)?.position).toEqual({ x: 0, y: 45 + 3 * 28 + 102 });
   });
 });

@@ -3,6 +3,7 @@ import {
   EdgeLabelRenderer,
   type EdgeProps,
   getSmoothStepPath,
+  Position,
 } from "@xyflow/react";
 import { memo } from "react";
 
@@ -56,6 +57,26 @@ function CanvasEdgePathComponent(props: EdgeProps<CanvasEdge>) {
         markerEnd={markerEnd}
         interactionWidth={interactionWidth}
       />
+      {data?.cardinality ? (
+        <EdgeLabelRenderer>
+          <span
+            className="pointer-events-none absolute font-mono text-[11px] font-semibold text-violet-700"
+            style={{
+              transform: `translate(${props.sourcePosition === Position.Left ? "-100%" : "0"}, -100%) translate(${props.sourceX + (props.sourcePosition === Position.Left ? -6 : 6)}px, ${props.sourceY - 2}px)`,
+            }}
+          >
+            {data.cardinality === "one-to-one" ? "1" : "N"}
+          </span>
+          <span
+            className="pointer-events-none absolute font-mono text-[11px] font-semibold text-violet-700"
+            style={{
+              transform: `translate(${props.targetPosition === Position.Left ? "-100%" : "0"}, -100%) translate(${props.targetX + (props.targetPosition === Position.Left ? -8 : 8)}px, ${props.targetY - 2}px)`,
+            }}
+          >
+            1
+          </span>
+        </EdgeLabelRenderer>
+      ) : null}
       {label ? (
         <EdgeLabelRenderer>
           <div

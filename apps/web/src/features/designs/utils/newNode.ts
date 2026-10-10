@@ -20,8 +20,24 @@ export const uniqueLabel = (graph: DesignGraph, base: string): string => {
   return `${base} ${suffix}`;
 };
 
-export const newNode = (graph: DesignGraph, kind: NodeKind): DesignNode =>
-  createNode(kind, {
+export const newNode = (graph: DesignGraph, kind: NodeKind): DesignNode => {
+  const node = createNode(kind, {
     id: `${kind}-${shortId()}`,
     label: uniqueLabel(graph, catalogue[kind].label),
   });
+
+  if (node.kind === "table") {
+    node.props.columns = [
+      {
+        id: "id",
+        name: "id",
+        type: "bigint",
+        nullable: false,
+        primaryKey: true,
+        unique: false,
+      },
+    ];
+  }
+
+  return node;
+};
