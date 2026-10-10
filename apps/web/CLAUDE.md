@@ -175,7 +175,13 @@ track's groups; a sandbox design shows every track under its name.
 `.meta()` and it appears in the form; never write a form for one kind. A
 prop whose metadata names an `editor` (a table's columns and indexes)
 answers a `custom` control, which `PropFieldControl` leaves to the editor
-of that name. Edge
+of that name: `TableColumnsEditor` and `TableIndexesEditor`. Their edits
+are pure functions in `properties/utils/tableEdits.ts` that return ops,
+because removing a column also removes the relations that use it and takes
+it out of every index, in one batch through `onApply`. A relation's
+inspector shows its columns, the cardinality they make and `onDelete`, and
+hides the kind, which a relation cannot change. *Copy SQL* in the top bar,
+shown once a design has a table, copies `toDDL`. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
 drawn the same way.
 The *Technology* section picks a node's product from `technologiesFor(kind)`

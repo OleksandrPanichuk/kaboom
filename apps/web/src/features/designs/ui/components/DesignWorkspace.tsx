@@ -42,6 +42,7 @@ import {
   GroupInspector,
   InspectorEmpty,
   NodeInspector,
+  relationColumns,
   SelectionInspector,
 } from "@/features/properties";
 import {
@@ -58,6 +59,7 @@ import {
   useSimulation,
 } from "@/features/simulation";
 
+import { CopySqlButton } from "./CopySqlButton";
 import { ReplayBar } from "./ReplayBar";
 
 export interface DesignWorkspaceContext {
@@ -323,6 +325,8 @@ export function DesignWorkspace({
         placement={placement}
         onRegionChange={(target) => editor.placeInRegion([onlyNode.id], target)}
         onPatch={(patch) => editor.updateNode(onlyNode.id, patch)}
+        edges={graph.edges}
+        onApply={editor.apply}
         onDelete={removeSelection}
       />
     ) : onlyEdge && selectedEdges.length === 1 && selectedNodes.length === 0 ? (
@@ -332,6 +336,7 @@ export function DesignWorkspace({
         onPatch={(patch) => editor.updateEdge(onlyEdge.id, patch)}
         fromLabel={labelOf(onlyEdge.from)}
         toLabel={labelOf(onlyEdge.to)}
+        columns={relationColumns(graph, onlyEdge.id)}
         onDelete={removeSelection}
       />
     ) : selectedNodes.length + selectedEdges.length > 1 ? (
@@ -373,6 +378,12 @@ export function DesignWorkspace({
         actions={
           <div className="flex items-center gap-1">
             {actions?.(context)}
+            {graph.nodes.some((node) => node.kind === "table") ? (
+              <CopySqlButton
+                graph={graph}
+                className={cn(actions && "max-sm:hidden")}
+              />
+            ) : null}
             <Button
               variant="ghost"
               size="icon"

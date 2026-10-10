@@ -2,8 +2,10 @@ import {
   catalogue,
   derivedProps,
   describeProps,
+  type DesignEdge,
   type DesignGroup,
   type DesignNode,
+  type DesignOp,
   findTechnology,
   type LintHit,
   type NodeCost,
@@ -34,6 +36,8 @@ import { LintCallout } from "./LintCallout";
 import { type CommitResult, PropFieldControl } from "./PropFieldControl";
 import { RegionField } from "./RegionField";
 import { SubnetField } from "./SubnetField";
+import { TableColumnsEditor } from "./TableColumnsEditor";
+import { TableIndexesEditor } from "./TableIndexesEditor";
 import { TechnologySection } from "./TechnologySection";
 
 const LABEL_MAX_LENGTH = 80;
@@ -48,6 +52,8 @@ interface NodeInspectorProps {
   placement: PlacementFields;
   onRegionChange: (target: RegionTarget) => void;
   onPatch: (patch: NodePatch) => CommitResult;
+  edges?: readonly DesignEdge[];
+  onApply?: (ops: DesignOp[]) => CommitResult;
   onDelete: () => void;
 }
 
@@ -60,6 +66,8 @@ export function NodeInspector({
   placement,
   onRegionChange,
   onPatch,
+  edges = [],
+  onApply = () => null,
   onDelete,
 }: NodeInspectorProps) {
   const id = useId();
@@ -216,6 +224,17 @@ export function NodeInspector({
           />
         ) : null}
       </InspectorSection>
+
+      {node.kind === "table" ? (
+        <>
+          <InspectorSection title="Columns">
+            <TableColumnsEditor table={node} edges={edges} onApply={onApply} />
+          </InspectorSection>
+          <InspectorSection title="Indexes">
+            <TableIndexesEditor table={node} onApply={onApply} />
+          </InspectorSection>
+        </>
+      ) : null}
 
       <TechnologySection node={node} onPatch={onPatch} />
 
