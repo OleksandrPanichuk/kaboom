@@ -145,6 +145,43 @@ export const checkPublishable = (input: unknown): PublishCheck => {
     }
   }
 
+  for (const drill of problem.drills) {
+    if (drill.kind !== "schema") continue;
+
+    const { relationships, columns, queries } = drill.requirements;
+
+    if (relationships.length === 0) {
+      issues.push(
+        `Drill ${drill.id} declares no relationship; a schema drill checks how tables relate.`,
+      );
+    }
+
+    const named = new Set([
+      ...relationships.flatMap((item) =>
+        item.cardinality === "one-to-many"
+          ? [item.parent, item.child]
+          : item.between,
+      ),
+      ...columns.map((item) => item.table),
+      ...queries.flatMap((item) => [item.from, ...(item.to ? [item.to] : [])]),
+    ]);
+
+    for (const [name, graph] of [
+      ["baseline", problem.baseline],
+      ["reference solution", problem.reference.graph],
+    ] as const) {
+      for (const id of named) {
+        if (
+          !graph.nodes.some((node) => node.id === id && node.kind === "table")
+        ) {
+          issues.push(
+            `Drill ${drill.id} names the table ${id}, which the ${name} does not have.`,
+          );
+        }
+      }
+    }
+  }
+
   const hintCost = problem.hints.reduce((sum, hint) => sum + hint.cost, 0);
 
   if (hintCost > MAX_HINT_COST) {

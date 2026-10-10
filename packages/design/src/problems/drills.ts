@@ -8,6 +8,7 @@ import type {
   Finding,
 } from "../evaluate/result";
 import type { LoadScenarioInput } from "../evaluate/scenario";
+import { evaluateSchema } from "../evaluate/schema";
 import type { DesignGraph } from "../graph";
 import {
   type Assertion,
@@ -18,7 +19,13 @@ import {
 } from "../testing/assertion";
 import { vary } from "../testing/variation";
 import { drillScenario, selectNodes } from "./resolve";
-import type { Drill, LoadDrill, NetworkDrill, PipelineDrill } from "./schema";
+import type {
+  Drill,
+  LoadDrill,
+  NetworkDrill,
+  PipelineDrill,
+  SchemaDrill,
+} from "./schema";
 
 export interface DrillOutcome {
   drillId: string;
@@ -226,9 +233,55 @@ export const runDrill = (
       return runPipelineDrill(drill, graph);
     case "network":
       return runNetworkDrill(drill, graph);
+    case "schema":
+      return runSchemaDrill(drill, graph);
     case "load":
       return runLoadDrill(drill, graph, seed, keepsWrites);
   }
+};
+
+const runSchemaDrill = (
+  drill: SchemaDrill,
+  graph: DesignGraph,
+): DrillOutcome => {
+  const result = evaluateSchema(graph, drill.requirements);
+  const assertions: Assertion[] = [];
+
+  if (!graph.edges.some((edge) => edge.kind === "relation")) {
+    assertions.push(
+      structural(
+        "Tables that reference each other",
+        "No table references another, so the schema keeps no relationship at all.",
+      ),
+    );
+  }
+
+  assertions.push(
+    ...result.checks.map((check) =>
+      assertion({
+        label: check.label,
+        expected: check.expected,
+        actual: check.actual,
+        passed: check.passed,
+        nodeIds: check.nodeIds,
+        message: check.message ?? "",
+      }),
+    ),
+  );
+
+  const asked = new Set(
+    result.checks.flatMap((check) => (check.finding ? [check.finding] : [])),
+  );
+
+  assertions.push(
+    ...forbidden(
+      drill.expect.forbid.filter((kind) => !asked.has(kind)),
+      result.findings,
+      true,
+    ),
+  );
+
+  return outcome(drill.id, assertions, result.findings);
 };
 
 const runNetworkDrill = (

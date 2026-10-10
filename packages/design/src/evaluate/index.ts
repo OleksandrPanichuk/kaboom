@@ -13,8 +13,10 @@ export type {
   NetworkResult,
   NodeStep,
   PipelineResult,
+  RequirementCheck,
   RolloutPhase,
   RolloutStep,
+  SchemaResult,
   StageTiming,
 } from "./result";
 export { FINDING_KINDS, ROLLOUT_PHASES } from "./result";
@@ -34,3 +36,4 @@ export {
   type Slo,
   SloSchema,
 } from "./scenario";
+export * from "./schema";

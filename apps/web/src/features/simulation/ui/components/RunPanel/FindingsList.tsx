@@ -24,6 +24,17 @@ const TITLES: Record<Finding["kind"], string> = {
   "exposed-store": "Data open to the internet",
   "exposed-service": "Service open to the internet",
   "open-store": "Data open to the whole VPC",
+  "missing-table": "Table missing",
+  "missing-relationship": "Tables not related",
+  "wrong-cardinality": "Wrong cardinality",
+  "missing-junction": "No junction table",
+  "duplicate-links": "Same pair allowed twice",
+  "missing-column": "Column missing",
+  "column-mismatch": "Column not as asked",
+  "unindexed-query": "Query reads the whole table",
+  "keyless-table": "No primary key",
+  "fk-type-mismatch": "Foreign key of another type",
+  "set-null-not-nullable": "Set null on a required column",
 };
 
 interface FindingsListProps {
