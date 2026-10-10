@@ -63,6 +63,10 @@ export class ProblemEntity {
 
     return {
       ...ProblemEntity.normalizeSummary(problem),
+      title: shown.title,
+      summary: shown.summary,
+      difficulty: shown.difficulty,
+      tags: shown.tags,
       version: version.version,
       statement: shown.statement,
       baseline: shown.baseline,

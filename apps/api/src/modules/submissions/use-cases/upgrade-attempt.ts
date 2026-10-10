@@ -7,15 +7,15 @@ import type { AttemptView } from "../submission.entity";
 import { ProblemNotStartedError } from "../submissions.errors";
 import { SubmissionsService } from "../submissions.service";
 
-export interface GetAttemptUseCaseOptions {
+export interface UpgradeAttemptUseCaseOptions {
   userId: string;
   slug: string;
 }
 
-type Options = GetAttemptUseCaseOptions;
+type Options = UpgradeAttemptUseCaseOptions;
 type Result = AttemptView;
 
-export class GetAttemptUseCase extends UseCase<Options, Result> {
+export class UpgradeAttemptUseCase extends UseCase<Options, Result> {
   private readonly problems = makeService(ProblemsService);
 
   private readonly attempts = makeRepository(ProblemAttemptsRepository);
@@ -23,12 +23,18 @@ export class GetAttemptUseCase extends UseCase<Options, Result> {
   private readonly service = makeService(SubmissionsService);
 
   public async execute({ userId, slug }: Options): Promise<Result> {
-    const { problem } = await this.problems.getPublished(slug);
+    const { problem, version } = await this.problems.getPublished(slug);
     const attempt = await this.attempts.find(userId, problem.id);
 
     if (!attempt)
       throw new ProblemNotStartedError("The problem is not started");
 
-    return this.service.view(attempt, problem.currentVersion);
+    const moved = await this.attempts.moveToVersion(
+      attempt.id,
+      version.version,
+      version.content.hints.length,
+    );
+
+    return this.service.view(moved ?? attempt, problem.currentVersion);
   }
 }

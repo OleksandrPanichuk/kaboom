@@ -691,6 +691,18 @@ draw how each skill moved. `progress` is a read model that owns no table:
 challenge submissions, newest first, with the number of reviews and their
 average score.
 
+## Problem versions
+
+A problem's content is versioned, and an attempt is pinned to the version it
+started on: every run, submission and hint reads that version, so changing a
+problem never rescores anyone's work. `GET /problems/:slug/attempt` answers
+`latestVersion` beside `problemVersion`, and `GET /problems/:slug?version=`
+shows the pinned version, so the brief a solver reads is the one they are
+scored against. Moving on is the solver's choice: `POST
+/problems/:slug/attempt/upgrade` keeps the design and pins the current
+version. Hints already revealed carry over, as many as the new version has,
+at its costs. Earlier submissions keep the version they were scored on.
+
 ## Leaderboard
 
 `leaderboard` ranks people by points, computed on read from submissions:

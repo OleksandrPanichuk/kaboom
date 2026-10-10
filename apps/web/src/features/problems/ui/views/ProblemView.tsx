@@ -22,6 +22,7 @@ import {
   runProblemMutation,
   startProblemMutation,
   submitSolutionMutation,
+  upgradeAttemptMutation,
 } from "@/features/problems/api";
 import type { ProblemOutcome } from "@/features/problems/typedefs";
 import {
@@ -31,6 +32,7 @@ import {
   TaskPanel,
   TestsPanel,
 } from "@/features/problems/ui/components";
+import { pinnedVersion } from "@/features/problems/utils";
 
 interface ProblemViewProps {
   slug: string;
@@ -44,13 +46,16 @@ const labelOf = (graph: DesignGraph, nodeId: string) => {
 };
 
 export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
-  const { data: problem } = useSuspenseQuery(problemQuery(slug));
   const { data: attempt } = useSuspenseQuery(attemptQuery(slug));
+  const { data: problem } = useSuspenseQuery(
+    problemQuery(slug, pinnedVersion(attempt)),
+  );
   const start = useMutation(startProblemMutation);
   const run = useMutation(runProblemMutation);
   const submit = useMutation(submitSolutionMutation);
   const hint = useMutation(revealHintMutation);
   const solutions = useMutation(revealSolutionsMutation);
+  const upgrade = useMutation(upgradeAttemptMutation);
   const [outcome, setOutcome] = useState<ProblemOutcome | null>(null);
   const [previous, setPrevious] = useState<TestReportModel | null>(null);
   const [runs, setRuns] = useState(0);
@@ -88,6 +93,19 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
             <TaskPanel
               problem={problem}
               attempt={attempt}
+              upgrading={upgrade.isPending}
+              upgradeError={upgrade.error ? errorMessage(upgrade.error) : null}
+              onUpgrade={() =>
+                upgrade.mutate(
+                  { slug },
+                  {
+                    onSuccess: () => {
+                      setOutcome(null);
+                      setPrevious(null);
+                    },
+                  },
+                )
+              }
               revealing={hint.isPending}
               hintError={hint.error ? errorMessage(hint.error) : null}
               onRevealHint={(index) => hint.mutate({ slug, index })}

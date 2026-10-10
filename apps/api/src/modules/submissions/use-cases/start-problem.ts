@@ -27,7 +27,7 @@ export class StartProblemUseCase extends UseCase<Options, Result> {
     const { problem, version } = await this.problems.getPublished(slug);
     const existing = await this.attempts.find(userId, problem.id);
 
-    if (existing) return this.service.view(existing);
+    if (existing) return this.service.view(existing, problem.currentVersion);
 
     const attempt = await transaction(async () => {
       const design = await make(CreateDesignUseCase).execute({
@@ -44,6 +44,6 @@ export class StartProblemUseCase extends UseCase<Options, Result> {
       });
     });
 
-    return this.service.view(attempt);
+    return this.service.view(attempt, problem.currentVersion);
   }
 }

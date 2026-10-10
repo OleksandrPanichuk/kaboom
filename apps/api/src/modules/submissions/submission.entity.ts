@@ -22,6 +22,7 @@ export interface AttemptEntity {
 
 export interface AttemptView {
   attempt: AttemptEntity;
+  latestVersion: number;
   hints: RevealedHint[];
   hintPenalty: number;
   lockedUntil: Date | null;
@@ -65,6 +66,7 @@ export interface SubmissionEntity {
 export class AttemptEntity {
   public static normalize({
     attempt,
+    latestVersion,
     hints,
     hintPenalty,
     lockedUntil,
@@ -72,6 +74,7 @@ export class AttemptEntity {
     return {
       designId: attempt.designId,
       problemVersion: attempt.problemVersion,
+      latestVersion,
       hints,
       hintPenalty,
       lockedUntil: lockedUntil?.toISOString() ?? null,

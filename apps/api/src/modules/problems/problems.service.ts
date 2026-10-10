@@ -27,6 +27,15 @@ export class ProblemsService extends Service {
     return found;
   }
 
+  public async getPublishedAt(
+    slug: string,
+    version: number,
+  ): Promise<ProblemWithContent> {
+    const { problem } = await this.getPublished(slug);
+
+    return { problem, version: await this.getVersion(problem.id, version) };
+  }
+
   public async getVersion(
     problemId: string,
     version: number,

@@ -31,6 +31,15 @@ export const startProblemMutation = mutationOptions({
   },
 });
 
+export const upgradeAttemptMutation = mutationOptions({
+  mutationKey: ["problems", "upgrade"],
+  mutationFn: async ({ slug }: ProblemVariables) =>
+    unwrap(await api.api.problems(slug).attempt.upgrade.post()),
+  onSuccess: (attempt, { slug }, _mutateResult, { client }) => {
+    client.setQueryData(attemptQuery(slug).queryKey, attempt);
+  },
+});
+
 export const revealHintMutation = mutationOptions({
   mutationKey: ["problems", "hint"],
   mutationFn: async ({ slug, index }: HintVariables) =>

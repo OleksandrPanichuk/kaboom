@@ -212,6 +212,9 @@ the sheet first. A second run marks what newly failed and what was fixed.
 A problem is started explicitly, from a screen with a Start button: the route
 only reads the attempt (`null` when there is none), because a link preloads
 its loader on hover and must never create anything.
+An attempt behind its problem's latest version shows that version's brief
+(`pinnedVersion`) and a notice in the Task tab offering to move on, which
+asks first, since it cannot be undone.
 
 `DesignCanvas` with `readOnly` draws a graph nobody may change, such as
 another solver's solution: no dragging, connecting, deleting or dropping,

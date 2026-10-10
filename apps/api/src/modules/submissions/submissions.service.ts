@@ -50,7 +50,10 @@ export class SubmissionsService extends Service {
     return { found, attempt, version, design };
   }
 
-  public async view(attempt: AttemptEntity): Promise<AttemptView> {
+  public async view(
+    attempt: AttemptEntity,
+    latestVersion: number,
+  ): Promise<AttemptView> {
     const [version, lockedUntil] = await Promise.all([
       this.problems.getVersion(attempt.problemId, attempt.problemVersion),
       this.lockOf(attempt.userId, attempt.problemId),
@@ -58,6 +61,7 @@ export class SubmissionsService extends Service {
 
     return {
       attempt,
+      latestVersion,
       lockedUntil,
       hints: revealedHints(version.content, attempt.hintsRevealed),
       hintPenalty: hintPenalty(version.content, attempt.hintsRevealed),
