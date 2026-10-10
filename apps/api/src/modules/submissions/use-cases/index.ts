@@ -30,3 +30,7 @@ export {
   SubmitSolutionUseCase,
   type SubmitSolutionUseCaseOptions,
 } from "./submit-solution";
+export {
+  UpgradeAttemptUseCase,
+  type UpgradeAttemptUseCaseOptions,
+} from "./upgrade-attempt";

@@ -14,6 +14,10 @@ export type RevealedHintModel = typeof RevealedHintModel.static;
 export const AttemptModel = t.Object({
   designId: t.String({ format: "uuid" }),
   problemVersion: t.Integer(),
+  latestVersion: t.Integer({
+    description:
+      "The problem's current version; an attempt behind it can move to it",
+  }),
   hints: t.Array(RevealedHintModel),
   hintPenalty: t.Integer(),
   lockedUntil: t.Nullable(t.String({ format: "date-time" })),

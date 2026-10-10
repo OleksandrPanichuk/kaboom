@@ -6,10 +6,14 @@ import { Markdown } from "@/components/Markdown";
 import { DifficultyBadge } from "./DifficultyBadge";
 import { HintList } from "./HintList";
 import { PanelSection } from "./PanelSection";
+import { VersionNotice } from "./VersionNotice";
 
 interface TaskPanelProps {
   problem: ProblemModel;
   attempt: AttemptModel;
+  upgrading: boolean;
+  upgradeError: string | null;
+  onUpgrade: () => void;
   revealing: boolean;
   hintError: string | null;
   onRevealHint: (index: number) => void;
@@ -18,12 +22,24 @@ interface TaskPanelProps {
 export function TaskPanel({
   problem,
   attempt,
+  upgrading,
+  upgradeError,
+  onUpgrade,
   revealing,
   hintError,
   onRevealHint,
 }: TaskPanelProps) {
   return (
     <div className="flex flex-col">
+      {attempt.problemVersion < attempt.latestVersion ? (
+        <VersionNotice
+          version={attempt.problemVersion}
+          latestVersion={attempt.latestVersion}
+          pending={upgrading}
+          error={upgradeError}
+          onUpgrade={onUpgrade}
+        />
+      ) : null}
       <div className="flex flex-col gap-2 border-b px-4 py-4">
         <div className="flex flex-wrap items-center gap-2">
           <DifficultyBadge difficulty={problem.difficulty} />

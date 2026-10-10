@@ -20,10 +20,15 @@ export const problemsQuery = ({ difficulty, track }: ProblemsFilter) =>
       ),
   });
 
-export const problemQuery = (slug: string) =>
+export const problemQuery = (slug: string, version?: number) =>
   queryOptions({
-    queryKey: ["problems", "detail", slug],
-    queryFn: async () => unwrap(await api.api.problems(slug).get()),
+    queryKey: ["problems", "detail", slug, version ?? null],
+    queryFn: async () =>
+      unwrap(
+        await api.api
+          .problems(slug)
+          .get({ query: version === undefined ? {} : { version } }),
+      ),
   });
 
 export const attemptQuery = (slug: string) =>

@@ -7,3 +7,4 @@ export { revealSolutionsRoute } from "./reveal-solutions.route";
 export { runProblemRoute } from "./run-problem.route";
 export { startProblemRoute } from "./start-problem.route";
 export { submitSolutionRoute } from "./submit-solution.route";
+export { upgradeAttemptRoute } from "./upgrade-attempt.route";

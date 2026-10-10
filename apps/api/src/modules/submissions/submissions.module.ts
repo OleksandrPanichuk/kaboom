@@ -21,6 +21,7 @@ import {
   RunProblemUseCase,
   StartProblemUseCase,
   SubmitSolutionUseCase,
+  UpgradeAttemptUseCase,
 } from "./use-cases";
 
 export const submissionsModule = defineModule({
@@ -42,6 +43,7 @@ export const submissionsModule = defineModule({
     submissionsRoutes({
       startProblem: makeUseCase(StartProblemUseCase),
       getAttempt: makeUseCase(GetAttemptUseCase),
+      upgradeAttempt: makeUseCase(UpgradeAttemptUseCase),
       runProblem: makeUseCase(RunProblemUseCase),
       submitSolution: makeUseCase(SubmitSolutionUseCase),
       listSubmissions: makeUseCase(ListSubmissionsUseCase),

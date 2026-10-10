@@ -16,3 +16,4 @@ export * from "./TaskPanel";
 export * from "./TestReport";
 export * from "./TestsPanel";
 export * from "./TrackFilter";
+export * from "./VersionNotice";

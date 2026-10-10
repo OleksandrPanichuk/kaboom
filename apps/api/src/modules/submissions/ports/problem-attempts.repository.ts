@@ -17,6 +17,12 @@ export abstract class ProblemAttemptsRepository extends Repository {
 
   public abstract insert(data: CreateAttemptData): Promise<AttemptEntity>;
 
+  public abstract moveToVersion(
+    id: string,
+    version: number,
+    hints: number,
+  ): Promise<AttemptEntity | null>;
+
   public abstract revealHint(
     id: string,
     index: number,
