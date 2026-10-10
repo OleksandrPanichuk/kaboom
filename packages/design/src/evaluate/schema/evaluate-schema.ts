@@ -143,7 +143,7 @@ export const evaluateSchema = (
     >,
   ) => {
     const { parent, child } = requirement;
-    const label = `Each ${nameOf(parent)} has many ${nameOf(child)}`;
+    const label = `${nameOf(parent)} to ${nameOf(child)}, one to many`;
     const expected = `a foreign key on ${nameOf(child)} to ${nameOf(parent)}, not unique`;
 
     if (missingTables(label, expected, [parent, child])) return;
@@ -188,7 +188,7 @@ export const evaluateSchema = (
         nodeIds,
         edgeIds: backward.map((relation) => relation.edge.id),
         finding: "wrong-cardinality",
-        message: `${columnName(wrong!.from, wrong!.foreignKey)} gives each ${nameOf(parent)} one ${nameOf(child)}, but a ${nameOf(parent)} has many; the foreign key belongs on ${nameOf(child)}.`,
+        message: `${columnName(wrong!.from, wrong!.foreignKey)} gives a row of ${nameOf(parent)} one row of ${nameOf(child)}, but it has many; the foreign key belongs on ${nameOf(child)}.`,
       });
       return;
     }
@@ -205,7 +205,7 @@ export const evaluateSchema = (
         nodeIds,
         edgeIds: forward.map((relation) => relation.edge.id),
         finding: "wrong-cardinality",
-        message: `${columnName(unique!.from, unique!.foreignKey)} is unique, so each ${nameOf(parent)} can have only one ${nameOf(child)}.`,
+        message: `${columnName(unique!.from, unique!.foreignKey)} is unique, so a row of ${nameOf(parent)} can have only one row of ${nameOf(child)}.`,
       });
       return;
     }
@@ -218,7 +218,7 @@ export const evaluateSchema = (
       passed: false,
       nodeIds,
       finding: "missing-relationship",
-      message: `Nothing relates ${nameOf(child)} to ${nameOf(parent)}, so a ${nameOf(child)} cannot say which ${nameOf(parent)} it belongs to.`,
+      message: `Nothing relates ${nameOf(child)} to ${nameOf(parent)}, so a row of ${nameOf(child)} cannot say which row of ${nameOf(parent)} it belongs to.`,
     });
   };
 
@@ -229,7 +229,7 @@ export const evaluateSchema = (
     >,
   ) => {
     const [a, b] = requirement.between;
-    const label = `Each ${nameOf(a)} has one ${nameOf(b)}`;
+    const label = `${nameOf(a)} and ${nameOf(b)}, one to one`;
     const expected = "a unique foreign key between them";
 
     if (missingTables(label, expected, [a, b])) return;
@@ -268,7 +268,7 @@ export const evaluateSchema = (
       edgeIds: direct.map((relation) => relation.edge.id),
       finding: loose ? "wrong-cardinality" : "missing-relationship",
       message: loose
-        ? `${columnName(loose.from, loose.foreignKey)} is not unique, so one ${nameOf(loose.to.id)} could have many ${nameOf(loose.from.id)}.`
+        ? `${columnName(loose.from, loose.foreignKey)} is not unique, so a row of ${nameOf(loose.to.id)} could have many rows of ${nameOf(loose.from.id)}.`
         : `Nothing relates ${nameOf(a)} and ${nameOf(b)}.`,
     });
   };
@@ -300,7 +300,7 @@ export const evaluateSchema = (
         nodeIds,
         edgeIds: direct.map((relation) => relation.edge.id),
         finding: "wrong-cardinality",
-        message: `${columnName(wrong!.from, wrong!.foreignKey)} lets each ${nameOf(wrong!.from.id)} have only one ${nameOf(wrong!.to.id)}; a many-to-many link needs a table of its own.`,
+        message: `${columnName(wrong!.from, wrong!.foreignKey)} lets a row of ${nameOf(wrong!.from.id)} have only one row of ${nameOf(wrong!.to.id)}; a many-to-many link needs a table of its own.`,
       });
       return;
     }

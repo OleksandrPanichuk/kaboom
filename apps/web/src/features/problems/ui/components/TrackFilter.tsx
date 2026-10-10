@@ -18,7 +18,7 @@ export function TrackFilter({ value, onChange }: TrackFilterProps) {
     <div
       role="group"
       aria-label="Track"
-      className="flex w-fit gap-1 rounded-xl border border-black/[0.07] bg-white p-1"
+      className="flex w-fit max-w-full flex-wrap gap-1 rounded-xl border border-black/[0.07] bg-white p-1"
     >
       {OPTIONS.map((option) => (
         <Button

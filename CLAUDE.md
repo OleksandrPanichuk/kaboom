@@ -814,6 +814,13 @@ refuses a schema drill with no relationship or naming a table the baseline
 or the reference lacks. `toDDL` writes a design as Postgres DDL: tables,
 then foreign keys as `ALTER TABLE`, then indexes.
 
+The track's problems are *Blog with tags*, *Orders for an online shop* and
+*Meeting rooms for many companies*. Each starts from its entity tables with
+only a key, and `data-model-problems.test.ts` pins the wrong designs each is
+meant to catch: a tag kept on the post, a junction table that allows a pair
+twice, money that rounds, an index that leads with the wrong column, a
+tenant with two billing profiles. They ship as challenges, without an
+interview.
 Challenges on this track are reviewed on design, integrity and query
 performance.
 

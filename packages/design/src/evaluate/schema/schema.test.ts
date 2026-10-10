@@ -79,7 +79,7 @@ describe("relationships", () => {
     } as const;
 
     expect(verdicts(evaluate(blog(), requirement))).toEqual([
-      ["Each users has many posts", true, null],
+      ["users to posts, one to many", true, null],
     ]);
 
     const unique = blog();
