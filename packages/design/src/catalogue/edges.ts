@@ -18,6 +18,7 @@ export const EDGE_KINDS = [
   "publishes",
   "protects",
   "admits",
+  "relation",
 ] as const;
 
 export const EdgeKindSchema = z.enum(EDGE_KINDS);
@@ -64,6 +65,29 @@ export const EdgePropsPatchSchema = z.strictObject({
   retries: retries.optional(),
 });
 
+export const ON_DELETE_ACTIONS = ["restrict", "cascade", "set-null"] as const;
+
+export type OnDeleteAction = (typeof ON_DELETE_ACTIONS)[number];
+
+const columnRef = z.string().min(1).max(64);
+const onDelete = z.enum(ON_DELETE_ACTIONS);
+
+export const RelationSchema = z.strictObject({
+  fromColumn: columnRef,
+  toColumn: columnRef,
+  onDelete: prop(onDelete.default("restrict"), {
+    title: "On delete",
+    description:
+      "What happens to these rows when the row they reference is deleted",
+  }),
+});
+
+export type Relation = z.output<typeof RelationSchema>;
+
+export const RelationPatchSchema = z.strictObject({
+  onDelete: onDelete.optional(),
+});
+
 export const CONTROL_EDGE_KINDS = [
   "mounts",
   "scales",
@@ -73,6 +97,7 @@ export const CONTROL_EDGE_KINDS = [
   "publishes",
   "protects",
   "admits",
+  "relation",
 ] as const satisfies readonly EdgeKind[];
 
 export const isControlEdge = (kind: EdgeKind): boolean =>

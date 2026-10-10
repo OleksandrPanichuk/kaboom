@@ -24,6 +24,8 @@ const DIMENSIONS: Record<string, string> = {
   reliability: "Reliability",
   delivery: "Delivery",
   operability: "Operability",
+  integrity: "Integrity",
+  "query-performance": "Query performance",
 };
 
 export function LatestScoreBreakdown({

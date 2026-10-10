@@ -67,8 +67,11 @@ export function NodeInspector({
   const [notes, setNotes] = useState(node.notes);
   const [notesSource, setNotesSource] = useState(node.notes);
   const definition = catalogue[node.kind];
+  const placeable = definition.track !== "data-model";
   const Icon = NODE_KIND_ICONS[definition.icon] ?? FALLBACK_NODE_ICON;
-  const fields = describeProps(definition.props);
+  const fields = describeProps(definition.props).filter(
+    (field) => field.meta.editor === undefined,
+  );
   const basic = fields.filter((field) => !field.meta.advanced);
   const advanced = fields.filter((field) => field.meta.advanced);
   const props = node.props as Record<string, unknown>;
@@ -198,14 +201,14 @@ export function NodeInspector({
             </p>
           </div>
         ) : null}
-        {placement.regions ? (
+        {placement.regions && placeable ? (
           <RegionField
             regions={groups.filter((group) => group.kind === "region")}
             value={node.groupId}
             onChange={onRegionChange}
           />
         ) : null}
-        {placement.subnets ? (
+        {placement.subnets && placeable ? (
           <SubnetField
             groups={groups}
             value={node.groupId}
@@ -216,15 +219,17 @@ export function NodeInspector({
 
       <TechnologySection node={node} onPatch={onPatch} />
 
-      <InspectorSection title="Properties">
-        {product ? (
-          <p className="-mt-1 text-xs leading-5 text-muted-foreground">
-            Values on the right are set by {product.label}; change them through
-            its settings above.
-          </p>
-        ) : null}
-        {basic.map(control)}
-      </InspectorSection>
+      {basic.length > 0 ? (
+        <InspectorSection title="Properties">
+          {product ? (
+            <p className="-mt-1 text-xs leading-5 text-muted-foreground">
+              Values on the right are set by {product.label}; change them
+              through its settings above.
+            </p>
+          ) : null}
+          {basic.map(control)}
+        </InspectorSection>
+      ) : null}
 
       {advanced.length > 0 ? (
         <details className="group border-b">

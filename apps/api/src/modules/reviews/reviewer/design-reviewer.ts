@@ -18,6 +18,7 @@ import { reviewTool, ToolConversation } from "./tool-conversation";
 export const DESIGN_DIMENSIONS = {
   "system-design": ["design", "scaling", "reliability"],
   devops: ["design", "delivery", "operability"],
+  "data-model": ["design", "integrity", "query-performance"],
 } as const satisfies Record<Track, readonly InterviewDimension[]>;
 
 type DesignDimension = (typeof DESIGN_DIMENSIONS)[Track][number];
@@ -28,11 +29,16 @@ const DIMENSION_MEANINGS: Record<DesignDimension, string> = {
   reliability: "it survives the failures the problem names",
   delivery: "a new version reaches users without failing their requests",
   operability: "when something goes wrong, someone finds out and can act",
+  integrity:
+    "the keys, types and constraints keep the data correct whatever is written",
+  "query-performance":
+    "every query the product needs is served by an index rather than a scan",
 };
 
 const SUBJECTS: Record<Track, string> = {
   "system-design": "a system design",
   devops: "the infrastructure and deployment of a system",
+  "data-model": "the database schema of a product",
 };
 
 const designReviewSchema = (dimensions: readonly DesignDimension[]) =>

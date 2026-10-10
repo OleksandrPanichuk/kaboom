@@ -31,14 +31,29 @@ export {
   EdgePropsPatchSchema,
   EdgePropsSchema,
   isControlEdge,
+  ON_DELETE_ACTIONS,
+  type OnDeleteAction,
+  type Relation,
+  RelationPatchSchema,
+  RelationSchema,
 } from "./edges";
-export { ALERT_SIGNALS } from "./kinds";
+export {
+  ALERT_SIGNALS,
+  type Column,
+  COLUMN_TYPES,
+  type ColumnType,
+  MAX_COLUMNS,
+  MAX_INDEXES,
+  type TableIndex,
+} from "./kinds";
 export {
   describeProps,
   prop,
+  PROP_EDITORS,
   PROP_UNITS,
   type PropControl,
   propControl,
+  type PropEditor,
   type PropField,
   type PropMeta,
   propMeta,

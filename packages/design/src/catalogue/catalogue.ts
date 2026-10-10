@@ -30,6 +30,7 @@ import {
   serviceKind,
   sqlDatabaseKind,
   streamKind,
+  tableKind,
   workerKind,
 } from "./kinds";
 
@@ -64,6 +65,7 @@ export const catalogue = {
   [artifactRegistryKind.kind]: artifactRegistryKind,
   [securityGroupKind.kind]: securityGroupKind,
   [natGatewayKind.kind]: natGatewayKind,
+  [tableKind.kind]: tableKind,
 } as const;
 
 export type Catalogue = typeof catalogue;

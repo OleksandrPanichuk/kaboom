@@ -28,6 +28,7 @@ import {
   Shield,
   Signpost,
   Split,
+  Table2,
   Waypoints,
   Zap,
 } from "lucide-react";
@@ -56,6 +57,7 @@ export const NODE_KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
   "k8s-deployment": Boxes,
   hpa: Scaling,
   "config-map": FileSliders,
+  table: Table2,
   secret: FileKey,
   alert: BellRing,
   monitoring: Activity,

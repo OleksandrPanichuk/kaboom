@@ -160,4 +160,11 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
     },
     animated: false,
   },
+  relation: {
+    description:
+      "A foreign key: each row of the source references one row of the target; it carries no request load.",
+    label: "Relation",
+    style: { stroke: "var(--color-violet-600)", strokeWidth: 1.5 },
+    animated: false,
+  },
 };

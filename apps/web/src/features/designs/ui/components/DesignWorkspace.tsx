@@ -267,8 +267,8 @@ export function DesignWorkspace({
     );
 
   const placement = {
-    regions: track !== "devops",
-    subnets: track !== "system-design",
+    regions: track === undefined || track === "system-design",
+    subnets: track === undefined || track === "devops",
   };
   const region = graph.groups.find((group) => group.id === regionId) ?? null;
   const within = (groupId: string): string[] => [

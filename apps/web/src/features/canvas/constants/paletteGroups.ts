@@ -65,4 +65,5 @@ export const PALETTE_GROUPS: PaletteGroup[] = [
     label: "Operations",
     kinds: ["monitoring", "alert"],
   },
+  { track: "data-model", label: "Schema", kinds: ["table"] },
 ];

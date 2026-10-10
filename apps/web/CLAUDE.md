@@ -172,7 +172,10 @@ track's groups; a sandbox design shows every track under its name.
 `features/properties` draws the inspector from the catalogue alone:
 `describeProps` gives each prop's metadata and `propControl` (both in
 `@repo/design`) the control to draw and its bounds. Add a prop to a kind with
-`.meta()` and it appears in the form; never write a form for one kind. Edge
+`.meta()` and it appears in the form; never write a form for one kind. A
+prop whose metadata names an `editor` (a table's columns and indexes)
+answers a `custom` control, which `PropFieldControl` leaves to the editor
+of that name. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
 drawn the same way.
 The *Technology* section picks a node's product from `technologiesFor(kind)`

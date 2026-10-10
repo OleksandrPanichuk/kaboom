@@ -3,6 +3,7 @@ import {
   type EdgeKind,
   EdgePropsSchema,
   type NodeKind,
+  type Relation,
 } from "../catalogue";
 import {
   DESIGN_GRAPH_SCHEMA_VERSION,
@@ -46,6 +47,7 @@ export interface CreateEdgeOptions {
   to: string;
   kind: EdgeKind;
   label?: string;
+  relation?: Relation;
 }
 
 export const createEdge = ({
@@ -54,6 +56,7 @@ export const createEdge = ({
   to,
   kind,
   label = "",
+  relation,
 }: CreateEdgeOptions): DesignEdge => ({
   id,
   from,
@@ -61,6 +64,7 @@ export const createEdge = ({
   kind,
   label,
   props: EdgePropsSchema.parse({}),
+  ...(relation ? { relation } : {}),
 });
 
 export interface CreateGroupOptions {
