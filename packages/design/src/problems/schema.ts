@@ -9,6 +9,7 @@ import {
 } from "../catalogue";
 import { FINDING_KINDS } from "../evaluate/result";
 import { ReleaseSchema, SloSchema } from "../evaluate/scenario";
+import { SchemaRequirementsSchema } from "../evaluate/schema/requirements";
 import { DesignGraphSchema, IdSchema } from "../graph";
 import { LINT_IDS } from "../lints";
 
@@ -146,9 +147,22 @@ export const NetworkDrillSchema = z.strictObject({
 });
 export type NetworkDrill = z.output<typeof NetworkDrillSchema>;
 
+export const SchemaDrillSchema = z.strictObject({
+  kind: z.literal("schema"),
+  ...drillBase,
+  requirements: SchemaRequirementsSchema,
+  expect: z
+    .strictObject({
+      forbid: z.array(z.enum(FINDING_KINDS)).default([]),
+    })
+    .default({ forbid: [] }),
+});
+export type SchemaDrill = z.output<typeof SchemaDrillSchema>;
+
 export const DrillSchema = z.union([
   PipelineDrillSchema,
   NetworkDrillSchema,
+  SchemaDrillSchema,
   LoadDrillSchema,
 ]);
 export type Drill = z.output<typeof DrillSchema>;

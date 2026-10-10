@@ -72,6 +72,17 @@ export const FINDING_KINDS = [
   "exposed-store",
   "exposed-service",
   "open-store",
+  "missing-table",
+  "missing-relationship",
+  "wrong-cardinality",
+  "missing-junction",
+  "duplicate-links",
+  "missing-column",
+  "column-mismatch",
+  "unindexed-query",
+  "keyless-table",
+  "fk-type-mismatch",
+  "set-null-not-nullable",
 ] as const;
 
 export type FindingKind = (typeof FINDING_KINDS)[number];
@@ -114,6 +125,23 @@ export interface ConnectionCheck {
   edgeId: string;
   allowed: boolean;
   reason: string | null;
+}
+
+export interface RequirementCheck {
+  requirement: "relationship" | "column" | "query";
+  label: string;
+  expected: string;
+  actual: string;
+  passed: boolean;
+  nodeIds: string[];
+  edgeIds: string[];
+  finding: FindingKind | null;
+  message: string | null;
+}
+
+export interface SchemaResult {
+  checks: RequirementCheck[];
+  findings: Finding[];
 }
 
 export interface NetworkResult {

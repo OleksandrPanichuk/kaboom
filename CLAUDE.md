@@ -800,6 +800,20 @@ set of columns is unique (`uniqueOver`), and every relation resolved to its
 columns. The lints `no-primary-key`, `fk-type-mismatch`,
 `set-null-not-nullable` and `unindexed-foreign-key` read it, and so will
 the schema evaluator, so the Checks tab and a run never disagree.
+A `schema` drill carries what the problem's data must do: relationships
+between the baseline's tables (one-to-many with a `parent` and a `child`,
+one-to-one, many-to-many), required columns, and queries that must be
+served by an index. `evaluateSchema` checks them by the rules in
+`evaluate/schema/README.md`. Tables are named by baseline node id and
+columns by name, so a junction table the solver adds may have any name; a
+query follows the relationships the problem declares, never a foreign key
+drawn beside them, so a shortcut cannot stand in for a junction table. A
+design with no relation fails every schema drill, which keeps "the
+reference without its edges passes nothing" true, and `checkPublishable`
+refuses a schema drill with no relationship or naming a table the baseline
+or the reference lacks. `toDDL` writes a design as Postgres DDL: tables,
+then foreign keys as `ALTER TABLE`, then indexes.
+
 Challenges on this track are reviewed on design, integrity and query
 performance.
 
