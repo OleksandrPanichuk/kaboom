@@ -11,6 +11,7 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { errorMessage } from "@/features/auth";
+import { type CanvasConnection, columnOfHandle } from "@/features/canvas";
 import {
   type DesignLayoutPositions,
   designQuery,
@@ -25,6 +26,7 @@ import {
   type DesignWriterState,
   dissolveRegionOps,
   newNode,
+  orientRelation,
   placementOps,
   removalOps,
   suggestEdgeKind,
@@ -52,8 +54,8 @@ export interface DesignEditor extends DesignWriterState {
   apply: (ops: DesignOp[]) => string | null;
   addNode: (kind: NodeKind, position: { x: number; y: number }) => void;
   moveNodes: (positions: DesignLayoutPositions) => void;
-  connect: (from: string, to: string) => void;
-  connectionError: (from: string, to: string) => string | null;
+  connect: (connection: CanvasConnection) => void;
+  connectionError: (connection: CanvasConnection) => string | null;
   remove: (nodeIds: string[], edgeIds: string[]) => void;
   updateNode: (id: string, patch: NodePatch) => string | null;
   updateEdge: (id: string, patch: EdgePatch) => string | null;
@@ -199,12 +201,41 @@ export const useDesignEditor = (
   );
 
   const edgeOp = useCallback(
-    (from: string, to: string): DesignOp | null => {
+    ({
+      from,
+      to,
+      fromHandle,
+      toHandle,
+    }: CanvasConnection): DesignOp | string => {
       const { graph } = writer.state;
       const source = graph.nodes.find((node) => node.id === from);
       const target = graph.nodes.find((node) => node.id === to);
 
-      if (!source || !target) return null;
+      if (!source || !target) {
+        return "One of those nodes is no longer in the design.";
+      }
+
+      if (source.kind === "table" && target.kind === "table") {
+        const fromColumn = columnOfHandle(fromHandle);
+        const toColumn = columnOfHandle(toHandle);
+
+        if (!fromColumn || !toColumn) {
+          return "Draw a relation from a column to the column it references.";
+        }
+
+        const oriented = orientRelation(source, fromColumn, target, toColumn);
+
+        return {
+          op: "add-edge",
+          edge: {
+            id: `edge-${crypto.randomUUID().slice(0, 8)}`,
+            ...oriented,
+            kind: "relation",
+            label: "",
+            props: EdgePropsSchema.parse({}),
+          },
+        };
+      }
 
       const edge: DesignEdge = {
         id: `edge-${crypto.randomUUID().slice(0, 8)}`,
@@ -227,24 +258,29 @@ export const useDesignEditor = (
   );
 
   const connectionError = useCallback(
-    (from: string, to: string) => {
-      const op = edgeOp(from, to);
+    (connection: CanvasConnection) => {
+      const op = edgeOp(connection);
 
-      if (!op) return "One of those nodes is no longer in the design.";
+      if (typeof op === "string") return op;
 
       const rejection = writer.check([op]);
 
       return rejection
-        ? describeConnectionRefusal(writer.state.graph, from, to, rejection)
+        ? describeConnectionRefusal(
+            writer.state.graph,
+            connection.from,
+            connection.to,
+            rejection,
+          )
         : null;
     },
     [edgeOp, writer],
   );
 
   const connect = useCallback(
-    (from: string, to: string) => {
-      const op = edgeOp(from, to);
-      const refused = op ? writer.apply([op]) : null;
+    (connection: CanvasConnection) => {
+      const op = edgeOp(connection);
+      const refused = typeof op === "string" ? op : writer.apply([op]);
 
       if (refused) writer.reportError(refused);
     },

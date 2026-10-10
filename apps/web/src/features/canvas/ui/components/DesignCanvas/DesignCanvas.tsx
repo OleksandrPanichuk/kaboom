@@ -43,6 +43,7 @@ import {
   NODE_WIDTH,
 } from "@/features/canvas/constants";
 import type {
+  CanvasConnection,
   CanvasEdge,
   CanvasNode,
   CanvasOverlay,
@@ -53,8 +54,12 @@ import { type Flow, mergeFlowNodes, toFlow } from "@/features/canvas/utils";
 import { CanvasEdgePath } from "./CanvasEdgePath";
 import { CanvasNodeCard } from "./CanvasNodeCard";
 import { GroupLayer } from "./GroupLayer";
+import { TableNodeCard } from "./TableNodeCard";
 
-const NODE_TYPES: NodeTypes = { "design-node": CanvasNodeCard };
+const NODE_TYPES: NodeTypes = {
+  "design-node": CanvasNodeCard,
+  "table-node": TableNodeCard,
+};
 
 const EDGE_TYPES: EdgeTypes = { "design-edge": CanvasEdgePath };
 
@@ -86,8 +91,8 @@ interface DesignCanvasProps {
   focus: CanvasFocus | null;
   onAddNode: (kind: NodeKind, position: { x: number; y: number }) => void;
   onMoveNodes: (positions: DesignLayout) => void;
-  connectionError: (from: string, to: string) => string | null;
-  onConnect: (from: string, to: string) => void;
+  connectionError: (connection: CanvasConnection) => string | null;
+  onConnect: (connection: CanvasConnection) => void;
   onRefuseConnection: (reason: string) => void;
   onDelete: (nodeIds: string[], edgeIds: string[]) => void;
   onSelectionChange: (nodeIds: string[], edgeIds: string[]) => void;
@@ -177,27 +182,51 @@ export function DesignCanvas({
 
   const startedAtTarget = useRef(false);
 
-  const oriented = (source: string, target: string): [string, string] =>
-    startedAtTarget.current ? [target, source] : [source, target];
+  const oriented = ({
+    source,
+    target,
+    sourceHandle = null,
+    targetHandle = null,
+  }: {
+    source: string;
+    target: string;
+    sourceHandle?: string | null;
+    targetHandle?: string | null;
+  }): CanvasConnection =>
+    startedAtTarget.current
+      ? {
+          from: target,
+          to: source,
+          fromHandle: targetHandle,
+          toHandle: sourceHandle,
+        }
+      : {
+          from: source,
+          to: target,
+          fromHandle: sourceHandle,
+          toHandle: targetHandle,
+        };
 
   const onConnectStart: OnConnectStart = (_event, { handleType }) => {
     startedAtTarget.current = handleType === "target";
   };
 
-  const isValidConnection: IsValidConnection<CanvasEdge> = ({
-    source,
-    target,
-  }) => connectionError(...oriented(source, target)) === null;
+  const isValidConnection: IsValidConnection<CanvasEdge> = (connection) =>
+    connectionError(oriented(connection)) === null;
 
-  const connect: OnConnect = ({ source, target }) =>
-    onConnect(...oriented(source, target));
+  const connect: OnConnect = (connection) => onConnect(oriented(connection));
 
   const onConnectEnd: OnConnectEnd = (_event, state) => {
     startedAtTarget.current = false;
 
     if (state.isValid !== false || !state.fromNode || !state.toNode) return;
 
-    const reason = connectionError(state.fromNode.id, state.toNode.id);
+    const reason = connectionError({
+      from: state.fromNode.id,
+      to: state.toNode.id,
+      fromHandle: state.fromHandle?.id ?? null,
+      toHandle: state.toHandle?.id ?? null,
+    });
 
     if (reason) onRefuseConnection(reason);
   };

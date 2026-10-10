@@ -219,6 +219,18 @@ An attempt behind its problem's latest version shows that version's brief
 (`pinnedVersion`) and a notice in the Task tab offering to move on, which
 asks first, since it cannot be undone.
 
+A table is drawn by `TableNodeCard` (`table-node`), one row per column with
+its type and key marks, and a target and a source handle on both sides of
+every row, named `<column>:<in|out>:<left|right>` (`columnHandle`). `toFlow`
+joins a relation on the sides that face each other in the saved layout and
+puts its derived cardinality in the edge's data, which `CanvasEdgePath`
+draws as `N` or `1` at each end; a one-to-one also gets an arrow at its
+start, since it reads both ways. Connecting two rows sends both handles:
+`orientRelation` points the relation at whichever end is a key, so it does
+not matter which way it was drawn, and a connection that names no column is
+refused. Grid placement leaves room under a tall table (`nodeHeight`). A new
+table starts with a `bigint` primary key `id`.
+
 `DesignCanvas` with `readOnly` draws a graph nobody may change, such as
 another solver's solution: no dragging, connecting, deleting or dropping,
 and it fits the whole graph however small that makes it.
