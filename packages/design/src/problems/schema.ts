@@ -229,6 +229,8 @@ export const INTERVIEW_DIMENSIONS = [
   "reliability",
   "delivery",
   "operability",
+  "integrity",
+  "query-performance",
   "communication",
 ] as const;
 export type InterviewDimension = (typeof INTERVIEW_DIMENSIONS)[number];

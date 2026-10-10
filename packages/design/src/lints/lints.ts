@@ -5,10 +5,14 @@ import {
   dualWrite,
   duplicateSchedule,
   failoverNowhere,
+  fkTypeMismatch,
+  noPrimaryKey,
+  setNullNotNullable,
   spofCriticalPath,
   statefulBehindRoundRobin,
   syncFanOut,
   syncThirdParty,
+  unindexedForeignKey,
   unreachableNode,
   unscrapedAlert,
 } from "./rules";
@@ -24,6 +28,10 @@ export const lints = {
   [unscrapedAlert.id]: unscrapedAlert,
   [dualWrite.id]: dualWrite,
   [failoverNowhere.id]: failoverNowhere,
+  [noPrimaryKey.id]: noPrimaryKey,
+  [fkTypeMismatch.id]: fkTypeMismatch,
+  [setNullNotNullable.id]: setNullNotNullable,
+  [unindexedForeignKey.id]: unindexedForeignKey,
 } as const;
 
 export type LintId = keyof typeof lints;

@@ -9,6 +9,8 @@ import {
   type NodeKind,
   type NodeKindDefinition,
   type NodeProps,
+  type Relation,
+  RelationSchema,
 } from "../catalogue";
 
 export const DESIGN_GRAPH_SCHEMA_VERSION = 1;
@@ -91,6 +93,7 @@ export interface DesignEdge {
   kind: z.infer<typeof EdgeKindSchema>;
   label: string;
   props: EdgeProps;
+  relation?: Relation;
 }
 
 export const DesignEdgeSchema: z.ZodType<DesignEdge> = z.strictObject({
@@ -100,6 +103,7 @@ export const DesignEdgeSchema: z.ZodType<DesignEdge> = z.strictObject({
   kind: EdgeKindSchema,
   label: LabelSchema.default(""),
   props: EdgePropsSchema.default(EdgePropsSchema.parse({})),
+  relation: RelationSchema.optional(),
 });
 
 export interface DesignGroup {

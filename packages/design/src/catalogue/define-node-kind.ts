@@ -1,12 +1,13 @@
 import type z from "zod";
 
-export const TRACKS = ["system-design", "devops"] as const;
+export const TRACKS = ["system-design", "devops", "data-model"] as const;
 
 export type Track = (typeof TRACKS)[number];
 
 export const TRACK_LABELS: Readonly<Record<Track, string>> = {
   "system-design": "System design",
   devops: "DevOps",
+  "data-model": "Data model",
 };
 
 export interface NodeKindDocs {

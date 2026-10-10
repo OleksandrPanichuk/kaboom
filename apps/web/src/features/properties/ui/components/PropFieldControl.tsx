@@ -46,6 +46,8 @@ export function PropFieldControl({
 
   const commit = (next: unknown) => setError(onCommit(next));
 
+  if (control.type === "custom") return null;
+
   if (control.type === "group") {
     const group = (value ?? {}) as Record<string, unknown>;
 

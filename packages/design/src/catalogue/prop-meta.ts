@@ -15,11 +15,16 @@ export const PROP_UNITS = [
 
 export type PropUnit = (typeof PROP_UNITS)[number];
 
+export const PROP_EDITORS = ["columns", "indexes"] as const;
+
+export type PropEditor = (typeof PROP_EDITORS)[number];
+
 export interface PropMeta {
   title: string;
   description?: string;
   unit?: PropUnit;
   advanced?: boolean;
+  editor?: PropEditor;
 }
 
 export const prop = <Schema extends z.ZodType>(
@@ -52,7 +57,8 @@ export type PropControl =
   | { type: "boolean" }
   | { type: "choice"; options: readonly string[] }
   | { type: "text"; maxLength: number | null }
-  | { type: "group"; fields: PropField[] };
+  | { type: "group"; fields: PropField[] }
+  | { type: "custom"; editor: PropEditor };
 
 const unwrap = (schema: z.ZodType): z.ZodType => {
   let current = schema;
@@ -72,6 +78,10 @@ const finite = (value: number | null): number | null =>
   value !== null && Number.isFinite(value) ? value : null;
 
 export const propControl = (schema: z.ZodType): PropControl => {
+  const editor = propMeta(schema)?.editor;
+
+  if (editor !== undefined) return { type: "custom", editor };
+
   const inner = unwrap(schema);
 
   if (inner instanceof z.ZodNumber) {

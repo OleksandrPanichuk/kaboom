@@ -1,5 +1,6 @@
 export * from "./catalogue";
 export * from "./cost";
+export * from "./data-model";
 export * from "./estimate";
 export * from "./evaluate";
 export * from "./graph";

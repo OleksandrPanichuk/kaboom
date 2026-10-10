@@ -178,8 +178,15 @@ const assertValidEdge = (graph: DesignGraph, edge: DesignEdge): void => {
   const from = findNode(graph, edge.from);
   const to = findNode(graph, edge.to);
 
-  if (from.id === to.id) {
+  if (from.id === to.id && edge.kind !== "relation") {
     reject("invalid-edge", `Edge ${edge.id} connects ${from.id} to itself`);
+  }
+
+  if (edge.kind !== "relation" && edge.relation !== undefined) {
+    reject(
+      "invalid-edge",
+      `Edge ${edge.id} is a ${edge.kind}; only a relation joins columns`,
+    );
   }
 
   if (to.kind === "client" || to.kind === "scheduler") {
@@ -220,13 +227,15 @@ const assertValidEdge = (graph: DesignGraph, edge: DesignEdge): void => {
 
   assertControlEdge(graph, edge, from, to);
 
-  const duplicate = graph.edges.some(
-    (other) =>
-      other.id !== edge.id &&
-      other.from === edge.from &&
-      other.to === edge.to &&
-      other.kind === edge.kind,
-  );
+  const duplicate =
+    edge.kind !== "relation" &&
+    graph.edges.some(
+      (other) =>
+        other.id !== edge.id &&
+        other.from === edge.from &&
+        other.to === edge.to &&
+        other.kind === edge.kind,
+    );
 
   if (duplicate) {
     reject(
@@ -384,6 +393,9 @@ const assertControlEdge = (
         );
       }
       return;
+    case "relation":
+      assertRelation(graph, edge, from, to);
+      return;
     default:
       if (
         !catalogue[from.kind].carriesTraffic ||
@@ -396,6 +408,89 @@ const assertControlEdge = (
           `Edge ${edge.id} sends ${edge.kind} traffic through ${idle.id}, a ${idle.kind}; it serves no requests`,
         );
       }
+  }
+};
+
+const assertRelation = (
+  graph: DesignGraph,
+  edge: DesignEdge,
+  from: DesignNode,
+  to: DesignNode,
+): void => {
+  if (from.kind !== "table" || to.kind !== "table") {
+    return reject(
+      "invalid-edge",
+      `Edge ${edge.id} relates ${from.id}, a ${from.kind}, to ${to.id}, a ${to.kind}; a relation joins two tables`,
+    );
+  }
+
+  const relation =
+    edge.relation ??
+    reject(
+      "invalid-edge",
+      `Relation ${edge.id} names no columns; it joins a foreign key to the column it references`,
+    );
+
+  const foreignKey =
+    from.props.columns.find((column) => column.id === relation.fromColumn) ??
+    reject(
+      "invalid-edge",
+      `Relation ${edge.id} starts at column ${relation.fromColumn}, which ${from.label || from.id} does not have`,
+    );
+  const referenced =
+    to.props.columns.find((column) => column.id === relation.toColumn) ??
+    reject(
+      "invalid-edge",
+      `Relation ${edge.id} references column ${relation.toColumn}, which ${to.label || to.id} does not have`,
+    );
+
+  const keyColumns = to.props.columns.filter((column) => column.primaryKey);
+  const wholeKey =
+    keyColumns.length === 1 && keyColumns[0]!.id === referenced.id;
+
+  if (!wholeKey && !referenced.unique) {
+    reject(
+      "invalid-edge",
+      `Relation ${edge.id} references ${to.label || to.id}.${referenced.name}, which is neither its primary key nor unique; a foreign key references one row`,
+    );
+  }
+
+  if (from.id === to.id && foreignKey.id === referenced.id) {
+    reject(
+      "invalid-edge",
+      `Relation ${edge.id} makes ${foreignKey.name} reference itself`,
+    );
+  }
+
+  const taken = graph.edges.some(
+    (other) =>
+      other.id !== edge.id &&
+      other.kind === "relation" &&
+      other.from === edge.from &&
+      other.relation?.fromColumn === relation.fromColumn,
+  );
+
+  if (taken) {
+    reject(
+      "invalid-edge",
+      `${from.label || from.id}.${foreignKey.name} already references a table; a column is one foreign key`,
+    );
+  }
+};
+
+const assertRelationsOf = (graph: DesignGraph, nodeId: string): void => {
+  for (const edge of graph.edges) {
+    if (
+      edge.kind === "relation" &&
+      (edge.from === nodeId || edge.to === nodeId)
+    ) {
+      assertRelation(
+        graph,
+        edge,
+        findNode(graph, edge.from),
+        findNode(graph, edge.to),
+      );
+    }
   }
 };
 
@@ -516,6 +611,7 @@ const updateNode = (
     previous.props = pick(before, keys);
     applied.props = pick(props, keys);
     node.props = props as DesignNode["props"];
+    assertRelationsOf(graph, id);
   }
 
   return {
@@ -565,6 +661,20 @@ const updateEdge = (
       : edge.props,
   };
 
+  if (patch.relation?.onDelete !== undefined) {
+    if (edge.relation === undefined) {
+      reject(
+        "invalid-edge",
+        `Edge ${edge.id} is a ${edge.kind}; only a relation has an on-delete rule`,
+      );
+    }
+
+    next.relation = {
+      ...edge.relation!,
+      onDelete: patch.relation.onDelete,
+    };
+  }
+
   assertValidEdge(graph, next);
 
   const previous: EdgePatch = {
@@ -572,6 +682,9 @@ const updateEdge = (
     ...(patch.kind !== undefined ? { kind: edge.kind } : {}),
     ...(patch.props !== undefined
       ? { props: pick(edge.props, Object.keys(patch.props)) }
+      : {}),
+    ...(patch.relation?.onDelete !== undefined && edge.relation
+      ? { relation: { onDelete: edge.relation.onDelete } }
       : {}),
   };
 

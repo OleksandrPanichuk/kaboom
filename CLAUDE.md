@@ -770,6 +770,39 @@ its own introduction, and a DevOps challenge is reviewed on design,
 delivery and operability. The palette shows a problem's own track, and a
 sandbox design shows both.
 
+## Data-model track
+
+The third track, `data-model`, is about the database itself. Its one kind
+is `table`, whose `columns` (a stable `id`, a `name`, a type from
+`COLUMN_TYPES`, `nullable`, `primaryKey`, `unique`) and `indexes` (ordered
+column ids, `unique`) are arrays. A composite primary key is several
+columns marked `primaryKey`. Such a prop names its editor in its metadata
+(`editor: "columns"`), and `propControl` answers `custom` for it instead of
+throwing, so the inspector draws it with an editor of its own.
+
+A foreign key is a `relation` edge from the table that holds it to the
+table it references, and only a relation carries `relation: { fromColumn,
+toColumn, onDelete }`. The field is optional, so no other edge parses any
+differently and no graph needed a migration; a relation's load `props` are
+ignored, as on every control edge. Cardinality is never stored: a unique
+foreign key makes a one-to-one. `applyOps` refuses a relation between
+anything but two tables, from or to a column its table lacks, to a column
+that is neither the whole primary key nor unique, or on a column that
+already references something. A table may reference itself, and two
+relations may join the same tables on different columns. An `update-node`
+that would leave a relation without its columns is refused, so a client
+removes the relation first in the same batch. `update-edge` changes only
+`onDelete`; changing a relation's columns is a delete and an add.
+
+What a table can answer lives in `data-model/tables.ts`: its primary key,
+whether a lookup's columns lead a key or an index (`indexedBy`), whether a
+set of columns is unique (`uniqueOver`), and every relation resolved to its
+columns. The lints `no-primary-key`, `fk-type-mismatch`,
+`set-null-not-nullable` and `unindexed-foreign-key` read it, and so will
+the schema evaluator, so the Checks tab and a run never disagree.
+Challenges on this track are reviewed on design, integrity and query
+performance.
+
 ## Technologies
 
 A node may name the product it runs on: `technology: { id, props }`, from

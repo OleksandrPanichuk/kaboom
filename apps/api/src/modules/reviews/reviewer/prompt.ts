@@ -7,6 +7,7 @@ import type { Evidence } from "./evidence";
 const INTERVIEW_KINDS: Record<Track, string> = {
   "system-design": "system design",
   devops: "DevOps",
+  "data-model": "data modelling",
 };
 
 export const reviewerPersona = (

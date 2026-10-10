@@ -1,6 +1,11 @@
 import z from "zod";
 
-import { EdgeKindSchema, EdgePropsPatchSchema } from "../catalogue";
+import {
+  EdgeKindSchema,
+  EdgePropsPatchSchema,
+  type OnDeleteAction,
+  RelationPatchSchema,
+} from "../catalogue";
 import {
   type DesignEdge,
   DesignEdgeSchema,
@@ -31,6 +36,7 @@ export interface EdgePatch {
   label?: string;
   kind?: DesignEdge["kind"];
   props?: Partial<DesignEdge["props"]>;
+  relation?: { onDelete?: OnDeleteAction };
 }
 
 export type DesignOp =
@@ -58,6 +64,7 @@ const EdgePatchSchema = z.strictObject({
   label: z.string().max(80).optional(),
   kind: EdgeKindSchema.optional(),
   props: EdgePropsPatchSchema.optional(),
+  relation: RelationPatchSchema.optional(),
 });
 
 export const DesignOpSchema: z.ZodType<DesignOp> = z.discriminatedUnion("op", [

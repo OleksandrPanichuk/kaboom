@@ -5,6 +5,8 @@ const LABELS: Record<string, string> = {
   reliability: "Reliability",
   delivery: "Delivery",
   operability: "Operability",
+  integrity: "Integrity",
+  "query-performance": "Query performance",
   communication: "Communication",
 };
 
