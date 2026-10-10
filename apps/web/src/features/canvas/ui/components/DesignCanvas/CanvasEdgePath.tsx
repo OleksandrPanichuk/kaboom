@@ -29,7 +29,8 @@ const arc = (
 };
 
 function CanvasEdgePathComponent(props: EdgeProps<CanvasEdge>) {
-  const { data, label, style, markerEnd, interactionWidth } = props;
+  const { data, label, style, markerStart, markerEnd, interactionWidth } =
+    props;
   const lanes = data?.lanes ?? 1;
   const lane = data?.lane ?? 0;
 
@@ -54,6 +55,7 @@ function CanvasEdgePathComponent(props: EdgeProps<CanvasEdge>) {
                 opacity: data.weight === 0 ? 0.3 : 1,
               }
         }
+        markerStart={markerStart}
         markerEnd={markerEnd}
         interactionWidth={interactionWidth}
       />

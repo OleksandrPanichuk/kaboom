@@ -191,6 +191,15 @@ describe("toFlow with tables", () => {
     ]);
   });
 
+  test("draws a one-to-one relation with an arrow at both ends", () => {
+    const { edges } = toFlow(graph(), {});
+
+    expect(edges.map((edge) => edge.markerStart !== undefined)).toEqual([
+      false,
+      true,
+    ]);
+  });
+
   test("joins a relation column to column, with its cardinality, and no lanes", () => {
     const { edges } = toFlow(graph(), {});
 

@@ -135,6 +135,13 @@ export const toFlow = (
 
   const edges = graph.edges.map((edge): CanvasEdge => {
     const kind = EDGE_KIND_STYLES[edge.kind];
+    const marker = {
+      type: MarkerType.ArrowClosed,
+      color: String(kind.style.stroke),
+      width: 16,
+      height: 16,
+      markerUnits: "userSpaceOnUse",
+    };
     const key = pairKey(edge.from, edge.to);
     const lane = edge.relation ? 0 : (taken.get(key) ?? 0);
     const relation = edge.relation;
@@ -168,13 +175,10 @@ export const toFlow = (
       label: edge.label || undefined,
       animated: kind.animated,
       style: kind.style,
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: String(kind.style.stroke),
-        width: 16,
-        height: 16,
-        markerUnits: "userSpaceOnUse",
-      },
+      markerEnd: marker,
+      ...(cardinality.get(edge.id) === "one-to-one"
+        ? { markerStart: marker }
+        : {}),
       ariaLabel: `${kind.label} from ${edge.from} to ${edge.to}`,
       data: {
         edge,
