@@ -12,4 +12,6 @@ export * from "./PropFieldControl";
 export * from "./RegionField";
 export * from "./SelectionInspector";
 export * from "./SubnetField";
+export * from "./TableColumnsEditor";
+export * from "./TableIndexesEditor";
 export * from "./TechnologySection";

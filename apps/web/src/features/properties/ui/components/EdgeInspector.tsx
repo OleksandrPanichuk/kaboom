@@ -5,6 +5,8 @@ import {
   EDGE_KINDS,
   type EdgePatch,
   EdgePropsSchema,
+  ON_DELETE_ACTIONS,
+  type OnDeleteAction,
 } from "@repo/design";
 import { ArrowRight, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
@@ -24,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { EDGE_KIND_STYLES } from "@/features/canvas";
+import type { RelationColumns } from "@/features/properties/utils";
 
 import { DraftInput } from "./DraftInput";
 import { InspectorSection } from "./InspectorSection";
@@ -33,10 +36,17 @@ const LABEL_MAX_LENGTH = 80;
 
 const EDGE_FIELDS = describeProps(EdgePropsSchema);
 
+const ON_DELETE_LABELS: Readonly<Record<OnDeleteAction, string>> = {
+  restrict: "Refuse the delete",
+  cascade: "Delete these rows too",
+  "set-null": "Set the column to null",
+};
+
 interface EdgeInspectorProps {
   edge: DesignEdge;
   fromLabel: string;
   toLabel: string;
+  columns?: RelationColumns | null;
   onPatch: (patch: EdgePatch) => CommitResult;
   onDelete: () => void;
 }
@@ -45,12 +55,14 @@ export function EdgeInspector({
   edge,
   fromLabel,
   toLabel,
+  columns = null,
   onPatch,
   onDelete,
 }: EdgeInspectorProps) {
   const id = useId();
   const [kindError, setKindError] = useState<string | null>(null);
   const [labelError, setLabelError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const kind = EDGE_KIND_STYLES[edge.kind];
   const props = edge.props as Record<string, unknown>;
 
@@ -68,40 +80,87 @@ export function EdgeInspector({
         </p>
       </div>
 
+      {edge.relation && columns ? (
+        <InspectorSection title="Foreign key">
+          <p className="font-mono text-sm break-all">
+            {fromLabel}.{columns.from} → {toLabel}.{columns.to}
+          </p>
+          <p className="-mt-2 text-xs leading-5 text-muted-foreground text-pretty">
+            {columns.oneToOne
+              ? `One to one: ${columns.from} is unique, so each ${toLabel} row has at most one ${fromLabel} row.`
+              : `Many to one: each ${toLabel} row may have many ${fromLabel} rows. Make ${columns.from} unique for one to one.`}
+          </p>
+          <Field data-invalid={deleteError ? true : undefined}>
+            <FieldLabel htmlFor={`${id}-on-delete`}>
+              When a {toLabel} row is deleted
+            </FieldLabel>
+            <Select
+              value={edge.relation.onDelete}
+              items={ON_DELETE_ACTIONS.map((value) => ({
+                value,
+                label: ON_DELETE_LABELS[value],
+              }))}
+              onValueChange={(next) => {
+                if (next)
+                  setDeleteError(onPatch({ relation: { onDelete: next } }));
+              }}
+            >
+              <SelectTrigger id={`${id}-on-delete`} className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ON_DELETE_ACTIONS.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {ON_DELETE_LABELS[value]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {deleteError ? <FieldError>{deleteError}</FieldError> : null}
+          </Field>
+        </InspectorSection>
+      ) : null}
+
       <InspectorSection title="General">
-        <Field>
-          <FieldLabel htmlFor={`${id}-kind`}>Kind</FieldLabel>
-          <Select
-            value={edge.kind}
-            onValueChange={(next) => setKindError(onPatch({ kind: next! }))}
-            items={EDGE_KINDS.map((value) => ({
-              value,
-              label: EDGE_KIND_STYLES[value].label,
-            }))}
-          >
-            <SelectTrigger id={`${id}-kind`} className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {EDGE_KINDS.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {EDGE_KIND_STYLES[value].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldDescription className="text-xs">
-            {kind.description}
-          </FieldDescription>
-          {kindError ? <FieldError>{kindError}</FieldError> : null}
-        </Field>
+        {edge.kind === "relation" ? null : (
+          <Field>
+            <FieldLabel htmlFor={`${id}-kind`}>Kind</FieldLabel>
+            <Select
+              value={edge.kind}
+              onValueChange={(next) => setKindError(onPatch({ kind: next! }))}
+              items={EDGE_KINDS.map((value) => ({
+                value,
+                label: EDGE_KIND_STYLES[value].label,
+              }))}
+            >
+              <SelectTrigger id={`${id}-kind`} className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {EDGE_KINDS.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {EDGE_KIND_STYLES[value].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldDescription className="text-xs">
+              {kind.description}
+            </FieldDescription>
+            {kindError ? <FieldError>{kindError}</FieldError> : null}
+          </Field>
+        )}
         <Field data-invalid={labelError ? true : undefined}>
           <FieldLabel htmlFor={`${id}-label`}>Label</FieldLabel>
           <DraftInput
             id={`${id}-label`}
             value={edge.label}
             maxLength={LABEL_MAX_LENGTH}
-            placeholder="What travels along it"
+            placeholder={
+              edge.kind === "relation"
+                ? "What the reference means"
+                : "What travels along it"
+            }
             invalid={labelError !== null}
             onUnchanged={() => setLabelError(null)}
             onCommit={(text) => setLabelError(onPatch({ label: text.trim() }))}
