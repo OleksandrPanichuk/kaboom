@@ -24,11 +24,13 @@ export class SaveDraftUseCase extends UseCase<Options, Result> {
     draftId,
     content,
   }: Options): Promise<Result> {
-    await this.authoring.ownDraft(authorId, draftId);
-    this.authoring.assertSize(content);
+    const draft = await this.authoring.ownDraft(authorId, draftId);
+    const resolved = await this.authoring.resolve(draft, content);
+
+    this.authoring.assertSize(resolved);
 
     return this.authoring.view(
-      await this.drafts.updateContent(draftId, content),
+      await this.drafts.updateContent(draftId, resolved),
     );
   }
 }

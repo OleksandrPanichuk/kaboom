@@ -46,6 +46,7 @@ export function WorkspaceTopBar({
     <header className="flex h-12 shrink-0 items-center gap-2 border-b bg-background px-2 sm:px-3">
       <Link
         to={back.to}
+        params={back.params}
         className={cn(
           buttonVariants({ variant: "ghost", size: "sm" }),
           "shrink-0 text-muted-foreground",

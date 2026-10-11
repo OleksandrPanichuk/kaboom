@@ -1,0 +1,4 @@
+ALTER TABLE "problem_drafts" ADD COLUMN "baseline_design_id" uuid;--> statement-breakpoint
+ALTER TABLE "problem_drafts" ADD COLUMN "reference_design_id" uuid;--> statement-breakpoint
+ALTER TABLE "problem_drafts" ADD CONSTRAINT "problem_drafts_baseline_design_id_designs_id_fk" FOREIGN KEY ("baseline_design_id") REFERENCES "public"."designs"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "problem_drafts" ADD CONSTRAINT "problem_drafts_reference_design_id_designs_id_fk" FOREIGN KEY ("reference_design_id") REFERENCES "public"."designs"("id") ON DELETE set null ON UPDATE no action;

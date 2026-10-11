@@ -6,6 +6,7 @@ export * from "./get-draft";
 export * from "./get-review";
 export * from "./list-my-drafts";
 export * from "./list-reviews";
+export * from "./open-draft-design";
 export * from "./reject-review";
 export * from "./save-draft";
 export * from "./submit-draft";

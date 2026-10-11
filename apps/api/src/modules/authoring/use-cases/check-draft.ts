@@ -22,6 +22,6 @@ export class CheckDraftUseCase extends UseCase<Options, Result> {
   public async execute({ authorId, draftId }: Options): Promise<Result> {
     const draft = await this.authoring.ownDraft(authorId, draftId);
 
-    return this.tester.check(draft.content);
+    return this.tester.check(await this.authoring.resolve(draft));
   }
 }

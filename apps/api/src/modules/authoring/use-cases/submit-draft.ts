@@ -33,10 +33,11 @@ export class SubmitDraftUseCase extends UseCase<Options, Result> {
 
   public async execute({ authorId, draftId }: Options): Promise<Result> {
     const draft = await this.authoring.ownDraft(authorId, draftId);
+    const resolved = await this.authoring.resolve(draft);
 
-    this.authoring.assertSize(draft.content);
+    this.authoring.assertSize(resolved);
 
-    const check = await this.tester.check(draft.content);
+    const check = await this.tester.check(resolved);
 
     if (!check.ok) {
       throw new ProblemNotPublishableError(

@@ -8,6 +8,8 @@ export interface CreateDraftData {
   forkedFromId: string | null;
 }
 
+export type DraftDesignPart = "baseline" | "reference";
+
 export abstract class ProblemDraftsRepository extends Repository {
   public abstract create(data: CreateDraftData): Promise<DraftEntity>;
 
@@ -23,6 +25,12 @@ export abstract class ProblemDraftsRepository extends Repository {
   ): Promise<DraftEntity>;
 
   public abstract linkProblem(id: string, problemId: string): Promise<void>;
+
+  public abstract linkDesign(
+    id: string,
+    part: DraftDesignPart,
+    designId: string,
+  ): Promise<void>;
 
   public abstract delete(id: string): Promise<void>;
 }

@@ -771,7 +771,14 @@ stands even when it does not parse; saving answers what does not parse
 yet, with paths. At most 20 drafts an author and 512 KB a draft. A draft
 starts blank (`starterProblem`) or as a fork of a published problem,
 copied under a new slug with `forked_from_id` remembered, and carried to
-the problem once it publishes.
+the problem once it publishes. Its baseline and reference are drawn in two
+ordinary designs the author owns, opened on demand (`POST
+/problem-drafts/:id/designs/:part`) from the draft's graphs; once
+linked, `AuthoringService.resolve` reads both graphs from the designs
+for every view, save, check and submission, so the canvas is the one
+place they are edited and nothing has to be copied back. The web edits
+a draft at `/authoring/$draftId`, autosaving, and opens the designer
+with `?draft=` so its back link returns to the draft.
 
 `problems` stays the published catalogue: every row has a current
 version, so nothing that reads it changed. Submitting runs the full

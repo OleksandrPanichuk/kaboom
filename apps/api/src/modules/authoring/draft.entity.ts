@@ -29,6 +29,11 @@ export interface DraftView {
   issues: PublishIssue[];
 }
 
+export interface DraftDesigns {
+  baseline: string | null;
+  reference: string | null;
+}
+
 export interface ReviewAuthor {
   handle: string;
   displayName: string;
@@ -88,6 +93,10 @@ export class DraftEntity {
       status: DraftEntity.status(view.draft, view.reviews),
       problem: view.problem,
       forkedFrom: view.forkedFrom,
+      designs: {
+        baseline: view.draft.baselineDesignId,
+        reference: view.draft.referenceDesignId,
+      },
       issues: view.issues.map(({ path, message }) => ({
         path: [...path],
         message,

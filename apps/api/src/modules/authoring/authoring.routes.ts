@@ -11,6 +11,7 @@ import {
   getReviewRoute,
   listMyDraftsRoute,
   listReviewsRoute,
+  openDraftDesignRoute,
   rejectReviewRoute,
   saveDraftRoute,
   submitDraftRoute,
@@ -25,6 +26,7 @@ import type {
   GetReviewUseCase,
   ListMyDraftsUseCase,
   ListReviewsUseCase,
+  OpenDraftDesignUseCase,
   RejectReviewUseCase,
   SaveDraftUseCase,
   SubmitDraftUseCase,
@@ -40,6 +42,7 @@ export interface AuthoringActions {
   checkDraft: Executable<CheckDraftUseCase>;
   submitDraft: Executable<SubmitDraftUseCase>;
   withdrawReview: Executable<WithdrawReviewUseCase>;
+  openDraftDesign: Executable<OpenDraftDesignUseCase>;
   listReviews: Executable<ListReviewsUseCase>;
   getReview: Executable<GetReviewUseCase>;
   approveReview: Executable<ApproveReviewUseCase>;
@@ -57,7 +60,8 @@ export const authoringRoutes = (actions: AuthoringActions) =>
         .delete("/:id", ...deleteDraftRoute(actions))
         .post("/:id/check", ...checkDraftRoute(actions))
         .post("/:id/submit", ...submitDraftRoute(actions))
-        .post("/:id/withdraw", ...withdrawReviewRoute(actions)),
+        .post("/:id/withdraw", ...withdrawReviewRoute(actions))
+        .post("/:id/designs/:part", ...openDraftDesignRoute(actions)),
     )
     .group("/problem-reviews", (reviews) =>
       reviews

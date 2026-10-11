@@ -5,7 +5,15 @@ import { ApiRequestError } from "@/lib/api";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+interface DesignSearch {
+  draft?: string;
+}
+
 export const Route = createFileRoute("/_app/(workspace)/designs/$designId")({
+  validateSearch: (search: Record<string, unknown>): DesignSearch =>
+    typeof search.draft === "string" && UUID.test(search.draft)
+      ? { draft: search.draft }
+      : {},
   loader: async ({ context, params }) => {
     if (!UUID.test(params.designId)) throw notFound();
 
@@ -24,6 +32,7 @@ export const Route = createFileRoute("/_app/(workspace)/designs/$designId")({
 
 function DesignRoute() {
   const { designId } = Route.useParams();
+  const { draft } = Route.useSearch();
 
-  return <DesignView designId={designId} />;
+  return <DesignView designId={designId} draftId={draft ?? null} />;
 }

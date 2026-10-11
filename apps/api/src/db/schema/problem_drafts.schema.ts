@@ -1,5 +1,6 @@
 import { index, jsonb, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
 
+import { designsSchema } from "./designs.schema";
 import { problemsSchema } from "./problems.schema";
 import { usersSchema } from "./users.schema";
 
@@ -17,6 +18,14 @@ export const problemDraftsSchema = pgTable(
       onDelete: "set null",
     }),
     content: jsonb("content").$type<unknown>().notNull(),
+    baselineDesignId: uuid("baseline_design_id").references(
+      () => designsSchema.id,
+      { onDelete: "set null" },
+    ),
+    referenceDesignId: uuid("reference_design_id").references(
+      () => designsSchema.id,
+      { onDelete: "set null" },
+    ),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

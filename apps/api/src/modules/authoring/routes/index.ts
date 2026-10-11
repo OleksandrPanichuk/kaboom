@@ -6,6 +6,7 @@ export { getDraftRoute } from "./get-draft.route";
 export { getReviewRoute } from "./get-review.route";
 export { listMyDraftsRoute } from "./list-my-drafts.route";
 export { listReviewsRoute } from "./list-reviews.route";
+export { openDraftDesignRoute } from "./open-draft-design.route";
 export { rejectReviewRoute } from "./reject-review.route";
 export { saveDraftRoute } from "./save-draft.route";
 export { submitDraftRoute } from "./submit-draft.route";
