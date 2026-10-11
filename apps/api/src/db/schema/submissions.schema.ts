@@ -57,6 +57,7 @@ export const submissionsSchema = pgTable(
     counted: boolean("counted").notNull().default(true),
     allPassed: boolean("all_passed").notNull().default(false),
     graph: jsonb("graph").$type<unknown>(),
+    schemas: jsonb("schemas").$type<unknown[]>(),
     items: jsonb("items").$type<unknown[]>().notNull(),
     drills: jsonb("drills").$type<unknown[]>().notNull(),
     tests: jsonb("tests").$type<unknown>(),

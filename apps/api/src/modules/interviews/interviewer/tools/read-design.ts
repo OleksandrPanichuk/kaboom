@@ -1,3 +1,4 @@
+import { flattenBundle } from "@repo/scoring";
 import z from "zod";
 
 import { makeService } from "@/core/registry";
@@ -13,11 +14,15 @@ export const readDesignTool = defineInterviewerTool({
   input: z.object({}),
   phases: "all",
   handle: async (_input, { interview }) => {
-    const design = await makeService(DesignsService).getOwned(
+    const designs = makeService(DesignsService);
+    const design = await designs.getOwned(
       interview.designId,
       interview.ownerId,
     );
+    const { bundle } = await designs.bundleOf(design);
 
-    return { content: describeDesign(design.graph, design.revision) };
+    return {
+      content: describeDesign(flattenBundle(bundle), design.revision),
+    };
   },
 });

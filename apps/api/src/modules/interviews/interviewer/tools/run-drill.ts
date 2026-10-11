@@ -1,4 +1,9 @@
-import { drillScenario, runDrill, TRACK_DEFINITIONS } from "@repo/scoring";
+import {
+  drillScenario,
+  flattenBundle,
+  runDrill,
+  TRACK_DEFINITIONS,
+} from "@repo/scoring";
 import z from "zod";
 
 import { make, makeService } from "@/core/registry";
@@ -26,11 +31,13 @@ export const runDrillTool = defineInterviewerTool({
       };
     }
 
-    const design = await makeService(DesignsService).getOwned(
+    const designs = makeService(DesignsService);
+    const design = await designs.getOwned(
       interview.designId,
       interview.ownerId,
     );
-    const outcome = runDrill(drill, design.graph, 0, {
+    const { bundle } = await designs.bundleOf(design);
+    const outcome = runDrill(drill, flattenBundle(bundle), 0, {
       keepsWrites: TRACK_DEFINITIONS[pinned.content.track].keepsWrites,
     });
 

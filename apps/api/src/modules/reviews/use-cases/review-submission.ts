@@ -1,3 +1,5 @@
+import { flattenBundle } from "@repo/scoring";
+
 import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { transaction } from "@/db/executor";
@@ -34,14 +36,17 @@ export class ReviewSubmissionUseCase extends UseCase<Options, Result> {
       return null;
     }
 
-    const { submission, graph } = found;
+    const { submission, graph, schemas } = found;
     const { content } = await this.problems.getVersion(
       submission.problemId,
       submission.problemVersion,
     );
     const written = await this.reviewer.write({
       content,
-      design: describeDesign(graph, submission.revision),
+      design: describeDesign(
+        flattenBundle({ system: graph, schemas }),
+        submission.revision,
+      ),
       checks: submission.items,
       drills: submission.drills,
       userId: submission.userId,

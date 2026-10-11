@@ -1,4 +1,5 @@
 import type { DesignGraph } from "@repo/design";
+import { flattenBundle } from "@repo/scoring";
 
 import { makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
@@ -21,7 +22,7 @@ type Options = RevealSolutionsUseCaseOptions;
 
 interface Result {
   lockedUntil: Date | null;
-  solutions: SharedSolution[];
+  solutions: Array<Omit<SharedSolution, "schemas">>;
 }
 
 const withoutNotes = (graph: DesignGraph): DesignGraph => ({
@@ -58,9 +59,9 @@ export class RevealSolutionsUseCase extends UseCase<Options, Result> {
 
     return {
       lockedUntil,
-      solutions: solutions.map((solution) => ({
+      solutions: solutions.map(({ schemas, ...solution }) => ({
         ...solution,
-        graph: withoutNotes(solution.graph),
+        graph: withoutNotes(flattenBundle({ system: solution.graph, schemas })),
       })),
     };
   }

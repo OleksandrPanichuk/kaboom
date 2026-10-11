@@ -1,5 +1,5 @@
-import type { DesignGraph } from "@repo/design";
 import type {
+  DesignBundle,
   ProblemContent,
   PublishCheck,
   Score,
@@ -10,7 +10,7 @@ import { Port } from "@/core/port";
 
 export interface DesignTestRequest {
   problem: ProblemContent;
-  graph: DesignGraph;
+  bundle: DesignBundle;
   include: "public" | "all";
   seeds: number;
 }

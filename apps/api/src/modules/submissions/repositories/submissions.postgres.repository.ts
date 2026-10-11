@@ -36,8 +36,16 @@ const NEWEST_FIRST = new Keyset<SubmissionEntity>({
   key: (submission) => [submission.createdAt, submission.id],
 });
 
+const schemaGraphs = (stored: unknown): Record<string, DesignGraph> =>
+  Object.fromEntries(
+    (
+      (stored as Array<{ designId: string; graph: DesignGraph }> | null) ?? []
+    ).map((schema) => [schema.designId, schema.graph]),
+  );
+
 const toEntity = ({
   graph: _graph,
+  schemas: _schemas,
   reviewModel: _model,
   reviewPromptVersion: _version,
   ...row
@@ -94,7 +102,11 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
       .limit(1);
 
     return row
-      ? { submission: toEntity(row), graph: row.graph as DesignGraph | null }
+      ? {
+          submission: toEntity(row),
+          graph: row.graph as DesignGraph | null,
+          schemas: schemaGraphs(row.schemas),
+        }
       : null;
   }
 
@@ -243,6 +255,7 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
         score: submissionsSchema.score,
         problemVersion: submissionsSchema.problemVersion,
         graph: submissionsSchema.graph,
+        schemas: submissionsSchema.schemas,
         createdAt: submissionsSchema.createdAt,
       })
       .from(submissionsSchema)
@@ -267,6 +280,10 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
       .orderBy(desc(best.createdAt))
       .limit(limit);
 
-    return rows.map((row) => ({ ...row, graph: row.graph as DesignGraph }));
+    return rows.map((row) => ({
+      ...row,
+      graph: row.graph as DesignGraph,
+      schemas: schemaGraphs(row.schemas),
+    }));
   }
 }

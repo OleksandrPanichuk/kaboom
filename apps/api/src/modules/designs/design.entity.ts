@@ -20,6 +20,13 @@ export interface DesignEntity {
   updatedAt: Date;
 }
 
+export interface ResolvedSchema {
+  designId: string;
+  revision: number;
+  graphHash: string;
+  graph: DesignGraph;
+}
+
 export type DesignSummaryEntity = Pick<
   DesignEntity,
   "id" | "name" | "kind" | "revision" | "createdAt" | "updatedAt"

@@ -1,6 +1,7 @@
 import {
   checkPublishable,
   drillRunner,
+  flattenBundle,
   runTests,
   scoreSubmission,
 } from "@repo/scoring";
@@ -13,10 +14,11 @@ import type {
 
 export const testDesign = ({
   problem,
-  graph,
+  bundle,
   include,
   seeds,
 }: DesignTestRequest): DesignTestResult => {
+  const graph = flattenBundle(bundle);
   const runner = drillRunner(problem, graph, { seeds });
 
   return {

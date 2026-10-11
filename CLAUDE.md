@@ -1156,10 +1156,28 @@ its databases for the node's kind (a SQL database takes SQL engines, a
 NoSQL one MongoDB or DynamoDB). A deleted schema leaves the reference in
 place, and the web names it as missing.
 
-This is the first part of the review's plan. Scoring still reads one
-graph, combined problems keep `storedOn`, and nothing migrates combined
-designs yet: resolving references into a frozen bundle for runs and
-submissions comes before problems or attempts use separate schemas.
+Scoring reads a **bundle**: `{ system, schemas }`, the design and the
+schema graphs its databases name (`DesignBundle` in `@repo/scoring`).
+`DesignsService.bundleOf` resolves each reference to the schema as it
+stands at that moment, among the owner's own schema designs, leaving out
+one that is gone. A run, a submission, an interview review and the
+interviewer's `run_drill` and `read_design` all read that bundle, so
+editing a schema shows on the next run with no step to update a pinned
+revision. A submission stores what it resolved beside its graph, in
+`schemas` (each with its design id, revision and hash), so a stored score,
+its review and the solutions others see never change when the schema does.
+
+`flattenBundle` turns a bundle into the one graph the evaluators read: each
+referenced schema's databases join the design on the node that names them,
+as `storedOn`, and a schema two nodes share is taken once, on the first.
+A design without references is a bundle with no schemas, so every problem
+scores as before. A schema that reuses an id the design or another schema
+has would make the graph ambiguous, so `bundleOf` refuses it with `409
+DESIGN_SCHEMA_CONFLICT` rather than scoring it.
+
+Still to come: problems and attempts that hold separate schemas, the
+canvas naming a database's schema, and migrating combined designs; until
+then combined problems keep `storedOn`.
 
 ## Technologies
 
