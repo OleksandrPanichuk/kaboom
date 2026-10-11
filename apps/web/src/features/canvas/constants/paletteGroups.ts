@@ -30,6 +30,7 @@ export const PALETTE_GROUPS: PaletteGroup[] = [
     kinds: [
       "cache",
       "sql-database",
+      "connection-pooler",
       "nosql-database",
       "object-storage",
       "search-index",

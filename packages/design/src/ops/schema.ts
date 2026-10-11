@@ -1,6 +1,8 @@
 import z from "zod";
 
 import {
+  type Connection,
+  ConnectionSchema,
   EdgeKindSchema,
   EdgePropsPatchSchema,
   type Engine,
@@ -39,6 +41,7 @@ export interface EdgePatch {
   label?: string;
   kind?: DesignEdge["kind"];
   props?: Partial<DesignEdge["props"]>;
+  connection?: Connection | null;
   relation?: {
     onDelete?: OnDeleteAction;
     onUpdate?: OnDeleteAction | null;
@@ -71,6 +74,7 @@ const EdgePatchSchema = z.strictObject({
   label: z.string().max(80).optional(),
   kind: EdgeKindSchema.optional(),
   props: EdgePropsPatchSchema.optional(),
+  connection: ConnectionSchema.nullable().optional(),
   relation: RelationPatchSchema.optional(),
 });
 

@@ -33,6 +33,7 @@ export interface PropMeta {
   unit?: PropUnit;
   advanced?: boolean;
   editor?: PropEditor;
+  fallback?: number;
 }
 
 export const prop = <Schema extends z.ZodType>(

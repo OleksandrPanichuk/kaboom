@@ -8,8 +8,11 @@ import {
   count,
   gigabytes,
   kilobytes,
+  optionalCount,
   rate,
 } from "./shared";
+
+export const DEFAULT_MAX_CONNECTIONS = 1_000;
 
 export const sqlDatabaseKind = defineNodeKind({
   kind: "sql-database",
@@ -29,6 +32,7 @@ export const sqlDatabaseKind = defineNodeKind({
       "Without failover and a replica, losing the primary takes every write down.",
       "Writes go to the primary only; replicas add read capacity, never write capacity.",
       "Sharding adds write capacity but makes queries across shards expensive.",
+      "Every replica of every caller holds its own pool of connections, so scaling out the callers can exhaust the database's connection limit.",
     ],
   },
   props: z.strictObject({
@@ -39,6 +43,11 @@ export const sqlDatabaseKind = defineNodeKind({
     writeCapacityRps: rate(1_000, {
       title: "Write capacity",
       description: "Writes per second the primary commits; replicas add none",
+    }),
+    maxConnections: optionalCount(DEFAULT_MAX_CONNECTIONS, {
+      title: "Max connections",
+      description:
+        "Connections the server accepts at once; a larger limit needs a larger instance",
     }),
     storageGb: gigabytes(500, {
       title: "Storage",

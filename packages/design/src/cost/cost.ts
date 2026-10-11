@@ -1,3 +1,4 @@
+import { DEFAULT_MAX_CONNECTIONS } from "../catalogue";
 import { findTechnology } from "../catalogue/technologies";
 import type { DesignGraph, DesignNode } from "../graph";
 import { perMillion, PRICES } from "./prices";
@@ -73,6 +74,8 @@ const kindCost = (
         1,
         node.props.readCapacityRps / PRICES.sqlInstanceReadRps,
         node.props.writeCapacityRps / PRICES.sqlInstanceWriteRps,
+        (node.props.maxConnections ?? DEFAULT_MAX_CONNECTIONS) /
+          PRICES.sqlInstanceConnections,
       );
       const sized = size > 1 ? `, each ${round(size)}× the base size,` : "";
 
@@ -147,6 +150,8 @@ const kindCost = (
     }
     case "rate-limiter":
       return { monthlyUsd: PRICES.rateLimiter, basis: "a small counter store" };
+    case "connection-pooler":
+      return { monthlyUsd: PRICES.connectionPooler, basis: "a small instance" };
     case "scheduler":
       return { monthlyUsd: PRICES.scheduler, basis: "a scheduled trigger" };
     case "coordination":

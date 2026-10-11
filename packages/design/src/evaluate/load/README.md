@@ -84,6 +84,7 @@ request it receives.
 | `scheduler`, `coordination`   | unbounded                                                                                                       | scheduler: what it emits; coordination: nothing                        |
 | `queue`                       | `capacityMsgPerSecond` accepted                                                                                 | see _Backlog_                                                          |
 | `stream`                      | `capacityMsgPerSecond` accepted                                                                                 | see _Backlog_                                                          |
+| `connection-pooler`           | the lesser of `capacityRps` and what its server connections carry; see _Connections_                            | what it serves, by share                                               |
 
 For a node with separate read and write capacities, `ρ = max(reads / read
 capacity, writes / write capacity)`; otherwise `ρ = λ / capacity`. Replica
@@ -100,6 +101,34 @@ below saturation. The step reports it as `throttled` (req/s).
 **Saturation.** Up to `ρ = 0.95` a node serves everything. Above it, it serves
 `0.95 × capacity` of each channel in proportion, and the rest is an error
 (nothing forwards it downstream).
+
+## Connections
+
+A `sql-database` accepts `maxConnections` at once (1,000 when unset), and a
+`connection-pooler` accepts `maxClientConnections` from its callers.
+
+- Every caller that holds a pool (a service, worker, scheduler or
+  deployment) opens one per replica to each database or pooler it reads,
+  writes or calls, of the edge's `connection.poolSize` (10 without one). Two
+  edges from one caller to one node share a pool, of the larger size. A
+  pooler opens one pool to each database it calls. No other kind opens
+  connections: a cache reading through or a balancer forwarding holds none.
+- A caller that is down, or behind a cut edge, holds nothing.
+- When the callers ask for more than the limit, the node refuses
+  `1 − limit / demanded` of what it receives, on top of anything it
+  throttles; utilisation and latency are computed on what it accepts. The
+  refused share is part of the node's own error rate and a **lasting** one,
+  since a caller without a connection fails however often it retries. The
+  step reports `connections: { demanded, max }`, and the finding is
+  `connections-exhausted`, not `errors`.
+- A pooler passes on at most what its server connections carry: the sum
+  over its outgoing synchronous edges of `poolSize × 1000 / latency`, the
+  target's base latency plus any latency fault. A request waiting for a free
+  server connection is the pooler saturating, with the latency and errors
+  that follow.
+
+Autoscaling the callers adds replicas, so it adds connections: the limit can
+be reached by the very traffic the autoscaler answers.
 
 ## Latency and errors
 
@@ -331,17 +360,18 @@ Each finding names its target, the step it first held at, a message that
 quotes the numbers, and those numbers in `data`. One finding per kind and
 target: the first step it held, with the worst value seen.
 
-| Kind              | When                                                                 |
-| ----------------- | -------------------------------------------------------------------- |
-| `saturated`       | a node reaches `ρ ≥ 0.95`                                            |
-| `errors`          | a node's own error rate, less what it throttles, exceeds 1 %         |
-| `throttled`       | a node turns away more than 1 % of what it receives                  |
-| `backlog-growing` | a queue's or consumer group's backlog grows for three steps in a row |
-| `slo-breach`      | a client's p99 or availability misses the scenario's SLO             |
-| `rollout-stalled` | a deployment's rollout is stalled                                    |
-| `rolled-back`     | a deployment's canary is rolled back                                 |
-| `crash-looping`   | a deployment's new pods have been restarted 3 times or more          |
-| `alert-fired`     | an alert paged; see _Alerts_                                         |
-| `stale-secret`    | a deployment's pods hold a secret's value after it was revoked       |
-| `schema-break`    | a breaking migration left old pods failing every request             |
-| `retry-storm`     | an edge's retries make it send 1.5× the load or more                 |
+| Kind                    | When                                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `saturated`             | a node reaches `ρ ≥ 0.95`                                                                        |
+| `errors`                | a node's own error rate, less what it throttles or refuses for want of a connection, exceeds 1 % |
+| `throttled`             | a node turns away more than 1 % of what it receives                                              |
+| `backlog-growing`       | a queue's or consumer group's backlog grows for three steps in a row                             |
+| `slo-breach`            | a client's p99 or availability misses the scenario's SLO                                         |
+| `rollout-stalled`       | a deployment's rollout is stalled                                                                |
+| `rolled-back`           | a deployment's canary is rolled back                                                             |
+| `crash-looping`         | a deployment's new pods have been restarted 3 times or more                                      |
+| `alert-fired`           | an alert paged; see _Alerts_                                                                     |
+| `stale-secret`          | a deployment's pods hold a secret's value after it was revoked                                   |
+| `schema-break`          | a breaking migration left old pods failing every request                                         |
+| `retry-storm`           | an edge's retries make it send 1.5× the load or more                                             |
+| `connections-exhausted` | a node's callers ask for more connections than it accepts                                        |

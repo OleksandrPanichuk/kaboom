@@ -1,4 +1,4 @@
-import { catalogue } from "../../catalogue";
+import { catalogue, DEFAULT_POOL_SIZE } from "../../catalogue";
 import type { DesignEdge, DesignGraph, DesignNode } from "../../graph";
 import type {
   ClientStep,
@@ -22,9 +22,11 @@ import {
   capacityOf,
   carries,
   type Channels,
+  connectionLimitOf,
   consumerLimit,
   feedsOnlyChanges,
   forwardedBy,
+  holdsPools,
   intrinsicErrorRateOf,
   SATURATION,
   SYNCHRONOUS,
@@ -427,6 +429,10 @@ const runStep = (
     const slowShare = rolloutShape(node)?.slowShare ?? 0;
 
     return {
+      connectionThroughput:
+        node.kind === "connection-pooler"
+          ? poolThroughputOf(node)
+          : Number.POSITIVE_INFINITY,
       capacityFactor:
         fault.capacityFactor * (1 - slowShare * (1 - 1 / SLOWDOWN)),
       replicas:
@@ -436,6 +442,58 @@ const runStep = (
     };
   };
 
+  const poolThroughputOf = (node: DesignNode): number => {
+    const pools = (topo.outbound.get(node.id) ?? []).filter((edge) =>
+      SYNCHRONOUS.has(edge.kind),
+    );
+
+    if (pools.length === 0) return Number.POSITIVE_INFINITY;
+
+    return pools.reduce((sum, edge) => {
+      const target = topo.byId.get(edge.to)!;
+      const latency =
+        baseLatencyOf(target) + (state.get(target.id)?.addLatencyMs ?? 0);
+      const size = edge.connection?.poolSize ?? DEFAULT_POOL_SIZE;
+
+      return latency > 0
+        ? sum + (size * 1_000) / latency
+        : Number.POSITIVE_INFINITY;
+    }, 0);
+  };
+
+  const connectionsInto = (node: DesignNode): number => {
+    const pools = new Map<string, number>();
+
+    for (const edge of topo.inbound.get(node.id) ?? []) {
+      if (!SYNCHRONOUS.has(edge.kind) || isCut(edge) || !isUp(edge.from)) {
+        continue;
+      }
+
+      pools.set(
+        edge.from,
+        Math.max(
+          pools.get(edge.from) ?? 0,
+          edge.connection?.poolSize ?? DEFAULT_POOL_SIZE,
+        ),
+      );
+    }
+
+    return [...pools].reduce((sum, [id, size]) => {
+      const source = topo.byId.get(id)!;
+
+      return (
+        sum +
+        size *
+          (holdsPools(source)
+            ? conditionsOf(source).replicas
+            : source.kind === "connection-pooler"
+              ? 1
+              : 0)
+      );
+    }, 0);
+  };
+
+  const refusedShares = new Map<string, number>();
   const received = new Map<string, Channels>();
   const edges: Record<string, EdgeStep> = {};
   const nodes: Record<string, NodeStep> = {};
@@ -491,7 +549,16 @@ const runStep = (
     const offered = total(load);
     const admittedFraction =
       up && limit !== null && offered > limit ? limit / offered : 1;
-    const admitted = scaleBy(load, admittedFraction);
+    const connectionLimit = up ? connectionLimitOf(node) : null;
+    const demanded = connectionLimit === null ? 0 : connectionsInto(node);
+    const connected =
+      connectionLimit !== null && demanded > connectionLimit
+        ? connectionLimit / demanded
+        : 1;
+
+    refusedShares.set(node.id, 1 - connected);
+
+    const admitted = scaleBy(load, admittedFraction * connected);
     const rho = up ? utilisation(admitted, capacity) : 0;
     const servedFraction = !up ? 0 : rho <= SATURATION ? 1 : SATURATION / rho;
     const served = scaleBy(admitted, servedFraction);
@@ -503,6 +570,7 @@ const runStep = (
         ? 1
         : 1 -
           admittedFraction *
+            connected *
             servedFraction *
             (1 - intrinsicErrorRateOf(node)) *
             (1 - (state.get(node.id)?.errorRate ?? 0)) *
@@ -540,6 +608,9 @@ const runStep = (
         ? { throttled: offered * (1 - admittedFraction) }
         : {}),
       ...(reportsReplicas(node) ? { replicas: conditions.replicas } : {}),
+      ...(connectionLimit !== null
+        ? { connections: { demanded, max: connectionLimit } }
+        : {}),
       ...(rollout ? { rollout: rollout.step } : {}),
     };
 
@@ -750,7 +821,12 @@ const runStep = (
     const downstream = combine(calls, (call) => call.errorRate);
     const downstreamLasting = combine(calls, (call) => call.lasting);
     const ownLasting = step.up
-      ? Math.min(step.ownErrorRate, state.get(node.id)?.lastingErrorRate ?? 0)
+      ? Math.min(
+          step.ownErrorRate,
+          1 -
+            (1 - (state.get(node.id)?.lastingErrorRate ?? 0)) *
+              (1 - (refusedShares.get(node.id) ?? 0)),
+        )
       : step.ownErrorRate;
 
     step.errorRate = Math.min(
@@ -883,18 +959,38 @@ const runStep = (
       });
     }
 
-    if (step.ownErrorRate - throttledRate > ERROR_FINDING && lambda > 0) {
+    const refused = refusedShares.get(node.id) ?? 0;
+    const failing =
+      step.ownErrorRate - throttledRate - refused * (1 - throttledRate);
+
+    if (failing > ERROR_FINDING && lambda > 0) {
       log.note(index, {
         target: { type: "node", id: node.id },
         kind: "errors",
         message: step.up
-          ? `${label} fails ${percent(step.ownErrorRate - throttledRate)} of what it receives: it cannot serve ${perSecond(lambda * (step.ownErrorRate - throttledRate))} of ${perSecond(lambda)}.`
+          ? `${label} fails ${percent(failing)} of what it receives: it cannot serve ${perSecond(lambda * failing)} of ${perSecond(lambda)}.`
           : `${label} is down and fails all ${perSecond(lambda)} it receives.`,
         data: {
-          errorRate: round(step.ownErrorRate - throttledRate, 5),
+          errorRate: round(failing, 5),
           lambda: round(lambda),
         },
-        worst: step.ownErrorRate - throttledRate,
+        worst: failing,
+      });
+    }
+
+    if (refused > 0 && lambda > 0 && step.connections) {
+      const { demanded, max } = step.connections;
+
+      log.note(index, {
+        target: { type: "node", id: node.id },
+        kind: "connections-exhausted",
+        message: `${label} accepts ${max.toLocaleString("en")} connections and its callers' pools ask for ${round(demanded, 0).toLocaleString("en")}, so it refuses ${percent(refused)} of what it receives.`,
+        data: {
+          demanded: round(demanded),
+          max,
+          refused: round(refused, 5),
+        },
+        worst: demanded / max,
       });
     }
 

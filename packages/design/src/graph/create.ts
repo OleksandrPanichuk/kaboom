@@ -1,5 +1,6 @@
 import {
   catalogue,
+  type Connection,
   type EdgeKind,
   EdgePropsSchema,
   type Engine,
@@ -51,6 +52,7 @@ export interface CreateEdgeOptions {
   label?: string;
   relation?: Relation;
   reference?: Reference;
+  connection?: Connection;
 }
 
 export const createEdge = ({
@@ -61,6 +63,7 @@ export const createEdge = ({
   label = "",
   relation,
   reference,
+  connection,
 }: CreateEdgeOptions): DesignEdge => ({
   id,
   from,
@@ -70,6 +73,7 @@ export const createEdge = ({
   props: EdgePropsSchema.parse({}),
   ...(relation ? { relation } : {}),
   ...(reference ? { reference } : {}),
+  ...(connection ? { connection } : {}),
 });
 
 export interface CreateGroupOptions {

@@ -47,6 +47,11 @@ export const edge = (
   return { ...created, props: { ...created.props, ...props } };
 };
 
+export const pooled = <Edge extends DesignEdge>(
+  link: Edge,
+  poolSize: number,
+): Edge => ({ ...link, connection: { poolSize } });
+
 export const graph = (
   nodes: DesignNode[],
   edges: DesignEdge[] = [],

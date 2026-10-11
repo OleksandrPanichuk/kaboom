@@ -1,4 +1,4 @@
-import type { EdgeKind } from "../../catalogue";
+import { DEFAULT_MAX_CONNECTIONS, type EdgeKind } from "../../catalogue";
 import type { DesignNode } from "../../graph";
 
 export interface Channels {
@@ -17,6 +17,7 @@ export interface NodeConditions {
   replicas: number;
   upReplicas: number;
   hitRatio: number;
+  connectionThroughput: number;
 }
 
 export const SATURATION = 0.95;
@@ -35,7 +36,12 @@ const separate = (reads: number, writes: number): Capacity => ({
 
 export const capacityOf = (
   node: DesignNode,
-  { capacityFactor, replicas, upReplicas }: NodeConditions,
+  {
+    capacityFactor,
+    replicas,
+    upReplicas,
+    connectionThroughput,
+  }: NodeConditions,
 ): Capacity => {
   const scale = (capacity: Capacity): Capacity => ({
     ...capacity,
@@ -109,8 +115,29 @@ export const capacityOf = (
     case "queue":
     case "stream":
       return scale(shared(node.props.capacityMsgPerSecond));
+    case "connection-pooler":
+      return scale(
+        shared(Math.min(node.props.capacityRps, connectionThroughput)),
+      );
   }
 };
+
+export const connectionLimitOf = (node: DesignNode): number | null => {
+  switch (node.kind) {
+    case "sql-database":
+      return node.props.maxConnections ?? DEFAULT_MAX_CONNECTIONS;
+    case "connection-pooler":
+      return node.props.maxClientConnections;
+    default:
+      return null;
+  }
+};
+
+export const holdsPools = (node: DesignNode): boolean =>
+  node.kind === "service" ||
+  node.kind === "worker" ||
+  node.kind === "scheduler" ||
+  node.kind === "k8s-deployment";
 
 export const throttleLimitOf = (
   node: DesignNode,

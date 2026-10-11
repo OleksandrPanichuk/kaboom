@@ -7,6 +7,8 @@ export const PRICES = {
   sqlInstance: 165,
   sqlInstanceReadRps: 5_000,
   sqlInstanceWriteRps: 1_000,
+  sqlInstanceConnections: 1_000,
+  connectionPooler: 30,
   sqlStoragePerGb: 0.115,
   nosqlPartition: 25,
   nosqlStoragePerGb: 0.25,

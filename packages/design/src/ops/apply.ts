@@ -9,6 +9,7 @@ import {
   fieldAt,
   findTechnology,
   isNodeKind,
+  opensConnections,
 } from "../catalogue";
 import { isKeyExactly, relationPairs } from "../data-model/tables";
 import {
@@ -258,6 +259,13 @@ const assertValidEdge = (graph: DesignGraph, edge: DesignEdge): void => {
     reject(
       "invalid-edge",
       `Edge ${edge.id} is a ${edge.kind}; only a reference starts at a field`,
+    );
+  }
+
+  if (edge.connection !== undefined && !opensConnections(edge.kind, to.kind)) {
+    reject(
+      "invalid-edge",
+      `Edge ${edge.id} is a ${edge.kind} to ${to.label || to.id}, a ${to.kind}; only a call, read or write into a SQL database or a connection pooler holds a pool of connections`,
     );
   }
 
@@ -682,6 +690,12 @@ const pick = <T extends object>(
     keys.map((key) => [key, (source as Record<string, unknown>)[key]]),
   ) as Partial<T>;
 
+const pickOrNull = (
+  source: Record<string, unknown>,
+  keys: readonly string[],
+): Record<string, unknown> =>
+  Object.fromEntries(keys.map((key) => [key, source[key] ?? null]));
+
 const addNode = (
   graph: DesignGraph,
   node: DesignNode,
@@ -772,7 +786,13 @@ const updateNode = (
   let props = before;
 
   if (patch.props !== undefined) {
-    props = parseNodeProps(node, { ...props, ...patch.props });
+    const merged: Record<string, unknown> = { ...props, ...patch.props };
+
+    for (const [key, value] of Object.entries(patch.props)) {
+      if (value === null) delete merged[key];
+    }
+
+    props = parseNodeProps(node, merged);
   }
 
   const derived = derive ? derivedProps(node.kind, node.technology) : {};
@@ -790,8 +810,8 @@ const updateNode = (
   if (patch.props !== undefined || changed.length > 0) {
     const keys = [...new Set([...Object.keys(patch.props ?? {}), ...changed])];
 
-    previous.props = pick(before, keys);
-    applied.props = pick(props, keys);
+    previous.props = pickOrNull(before, keys);
+    applied.props = pickOrNull(props, keys);
     node.props = props as DesignNode["props"];
     assertRelationsOf(graph, id);
   }
@@ -843,6 +863,9 @@ const updateEdge = (
       : edge.props,
   };
 
+  if (patch.connection === null) delete next.connection;
+  else if (patch.connection !== undefined) next.connection = patch.connection;
+
   const relationPatch = patch.relation;
 
   if (relationPatch !== undefined && Object.keys(relationPatch).length > 0) {
@@ -870,6 +893,9 @@ const updateEdge = (
     ...(patch.props !== undefined
       ? { props: pick(edge.props, Object.keys(patch.props)) }
       : {}),
+    ...(patch.connection !== undefined
+      ? { connection: edge.connection ?? null }
+      : {}),
     ...(patch.relation !== undefined && edge.relation
       ? {
           relation: Object.fromEntries(
@@ -883,6 +909,8 @@ const updateEdge = (
   };
 
   Object.assign(edge, next);
+
+  if (next.connection === undefined) delete edge.connection;
 
   return [{ op: "update-edge", id, patch: previous }];
 };

@@ -875,6 +875,27 @@ expire. Their baselines list the item types and their attributes, so the
 facts have names to attach to, and leave the keys to the solver. A
 reference with every item's keys taken away passes no drill, as a
 reference without its edges does.
+How the application reaches a SQL database is part of the load model. A
+`sql-database` accepts `maxConnections` (1,000 when unset; a larger limit
+prices a larger instance), and every replica of a service, worker,
+scheduler or deployment holds a pool to each database it calls, the edge's
+optional `connection: { poolSize }` or ten. Asked for more than its limit,
+the database refuses the excess as a lasting error and reports
+`connections-exhausted`, so autoscaling the callers can take it down. A
+`connection-pooler` (PgBouncer, RDS Proxy) takes the callers' pools against
+its own `maxClientConnections` and opens only its own to the database,
+which bounds what it passes on at `poolSize × 1000 / latency` a second.
+*Ticket sales on serverless functions* practises it: functions that each
+hold a connection, scaled into the thousands by an on-sale. The rules are
+in the load README.
+
+A new prop on an existing kind is optional with no default
+(`optionalCount`, its `fallback` in the metadata for the inspector), for the
+same reason no graph version is bumped: a default would appear in every
+stored node that lacks it, and change the hash replay checks. A top-level
+`null` in an `update-node` props patch removes the prop, so undo restores
+an absent one.
+
 *A product catalogue with variants* and *Chat messages in MongoDB*
 practise it: variants embedded and read with their product, reviews and
 messages that reference their parent instead of piling into it, indexes

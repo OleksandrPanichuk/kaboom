@@ -1061,3 +1061,63 @@ describe("drills that need a node to act on", () => {
     expect(scoreSubmission(problem, untested).score).toBeLessThan(50);
   });
 });
+
+describe("scoring the serverless ticket shop", () => {
+  const reference = OFFICIAL_PROBLEMS.find(
+    (item) => item.slug === "serverless-tickets",
+  )!.reference.graph;
+  const withDatabase = (patch: Record<string, unknown>): DesignGraph => ({
+    ...reference,
+    nodes: reference.nodes.map((item) =>
+      item.id === "tickets"
+        ? ({ ...item, props: { ...item.props, ...patch } } as typeof item)
+        : item,
+    ),
+  });
+  const direct = (design: DesignGraph): DesignGraph => ({
+    ...design,
+    nodes: design.nodes.filter((item) => item.id !== "pooler"),
+    edges: [
+      ...design.edges.filter(
+        (item) => item.from !== "pooler" && item.to !== "pooler",
+      ),
+      {
+        ...edge("functions", "tickets", "sync-call"),
+        connection: { poolSize: 1 },
+      },
+    ],
+  });
+
+  test("functions that each connect to the database run it out of connections in the sale", () => {
+    const { passed } = passedItems("serverless-tickets", direct(reference));
+
+    expect(passed["handles-a-normal-day"]).toBe(true);
+    expect(passed["survives-the-on-sale"]).toBe(false);
+    expect(passed["pools-connections"]).toBe(false);
+  });
+
+  test("a pooler with a default pool of ten cannot carry the sale", () => {
+    const starved: DesignGraph = {
+      ...reference,
+      edges: reference.edges.map((item) =>
+        item.from === "pooler"
+          ? { ...item, connection: { poolSize: 10 } }
+          : item,
+      ),
+    };
+
+    expect(
+      passedItems("serverless-tickets", starved).passed["survives-the-on-sale"],
+    ).toBe(false);
+  });
+
+  test("raising the database's limit passes the sale, but pools nothing", () => {
+    const { passed } = passedItems(
+      "serverless-tickets",
+      direct(withDatabase({ maxConnections: 2_000 })),
+    );
+
+    expect(passed["survives-the-on-sale"]).toBe(true);
+    expect(passed["pools-connections"]).toBe(false);
+  });
+});

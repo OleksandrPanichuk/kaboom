@@ -5,13 +5,34 @@ import { defineTechnology } from "../define-technology";
 import { choice, count, toggle } from "../kinds/shared";
 
 const RDS_CLASSES = {
-  "db.t4g.medium": { reads: 1_500, writes: 400, hourly: 0.065 },
-  "db.r6g.large": { reads: 4_000, writes: 1_000, hourly: 0.225 },
-  "db.r6g.2xlarge": { reads: 12_000, writes: 3_000, hourly: 0.899 },
-  "db.r6g.8xlarge": { reads: 40_000, writes: 9_000, hourly: 3.596 },
+  "db.t4g.medium": {
+    reads: 1_500,
+    writes: 400,
+    connections: 450,
+    hourly: 0.065,
+  },
+  "db.r6g.large": {
+    reads: 4_000,
+    writes: 1_000,
+    connections: 1_800,
+    hourly: 0.225,
+  },
+  "db.r6g.2xlarge": {
+    reads: 12_000,
+    writes: 3_000,
+    connections: 5_000,
+    hourly: 0.899,
+  },
+  "db.r6g.8xlarge": {
+    reads: 40_000,
+    writes: 9_000,
+    connections: 5_000,
+    hourly: 3.596,
+  },
 } as const;
 
 const AURORA_PREMIUM = 1.2;
+const RDS_PROXY_PER_VCPU_HOUR = 0.015;
 const CLOUD_SQL_PER_VCPU = 49;
 const DYNAMODB = {
   readUnit: 0.095,
@@ -70,6 +91,7 @@ export const amazonRds = defineTechnology({
   derive: ({ instanceClass, multiAz }) => ({
     readCapacityRps: RDS_CLASSES[instanceClass].reads,
     writeCapacityRps: RDS_CLASSES[instanceClass].writes,
+    maxConnections: RDS_CLASSES[instanceClass].connections,
     failover: multiAz ? ("automatic" as const) : ("manual" as const),
   }),
   monthlyUsd: ({ instanceClass, multiAz }) =>
@@ -90,6 +112,7 @@ export const amazonAurora = defineTechnology({
   derive: ({ instanceClass }) => ({
     readCapacityRps: Math.round(RDS_CLASSES[instanceClass].reads * 1.5),
     writeCapacityRps: Math.round(RDS_CLASSES[instanceClass].writes * 1.5),
+    maxConnections: RDS_CLASSES[instanceClass].connections,
     failover: "automatic" as const,
   }),
   monthlyUsd: ({ instanceClass }) =>
@@ -119,6 +142,42 @@ export const cloudSql = defineTechnology({
   }),
   monthlyUsd: ({ vcpus, highAvailability }) =>
     vcpus * CLOUD_SQL_PER_VCPU * (highAvailability ? 2 : 1),
+});
+
+export const pgbouncer = defineTechnology({
+  id: "pgbouncer",
+  kind: "connection-pooler",
+  provider: "self-hosted",
+  label: "PgBouncer",
+  monogram: "PGB",
+  summary:
+    "A lightweight Postgres pooler you run yourself. In transaction mode, a server connection serves one client only for the length of a transaction.",
+  props: z.strictObject({
+    maxClientConn: count(1_000, {
+      title: "max_client_conn",
+      description: "Client connections it accepts at once",
+    }),
+  }),
+  derive: ({ maxClientConn }) => ({ maxClientConnections: maxClientConn }),
+});
+
+export const amazonRdsProxy = defineTechnology({
+  id: "amazon-rds-proxy",
+  kind: "connection-pooler",
+  provider: "aws",
+  label: "Amazon RDS Proxy",
+  monogram: "PRX",
+  summary:
+    "A managed pooler in front of RDS and Aurora that holds thousands of client connections and keeps them through a failover.",
+  props: z.strictObject({
+    databaseVcpus: count(2, {
+      title: "Database vCPUs",
+      description: "vCPUs of the database behind it, which it is billed by",
+    }),
+  }),
+  derive: () => ({ maxClientConnections: 10_000 }),
+  monthlyUsd: ({ databaseVcpus }) =>
+    databaseVcpus * RDS_PROXY_PER_VCPU_HOUR * HOURS_PER_MONTH,
 });
 
 export const amazonDynamodb = defineTechnology({

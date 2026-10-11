@@ -18,6 +18,7 @@ const TITLES: Record<Finding["kind"], string> = {
   "stale-secret": "Old secret still in use",
   "schema-break": "Migration broke the old version",
   "retry-storm": "Retries piling on",
+  "connections-exhausted": "Out of connections",
   "untested-deploy": "Deploys untested code",
   "unscanned-deploy": "Deploys unscanned code",
   "blocked-path": "Cannot connect",
