@@ -47,7 +47,7 @@ export function ProfileNameForm() {
         <FieldDescription>
           {update.isSuccess
             ? "Saved."
-            : "Shown in the app and in the emails we send you."}
+            : "Used in the app and in the emails we send you."}
         </FieldDescription>
         {update.isError ? (
           <FieldError>{errorMessage(update.error)}</FieldError>

@@ -1,15 +1,9 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { cn } from "cn";
 import { Gauge } from "lucide-react";
 
 import { skillsQuery } from "@/features/skills/api";
 
-const barTone = (score: number) =>
-  score >= 80
-    ? "bg-emerald-500"
-    : score >= 50
-      ? "bg-indigo-500"
-      : "bg-amber-500";
+import { SkillBars } from "./SkillBars";
 
 export function SkillsCard() {
   const { data } = useSuspenseQuery(skillsQuery);
@@ -35,35 +29,7 @@ export function SkillsCard() {
           </p>
         </div>
       </div>
-      <ul className="flex flex-col gap-3">
-        {data.skills.map((skill) => (
-          <li key={skill.skill} className="flex flex-col gap-1.5">
-            <p className="flex items-baseline justify-between gap-3 text-sm">
-              <span className="font-medium">{skill.label}</span>
-              <span className="text-muted-foreground tabular-nums">
-                {skill.score === null
-                  ? "No data yet"
-                  : `${skill.score} · ${skill.samples} ${skill.samples === 1 ? "review" : "reviews"}`}
-              </span>
-            </p>
-            <div
-              role="progressbar"
-              aria-label={skill.label}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={skill.score ?? undefined}
-              className="h-1.5 overflow-hidden rounded-full bg-zinc-100"
-            >
-              {skill.score !== null ? (
-                <div
-                  className={cn("h-full rounded-full", barTone(skill.score))}
-                  style={{ width: `${Math.max(2, skill.score)}%` }}
-                />
-              ) : null}
-            </div>
-          </li>
-        ))}
-      </ul>
+      <SkillBars skills={data.skills} />
     </section>
   );
 }

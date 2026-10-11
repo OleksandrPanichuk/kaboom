@@ -4,10 +4,7 @@ import { bind, makeUseCase } from "@/core/registry";
 import { leaderboardRoutes } from "./leaderboard.routes";
 import { LeaderboardRepository } from "./ports";
 import { PostgresLeaderboardRepository } from "./repositories";
-import {
-  GetLeaderboardUseCase,
-  SaveLeaderboardProfileUseCase,
-} from "./use-cases";
+import { GetLeaderboardUseCase } from "./use-cases";
 
 export const leaderboardModule = defineModule({
   name: "leaderboard",
@@ -21,6 +18,5 @@ export const leaderboardModule = defineModule({
   routes: () =>
     leaderboardRoutes({
       getLeaderboard: makeUseCase(GetLeaderboardUseCase),
-      saveLeaderboardProfile: makeUseCase(SaveLeaderboardProfileUseCase),
     }),
 });

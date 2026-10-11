@@ -119,3 +119,41 @@ describe("api client query", () => {
     expect(typeChecks).toBeFunction();
   });
 });
+
+describe("api client body", () => {
+  const sent = async (body: unknown) => {
+    let init: RequestInit | undefined;
+    const api = createApiClient({
+      url: "http://localhost",
+      fetch: ((_input: string | URL | Request, options?: RequestInit) => {
+        init = options;
+
+        return Promise.resolve(Response.json([]));
+      }) as typeof fetch,
+    }) as unknown as ApiProxy<TestRoutes>;
+
+    await api.api.search.post(body as { text: string }, {
+      query: { track: "design" },
+    });
+
+    return init!;
+  };
+
+  test("sends JSON by default", async () => {
+    const init = await sent({ text: "cache" });
+
+    expect(init.body).toBe(JSON.stringify({ text: "cache" }));
+    expect(init.headers).toMatchObject({ "content-type": "application/json" });
+  });
+
+  test("sends a body holding a file as multipart, letting fetch set the type", async () => {
+    const file = new File(["png"], "me.png", { type: "image/png" });
+    const init = await sent({ file, text: "avatar" });
+    const form = init.body as FormData;
+
+    expect(form).toBeInstanceOf(FormData);
+    expect(form.get("text")).toBe("avatar");
+    expect((form.get("file") as File).name).toBe("me.png");
+    expect(init.headers).not.toHaveProperty("content-type");
+  });
+});

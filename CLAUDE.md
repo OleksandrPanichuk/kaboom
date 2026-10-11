@@ -741,6 +741,38 @@ scored against. Moving on is the solver's choice: `POST
 version. Hints already revealed carry over, as many as the new version has,
 at its costs. Earlier submissions keep the version they were scored on.
 
+## Profiles
+
+`profiles` owns the public face of an account: a `handle`, a
+`display_name`, a `bio`, up to three `links`, an `avatar_key` and
+`visible`. Every user has one row, made in the transaction that creates
+the user: `users` declares the `UserLifecycle` port and calls `created`
+from `UsersService.create`, and `profiles` binds it, as `reviews` binds
+`ReviewScheduler`. The handle starts from the name and the user's id
+(`ada-lovelac-1f0c2a9e`), and the display name starts as `users.name`
+but is its own field from then on, so the account name stays private once
+someone changes either. Profiles are public by default; a hidden one
+answers 404 to everyone but its owner and is left off the leaderboard.
+The email is never shown.
+
+An avatar is uploaded as multipart (`PUT /profiles/me/avatar`) and
+stored through `FileStorage` under `avatars/<uuid>.<ext>`. Its type is
+read from its first bytes, never from its name or declared type, and it
+may be at most 1 MB. A new upload gets a new key and deletes the old
+file, so `GET /profiles/avatars/:file` serves it with an immutable cache
+header and no session. `UserLifecycle.deleting` removes the file before
+the account goes, since the row only cascades.
+
+`GET /profiles/:handle` composes the standing (`LeaderboardEntity`
+over the leaderboard's own standings), the skills (`SkillsService
+.summaryFor`) and recent counted submissions. `profiles` imports
+`leaderboard`, never the reverse: the leaderboard reads the `profiles`
+table in its own query, and `avatarUrl` from `profile.avatar.ts`, a
+file that imports nothing.
+
+The generated client types a `t.File` as `Blob`, and sends a body that
+holds one as multipart, so a caller writes `put({ file })`.
+
 ## Leaderboard
 
 `leaderboard` ranks people by points, computed on read from submissions:
@@ -748,10 +780,10 @@ each official problem's best counted score times its difficulty weight,
 the same arithmetic as `/progress`. `?period=week` counts only submissions
 of the last seven days and `?track=` only that track's problems; the rank
 name shows only all time and across tracks, where it means what the ranks
-say. Nobody is listed until they choose a handle and to be shown, in the
-module's own `leaderboard_profiles`; the board shows the handle, never the
-name or the email. Tied points share a place. `me` is the caller's own
-standing, with a position only when they are listed.
+say. Everyone whose profile is visible is listed, by display name, handle
+and avatar. Tied points share a place, and `LeaderboardEntity.listed`
+decides places for the board and a profile alike. `me` is the caller's
+own standing, with a position only when they are listed.
 
 ## DevOps track
 

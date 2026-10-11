@@ -6,6 +6,8 @@ import { LEADERBOARD_PERIODS } from "./leaderboard.constants";
 export const LeaderboardEntryModel = t.Object({
   position: t.Integer(),
   handle: t.String(),
+  displayName: t.String(),
+  avatarUrl: t.Nullable(t.String()),
   points: t.Integer(),
   solved: t.Integer(),
   rank: t.Nullable(t.String()),
@@ -25,9 +27,3 @@ export const LeaderboardModel = t.Object({
   }),
 });
 export type LeaderboardModel = typeof LeaderboardModel.static;
-
-export const LeaderboardProfileModel = t.Object({
-  handle: t.String(),
-  visible: t.Boolean(),
-});
-export type LeaderboardProfileModel = typeof LeaderboardProfileModel.static;

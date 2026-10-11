@@ -85,7 +85,7 @@ const renderSchema = (schema: OpenApiSchema | undefined, depth = 1): string => {
 
   switch (schema.type) {
     case "string":
-      return "string";
+      return schema.format === "binary" ? "Blob" : "string";
     case "number":
     case "integer":
       return "number";

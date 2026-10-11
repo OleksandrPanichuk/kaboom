@@ -97,11 +97,15 @@ export const createClient = ({
         headers: {
           origin: ORIGIN,
           ...(cookie ? { cookie } : {}),
-          ...(body === undefined ? {} : { "content-type": "application/json" }),
+          ...(body === undefined || body instanceof FormData
+            ? {}
+            : { "content-type": "application/json" }),
           ...(captcha ? PASSING_CAPTCHA : {}),
           ...headers,
         },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        ...(body === undefined
+          ? {}
+          : { body: body instanceof FormData ? body : JSON.stringify(body) }),
       }),
     );
 

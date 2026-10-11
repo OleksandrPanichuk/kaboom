@@ -1,7 +1,7 @@
-import { and, eq, ne, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
-import { isUniqueViolation, leaderboardProfilesSchema } from "@/db";
-import { type DBExecutor, getExecutor, transaction } from "@/db/executor";
+import { profilesSchema } from "@/db";
+import { type DBExecutor, getExecutor } from "@/db/executor";
 import { DIFFICULTY_WEIGHT, MIN_SOLUTION_SCORE } from "@/modules/submissions";
 
 import type {
@@ -9,14 +9,13 @@ import type {
   LeaderboardProfileEntity,
   Standing,
 } from "../leaderboard.entity";
-import {
-  LeaderboardRepository,
-  type SaveProfileData,
-} from "../ports/leaderboard.repository";
+import { LeaderboardRepository } from "../ports/leaderboard.repository";
 
 interface StandingRow extends Record<string, unknown> {
   user_id: string;
   handle: string | null;
+  display_name: string | null;
+  avatar_key: string | null;
   visible: boolean | null;
   points: number | string;
   solved: number | string;
@@ -61,9 +60,9 @@ export class PostgresLeaderboardRepository extends LeaderboardRepository {
         join problems p on p.id = b.problem_id
         group by b.user_id
       )
-      select t.user_id, l.handle, l.visible, t.points, t.solved
+      select t.user_id, l.handle, l.display_name, l.avatar_key, l.visible, t.points, t.solved
       from totals t
-      left join leaderboard_profiles l on l.user_id = t.user_id
+      left join profiles l on l.user_id = t.user_id
       where t.points > 0
       order by t.points desc, l.handle asc nulls last
     `)) as unknown as StandingRow[];
@@ -71,6 +70,8 @@ export class PostgresLeaderboardRepository extends LeaderboardRepository {
     return rows.map((row) => ({
       userId: row.user_id,
       handle: row.handle,
+      displayName: row.display_name,
+      avatarKey: row.avatar_key,
       visible: row.visible ?? false,
       points: Number(row.points),
       solved: Number(row.solved),
@@ -82,54 +83,12 @@ export class PostgresLeaderboardRepository extends LeaderboardRepository {
   ): Promise<LeaderboardProfileEntity | null> {
     const [row] = await this.db
       .select()
-      .from(leaderboardProfilesSchema)
-      .where(eq(leaderboardProfilesSchema.userId, userId))
+      .from(profilesSchema)
+      .where(eq(profilesSchema.userId, userId))
       .limit(1);
 
     return row
       ? { userId: row.userId, handle: row.handle, visible: row.visible }
       : null;
-  }
-
-  public async saveProfile({
-    userId,
-    handle,
-    visible,
-  }: SaveProfileData): Promise<LeaderboardProfileEntity | null> {
-    try {
-      return await transaction(async () => {
-        const [taken] = await this.db
-          .select({ userId: leaderboardProfilesSchema.userId })
-          .from(leaderboardProfilesSchema)
-          .where(
-            and(
-              eq(leaderboardProfilesSchema.handle, handle),
-              ne(leaderboardProfilesSchema.userId, userId),
-            ),
-          )
-          .limit(1);
-
-        if (taken) return null;
-
-        const [row] = await this.db
-          .insert(leaderboardProfilesSchema)
-          .values({ userId, handle, visible })
-          .onConflictDoUpdate({
-            target: leaderboardProfilesSchema.userId,
-            set: { handle, visible, updatedAt: new Date() },
-          })
-          .returning();
-
-        return {
-          userId: row!.userId,
-          handle: row!.handle,
-          visible: row!.visible,
-        };
-      });
-    } catch (error) {
-      if (isUniqueViolation(error)) return null;
-
-      throw error;
-    }
   }
 }

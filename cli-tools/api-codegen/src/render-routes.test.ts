@@ -70,6 +70,22 @@ const paths = {
       },
     },
   },
+  "/api/avatar": {
+    put: {
+      requestBody: {
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: { file: { type: "string", format: "binary" } },
+              required: ["file"],
+            },
+          },
+        },
+      },
+      responses: response,
+    },
+  },
   "/api/problems/{slug}": {
     get: {
       parameters: [{ name: "slug", in: "path", required: true }],
@@ -103,6 +119,10 @@ describe("renderRoutes", () => {
   test("leaves event streams out, since the client reads whole bodies", () => {
     expect(rendered).not.toContain("events:");
     expect(rendered).not.toContain("/events");
+  });
+
+  test("types a file in a body as a Blob", () => {
+    expect(rendered).toContain("file: Blob;");
   });
 
   test("types a coerced integer in a response as a number", () => {

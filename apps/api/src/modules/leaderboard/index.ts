@@ -7,8 +7,8 @@ export {
   type LeaderboardView,
   type ListedStanding,
   type Standing,
+  type UserStanding,
 } from "./leaderboard.entity";
-export * from "./leaderboard.errors";
 export * from "./leaderboard.model";
 export { leaderboardModule } from "./leaderboard.module";
 export {

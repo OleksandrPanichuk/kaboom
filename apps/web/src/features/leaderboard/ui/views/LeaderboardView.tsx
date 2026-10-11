@@ -29,7 +29,7 @@ export function LeaderboardView({
           </h1>
           <p className="text-sm leading-6 text-muted-foreground sm:text-base text-pretty">
             Points from the best counted score on each official problem,
-            weighted by difficulty. Only people who chose a handle appear.
+            weighted by difficulty. Everyone with a public profile appears.
           </p>
         </div>
         <MyStanding me={data.me} />
