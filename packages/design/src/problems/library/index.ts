@@ -5,6 +5,7 @@ import { catalogueVariants } from "./catalogue-variants";
 import { chat } from "./chat";
 import { chatMessages } from "./chat-messages";
 import { fareSearch } from "./fare-search";
+import { flashSaleCheckout } from "./flash-sale-checkout";
 import { gameLeaderboard } from "./game-leaderboard";
 import { jobQueue } from "./job-queue";
 import { latencyRegression } from "./latency-regression";
@@ -37,6 +38,7 @@ export const OFFICIAL_PROBLEMS: ProblemContent[] = [
   cardPayments,
   fareSearch,
   serverlessTickets,
+  flashSaleCheckout,
   zeroDowntimeRollout,
   latencyRegression,
   monorepoPipeline,

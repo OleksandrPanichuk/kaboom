@@ -225,7 +225,13 @@ while unset, as `maxConnections` does. An edge that opens connections
 (`opensConnections`: a call, read or write into a SQL database or a
 pooler) gets a *Connection pool* field in the edge inspector; empty sends
 `connection: null`. The run overlay names a node that refuses connections
-with how many its callers asked for, in the saturated tone. Edge
+with how many its callers asked for, in the saturated tone. A database
+box names the node it is stored on, the group inspector picks it from the
+nodes of the right kind, and that node's inspector links back: following
+the link selects the box and frames its nodes, through a `CanvasFocus`
+with a `groupId`, which selects nothing on the canvas. `paletteTracks`
+gives a problem's palette its own track first, then the tracks of what the
+design already draws. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
 drawn the same way.
 The *Technology* section picks a node's product from `technologiesFor(kind)`

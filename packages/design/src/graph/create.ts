@@ -82,6 +82,7 @@ export interface CreateGroupOptions {
   label: string;
   parentId?: string | null;
   engine?: Engine;
+  storedOn?: string;
 }
 
 export const createGroup = ({
@@ -90,10 +91,12 @@ export const createGroup = ({
   label,
   parentId = null,
   engine,
+  storedOn,
 }: CreateGroupOptions): DesignGroup => ({
   id,
   kind,
   label,
   parentId,
   ...(engine ? { engine } : {}),
+  ...(storedOn ? { storedOn } : {}),
 });

@@ -124,6 +124,7 @@ export interface DesignGroup {
   label: string;
   parentId: string | null;
   engine?: Engine;
+  storedOn?: string;
 }
 
 export const DesignGroupSchema: z.ZodType<DesignGroup> = z.strictObject({
@@ -132,6 +133,7 @@ export const DesignGroupSchema: z.ZodType<DesignGroup> = z.strictObject({
   label: LabelSchema,
   parentId: IdSchema.nullable().default(null),
   engine: z.enum(ENGINES).optional(),
+  storedOn: IdSchema.optional(),
 });
 
 export interface DesignGraph {

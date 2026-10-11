@@ -7,12 +7,13 @@ import {
   type DesignGroup,
   type DesignNode,
   type DesignOp,
+  ENGINE_LABELS,
   findTechnology,
   type LintHit,
   type NodeCost,
   type NodePatch,
 } from "@repo/design";
-import { ChevronRight, Trash2 } from "lucide-react";
+import { ChevronRight, Database as DatabaseIcon, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -56,6 +57,7 @@ interface NodeInspectorProps {
   hits: LintHit[];
   replicas?: string[];
   groups: DesignGroup[];
+  onShowGroup?: (groupId: string) => void;
   placement: PlacementFields;
   onRegionChange: (target: RegionTarget) => void;
   onPatch: (patch: NodePatch) => CommitResult;
@@ -70,6 +72,7 @@ export function NodeInspector({
   hits,
   replicas = [],
   groups,
+  onShowGroup = () => undefined,
   placement,
   onRegionChange,
   onPatch,
@@ -81,6 +84,7 @@ export function NodeInspector({
   const [labelError, setLabelError] = useState<string | null>(null);
   const [notes, setNotes] = useState(node.notes);
   const [notesSource, setNotesSource] = useState(node.notes);
+  const held = groups.filter((group) => group.storedOn === node.id);
   const definition = catalogue[node.kind];
   const placeable = definition.track !== "data-model";
   const engine =
@@ -163,6 +167,34 @@ export function NodeInspector({
           </span>
           .
         </p>
+      ) : null}
+
+      {held.length > 0 ? (
+        <div className="flex flex-col gap-1 border-b px-4 py-3">
+          <p className="text-xs font-medium text-muted-foreground">
+            Holds the schema of
+          </p>
+          <ul className="flex flex-col gap-0.5">
+            {held.map((group) => (
+              <li key={group.id}>
+                <button
+                  type="button"
+                  onClick={() => onShowGroup(group.id)}
+                  className="inline-flex max-w-full items-center gap-1.5 rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  <DatabaseIcon
+                    aria-hidden="true"
+                    className="size-3.5 shrink-0"
+                  />
+                  <span className="truncate">
+                    {group.label || "Database"}
+                    {group.engine ? ` · ${ENGINE_LABELS[group.engine]}` : ""}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
       {hits.length > 0 ? (

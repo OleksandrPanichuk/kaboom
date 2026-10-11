@@ -737,6 +737,9 @@ const removeNode = (graph: DesignGraph, id: string): DesignOp[] => {
   const edges = graph.edges.filter(
     (edge) => edge.from === id || edge.to === id,
   );
+  const stored = graph.groups.filter((group) => group.storedOn === id);
+
+  for (const group of stored) delete group.storedOn;
 
   graph.nodes = graph.nodes.filter((candidate) => candidate.id !== id);
   graph.edges = graph.edges.filter(
@@ -746,6 +749,11 @@ const removeNode = (graph: DesignGraph, id: string): DesignOp[] => {
   return [
     { op: "add-node", node },
     ...edges.map((edge): DesignOp => ({ op: "add-edge", edge })),
+    ...stored.map((group): DesignOp => ({
+      op: "update-group",
+      id: group.id,
+      patch: { storedOn: id },
+    })),
   ];
 };
 
@@ -915,6 +923,39 @@ const updateEdge = (
   return [{ op: "update-edge", id, patch: previous }];
 };
 
+const STORES: Readonly<Record<EngineFamily, DesignNode["kind"]>> = {
+  sql: "sql-database",
+  document: "nosql-database",
+  "key-value": "nosql-database",
+};
+
+const assertStoredOn = (graph: DesignGraph, group: DesignGroup): void => {
+  if (group.storedOn === undefined) return;
+
+  const engine =
+    group.kind === "database" && group.engine !== undefined
+      ? group.engine
+      : reject(
+          "invalid-op",
+          `Group ${group.id} is a ${group.kind}; only a database is stored on a node`,
+        );
+
+  const node =
+    graph.nodes.find((candidate) => candidate.id === group.storedOn) ??
+    reject(
+      "invalid-op",
+      `${group.label || group.id} is stored on ${group.storedOn}, which the design does not have`,
+    );
+  const kind = STORES[ENGINE_FAMILIES[engine]];
+
+  if (node.kind !== kind) {
+    reject(
+      "invalid-op",
+      `${group.label || group.id} is a ${ENGINE_LABELS[engine]} database, so it lives on a ${catalogue[kind].label.toLowerCase()}, and ${node.label || node.id} is a ${catalogue[node.kind].label.toLowerCase()}`,
+    );
+  }
+};
+
 const addGroup = (graph: DesignGraph, group: DesignGroup): DesignOp[] => {
   if (graph.groups.length >= MAX_GROUPS) {
     reject("too-large", `A design holds at most ${MAX_GROUPS} groups`);
@@ -923,6 +964,7 @@ const addGroup = (graph: DesignGraph, group: DesignGroup): DesignOp[] => {
   assertFreeId(graph, group.id);
   assertGroup(graph, group.parentId);
   assertNesting(graph, group);
+  assertStoredOn(graph, group);
   graph.groups.push(structuredClone(group));
 
   return [{ op: "remove-group", id: group.id }];
@@ -974,6 +1016,16 @@ const updateGroup = (
 
     previous.engine = current;
     group.engine = patch.engine;
+  }
+
+  if (patch.storedOn !== undefined) {
+    const before = group.storedOn ?? null;
+
+    if (patch.storedOn === null) delete group.storedOn;
+    else group.storedOn = patch.storedOn;
+
+    assertStoredOn(graph, group);
+    previous.storedOn = before;
   }
 
   return [{ op: "update-group", id, patch: previous }];

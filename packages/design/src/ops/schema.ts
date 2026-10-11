@@ -35,6 +35,7 @@ export interface NodePatch {
 export interface GroupPatch {
   label?: string;
   engine?: Engine;
+  storedOn?: string | null;
 }
 
 export interface EdgePatch {
@@ -101,6 +102,7 @@ export const DesignOpSchema: z.ZodType<DesignOp> = z.discriminatedUnion("op", [
     patch: z.strictObject({
       label: z.string().max(80).optional(),
       engine: z.enum(ENGINES).optional(),
+      storedOn: IdSchema.nullable().optional(),
     }),
   }),
 ]);

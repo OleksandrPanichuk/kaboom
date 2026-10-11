@@ -58,19 +58,25 @@ const ABOUT: Record<GroupKind, string> = {
     "The tables of one database. Its engine decides which types, defaults and indexes they may use, and how the schema is written as SQL.",
 };
 
+const NOWHERE = "nowhere";
+
 interface GroupInspectorProps {
   group: DesignGroup;
   members: string[];
+  hosts?: Array<{ id: string; label: string }>;
   onRename: (label: string) => string | null;
   onEngineChange?: (engine: Engine) => string | null;
+  onStoredOnChange?: (nodeId: string | null) => string | null;
   onDissolve: () => void;
 }
 
 export function GroupInspector({
   group,
   members,
+  hosts = [],
   onRename,
   onEngineChange = () => null,
+  onStoredOnChange = () => null,
   onDissolve,
 }: GroupInspectorProps) {
   const kind = GROUP_KIND_LABELS[group.kind];
@@ -79,6 +85,11 @@ export function GroupInspector({
   const id = useId();
   const [error, setError] = useState<string | null>(null);
   const [engineError, setEngineError] = useState<string | null>(null);
+  const [hostError, setHostError] = useState<string | null>(null);
+  const hostItems = [
+    { value: NOWHERE, label: "Not placed on a node" },
+    ...hosts.map((host) => ({ value: host.id, label: host.label })),
+  ];
   const engines = group.engine
     ? ENGINES.filter(
         (engine) => ENGINE_FAMILIES[engine] === ENGINE_FAMILIES[group.engine!],
@@ -147,6 +158,39 @@ export function GroupInspector({
               Checks name what the new engine lacks.
             </FieldDescription>
             {engineError ? <FieldError>{engineError}</FieldError> : null}
+          </Field>
+        ) : null}
+        {group.engine ? (
+          <Field data-invalid={hostError ? true : undefined}>
+            <FieldLabel htmlFor={`${id}-host`}>Stored on</FieldLabel>
+            <Select
+              value={group.storedOn ?? NOWHERE}
+              items={hostItems}
+              onValueChange={(next) =>
+                setHostError(
+                  onStoredOnChange(
+                    next === NOWHERE || next === null ? null : String(next),
+                  ),
+                )
+              }
+            >
+              <SelectTrigger id={`${id}-host`} className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {hostItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldDescription className="text-xs">
+              {hosts.length === 0
+                ? `Add a ${group.engine === "mongodb" || group.engine === "dynamodb" ? "NoSQL" : "SQL"} database node to say which server holds these ${group.engine === "mongodb" ? "collections" : "tables"}.`
+                : "The database node in the architecture that holds this schema."}
+            </FieldDescription>
+            {hostError ? <FieldError>{hostError}</FieldError> : null}
           </Field>
         ) : null}
         <div className="flex flex-col gap-1">
