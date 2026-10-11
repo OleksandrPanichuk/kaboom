@@ -244,10 +244,38 @@ export const ColumnSchema = z
 
 export type Column = z.output<typeof ColumnSchema>;
 
+export const INDEX_METHODS = [
+  "btree",
+  "hash",
+  "gin",
+  "gist",
+  "brin",
+  "fulltext",
+] as const;
+
+export type IndexMethod = (typeof INDEX_METHODS)[number];
+
+export const FILTER_OPERATORS = ["=", "!=", "is-null", "is-not-null"] as const;
+
+export type FilterOperator = (typeof FILTER_OPERATORS)[number];
+
+export const FilterSchema = z.strictObject({
+  column: ColumnIdSchema,
+  op: z.enum(FILTER_OPERATORS),
+  value: z.string().min(1).max(255).optional(),
+});
+
+export type IndexFilter = z.output<typeof FilterSchema>;
+
 export const IndexSchema = z.strictObject({
   id: ColumnIdSchema,
   columns: z.array(ColumnIdSchema).min(1).max(8),
   unique: z.boolean().default(false),
+  method: z.enum(INDEX_METHODS).optional(),
+  lower: z.array(ColumnIdSchema).min(1).max(8).optional(),
+  descending: z.array(ColumnIdSchema).min(1).max(8).optional(),
+  include: z.array(ColumnIdSchema).min(1).max(16).optional(),
+  where: FilterSchema.optional(),
 });
 
 export type TableIndex = z.output<typeof IndexSchema>;

@@ -39,7 +39,11 @@ export interface EdgePatch {
   label?: string;
   kind?: DesignEdge["kind"];
   props?: Partial<DesignEdge["props"]>;
-  relation?: { onDelete?: OnDeleteAction };
+  relation?: {
+    onDelete?: OnDeleteAction;
+    onUpdate?: OnDeleteAction | null;
+    deferrable?: true | null;
+  };
 }
 
 export type DesignOp =

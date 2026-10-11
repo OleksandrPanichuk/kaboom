@@ -3,12 +3,11 @@ import {
   columnName,
   columnsName,
   foreignKeyIds,
-  indexedBy,
   isOneToOne,
-  keyOrders,
-  leadsWith,
+  type Lookup,
   relationsOf,
   type ResolvedRelation,
+  servesLookup,
   tableName,
   type TableNode,
   tablesOf,
@@ -62,19 +61,37 @@ const byName = (table: TableNode, name: string): Column | undefined =>
     (column) => column.name.toLowerCase() === name.toLowerCase(),
   );
 
-const servesOrder = (
-  table: TableNode,
-  equal: Column[],
-  order: Column[],
+const sameValues = (
+  actual: readonly string[] | undefined,
+  wanted: readonly string[],
 ): boolean =>
-  keyOrders(table).some((columns) => {
-    const ids = equal.map((column) => column.id);
+  actual?.length === wanted.length &&
+  wanted.every((value) => actual.includes(value));
 
-    return (
-      leadsWith(columns, ids) &&
-      order.every((column, index) => columns[ids.length + index] === column.id)
-    );
-  });
+const describeLookup = (table: TableNode, lookup: Lookup): string => {
+  const name = (id: string) =>
+    table.props.columns.find((column) => column.id === id)?.name ?? id;
+
+  if (lookup.match) {
+    return lookup.match.kind === "contains"
+      ? `a contains search on ${name(lookup.match.column)}`
+      : `a text search on ${name(lookup.match.column)}`;
+  }
+
+  const parts = [
+    ...lookup.equal.map(name),
+    ...(lookup.lower ?? []).map((id) => `lower(${name(id)})`),
+    ...(lookup.range !== undefined ? [`a range of ${name(lookup.range)}`] : []),
+  ];
+  const where = lookup.where
+    ? ` where ${name(lookup.where.column)} ${lookup.where.op.replaceAll("-", " ")}${lookup.where.value !== undefined ? ` '${lookup.where.value}'` : ""}`
+    : "";
+  const order = lookup.order?.length
+    ? ` ordered by ${lookup.order.map(name).join(", ")}`
+    : "";
+
+  return `(${parts.join(", ")})${where}${order}`.replace("()", "the rows");
+};
 
 const describeColumn = (requirement: ColumnRequirement): string =>
   [
@@ -83,6 +100,18 @@ const describeColumn = (requirement: ColumnRequirement): string =>
     ...(requirement.unique === false ? ["not unique"] : []),
     ...(requirement.nullable === true ? ["nullable"] : []),
     ...(requirement.nullable === false ? ["not null"] : []),
+    ...(requirement.maxLength !== undefined
+      ? [`at most ${requirement.maxLength} characters`]
+      : []),
+    ...(requirement.defaultsTo !== undefined
+      ? [
+          `defaults to ${requirement.defaultsTo === "now" ? "now" : "a new uuid"}`,
+        ]
+      : []),
+    ...(requirement.generatesItself ? ["generates itself"] : []),
+    ...(requirement.values !== undefined
+      ? [`one of ${requirement.values.join(", ")}`]
+      : []),
   ].join(", ");
 
 export const evaluateSchema = (
@@ -418,6 +447,38 @@ export const evaluateSchema = (
       column.nullable !== requirement.nullable
         ? [column.nullable ? "can be null" : "cannot be null"]
         : []),
+      ...(requirement.maxLength !== undefined &&
+      !(
+        (column.type === "varchar" || column.type === "char") &&
+        column.length !== undefined &&
+        column.length <= requirement.maxLength
+      )
+        ? [
+            column.length === undefined
+              ? "has no length, so any amount of text fits"
+              : `holds up to ${column.length} characters, more than ${requirement.maxLength}`,
+          ]
+        : []),
+      ...(requirement.defaultsTo !== undefined &&
+      column.default?.kind !== requirement.defaultsTo
+        ? [
+            requirement.defaultsTo === "now"
+              ? "does not default to now"
+              : "does not default to a new uuid",
+          ]
+        : []),
+      ...(requirement.generatesItself &&
+      column.generated?.kind !== "identity" &&
+      column.default?.kind !== "uuid"
+        ? ["has to be given a value; it neither counts up nor makes a uuid"]
+        : []),
+      ...(requirement.values !== undefined &&
+      !sameValues(
+        column.type === "enum" ? column.values : column.checks?.in,
+        requirement.values,
+      )
+        ? [`does not limit its values to ${requirement.values.join(", ")}`]
+        : []),
     ];
 
     check({
@@ -554,22 +615,33 @@ export const evaluateSchema = (
       return;
     }
 
-    const lookup = query.by.map((name) => byName(from, name));
-    const absent = query.by.filter((_, index) => !lookup[index]);
+    const named = (table: TableNode, names: string[]) => {
+      const found = names.map((name) => byName(table, name));
+      const absent = names.filter((_, index) => !found[index]);
 
-    if (absent.length > 0) {
-      fail(
-        `${tableName(from)} has no ${absent.join(", ")}`,
-        "missing-column",
-        `${query.title} looks ${tableName(from)} up by ${absent.join(" and ")}, which it does not have.`,
-        [from.id],
-      );
-      return;
-    }
+      if (absent.length > 0) {
+        fail(
+          `${tableName(table)} has no ${absent.join(", ")}`,
+          "missing-column",
+          `${query.title} needs ${absent.join(" and ")} on ${tableName(table)}, which it does not have.`,
+          [table.id],
+        );
+        return null;
+      }
 
-    const hops: Hop[] = [
-      { table: from, columns: lookup as Column[], many: true },
-    ];
+      return found as Column[];
+    };
+
+    const lookupColumns = named(from, [
+      ...query.by,
+      ...(query.match ? [query.match.column] : []),
+    ]);
+
+    if (!lookupColumns) return;
+
+    const equal = lookupColumns.slice(0, query.by.length);
+    const matched = query.match ? lookupColumns.at(-1)! : undefined;
+    const hops: Hop[] = [{ table: from, columns: equal, many: true }];
 
     if (query.to !== undefined) {
       const rest = route(query.from, query.to);
@@ -588,39 +660,56 @@ export const evaluateSchema = (
     }
 
     const last = hops.at(-1)!;
-    const order = query.orderBy.map((name) => byName(last.table, name));
-    const unordered = query.orderBy.filter((_, index) => !order[index]);
+    const tail = named(last.table, [
+      ...query.orderBy,
+      ...(query.where ? [query.where.column] : []),
+    ]);
 
-    if (unordered.length > 0) {
-      fail(
-        `${tableName(last.table)} has no ${unordered.join(", ")}`,
-        "missing-column",
-        `${query.title} orders ${tableName(last.table)} by ${unordered.join(" and ")}, which it does not have.`,
-        [last.table.id],
-      );
-      return;
-    }
+    if (!tail) return;
+
+    const order = tail.slice(0, query.orderBy.length);
+    const filtered = query.where ? tail.at(-1)! : undefined;
 
     for (const [position, hop] of hops.entries()) {
-      const ordered =
-        position === hops.length - 1 && hop.many ? (order as Column[]) : [];
-      const served =
-        ordered.length > 0
-          ? servesOrder(hop.table, hop.columns, ordered)
-          : indexedBy(
-              hop.table,
-              hop.columns.map((column) => column.id),
-            );
+      const first = position === 0;
+      const final = position === hops.length - 1;
+      const lookup: Lookup = {
+        equal: hop.columns.map((column) => column.id),
+        ...(first && matched && query.match?.kind === "case-insensitive"
+          ? { lower: [matched.id] }
+          : {}),
+        ...(first && matched && query.match?.kind === "range"
+          ? { range: matched.id }
+          : {}),
+        ...(first &&
+        matched &&
+        (query.match?.kind === "contains" ||
+          query.match?.kind === "text-search")
+          ? { match: { column: matched.id, kind: query.match.kind } }
+          : {}),
+        ...(final && hop.many && order.length > 0
+          ? { order: order.map((column) => column.id) }
+          : {}),
+        ...(final && filtered && query.where
+          ? {
+              where: {
+                column: filtered.id,
+                op: query.where.op,
+                ...(query.where.value !== undefined
+                  ? { value: query.where.value }
+                  : {}),
+              },
+            }
+          : {}),
+      };
 
-      if (!served) {
-        const wanted = [...hop.columns, ...ordered]
-          .map((column) => column.name)
-          .join(", ");
+      if (!servesLookup(hop.table, lookup)) {
+        const wanted = describeLookup(hop.table, lookup);
 
         fail(
-          `${tableName(hop.table)} has no index on (${wanted})`,
+          `${tableName(hop.table)} has no index for ${wanted}`,
           "unindexed-query",
-          `${query.title} reads every row of ${tableName(hop.table)}: no index leads with (${wanted}).`,
+          `${query.title} reads every row of ${tableName(hop.table)}: no index serves ${wanted}.`,
           [hop.table.id],
         );
         return;

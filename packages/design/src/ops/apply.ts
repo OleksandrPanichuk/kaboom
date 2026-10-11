@@ -749,18 +749,23 @@ const updateEdge = (
       : edge.props,
   };
 
-  if (patch.relation?.onDelete !== undefined) {
-    if (edge.relation === undefined) {
+  const relationPatch = patch.relation;
+
+  if (relationPatch !== undefined && Object.keys(relationPatch).length > 0) {
+    const current =
+      edge.relation ??
       reject(
         "invalid-edge",
-        `Edge ${edge.id} is a ${edge.kind}; only a relation has an on-delete rule`,
+        `Edge ${edge.id} is a ${edge.kind}; only a relation has rules for deletes and updates`,
       );
+    const updated: Record<string, unknown> = { ...current };
+
+    for (const [key, value] of Object.entries(relationPatch)) {
+      if (value === null) delete updated[key];
+      else if (value !== undefined) updated[key] = value;
     }
 
-    next.relation = {
-      ...edge.relation!,
-      onDelete: patch.relation.onDelete,
-    };
+    next.relation = updated as typeof current;
   }
 
   assertValidEdge(graph, next);
@@ -771,8 +776,15 @@ const updateEdge = (
     ...(patch.props !== undefined
       ? { props: pick(edge.props, Object.keys(patch.props)) }
       : {}),
-    ...(patch.relation?.onDelete !== undefined && edge.relation
-      ? { relation: { onDelete: edge.relation.onDelete } }
+    ...(patch.relation !== undefined && edge.relation
+      ? {
+          relation: Object.fromEntries(
+            Object.keys(patch.relation).map((key) => [
+              key,
+              (edge.relation as Record<string, unknown>)[key] ?? null,
+            ]),
+          ),
+        }
       : {}),
   };
 

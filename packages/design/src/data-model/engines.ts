@@ -4,10 +4,12 @@ import {
   DEFAULT_ENGINE,
   type Engine,
   ENGINE_LABELS,
+  type IndexMethod,
   INTEGER_TYPES,
+  type TableIndex,
 } from "../catalogue";
 import type { DesignGraph, DesignNode } from "../graph";
-import { primaryKeyOf, type TableNode } from "./tables";
+import { primaryKeyOf, type ResolvedRelation, type TableNode } from "./tables";
 
 export type SqlEngine = Extract<Engine, "postgres" | "mysql" | "sqlite">;
 
@@ -168,3 +170,63 @@ export const engineIssues = (
 
   return issues;
 };
+
+const INDEX_METHODS_BY_ENGINE: Readonly<
+  Record<SqlEngine, readonly IndexMethod[]>
+> = {
+  postgres: ["btree", "hash", "gin", "gist", "brin"],
+  mysql: ["btree", "hash", "fulltext"],
+  sqlite: ["btree"],
+};
+
+export const engineIndexMethods = (engine: SqlEngine): readonly IndexMethod[] =>
+  INDEX_METHODS_BY_ENGINE[engine];
+
+export const indexIssues = (
+  engine: SqlEngine,
+  table: TableNode,
+  index: TableIndex,
+): string[] => {
+  const label = ENGINE_LABELS[engine];
+  const names = index.columns
+    .map(
+      (id) =>
+        table.props.columns.find((column) => column.id === id)?.name ?? id,
+    )
+    .join(", ");
+  const name = `the index on ${table.label || table.id} (${names})`;
+  const method = index.method ?? "btree";
+  const issues: string[] = [];
+
+  if (!INDEX_METHODS_BY_ENGINE[engine].includes(method)) {
+    issues.push(`${label} has no ${method} index, which ${name} is.`);
+  }
+
+  if (engine === "mysql" && method === "hash") {
+    issues.push(
+      `InnoDB builds ${name} as a btree; ${label} keeps hash indexes for in-memory tables.`,
+    );
+  }
+
+  if (index.include !== undefined && engine !== "postgres") {
+    issues.push(`${label} cannot include extra columns in ${name}.`);
+  }
+
+  if (index.where !== undefined && engine === "mysql") {
+    issues.push(
+      `${label} has no partial indexes, so ${name} cannot have a filter.`,
+    );
+  }
+
+  return issues;
+};
+
+export const relationIssues = (
+  engine: SqlEngine,
+  relation: ResolvedRelation,
+): string[] =>
+  relation.relation.deferrable && engine !== "postgres"
+    ? [
+        `${ENGINE_LABELS[engine]} cannot defer the foreign key from ${relation.from.label || relation.from.id} to ${relation.to.label || relation.to.id}.`,
+      ]
+    : [];

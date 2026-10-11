@@ -80,6 +80,8 @@ export const RelationSchema = z.strictObject({
     .min(1)
     .max(7)
     .optional(),
+  onUpdate: onDelete.optional(),
+  deferrable: z.literal(true).optional(),
   onDelete: prop(onDelete.default("restrict"), {
     title: "On delete",
     description:
@@ -91,6 +93,8 @@ export type Relation = z.output<typeof RelationSchema>;
 
 export const RelationPatchSchema = z.strictObject({
   onDelete: onDelete.optional(),
+  onUpdate: onDelete.nullable().optional(),
+  deferrable: z.literal(true).nullable().optional(),
 });
 
 export const CONTROL_EDGE_KINDS = [
