@@ -229,7 +229,10 @@ with how many its callers asked for, in the saturated tone. A database
 box names the node it is stored on, the group inspector picks it from the
 nodes of the right kind, and that node's inspector links back: following
 the link selects the box and frames its nodes, through a `CanvasFocus`
-with a `groupId`, which selects nothing on the canvas. `paletteTracks`
+with a `groupId`, which selects nothing on the canvas. `WorkspaceInspector`
+picks the inspector for the selection and assembles its props, from the
+pure helpers in `designs/utils/inspectorFacts.ts`, so `DesignWorkspace`
+stays layout. `paletteTracks`
 gives a problem's palette its own track first, then the tracks of what the
 design already draws. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
