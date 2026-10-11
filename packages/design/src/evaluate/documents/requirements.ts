@@ -1,6 +1,10 @@
 import z from "zod";
 
-const CollectionRef = z.string().min(1).max(64);
+const CollectionRef = z
+  .string()
+  .min(1)
+  .max(64)
+  .meta({ ref: "collection", description: "A collection of the baseline" });
 const FieldPath = z
   .string()
   .regex(/^[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)*$/i)

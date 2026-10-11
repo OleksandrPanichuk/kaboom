@@ -81,8 +81,12 @@ export const FaultSchema = z.discriminatedUnion("kind", [
 export type Fault = z.infer<typeof FaultSchema>;
 
 export const SloSchema = z.strictObject({
-  p99Ms: z.number().positive().max(600_000),
-  availability: z.number().min(0).max(1),
+  p99Ms: z.number().positive().max(600_000).meta({ title: "p99 (ms)" }),
+  availability: z
+    .number()
+    .min(0)
+    .max(1)
+    .meta({ description: "The share of requests that succeed, 0 to 1" }),
 });
 
 export type Slo = z.infer<typeof SloSchema>;

@@ -45,9 +45,3 @@ export const withGraphsFrom = (
     graph: asContent(server.reference).graph,
   },
 });
-
-export const tagsFromText = (text: string): string[] =>
-  text
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter((tag) => tag !== "");

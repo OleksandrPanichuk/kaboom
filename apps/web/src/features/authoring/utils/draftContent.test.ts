@@ -4,7 +4,6 @@ import {
   asContent,
   formatPath,
   sectionOf,
-  tagsFromText,
   withGraphsFrom,
 } from "./draftContent";
 
@@ -48,9 +47,5 @@ describe("draft content", () => {
       baseline: "new",
       reference: { graph: "new", notes: "mine" },
     });
-  });
-
-  test("splits tags on commas", () => {
-    expect(tagsFromText(" cache, queues ,, ")).toEqual(["cache", "queues"]);
   });
 });

@@ -753,6 +753,12 @@ is reported where that name is written. `formatIssue` writes one as
 official problem round-trips through JSON unchanged
 (`official.test.ts`), so stored content is the authored form.
 
+`authoringSchema(section)` exports the drills, rubric, hints, interview
+and chaos validators as JSON Schema for the web's forms. Their labels,
+descriptions, `examples` and `ref`s (a field naming a drill, table,
+collection or item type) are `.meta()` on the zod schemas, so the form
+and the validator never disagree; metadata changes no parse.
+
 A problem's own content decides most of what testing it costs, so
 publishing bounds it, in node-steps rather than time so a check never
 depends on the machine. `problemSteps` adds up what the load drills and
