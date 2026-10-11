@@ -3,6 +3,8 @@ import z from "zod";
 import {
   EdgeKindSchema,
   EdgePropsPatchSchema,
+  type Engine,
+  ENGINES,
   type OnDeleteAction,
   RelationPatchSchema,
 } from "../catalogue";
@@ -30,6 +32,7 @@ export interface NodePatch {
 
 export interface GroupPatch {
   label?: string;
+  engine?: Engine;
 }
 
 export interface EdgePatch {
@@ -87,7 +90,10 @@ export const DesignOpSchema: z.ZodType<DesignOp> = z.discriminatedUnion("op", [
   z.strictObject({
     op: z.literal("update-group"),
     id: IdSchema,
-    patch: z.strictObject({ label: z.string().max(80).optional() }),
+    patch: z.strictObject({
+      label: z.string().max(80).optional(),
+      engine: z.enum(ENGINES).optional(),
+    }),
   }),
 ]);
 

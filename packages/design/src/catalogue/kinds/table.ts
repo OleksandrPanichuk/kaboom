@@ -2,50 +2,10 @@ import z from "zod";
 
 import { defineNodeKind } from "../define-node-kind";
 import { prop } from "../prop-meta";
-
-export const COLUMN_TYPES = [
-  "uuid",
-  "bigint",
-  "integer",
-  "text",
-  "varchar",
-  "boolean",
-  "timestamptz",
-  "date",
-  "numeric",
-  "jsonb",
-] as const;
-
-export type ColumnType = (typeof COLUMN_TYPES)[number];
+import { ColumnSchema, IndexSchema } from "./columns";
 
 export const MAX_COLUMNS = 64;
 export const MAX_INDEXES = 32;
-
-const ColumnIdSchema = z.string().min(1).max(64);
-
-export const ColumnNameSchema = z
-  .string()
-  .regex(/^[a-z_][a-z0-9_]*$/i, "use letters, digits and underscores")
-  .max(63);
-
-export const ColumnSchema = z.strictObject({
-  id: ColumnIdSchema,
-  name: ColumnNameSchema,
-  type: z.enum(COLUMN_TYPES),
-  nullable: z.boolean().default(false),
-  primaryKey: z.boolean().default(false),
-  unique: z.boolean().default(false),
-});
-
-export type Column = z.output<typeof ColumnSchema>;
-
-export const IndexSchema = z.strictObject({
-  id: ColumnIdSchema,
-  columns: z.array(ColumnIdSchema).min(1).max(8),
-  unique: z.boolean().default(false),
-});
-
-export type TableIndex = z.output<typeof IndexSchema>;
 
 export const tableKind = defineNodeKind({
   kind: "table",

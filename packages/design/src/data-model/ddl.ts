@@ -1,4 +1,5 @@
 import type { DesignGraph } from "../graph";
+import { engineOf, isSqlEngine, writeType } from "./engines";
 import {
   primaryKeyOf,
   relationsOf,
@@ -17,12 +18,13 @@ const ON_DELETE = {
   "set-null": "SET NULL",
 } as const;
 
-const createTable = (table: TableNode): string => {
+const createTable = (graph: DesignGraph, table: TableNode): string => {
+  const engine = engineOf(graph, table);
   const key = primaryKeyOf(table);
   const lines = [
     ...table.props.columns.map((column) =>
       [
-        `  ${quote(column.name)} ${column.type}`,
+        `  ${quote(column.name)} ${isSqlEngine(engine) ? writeType(engine, column) : column.type}`,
         ...(column.nullable ? [] : ["NOT NULL"]),
         ...(column.unique ? ["UNIQUE"] : []),
       ].join(" "),
@@ -56,12 +58,12 @@ const createIndexes = (table: TableNode): string[] => {
 export const toDDL = (graph: DesignGraph): string => {
   const tables = tablesOf(graph);
   const foreignKeys = relationsOf(graph).map(
-    ({ from, to, foreignKey, referenced, relation }) =>
-      `ALTER TABLE ${quote(tableName(from))} ADD FOREIGN KEY (${quote(foreignKey.name)}) REFERENCES ${quote(tableName(to))} (${quote(referenced.name)}) ON DELETE ${ON_DELETE[relation.onDelete]};`,
+    ({ from, to, pairs, relation }) =>
+      `ALTER TABLE ${quote(tableName(from))} ADD FOREIGN KEY (${pairs.map((pair) => quote(pair.from.name)).join(", ")}) REFERENCES ${quote(tableName(to))} (${pairs.map((pair) => quote(pair.to.name)).join(", ")}) ON DELETE ${ON_DELETE[relation.onDelete]};`,
   );
 
   return [
-    ...tables.map(createTable),
+    ...tables.map((table) => createTable(graph, table)),
     ...foreignKeys,
     ...tables.flatMap(createIndexes),
   ].join("\n\n");

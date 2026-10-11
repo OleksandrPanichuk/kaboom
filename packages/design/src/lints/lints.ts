@@ -4,6 +4,7 @@ import {
   deadEndNode,
   dualWrite,
   duplicateSchedule,
+  engineUnsupported,
   failoverNowhere,
   fkTypeMismatch,
   noPrimaryKey,
@@ -32,6 +33,7 @@ export const lints = {
   [fkTypeMismatch.id]: fkTypeMismatch,
   [setNullNotNullable.id]: setNullNotNullable,
   [unindexedForeignKey.id]: unindexedForeignKey,
+  [engineUnsupported.id]: engineUnsupported,
 } as const;
 
 export type LintId = keyof typeof lints;

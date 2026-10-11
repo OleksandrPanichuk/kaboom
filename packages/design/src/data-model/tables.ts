@@ -3,6 +3,11 @@ import type { DesignEdge, DesignGraph, NodeFor } from "../graph";
 
 export type TableNode = NodeFor<"table">;
 
+export interface ColumnPair {
+  from: Column;
+  to: Column;
+}
+
 export interface ResolvedRelation {
   edge: DesignEdge;
   relation: Relation;
@@ -10,7 +15,15 @@ export interface ResolvedRelation {
   to: TableNode;
   foreignKey: Column;
   referenced: Column;
+  pairs: ColumnPair[];
 }
+
+export const relationPairs = (
+  relation: Relation,
+): Array<{ fromColumn: string; toColumn: string }> => [
+  { fromColumn: relation.fromColumn, toColumn: relation.toColumn },
+  ...(relation.moreColumns ?? []),
+];
 
 export const tablesOf = (graph: DesignGraph): TableNode[] =>
   graph.nodes.filter((node): node is TableNode => node.kind === "table");
@@ -33,16 +46,26 @@ export const relationsOf = (graph: DesignGraph): ResolvedRelation[] => {
 
     if (edge.kind !== "relation" || !from || !to || !relation) return [];
 
-    const foreignKey = from.props.columns.find(
-      (column) => column.id === relation.fromColumn,
-    );
-    const referenced = to.props.columns.find(
-      (column) => column.id === relation.toColumn,
-    );
+    const pairs = relationPairs(relation).map((pair) => ({
+      from: from.props.columns.find((column) => column.id === pair.fromColumn),
+      to: to.props.columns.find((column) => column.id === pair.toColumn),
+    }));
 
-    if (!foreignKey || !referenced) return [];
+    if (pairs.some((pair) => !pair.from || !pair.to)) return [];
 
-    return [{ edge, relation, from, to, foreignKey, referenced }];
+    const resolved = pairs as ColumnPair[];
+
+    return [
+      {
+        edge,
+        relation,
+        from,
+        to,
+        foreignKey: resolved[0]!.from,
+        referenced: resolved[0]!.to,
+        pairs: resolved,
+      },
+    ];
   });
 };
 
@@ -80,5 +103,32 @@ export const uniqueOver = (table: TableNode, columnIds: string[]): boolean => {
   );
 };
 
-export const isOneToOne = ({ from, foreignKey }: ResolvedRelation): boolean =>
-  uniqueOver(from, [foreignKey.id]);
+export const foreignKeyIds = ({ pairs }: ResolvedRelation): string[] =>
+  pairs.map((pair) => pair.from.id);
+
+export const isOneToOne = (relation: ResolvedRelation): boolean =>
+  uniqueOver(relation.from, foreignKeyIds(relation));
+
+export const isKeyExactly = (
+  table: TableNode,
+  columnIds: string[],
+): boolean => {
+  const wanted = new Set(columnIds);
+  const same = (ids: string[]) =>
+    ids.length === wanted.size && ids.every((id) => wanted.has(id));
+  const key = primaryKeyOf(table).map((column) => column.id);
+
+  return (
+    same(key) ||
+    (columnIds.length === 1 &&
+      table.props.columns.some(
+        (column) => column.unique && column.id === columnIds[0],
+      )) ||
+    table.props.indexes.some((index) => index.unique && same(index.columns))
+  );
+};
+
+export const columnsName = (table: TableNode, columns: Column[]): string =>
+  columns.length === 1
+    ? columnName(table, columns[0]!)
+    : `${tableName(table)}.(${columns.map((column) => column.name).join(", ")})`;
