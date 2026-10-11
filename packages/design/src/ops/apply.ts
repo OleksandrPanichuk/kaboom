@@ -6,6 +6,7 @@ import {
   ENGINE_FAMILIES,
   ENGINE_LABELS,
   type EngineFamily,
+  fieldAt,
   findTechnology,
   isNodeKind,
 } from "../catalogue";
@@ -113,7 +114,7 @@ const assertNesting = (graph: DesignGraph, group: DesignGroup): void => {
 
 const FAMILY_KINDS: Readonly<Record<EngineFamily, readonly string[]>> = {
   sql: ["table"],
-  document: [],
+  document: ["collection"],
   "key-value": [],
 };
 
@@ -123,7 +124,24 @@ const FAMILY_HOLDS: Readonly<Record<EngineFamily, string>> = {
   "key-value": "DynamoDB tables",
 };
 
+const ENGINE_ONLY: Readonly<Record<string, EngineFamily>> = {
+  collection: "document",
+};
+
 const assertPlacement = (graph: DesignGraph, node: DesignNode): void => {
+  const only = ENGINE_ONLY[node.kind];
+
+  if (only !== undefined) {
+    const home = graph.groups.find((group) => group.id === node.groupId);
+
+    if (!home?.engine || ENGINE_FAMILIES[home.engine] !== only) {
+      reject(
+        "invalid-op",
+        `${node.label || node.id} is a ${node.kind}; it lives in a ${only === "document" ? "MongoDB" : "DynamoDB"} database`,
+      );
+    }
+  }
+
   if (node.groupId === null) return;
 
   const group = findGroup(graph, node.groupId);
@@ -233,6 +251,13 @@ const assertValidEdge = (graph: DesignGraph, edge: DesignEdge): void => {
 
   if (from.id === to.id && edge.kind !== "relation") {
     reject("invalid-edge", `Edge ${edge.id} connects ${from.id} to itself`);
+  }
+
+  if (edge.kind !== "reference" && edge.reference !== undefined) {
+    reject(
+      "invalid-edge",
+      `Edge ${edge.id} is a ${edge.kind}; only a reference starts at a field`,
+    );
   }
 
   if (edge.kind !== "relation" && edge.relation !== undefined) {
@@ -449,6 +474,9 @@ const assertControlEdge = (
     case "relation":
       assertRelation(graph, edge, from, to);
       return;
+    case "reference":
+      assertReference(graph, edge, from, to);
+      return;
     default:
       if (
         !catalogue[from.kind].carriesTraffic ||
@@ -564,8 +592,73 @@ const assertRelation = (
   }
 };
 
+const assertReference = (
+  graph: DesignGraph,
+  edge: DesignEdge,
+  from: DesignNode,
+  to: DesignNode,
+): void => {
+  if (from.kind !== "collection" || to.kind !== "collection") {
+    return reject(
+      "invalid-edge",
+      `A reference joins two collections, and ${from.kind === "collection" ? to.label || to.id : from.label || from.id} is a ${from.kind === "collection" ? to.kind : from.kind}`,
+    );
+  }
+
+  const reference =
+    edge.reference ??
+    reject(
+      "invalid-edge",
+      `Reference ${edge.id} names no field; it starts at the field that holds the other document's _id`,
+    );
+  const field =
+    fieldAt(from.props.fields, reference.fromField) ??
+    reject(
+      "invalid-edge",
+      `Reference ${edge.id} starts at ${reference.fromField.join(".")}, which ${from.label || from.id} does not have`,
+    );
+  const holdsIds =
+    field.type === "objectId" ||
+    (field.type === "array" && field.of === "objectId");
+
+  if (!holdsIds) {
+    reject(
+      "invalid-edge",
+      `${from.label || from.id}.${field.name} is a ${field.type === "array" ? `array of ${field.of}` : field.type}; a reference holds an objectId, or an array of them`,
+    );
+  }
+
+  const path = reference.fromField.join("/");
+  const taken = graph.edges.some(
+    (other) =>
+      other.id !== edge.id &&
+      other.kind === "reference" &&
+      other.from === edge.from &&
+      other.reference?.fromField.join("/") === path,
+  );
+
+  if (taken) {
+    reject(
+      "invalid-edge",
+      `${from.label || from.id}.${field.name} already references a collection`,
+    );
+  }
+};
+
 const assertRelationsOf = (graph: DesignGraph, nodeId: string): void => {
   for (const edge of graph.edges) {
+    if (
+      edge.kind === "reference" &&
+      (edge.from === nodeId || edge.to === nodeId)
+    ) {
+      assertReference(
+        graph,
+        edge,
+        findNode(graph, edge.from),
+        findNode(graph, edge.to),
+      );
+    }
+
     if (
       edge.kind === "relation" &&
       (edge.from === nodeId || edge.to === nodeId)

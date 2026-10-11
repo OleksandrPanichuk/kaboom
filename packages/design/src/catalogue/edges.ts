@@ -19,6 +19,7 @@ export const EDGE_KINDS = [
   "protects",
   "admits",
   "relation",
+  "reference",
 ] as const;
 
 export const EdgeKindSchema = z.enum(EDGE_KINDS);
@@ -91,6 +92,12 @@ export const RelationSchema = z.strictObject({
 
 export type Relation = z.output<typeof RelationSchema>;
 
+export const ReferenceSchema = z.strictObject({
+  fromField: z.array(z.string().min(1).max(64)).min(1).max(4),
+});
+
+export type Reference = z.output<typeof ReferenceSchema>;
+
 export const RelationPatchSchema = z.strictObject({
   onDelete: onDelete.optional(),
   onUpdate: onDelete.nullable().optional(),
@@ -107,6 +114,7 @@ export const CONTROL_EDGE_KINDS = [
   "protects",
   "admits",
   "relation",
+  "reference",
 ] as const satisfies readonly EdgeKind[];
 
 export const isControlEdge = (kind: EdgeKind): boolean =>

@@ -59,6 +59,7 @@ export const capacityOf = (
     case "security-group":
     case "nat-gateway":
     case "table":
+    case "collection":
       return shared(Number.POSITIVE_INFINITY);
     case "search-index":
       return scale(
@@ -173,6 +174,7 @@ export const baseLatencyOf = (node: DesignNode): number => {
     case "security-group":
     case "nat-gateway":
     case "table":
+    case "collection":
       return 0;
     case "worker":
       return node.props.processingMs;
@@ -224,6 +226,7 @@ export const carries = (
     case "protects":
     case "admits":
     case "relation":
+    case "reference":
       return { reads: false, writes: false };
     default:
       return { reads: true, writes: true };

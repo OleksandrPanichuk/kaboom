@@ -146,6 +146,43 @@ export const checkPublishable = (input: unknown): PublishCheck => {
   }
 
   for (const drill of problem.drills) {
+    if (drill.kind === "documents") {
+      const { embedded, references, queries, unique, ttl } = drill.requirements;
+
+      if (references.length === 0) {
+        issues.push(
+          `Drill ${drill.id} declares no reference; a documents drill checks how collections relate.`,
+        );
+      }
+
+      const named = new Set([
+        ...embedded.map((item) => item.collection),
+        ...references.flatMap((item) => [item.from, item.to]),
+        ...queries.map((item) => item.collection),
+        ...unique.map((item) => item.collection),
+        ...ttl.map((item) => item.collection),
+      ]);
+
+      for (const [name, graph] of [
+        ["baseline", problem.baseline],
+        ["reference solution", problem.reference.graph],
+      ] as const) {
+        for (const id of named) {
+          if (
+            !graph.nodes.some(
+              (node) => node.id === id && node.kind === "collection",
+            )
+          ) {
+            issues.push(
+              `Drill ${drill.id} names the collection ${id}, which the ${name} does not have.`,
+            );
+          }
+        }
+      }
+
+      continue;
+    }
+
     if (drill.kind !== "schema") continue;
 
     const { relationships, columns, queries } = drill.requirements;

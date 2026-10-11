@@ -33,6 +33,8 @@ export {
   isControlEdge,
   ON_DELETE_ACTIONS,
   type OnDeleteAction,
+  type Reference,
+  ReferenceSchema,
   type Relation,
   RelationPatchSchema,
   RelationSchema,
@@ -61,6 +63,20 @@ export {
   TIME_TYPES,
   TIMESTAMP_TYPES,
 } from "./kinds";
+export {
+  collectionKind,
+  DOCUMENT_INDEX_DIRECTIONS,
+  type DocumentField,
+  DocumentFieldSchema,
+  type DocumentIndex,
+  type DocumentIndexDirection,
+  FIELD_TYPES,
+  fieldAt,
+  type FieldType,
+  MAX_FIELD_DEPTH,
+  SCALAR_FIELD_TYPES,
+  type ScalarFieldType,
+} from "./kinds/collection";
 export {
   describeProps,
   prop,

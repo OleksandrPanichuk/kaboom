@@ -1,5 +1,12 @@
-import type { Column, OnDeleteAction, TableIndex } from "../catalogue";
+import type {
+  Column,
+  DocumentField,
+  DocumentIndex,
+  OnDeleteAction,
+  TableIndex,
+} from "../catalogue";
 import { createEdge, createNode, type DesignEdge } from "../graph";
+import type { CollectionNode } from "./documents";
 import type { TableNode } from "./tables";
 
 export const column = (
@@ -48,4 +55,33 @@ export const references = (
     to,
     kind: "relation",
     relation: { fromColumn, toColumn, onDelete },
+  });
+
+export const field = (
+  name: string,
+  type: DocumentField["type"],
+  extra: Partial<DocumentField> = {},
+): DocumentField => ({ id: name, name, type, required: false, ...extra });
+
+export const collection = (
+  id: string,
+  fields: DocumentField[],
+  indexes: DocumentIndex[] = [],
+  groupId = "store",
+): CollectionNode => {
+  const node = createNode("collection", { id, label: id, groupId });
+
+  node.props.fields = fields;
+  node.props.indexes = indexes;
+
+  return node;
+};
+
+export const refers = (from: string, path: string[], to: string): DesignEdge =>
+  createEdge({
+    id: `${from}.${path.join(".")}`,
+    from,
+    to,
+    kind: "reference",
+    reference: { fromField: path },
   });

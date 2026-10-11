@@ -1,4 +1,5 @@
 import { carriesLoad } from "../catalogue";
+import { evaluateDocuments } from "../evaluate/documents";
 import { evaluateLoad } from "../evaluate/load";
 import { evaluateNetwork } from "../evaluate/network";
 import { evaluatePipeline } from "../evaluate/pipeline";
@@ -20,6 +21,7 @@ import {
 import { vary } from "../testing/variation";
 import { drillScenario, selectNodes } from "./resolve";
 import type {
+  DocumentsDrill,
   Drill,
   LoadDrill,
   NetworkDrill,
@@ -235,6 +237,8 @@ export const runDrill = (
       return runNetworkDrill(drill, graph);
     case "schema":
       return runSchemaDrill(drill, graph);
+    case "documents":
+      return runDocumentsDrill(drill, graph);
     case "load":
       return runLoadDrill(drill, graph, seed, keepsWrites);
   }
@@ -278,6 +282,38 @@ const runSchemaDrill = (
       drill.expect.forbid.filter((kind) => !asked.has(kind)),
       result.findings,
       true,
+    ),
+  );
+
+  return outcome(drill.id, assertions, result.findings);
+};
+
+const runDocumentsDrill = (
+  drill: DocumentsDrill,
+  graph: DesignGraph,
+): DrillOutcome => {
+  const result = evaluateDocuments(graph, drill.requirements);
+  const assertions: Assertion[] = [];
+
+  if (!graph.edges.some((edge) => edge.kind === "reference")) {
+    assertions.push(
+      structural(
+        "Collections that reference each other",
+        "No collection references another, so the documents keep no relationship at all.",
+      ),
+    );
+  }
+
+  assertions.push(
+    ...result.checks.map((check) =>
+      assertion({
+        label: check.label,
+        expected: check.expected,
+        actual: check.actual,
+        passed: check.passed,
+        nodeIds: check.nodeIds,
+        message: check.message ?? "",
+      }),
     ),
   );
 

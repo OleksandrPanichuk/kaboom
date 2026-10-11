@@ -36,6 +36,12 @@ const TITLES: Record<Finding["kind"], string> = {
   "fk-type-mismatch": "Foreign key of another type",
   "set-null-not-nullable": "Set null on a required column",
   "engine-unsupported": "Not in this engine",
+  "missing-collection": "Collection missing",
+  "missing-field": "Field missing",
+  "not-embedded": "Not embedded",
+  "unbounded-array": "Array that never stops growing",
+  "missing-unique": "Not unique",
+  "missing-ttl": "Never expires",
 };
 
 interface FindingsListProps {

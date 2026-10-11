@@ -11,6 +11,8 @@ import {
   type NodeKind,
   type NodeKindDefinition,
   type NodeProps,
+  type Reference,
+  ReferenceSchema,
   type Relation,
   RelationSchema,
 } from "../catalogue";
@@ -98,6 +100,7 @@ export interface DesignEdge {
   label: string;
   props: EdgeProps;
   relation?: Relation;
+  reference?: Reference;
 }
 
 export const DesignEdgeSchema: z.ZodType<DesignEdge> = z.strictObject({
@@ -108,6 +111,7 @@ export const DesignEdgeSchema: z.ZodType<DesignEdge> = z.strictObject({
   label: LabelSchema.default(""),
   props: EdgePropsSchema.default(EdgePropsSchema.parse({})),
   relation: RelationSchema.optional(),
+  reference: ReferenceSchema.optional(),
 });
 
 export interface DesignGroup {

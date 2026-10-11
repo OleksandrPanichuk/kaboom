@@ -15,7 +15,12 @@ export const PROP_UNITS = [
 
 export type PropUnit = (typeof PROP_UNITS)[number];
 
-export const PROP_EDITORS = ["columns", "indexes"] as const;
+export const PROP_EDITORS = [
+  "columns",
+  "indexes",
+  "fields",
+  "document-indexes",
+] as const;
 
 export type PropEditor = (typeof PROP_EDITORS)[number];
 

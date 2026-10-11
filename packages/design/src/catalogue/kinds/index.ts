@@ -4,6 +4,7 @@ export { artifactRegistryKind } from "./artifact-registry";
 export { cacheKind } from "./cache";
 export { cdnKind } from "./cdn";
 export { clientKind } from "./client";
+export * from "./collection";
 export * from "./columns";
 export { configMapKind } from "./config-map";
 export { coordinationKind } from "./coordination";
