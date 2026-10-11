@@ -10,6 +10,7 @@ import {
   chaosCases,
   type ChaosOutcome,
   chaosSettings,
+  chaosWindow,
   loadedNodes,
   runChaosCase,
 } from "./chaos";
@@ -108,13 +109,7 @@ export const drillRunner = (
     const chaosCost =
       baseline && settings.enabled && base?.passed && base.result
         ? chaosCases(graph, settings, loadedNodes(base.result)).length *
-          runCost(graph, {
-            kind: "load",
-            durationSeconds:
-              settings.faultAt +
-              settings.faultSeconds +
-              settings.recoverySeconds,
-          }) *
+          runCost(graph, chaosWindow(settings)) *
           Math.min(seeds, CHAOS_SEEDS)
         : 0;
     const total = drillCost + chaosCost;
