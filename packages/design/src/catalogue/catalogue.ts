@@ -11,6 +11,7 @@ import {
   configMapKind,
   coordinationKind,
   dnsKind,
+  dynamoTableKind,
   externalApiKind,
   hpaKind,
   ingressKind,
@@ -68,6 +69,7 @@ export const catalogue = {
   [natGatewayKind.kind]: natGatewayKind,
   [tableKind.kind]: tableKind,
   [collectionKind.kind]: collectionKind,
+  [dynamoTableKind.kind]: dynamoTableKind,
 } as const;
 
 export type Catalogue = typeof catalogue;

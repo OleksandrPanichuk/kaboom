@@ -850,6 +850,24 @@ expiring fields; the rules are in `evaluate/documents/README.md`. How far
 something grows is a fact of the problem, so nothing the solver types can
 make a design pass. `toMongo` writes a `$jsonSchema` validator per
 collection and its `createIndex` calls.
+
+A **dynamo-table** lives only in a `dynamodb` database. Its `keySchema`
+declares the key attributes and which are the partition and sort key, its
+`indexes` are global or local with a projection, and its `items` are item
+types: one table holds several kinds of thing, each with its own
+attributes, filling the key attributes from templates such as
+`CUSTOMER#{customerId}`. A `key-value` drill checks that every access
+pattern is a `Query` on the table or an index (the partition key's
+attributes given, the rest leading the sort key, a range next), that a
+global index projects what a pattern returns, that no partition takes more
+than 1,000 writes a second, that a list kept inside an item fits in
+400 KB, and expiry by a number attribute; the rules are in
+`evaluate/key-value/README.md`. How many values an attribute takes and how
+often an item is written are facts of the problem. An attribute with
+`shards` is write sharding: it spreads the writes, and a pattern is served
+by querying every shard, so a random suffix the problem never mentions
+cannot pass for one. `toCloudFormation` writes an `AWS::DynamoDB::Table`
+per table.
 *A product catalogue with variants* and *Chat messages in MongoDB*
 practise it: variants embedded and read with their product, reviews and
 messages that reference their parent instead of piling into it, indexes

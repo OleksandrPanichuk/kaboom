@@ -9,6 +9,7 @@ export * from "./columns";
 export { configMapKind } from "./config-map";
 export { coordinationKind } from "./coordination";
 export { dnsKind } from "./dns";
+export * from "./dynamo-table";
 export { externalApiKind } from "./external-api";
 export { hpaKind } from "./hpa";
 export { ingressKind } from "./ingress";

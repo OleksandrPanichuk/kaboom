@@ -1,5 +1,6 @@
 import { carriesLoad } from "../catalogue";
 import { evaluateDocuments } from "../evaluate/documents";
+import { evaluateKeyValue } from "../evaluate/key-value";
 import { evaluateLoad } from "../evaluate/load";
 import { evaluateNetwork } from "../evaluate/network";
 import { evaluatePipeline } from "../evaluate/pipeline";
@@ -23,6 +24,7 @@ import { drillScenario, selectNodes } from "./resolve";
 import type {
   DocumentsDrill,
   Drill,
+  KeyValueDrill,
   LoadDrill,
   NetworkDrill,
   PipelineDrill,
@@ -239,6 +241,8 @@ export const runDrill = (
       return runSchemaDrill(drill, graph);
     case "documents":
       return runDocumentsDrill(drill, graph);
+    case "key-value":
+      return runKeyValueDrill(drill, graph);
     case "load":
       return runLoadDrill(drill, graph, seed, keepsWrites);
   }
@@ -300,6 +304,46 @@ const runDocumentsDrill = (
       structural(
         "Collections that reference each other",
         "No collection references another, so the documents keep no relationship at all.",
+      ),
+    );
+  }
+
+  assertions.push(
+    ...result.checks.map((check) =>
+      assertion({
+        label: check.label,
+        expected: check.expected,
+        actual: check.actual,
+        passed: check.passed,
+        nodeIds: check.nodeIds,
+        message: check.message ?? "",
+      }),
+    ),
+  );
+
+  return outcome(drill.id, assertions, result.findings);
+};
+
+const runKeyValueDrill = (
+  drill: KeyValueDrill,
+  graph: DesignGraph,
+): DrillOutcome => {
+  const result = evaluateKeyValue(graph, drill.requirements);
+  const assertions: Assertion[] = [];
+  const keyed = graph.nodes.some(
+    (node) =>
+      node.kind === "dynamo-table" &&
+      node.props.keySchema.partitionKey !== null &&
+      node.props.items.some(
+        (item) => item.keys[node.props.keySchema.partitionKey!] !== undefined,
+      ),
+  );
+
+  if (!keyed) {
+    assertions.push(
+      structural(
+        "Items with keys",
+        "No item says what its partition key holds, so nothing can be read by key.",
       ),
     );
   }

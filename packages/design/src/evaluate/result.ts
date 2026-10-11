@@ -90,6 +90,11 @@ export const FINDING_KINDS = [
   "unbounded-array",
   "missing-unique",
   "missing-ttl",
+  "missing-item",
+  "needs-scan",
+  "hot-partition",
+  "item-too-large",
+  "projection-missing",
 ] as const;
 
 export type FindingKind = (typeof FINDING_KINDS)[number];
@@ -142,7 +147,10 @@ export interface RequirementCheck {
     | "embedded"
     | "reference"
     | "unique"
-    | "ttl";
+    | "ttl"
+    | "pattern"
+    | "partition"
+    | "size";
   label: string;
   expected: string;
   actual: string;

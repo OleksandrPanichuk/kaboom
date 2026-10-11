@@ -146,6 +146,49 @@ export const checkPublishable = (input: unknown): PublishCheck => {
   }
 
   for (const drill of problem.drills) {
+    if (drill.kind === "key-value") {
+      const { patterns, writes, cardinality, apart, ttl } = drill.requirements;
+
+      if (patterns.length === 0) {
+        issues.push(
+          `Drill ${drill.id} declares no access pattern; a key-value drill checks how items are read.`,
+        );
+      }
+
+      const named = new Set(
+        [
+          ...patterns.flatMap((item) => item.items),
+          ...writes.map((item) => item.item),
+          ...cardinality.map((item) => item.item),
+          ...apart.flatMap((item) => [item.item, item.from]),
+          ...ttl.map((item) => item.item),
+        ].map((name) => name.toLowerCase()),
+      );
+
+      for (const [name, graph] of [
+        ["baseline", problem.baseline],
+        ["reference solution", problem.reference.graph],
+      ] as const) {
+        for (const item of named) {
+          if (
+            !graph.nodes.some(
+              (node) =>
+                node.kind === "dynamo-table" &&
+                node.props.items.some(
+                  (candidate) => candidate.name.toLowerCase() === item,
+                ),
+            )
+          ) {
+            issues.push(
+              `Drill ${drill.id} names the item type ${item}, which the ${name} does not have.`,
+            );
+          }
+        }
+      }
+
+      continue;
+    }
+
     if (drill.kind === "documents") {
       const { embedded, references, queries, unique, ttl } = drill.requirements;
 
