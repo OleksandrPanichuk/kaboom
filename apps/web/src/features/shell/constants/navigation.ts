@@ -2,6 +2,7 @@ import type { LinkProps } from "@tanstack/react-router";
 import {
   BookOpen,
   ChartNoAxesColumn,
+  ClipboardCheck,
   House,
   type LucideIcon,
   MessagesSquare,
@@ -13,9 +14,12 @@ import {
   UserRound,
 } from "lucide-react";
 
+export type StaffRole = "moderator" | "admin";
+
 interface NavItemBase {
   label: string;
   icon: LucideIcon;
+  minimumRole?: StaffRole;
 }
 
 export interface NavLinkItem extends NavItemBase {
@@ -49,7 +53,15 @@ export const NAVIGATION: NavGroup[] = [
   },
   {
     label: "Create",
-    items: [{ label: "My problems", icon: PencilLine, to: "/authoring" }],
+    items: [
+      { label: "My problems", icon: PencilLine, to: "/authoring" },
+      {
+        label: "Reviews",
+        icon: ClipboardCheck,
+        to: "/moderation",
+        minimumRole: "moderator",
+      },
+    ],
   },
 ];
 

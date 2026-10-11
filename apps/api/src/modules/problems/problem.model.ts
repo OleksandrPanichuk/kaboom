@@ -14,6 +14,13 @@ export const ProblemSummaryModel = t.Object({
   tags: t.Array(t.String()),
   version: t.Integer(),
   publishedAt: t.Nullable(t.String({ format: "date-time" })),
+  author: t.Nullable(
+    t.Object(
+      { handle: t.String(), displayName: t.String() },
+      { description: "Who wrote a community problem; null for official ones" },
+    ),
+  ),
+  forkedFrom: t.Nullable(t.Object({ slug: t.String(), title: t.String() })),
 });
 export type ProblemSummaryModel = typeof ProblemSummaryModel.static;
 

@@ -2,10 +2,12 @@ import type { AttemptModel, ProblemModel } from "@repo/api-client";
 import { EyeOff } from "lucide-react";
 
 import { Markdown } from "@/components/Markdown";
+import { ForkProblemButton } from "@/features/authoring";
 
 import { DifficultyBadge } from "./DifficultyBadge";
 import { HintList } from "./HintList";
 import { PanelSection } from "./PanelSection";
+import { ProblemCredit } from "./ProblemCredit";
 import { VersionNotice } from "./VersionNotice";
 
 interface TaskPanelProps {
@@ -17,6 +19,7 @@ interface TaskPanelProps {
   revealing: boolean;
   hintError: string | null;
   onRevealHint: (index: number) => void;
+  onOpenDraft: (draftId: string) => void;
 }
 
 export function TaskPanel({
@@ -28,6 +31,7 @@ export function TaskPanel({
   revealing,
   hintError,
   onRevealHint,
+  onOpenDraft,
 }: TaskPanelProps) {
   return (
     <div className="flex flex-col">
@@ -55,6 +59,14 @@ export function TaskPanel({
         <p className="text-sm leading-5 text-muted-foreground text-pretty">
           {problem.summary}
         </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <ProblemCredit problem={problem} />
+          <ForkProblemButton
+            slug={problem.slug}
+            size="sm"
+            onForked={onOpenDraft}
+          />
+        </div>
       </div>
 
       <PanelSection title="Brief">

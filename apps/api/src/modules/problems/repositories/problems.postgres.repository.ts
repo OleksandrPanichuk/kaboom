@@ -1,5 +1,6 @@
 import { type ProblemContent, ProblemContentSchema } from "@repo/scoring";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import {
@@ -7,6 +8,7 @@ import {
   problemsSchema,
   type ProblemVersionRow,
   problemVersionsSchema,
+  profilesSchema,
 } from "@/db";
 import { type DBExecutor, getExecutor, transaction } from "@/db/executor";
 import { Keyset } from "@/db/pagination";
@@ -20,6 +22,7 @@ import {
   type SyncOutcome,
 } from "../ports/problems.repository";
 import type {
+  ProblemCredit,
   ProblemEntity,
   ProblemVersionEntity,
   ProblemWithContent,
@@ -143,6 +146,46 @@ export class PostgresProblemsRepository extends ProblemsRepository {
       .limit(1);
 
     return row ? toVersion(row) : null;
+  }
+
+  public async credits(
+    ids: readonly string[],
+  ): Promise<Map<string, ProblemCredit>> {
+    if (ids.length === 0) return new Map();
+
+    const source = alias(problemsSchema, "source");
+    const rows = await this.db
+      .select({
+        id: problemsSchema.id,
+        handle: profilesSchema.handle,
+        displayName: profilesSchema.displayName,
+        visible: profilesSchema.visible,
+        forkSlug: source.slug,
+        forkTitle: source.title,
+      })
+      .from(problemsSchema)
+      .leftJoin(
+        profilesSchema,
+        eq(profilesSchema.userId, problemsSchema.authorId),
+      )
+      .leftJoin(source, eq(source.id, problemsSchema.forkedFromId))
+      .where(inArray(problemsSchema.id, [...ids]));
+
+    return new Map(
+      rows.map((row) => [
+        row.id,
+        {
+          author:
+            row.handle !== null && row.displayName !== null && row.visible
+              ? { handle: row.handle, displayName: row.displayName }
+              : null,
+          forkedFrom:
+            row.forkSlug !== null && row.forkTitle !== null
+              ? { slug: row.forkSlug, title: row.forkTitle }
+              : null,
+        },
+      ]),
+    );
   }
 
   public async findBySlug(slug: string): Promise<ProblemEntity | null> {

@@ -9,6 +9,7 @@ import { cn } from "cn";
 import { formatSubmittedAt, scoreTone } from "@/features/problems/utils";
 
 import { DifficultyBadge } from "./DifficultyBadge";
+import { ProblemCredit } from "./ProblemCredit";
 
 interface ProblemCardProps {
   problem: ProblemSummaryModel;
@@ -33,6 +34,9 @@ export function ProblemCard({ problem, progress }: ProblemCardProps) {
           <p className="text-sm leading-5 text-muted-foreground text-pretty">
             {problem.summary}
           </p>
+          <div className="relative z-10">
+            <ProblemCredit problem={problem} />
+          </div>
         </div>
         <DifficultyBadge difficulty={problem.difficulty} />
       </div>

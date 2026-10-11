@@ -7,8 +7,8 @@ import { CanvasProvider, DesignCanvas } from "@/features/canvas";
 
 interface DraftGraphCardProps {
   graph: unknown;
-  editing: boolean;
-  onEdit: () => void;
+  editing?: boolean;
+  onEdit?: () => void;
 }
 
 const NOTHING = () => undefined;
@@ -54,10 +54,17 @@ export function DraftGraphCard({
           {design.nodes.length} {design.nodes.length === 1 ? "node" : "nodes"},{" "}
           {design.edges.length} {design.edges.length === 1 ? "edge" : "edges"}
         </p>
-        <Button variant="outline" size="sm" disabled={editing} onClick={onEdit}>
-          <PencilRuler aria-hidden="true" />
-          {editing ? "Opening…" : "Edit in the designer"}
-        </Button>
+        {onEdit ? (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={editing}
+            onClick={onEdit}
+          >
+            <PencilRuler aria-hidden="true" />
+            {editing ? "Opening…" : "Edit in the designer"}
+          </Button>
+        ) : null}
       </div>
     </div>
   );

@@ -334,10 +334,31 @@ the same points, recent activity and the challenge table. A sparkline's
 axis fits its points with a span of at least 20, since its value is
 printed beside it, and it answers hover and the arrow keys.
 
-`features/leaderboard` renders `/leaderboard`: the caller's standing with
-the form to choose a handle and whether to be shown, the period and track
-filters (kept in the URL as `?period=week&track=…`, the default left out),
-and the table, where the caller's row is marked.
+`features/leaderboard` renders `/leaderboard`: the caller's standing
+with a link to edit their profile, the period and track filters (kept in
+the URL as `?period=week&track=…`, the default left out), and the table,
+where the caller's row is marked.
+
+`features/authoring` renders *My problems* (`/authoring`) and the draft
+editor (`/authoring/$draftId`), a shell page rather than a workspace,
+since the canvas lives elsewhere. `useDraftEditor` keeps the content in
+local state, saves it 0.8 s after the last edit, and takes back only the
+baseline and reference graphs from the server's answer, which reads them
+from the draft's linked designs. Its forms write top-level fields;
+drills, rubric, hints, interview and chaos are `JsonField`s that save once
+they parse. An issue's path picks its section (`sectionOf`), which the
+issues list jumps to. *Edit in the designer* opens the linked design at
+`/designs/$designId?draft=…`, whose back link returns to the draft.
+`ForkProblemButton` starts a draft from a published problem, on its start
+screen and in its Task tab.
+
+`features/moderation` renders the review queue (`/moderation`, with
+`?status=`) and a review (`/moderation/$reviewId`): the content read-only,
+what an update changes against the live version (`changedFields`), and
+approving at a difficulty or sending back with feedback. A decision drops
+the cached lists, so the queue never shows a decided review. Nav items
+may carry a `minimumRole`, and the sidebar shows *Reviews* to moderators
+and admins only; the API refuses everyone else anyway.
 
 `features/simulation` runs `evaluateLoad` in the browser while the Run tab
 is open, on a deferred graph so typing stays smooth, and turns a step into

@@ -6,6 +6,7 @@ import { Repository } from "@/core/repository";
 import type { ProblemDifficulty } from "@/db";
 
 import type {
+  ProblemCredit,
   ProblemEntity,
   ProblemVersionEntity,
   ProblemWithContent,
@@ -54,6 +55,10 @@ export abstract class ProblemsRepository extends Repository {
   ): Promise<ProblemVersionEntity | null>;
 
   public abstract findBySlug(slug: string): Promise<ProblemEntity | null>;
+
+  public abstract credits(
+    ids: readonly string[],
+  ): Promise<Map<string, ProblemCredit>>;
 
   public abstract findById(id: string): Promise<ProblemWithContent | null>;
 

@@ -5,6 +5,7 @@ export * from "./HintList";
 export * from "./HistoryPanel";
 export * from "./PanelSection";
 export * from "./ProblemCard";
+export * from "./ProblemCredit";
 export * from "./ProblemsListSkeleton";
 export * from "./ProblemsPage";
 export * from "./ProblemStart";
