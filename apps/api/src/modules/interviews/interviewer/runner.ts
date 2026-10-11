@@ -30,6 +30,7 @@ export interface TurnRequest {
   interview: InterviewEntity;
   triggers: Trigger[];
   turnId: string;
+  startedAt: Date;
   signal: AbortSignal;
 }
 
@@ -57,6 +58,7 @@ export class InterviewerRunner extends Service {
     interview: started,
     triggers,
     turnId,
+    startedAt,
     signal,
   }: TurnRequest): Promise<TurnResult> {
     const model = make(LanguageModel);
@@ -67,7 +69,6 @@ export class InterviewerRunner extends Service {
       triggers,
     );
     const said: string[] = [];
-    const startedAt = new Date();
     let interview = started;
     let tokens = 0;
 
