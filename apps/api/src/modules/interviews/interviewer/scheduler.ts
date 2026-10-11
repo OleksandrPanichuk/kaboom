@@ -205,6 +205,7 @@ export class TurnScheduler extends Service {
         interview,
         triggers,
         turnId: row.id,
+        startedAt: row.startedAt,
         signal: controller.signal,
       });
 
