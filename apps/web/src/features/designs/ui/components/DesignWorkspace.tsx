@@ -4,8 +4,6 @@ import {
   evaluateLoad,
   type Finding,
   type LintHit,
-  opensConnections,
-  referencesOf,
   runLints,
   type Track,
   vary,
@@ -38,16 +36,8 @@ import {
   useHistoryShortcuts,
 } from "@/features/designs/hooks";
 import type { ReplayRequest } from "@/features/designs/typedefs";
-import {
-  ChecksPanel,
-  EdgeInspector,
-  formatMonthly,
-  GroupInspector,
-  InspectorEmpty,
-  NodeInspector,
-  relationColumns,
-  SelectionInspector,
-} from "@/features/properties";
+import { nodesWithin } from "@/features/designs/utils";
+import { ChecksPanel, formatMonthly } from "@/features/properties";
 import {
   type WorkspaceBackLink,
   WorkspaceLayout,
@@ -64,6 +54,7 @@ import {
 
 import { CopySqlButton } from "./CopySqlButton";
 import { ReplayBar } from "./ReplayBar";
+import { WorkspaceInspector } from "./WorkspaceInspector";
 
 export interface DesignWorkspaceContext {
   graph: DesignGraph;
@@ -249,21 +240,11 @@ export function DesignWorkspace({
     );
 
   const showGroup = (groupId: string) => {
-    const inside = (id: string | null): boolean => {
-      const group = editor.graph.groups.find((item) => item.id === id);
-
-      return (
-        group !== undefined && (group.id === groupId || inside(group.parentId))
-      );
-    };
-
     focusingRef.current = true;
     setRegionId(groupId);
     setTab("node");
     setFocus((current) => ({
-      nodeIds: editor.graph.nodes
-        .filter((node) => inside(node.groupId))
-        .map((node) => node.id),
+      nodeIds: nodesWithin(editor.graph, groupId).map((node) => node.id),
       token: (current?.token ?? 0) + 1,
       groupId,
     }));
@@ -284,8 +265,6 @@ export function DesignWorkspace({
   const selectedEdges = graph.edges.filter((edge) =>
     selection.edges.includes(edge.id),
   );
-  const labelOf = (id: string) =>
-    graph.nodes.find((node) => node.id === id)?.label ?? id;
   const removeSelection = () =>
     editor.remove(
       selectedNodes.map((node) => node.id),
@@ -297,119 +276,26 @@ export function DesignWorkspace({
     subnets: track === undefined || track === "devops",
   };
   const region = graph.groups.find((group) => group.id === regionId) ?? null;
-  const within = (groupId: string): string[] => [
-    groupId,
-    ...graph.groups
-      .filter((group) => group.parentId === groupId)
-      .flatMap((group) => within(group.id)),
-  ];
-  const sharedRegion = selectedNodes.every(
-    (node) => node.groupId === selectedNodes[0]?.groupId,
-  )
-    ? (selectedNodes[0]?.groupId ?? null)
-    : null;
   const selectRegion = (id: string | null) => {
     setRegionId(id);
     if (id) setTab("node");
   };
 
-  const [onlyNode] = selectedNodes;
-  const [onlyEdge] = selectedEdges;
-  const inspector =
-    region && selectedNodes.length + selectedEdges.length === 0 ? (
-      <GroupInspector
-        key={region.id}
-        group={region}
-        members={graph.nodes
-          .filter(
-            (node) =>
-              node.groupId !== null && within(region.id).includes(node.groupId),
-          )
-          .map((node) => labelOf(node.id))}
-        onRename={(label) => editor.renameRegion(region.id, label)}
-        onEngineChange={(engine) =>
-          editor.apply([
-            { op: "update-group", id: region.id, patch: { engine } },
-          ])
-        }
-        hosts={graph.nodes
-          .filter(
-            (node) =>
-              node.kind ===
-              (region.engine === "mongodb" || region.engine === "dynamodb"
-                ? "nosql-database"
-                : "sql-database"),
-          )
-          .map((node) => ({ id: node.id, label: labelOf(node.id) }))}
-        onStoredOnChange={(storedOn) =>
-          editor.apply([
-            { op: "update-group", id: region.id, patch: { storedOn } },
-          ])
-        }
-        onDissolve={() => {
-          editor.dissolveRegion(region.id);
-          setRegionId(null);
-        }}
-      />
-    ) : onlyNode && selectedNodes.length === 1 && selectedEdges.length === 0 ? (
-      <NodeInspector
-        key={onlyNode.id}
-        node={onlyNode}
-        hits={hits.filter((hit) => hit.nodeIds.includes(onlyNode.id))}
-        replicas={graph.edges
-          .filter(
-            (edge) => edge.kind === "replication" && edge.from === onlyNode.id,
-          )
-          .map((edge) => labelOf(edge.to))}
-        groups={graph.groups}
-        onShowGroup={showGroup}
-        cost={
-          estimate.nodes.find((item) => item.nodeId === onlyNode.id) ?? null
-        }
-        placement={placement}
-        onRegionChange={(target) => editor.placeInRegion([onlyNode.id], target)}
-        onPatch={(patch) => editor.updateNode(onlyNode.id, patch)}
-        edges={graph.edges}
-        onApply={editor.apply}
-        onDelete={removeSelection}
-      />
-    ) : onlyEdge && selectedEdges.length === 1 && selectedNodes.length === 0 ? (
-      <EdgeInspector
-        key={onlyEdge.id}
-        edge={onlyEdge}
-        onPatch={(patch) => editor.updateEdge(onlyEdge.id, patch)}
-        fromLabel={labelOf(onlyEdge.from)}
-        toLabel={labelOf(onlyEdge.to)}
-        columns={relationColumns(graph, onlyEdge.id)}
-        referenceName={
-          referencesOf(graph).find((item) => item.edge.id === onlyEdge.id)
-            ?.field.name ?? null
-        }
-        pooled={opensConnections(
-          onlyEdge.kind,
-          graph.nodes.find((item) => item.id === onlyEdge.to)?.kind ?? "client",
-        )}
-        onApply={editor.apply}
-        onDelete={removeSelection}
-      />
-    ) : selectedNodes.length + selectedEdges.length > 1 ? (
-      <SelectionInspector
-        nodes={selectedNodes.length}
-        edges={selectedEdges.length}
-        groups={graph.groups}
-        placement={placement}
-        region={sharedRegion}
-        onRegionChange={(target) =>
-          editor.placeInRegion(
-            selectedNodes.map((node) => node.id),
-            target,
-          )
-        }
-        onDelete={removeSelection}
-      />
-    ) : (
-      <InspectorEmpty />
-    );
+  const inspector = (
+    <WorkspaceInspector
+      graph={graph}
+      editor={editor}
+      nodes={selectedNodes}
+      edges={selectedEdges}
+      group={region}
+      hits={hits}
+      estimate={estimate}
+      placement={placement}
+      onShowGroup={showGroup}
+      onGroupDissolved={() => setRegionId(null)}
+      onDelete={removeSelection}
+    />
+  );
 
   return (
     <CanvasProvider>

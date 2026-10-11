@@ -1,6 +1,7 @@
 export * from "./describeConnectionRefusal";
 export * from "./designWriter";
 export * from "./formatEditedAt";
+export * from "./inspectorFacts";
 export * from "./newNode";
 export * from "./orientRelation";
 export * from "./regionOps";
