@@ -25,6 +25,10 @@ export const AttemptModel = t.Object({
   hints: t.Array(RevealedHintModel),
   hintPenalty: t.Integer(),
   lockedUntil: t.Nullable(t.String({ format: "date-time" })),
+  solved: t.Boolean({
+    description:
+      "Whether a submission passed every test, which opens other solutions without locking points",
+  }),
   createdAt: t.String({ format: "date-time" }),
 });
 export type AttemptModel = typeof AttemptModel.static;
@@ -135,6 +139,9 @@ export const SubmissionModel = t.Object({
   review: t.Nullable(DesignReviewModel),
   hintPenalty: t.Integer(),
   counted: t.Boolean(),
+  allPassed: t.Boolean({
+    description: "Every test passed, none flaky or skipped",
+  }),
   items: t.Array(ItemResultModel),
   drills: t.Array(DrillResultModel),
   tests: t.Nullable(TestReportModel),
@@ -175,7 +182,7 @@ export const SolutionModel = t.Object({
 export type SolutionModel = typeof SolutionModel.static;
 
 export const SolutionsModel = t.Object({
-  lockedUntil: t.String({ format: "date-time" }),
+  lockedUntil: t.Nullable(t.String({ format: "date-time" })),
   solutions: t.Array(SolutionModel),
 });
 export type SolutionsModel = typeof SolutionsModel.static;

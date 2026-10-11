@@ -5,7 +5,11 @@ import { Service } from "@/core/service";
 import { DesignsService } from "@/modules/designs";
 import { ProblemsService } from "@/modules/problems";
 
-import { ProblemAttemptsRepository, SolutionRevealsRepository } from "./ports";
+import {
+  ProblemAttemptsRepository,
+  SolutionRevealsRepository,
+  SubmissionsRepository,
+} from "./ports";
 import type { AttemptEntity, AttemptView } from "./submission.entity";
 import { SOLUTION_LOCK_MS } from "./submissions.constants";
 import { ProblemNotStartedError } from "./submissions.errors";
@@ -19,6 +23,8 @@ export class SubmissionsService extends Service {
   private readonly attempts = makeRepository(ProblemAttemptsRepository);
 
   private readonly reveals = makeRepository(SolutionRevealsRepository);
+
+  private readonly submissions = makeRepository(SubmissionsRepository);
 
   public lockedUntil(revealedAt: Date | null, now = new Date()): Date | null {
     if (!revealedAt) return null;
@@ -54,15 +60,17 @@ export class SubmissionsService extends Service {
     attempt: AttemptEntity,
     latestVersion: number,
   ): Promise<AttemptView> {
-    const [version, lockedUntil] = await Promise.all([
+    const [version, lockedUntil, solved] = await Promise.all([
       this.problems.getVersion(attempt.problemId, attempt.problemVersion),
       this.lockOf(attempt.userId, attempt.problemId),
+      this.submissions.hasPassedAll(attempt.userId, attempt.problemId),
     ]);
 
     return {
       attempt,
       latestVersion,
       lockedUntil,
+      solved,
       hints: revealedHints(version.content, attempt.hintsRevealed),
       hintPenalty: hintPenalty(version.content, attempt.hintsRevealed),
     };

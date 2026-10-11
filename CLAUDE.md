@@ -741,6 +741,17 @@ scored against. Moving on is the solver's choice: `POST
 version. Hints already revealed carry over, as many as the new version has,
 at its costs. Earlier submissions keep the version they were scored on.
 
+## Other people's solutions
+
+A submission records `all_passed` when its report has passed tests and
+none failed, flaky or skipped, and the attempt answers `solved` once any
+of the user's submissions to that problem did. Solving opens the other
+solvers' best designs (80 or more, anonymous, notes removed) for free,
+and the web loads them as soon as the tab opens. Before that, `POST
+/problems/:slug/solutions/reveal` is a forfeit: it records a reveal, and
+for seven days the user's submissions there are scored but not counted,
+while points earned before stay.
+
 ## Profiles
 
 `profiles` owns the public face of an account: a `handle`, a

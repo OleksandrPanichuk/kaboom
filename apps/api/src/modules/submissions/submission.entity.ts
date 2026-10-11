@@ -26,6 +26,7 @@ export interface AttemptView {
   hints: RevealedHint[];
   hintPenalty: number;
   lockedUntil: Date | null;
+  solved: boolean;
 }
 
 export interface DesignReviewItem {
@@ -57,6 +58,7 @@ export interface SubmissionEntity {
   review: DesignReview | null;
   hintPenalty: number;
   counted: boolean;
+  allPassed: boolean;
   items: ItemScore[];
   drills: DrillScore[];
   tests: TestReport | null;
@@ -70,6 +72,7 @@ export class AttemptEntity {
     hints,
     hintPenalty,
     lockedUntil,
+    solved,
   }: AttemptView): AttemptModel {
     return {
       designId: attempt.designId,
@@ -78,6 +81,7 @@ export class AttemptEntity {
       hints,
       hintPenalty,
       lockedUntil: lockedUntil?.toISOString() ?? null,
+      solved,
       createdAt: attempt.createdAt.toISOString(),
     };
   }
@@ -97,6 +101,7 @@ export class SubmissionEntity {
       review: entity.review,
       hintPenalty: entity.hintPenalty,
       counted: entity.counted,
+      allPassed: entity.allPassed,
       items: entity.items,
       drills: entity.drills,
       tests: entity.tests,
