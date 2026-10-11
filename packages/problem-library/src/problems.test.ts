@@ -8,9 +8,13 @@ import {
 } from "@repo/scoring";
 import { runDrill } from "@repo/scoring";
 import {
+  asDrawnWork,
   checkPublishable,
   formatIssue,
   HIDDEN_FAILED,
+  MAX_PROBLEM_STEPS,
+  MAX_REFERENCE_WORK,
+  problemSteps,
   publicProblem,
   publicScore,
 } from "@repo/scoring";
@@ -1266,5 +1270,67 @@ describe("a publish issue", () => {
     expect(lines.some((line) => line.startsWith("hints[0].title: "))).toBe(
       true,
     );
+  });
+});
+
+describe("what a problem may cost to test", () => {
+  test("every official problem stays well within both limits", () => {
+    for (const problem of OFFICIAL_PROBLEMS) {
+      expect(problemSteps(problem).total).toBeLessThan(MAX_PROBLEM_STEPS / 4);
+      expect(asDrawnWork(problem, problem.reference.graph)).toBeLessThan(
+        MAX_REFERENCE_WORK / 5,
+      );
+    }
+  });
+
+  test("refuses drills that ask for too many steps, at the longest one", () => {
+    const long = shortener.drills.map((drill, index) =>
+      drill.kind === "load" && index === 1
+        ? { ...drill, durationSeconds: 3_600 }
+        : drill,
+    );
+    const extra = [2, 3, 4, 5, 6].map((n) => ({
+      ...shortener.drills[0]!,
+      id: `long-${n}`,
+      visibility: "hidden" as const,
+      durationSeconds: 3_600,
+    }));
+    const check = checkPublishable({
+      ...shortener,
+      drills: [...long, ...extra],
+    });
+
+    const issues = check.ok ? [] : check.issues;
+
+    expect(issues.map((issue) => issue.path)).toEqual([
+      ["drills", 1, "durationSeconds"],
+    ]);
+    expect(issues[0]?.message).toContain(
+      `the longest, ${shortener.drills[1]!.id}, runs 360`,
+    );
+  });
+
+  test("refuses a reference that costs too much to test once", () => {
+    const filler = Array.from({ length: 60 }, (_, n) =>
+      createNode("cache", { id: `filler-${n}` }),
+    );
+    const check = checkPublishable({
+      ...shortener,
+      drills: shortener.drills.map((drill) =>
+        drill.kind === "load" ? { ...drill, durationSeconds: 1_800 } : drill,
+      ),
+      reference: {
+        ...shortener.reference,
+        graph: {
+          ...shortener.reference.graph,
+          nodes: [...shortener.reference.graph.nodes, ...filler],
+        },
+      },
+    });
+
+    expect(!check.ok && check.issues.map((issue) => issue.path)).toEqual([
+      ["reference", "graph"],
+    ]);
+    expect(!check.ok && check.issues[0]!.message).toContain("node-steps");
   });
 });

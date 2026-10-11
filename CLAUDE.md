@@ -753,6 +753,16 @@ is reported where that name is written. `formatIssue` writes one as
 official problem round-trips through JSON unchanged
 (`official.test.ts`), so stored content is the authored form.
 
+A problem's own content decides most of what testing it costs, so
+publishing bounds it, in node-steps rather than time so a check never
+depends on the machine. `problemSteps` adds up what the load drills and
+one chaos case simulate, at most `MAX_PROBLEM_STEPS` (2,000), and the
+issue points at the longest drill's `durationSeconds` or at `chaos`.
+`asDrawnWork` prices the reference's single run of every drill and chaos
+case, at most `MAX_REFERENCE_WORK` (50,000). Seeds are already held by
+`VARIATION_BUDGET`, and a solver's own large design by the tester's
+timeout. Every official problem stays at a quarter and a fifth of these.
+
 ## Other people's solutions
 
 A submission records `all_passed` when its report has passed tests and

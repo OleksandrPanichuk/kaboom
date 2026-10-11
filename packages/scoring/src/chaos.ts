@@ -225,6 +225,12 @@ export const loadedNodes = (result: EvaluationResult): Set<string> =>
     ),
   );
 
+export const chaosWindow = (settings: ChaosSettings): LoadScenarioInput => ({
+  kind: "load",
+  durationSeconds:
+    settings.faultAt + settings.faultSeconds + settings.recoverySeconds,
+});
+
 export const chaosCases = (
   graph: DesignGraph,
   settings: ChaosSettings,

@@ -104,3 +104,11 @@ export {
   type Variation,
   vary,
 } from "./variation";
+export {
+  asDrawnWork,
+  type DrillSteps,
+  MAX_PROBLEM_STEPS,
+  MAX_REFERENCE_WORK,
+  type ProblemSteps,
+  problemSteps,
+} from "./work";

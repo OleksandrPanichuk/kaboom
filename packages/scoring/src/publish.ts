@@ -10,6 +10,12 @@ import {
   ProblemContentSchema,
 } from "./schema";
 import { type Score, scoreSubmission } from "./score";
+import {
+  asDrawnWork,
+  MAX_PROBLEM_STEPS,
+  MAX_REFERENCE_WORK,
+  problemSteps,
+} from "./work";
 
 export interface PublicDrill {
   id: string;
@@ -436,6 +442,31 @@ export const checkPublishable = (input: unknown): PublishCheck => {
       ["drills"],
       "A problem needs at least one public drill for solvers to run.",
     );
+  }
+
+  if (issues.length === 0) {
+    const steps = problemSteps(problem);
+
+    if (steps.total > MAX_PROBLEM_STEPS) {
+      const longest = [...steps.drills].sort((a, b) => b.steps - a.steps)[0];
+      const chaosLeads = !longest || steps.chaos > longest.steps;
+
+      add(
+        chaosLeads ? ["chaos"] : ["drills", longest.index, "durationSeconds"],
+        `The drills simulate ${steps.total} steps in all, over the ${MAX_PROBLEM_STEPS} a problem may ask for; ${chaosLeads ? `each chaos case alone runs ${steps.chaos}` : `the longest, ${longest.id}, runs ${longest.steps}`}.`,
+      );
+    }
+  }
+
+  if (issues.length === 0) {
+    const work = asDrawnWork(problem, problem.reference.graph);
+
+    if (work > MAX_REFERENCE_WORK) {
+      add(
+        ["reference", "graph"],
+        `Testing the reference solution once takes ${work.toLocaleString("en")} node-steps, over the ${MAX_REFERENCE_WORK.toLocaleString("en")} a problem may cost; use fewer or shorter drills, or a smaller reference.`,
+      );
+    }
   }
 
   if (issues.length === 0) {
