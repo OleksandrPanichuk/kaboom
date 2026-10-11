@@ -7,7 +7,13 @@ import {
 
 import type { HeatTone } from "@/features/simulation/typedefs";
 
-import { formatRate, formatShare, heatOf, turnedAway } from "./heat";
+import {
+  formatRate,
+  formatShare,
+  heatOf,
+  refusesConnections,
+  turnedAway,
+} from "./heat";
 
 export interface SimulationOverlay {
   nodes: Record<string, { tone: HeatTone; text: string }>;
@@ -64,11 +70,13 @@ export const overlayAt = (
                 ? `Routes ${formatRate(load)}`
                 : node.kind === "client" || node.kind === "scheduler"
                   ? `Sends ${formatRate(load)}`
-                  : turnedAway(numbers) > 0
-                    ? `${formatRate(load)} · ${formatRate(turnedAway(numbers))} turned away`
-                    : numbers.backlog
-                      ? `${formatShare(numbers.rho)} · ${formatRate(load)} · ${Math.round(numbers.backlog).toLocaleString("en")} waiting`
-                      : `${formatShare(numbers.rho)} · ${formatRate(load)}`,
+                  : refusesConnections(numbers) && numbers.connections
+                    ? `${formatRate(load)} · ${Math.round(numbers.connections.demanded).toLocaleString("en")} of ${numbers.connections.max.toLocaleString("en")} connections`
+                    : turnedAway(numbers) > 0
+                      ? `${formatRate(load)} · ${formatRate(turnedAway(numbers))} turned away`
+                      : numbers.backlog
+                        ? `${formatShare(numbers.rho)} · ${formatRate(load)} · ${Math.round(numbers.backlog).toLocaleString("en")} waiting`
+                        : `${formatShare(numbers.rho)} · ${formatRate(load)}`,
     };
   }
 

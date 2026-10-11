@@ -126,7 +126,7 @@ export function PropFieldControl({
         <div className="relative">
           <DraftInput
             id={id}
-            value={toDisplay(Number(value), unit)}
+            value={toDisplay(Number(value ?? meta.fallback), unit)}
             inputMode={control.integer ? "numeric" : "decimal"}
             invalid={error !== null}
             describedBy={meta.description ? descriptionId : undefined}
