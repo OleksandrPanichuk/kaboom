@@ -22,6 +22,9 @@ import {
   NODE_WIDTH,
   PALETTE_GROUPS,
   type PaletteGroup,
+  TABLE_HEADER_HEIGHT,
+  TABLE_ROW_HEIGHT,
+  TABLE_WIDTH,
 } from "@/features/canvas/constants";
 import { findFreeSpot } from "@/features/canvas/utils";
 import { useWorkspacePanels } from "@/features/shell";
@@ -60,13 +63,22 @@ export function NodePalette({ track, onAdd }: NodePaletteProps) {
           y: rect.top + rect.height / 2,
         })
       : { x: 0, y: 0 };
-    const wanted = {
-      x: centre.x - NODE_WIDTH / 2,
-      y: centre.y - NODE_HEIGHT / 2,
+    const wide = kind === "table" || kind === "collection";
+    const size = {
+      width: wide ? TABLE_WIDTH : NODE_WIDTH,
+      height: wide ? TABLE_HEADER_HEIGHT + 2 * TABLE_ROW_HEIGHT : NODE_HEIGHT,
     };
-    const taken = flow.getNodes().map((node) => node.position);
+    const wanted = {
+      x: centre.x - size.width / 2,
+      y: centre.y - size.height / 2,
+    };
+    const taken = flow.getNodes().map((node) => ({
+      ...node.position,
+      width: node.measured?.width,
+      height: node.measured?.height,
+    }));
 
-    onAdd(kind, findFreeSpot(taken, wanted));
+    onAdd(kind, findFreeSpot(taken, wanted, size));
     closePanels();
   };
 

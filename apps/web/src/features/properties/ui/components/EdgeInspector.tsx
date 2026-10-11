@@ -41,6 +41,7 @@ interface EdgeInspectorProps {
   fromLabel: string;
   toLabel: string;
   columns?: RelationColumns | null;
+  referenceName?: string | null;
   onApply?: (ops: DesignOp[]) => CommitResult;
   onPatch: (patch: EdgePatch) => CommitResult;
   onDelete: () => void;
@@ -51,6 +52,7 @@ export function EdgeInspector({
   fromLabel,
   toLabel,
   columns = null,
+  referenceName = null,
   onApply = () => null,
   onPatch,
   onDelete,
@@ -86,8 +88,21 @@ export function EdgeInspector({
         />
       ) : null}
 
+      {edge.reference ? (
+        <InspectorSection title="Reference">
+          <p className="font-mono text-sm break-all">
+            {fromLabel}.{referenceName ?? edge.reference.fromField.join(".")} →{" "}
+            {toLabel}._id
+          </p>
+          <p className="-mt-2 text-xs leading-5 text-muted-foreground text-pretty">
+            Each {fromLabel} document holds the _id of a {toLabel} document.
+            Nothing checks that it exists: MongoDB enforces no foreign keys.
+          </p>
+        </InspectorSection>
+      ) : null}
+
       <InspectorSection title="General">
-        {edge.kind === "relation" ? null : (
+        {edge.kind === "relation" || edge.kind === "reference" ? null : (
           <Field>
             <FieldLabel htmlFor={`${id}-kind`}>Kind</FieldLabel>
             <Select

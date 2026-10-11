@@ -30,11 +30,11 @@ export type CanvasNodeData = Record<string, unknown> & {
   engine?: Engine;
 };
 
-export type CanvasNodeType = "design-node" | "table-node";
+export type CanvasNodeType = "design-node" | "table-node" | "collection-node";
 
 export type CanvasNode = Node<CanvasNodeData, CanvasNodeType>;
 
-export type RelationCardinality = "one-to-one" | "many-to-one";
+export type RelationCardinality = "one-to-one" | "many-to-one" | "one-to-many";
 
 export type CanvasEdgeData = Record<string, unknown> & {
   edge: DesignEdge;

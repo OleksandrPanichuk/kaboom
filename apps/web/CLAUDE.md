@@ -194,7 +194,21 @@ partial filter. A relation's inspector adds and drops column pairs for a
 composite key, which it sends as a remove and an add (`withPairs`), and
 sets `ON UPDATE` and deferrable. The canvas writes each type as the
 table's engine does, marks ids that fill themselves in, dashes a relation
-whose key may be empty and reads its far end as `0..1`. Edge
+whose key may be empty and reads its far end as `0..1`.
+
+A collection is drawn by `CollectionNodeCard` (`collection-node`): an `_id`
+row that takes references on both sides, then its fields flattened with
+indentation (`documentRows`), where only a field holding ids
+(`holdsIds`) can start a reference. Connecting a field to another
+collection sends a `reference` from the field, whichever end the drag began
+at. The palette's *Documents* group adds a collection into the design's
+MongoDB database, creating it with the first (`homeOps`). The inspector
+edits fields as a tree (`FieldsEditor`, pure edits in `documentEdits.ts`,
+where removing a field also removes its references and index keys) and
+document indexes with a direction per key, unique, sparse and a TTL on a
+single date. *Copy for MongoDB* copies `toMongo`. A new node is placed by
+its real size, and every taken node's measured one, so tables and
+collections land clear of each other. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
 drawn the same way.
 The *Technology* section picks a node's product from `technologiesFor(kind)`

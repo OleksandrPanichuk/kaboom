@@ -5,11 +5,31 @@ interface Point {
   y: number;
 }
 
-const CELL = { x: NODE_WIDTH + NODE_GAP, y: NODE_HEIGHT + NODE_GAP };
+interface Box extends Point {
+  width?: number;
+  height?: number;
+}
+
+interface Size {
+  width: number;
+  height: number;
+}
+
 const MAX_RING = 12;
 
-const overlaps = (a: Point, b: Point): boolean =>
-  Math.abs(a.x - b.x) < CELL.x && Math.abs(a.y - b.y) < CELL.y;
+const DEFAULT_SIZE: Size = { width: NODE_WIDTH, height: NODE_HEIGHT };
+
+const overlaps = (taken: Box, spot: Point, size: Size): boolean => {
+  const width = taken.width ?? NODE_WIDTH;
+  const height = taken.height ?? NODE_HEIGHT;
+
+  return (
+    spot.x < taken.x + width + NODE_GAP &&
+    taken.x < spot.x + size.width + NODE_GAP &&
+    spot.y < taken.y + height + NODE_GAP &&
+    taken.y < spot.y + size.height + NODE_GAP
+  );
+};
 
 const ring = (radius: number): Point[] => {
   if (radius === 0) return [{ x: 0, y: 0 }];
@@ -29,15 +49,21 @@ const ring = (radius: number): Point[] => {
   );
 };
 
-export const findFreeSpot = (taken: Point[], wanted: Point): Point => {
+export const findFreeSpot = (
+  taken: Box[],
+  wanted: Point,
+  size: Size = DEFAULT_SIZE,
+): Point => {
+  const cell = { x: size.width + NODE_GAP, y: size.height + NODE_GAP };
+
   for (let radius = 0; radius <= MAX_RING; radius++) {
-    for (const cell of ring(radius)) {
+    for (const step of ring(radius)) {
       const spot = {
-        x: wanted.x + cell.x * CELL.x,
-        y: wanted.y + cell.y * CELL.y,
+        x: wanted.x + step.x * cell.x,
+        y: wanted.y + step.y * cell.y,
       };
 
-      if (!taken.some((point) => overlaps(point, spot))) return spot;
+      if (!taken.some((box) => overlaps(box, spot, size))) return spot;
     }
   }
 

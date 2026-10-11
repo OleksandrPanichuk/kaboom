@@ -62,20 +62,26 @@ function CanvasEdgePathComponent(props: EdgeProps<CanvasEdge>) {
       {data?.cardinality ? (
         <EdgeLabelRenderer>
           <span
-            className="pointer-events-none absolute font-mono text-[11px] font-semibold text-violet-700"
+            className="pointer-events-none absolute font-mono text-[11px] font-semibold"
             style={{
+              color: String(style?.stroke ?? "currentColor"),
               transform: `translate(${props.sourcePosition === Position.Left ? "-100%" : "0"}, -100%) translate(${props.sourceX + (props.sourcePosition === Position.Left ? -6 : 6)}px, ${props.sourceY - 2}px)`,
             }}
           >
-            {data.cardinality === "one-to-one" ? "1" : "N"}
+            {data.cardinality === "many-to-one" ? "N" : "1"}
           </span>
           <span
-            className="pointer-events-none absolute font-mono text-[11px] font-semibold text-violet-700"
+            className="pointer-events-none absolute font-mono text-[11px] font-semibold"
             style={{
+              color: String(style?.stroke ?? "currentColor"),
               transform: `translate(${props.targetPosition === Position.Left ? "-100%" : "0"}, -100%) translate(${props.targetX + (props.targetPosition === Position.Left ? -8 : 8)}px, ${props.targetY - 2}px)`,
             }}
           >
-            {data.optional ? "0..1" : "1"}
+            {data.cardinality === "one-to-many"
+              ? "N"
+              : data.optional
+                ? "0..1"
+                : "1"}
           </span>
         </EdgeLabelRenderer>
       ) : null}

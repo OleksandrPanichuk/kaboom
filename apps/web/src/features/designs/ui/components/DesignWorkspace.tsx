@@ -4,6 +4,7 @@ import {
   evaluateLoad,
   type Finding,
   type LintHit,
+  referencesOf,
   runLints,
   type Track,
   vary,
@@ -342,6 +343,10 @@ export function DesignWorkspace({
         fromLabel={labelOf(onlyEdge.from)}
         toLabel={labelOf(onlyEdge.to)}
         columns={relationColumns(graph, onlyEdge.id)}
+        referenceName={
+          referencesOf(graph).find((item) => item.edge.id === onlyEdge.id)
+            ?.field.name ?? null
+        }
         onApply={editor.apply}
         onDelete={removeSelection}
       />
@@ -387,6 +392,13 @@ export function DesignWorkspace({
             {graph.nodes.some((node) => node.kind === "table") ? (
               <CopySqlButton
                 graph={graph}
+                className={cn(actions && "max-sm:hidden")}
+              />
+            ) : null}
+            {graph.nodes.some((node) => node.kind === "collection") ? (
+              <CopySqlButton
+                graph={graph}
+                format="mongo"
                 className={cn(actions && "max-sm:hidden")}
               />
             ) : null}

@@ -38,3 +38,20 @@ describe("findFreeSpot", () => {
     }
   });
 });
+
+describe("findFreeSpot with sizes", () => {
+  test("keeps a wide new node clear of a tall one already there", () => {
+    const spot = findFreeSpot(
+      [{ x: 0, y: 0, width: 248, height: 160 }],
+      { x: 0, y: 0 },
+      { width: 248, height: 101 },
+    );
+    const clear =
+      spot.x >= 248 + 24 ||
+      spot.x + 248 + 24 <= 0 ||
+      spot.y >= 160 + 24 ||
+      spot.y + 101 + 24 <= 0;
+
+    expect(clear).toBe(true);
+  });
+});
