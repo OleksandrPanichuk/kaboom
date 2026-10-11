@@ -1,11 +1,13 @@
 import {
   carriesLoad,
+  DEFAULT_POOL_SIZE,
   describeProps,
   type DesignEdge,
   type DesignOp,
   EDGE_KINDS,
   type EdgePatch,
   EdgePropsSchema,
+  MAX_POOL_SIZE,
 } from "@repo/design";
 import { ArrowRight, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
@@ -42,6 +44,7 @@ interface EdgeInspectorProps {
   toLabel: string;
   columns?: RelationColumns | null;
   referenceName?: string | null;
+  pooled?: boolean;
   onApply?: (ops: DesignOp[]) => CommitResult;
   onPatch: (patch: EdgePatch) => CommitResult;
   onDelete: () => void;
@@ -53,6 +56,7 @@ export function EdgeInspector({
   toLabel,
   columns = null,
   referenceName = null,
+  pooled = false,
   onApply = () => null,
   onPatch,
   onDelete,
@@ -60,6 +64,7 @@ export function EdgeInspector({
   const id = useId();
   const [kindError, setKindError] = useState<string | null>(null);
   const [labelError, setLabelError] = useState<string | null>(null);
+  const [poolError, setPoolError] = useState<string | null>(null);
   const kind = EDGE_KIND_STYLES[edge.kind];
   const props = edge.props as Record<string, unknown>;
 
@@ -159,6 +164,46 @@ export function EdgeInspector({
               onCommit={(value) => onPatch({ props: { [field.key]: value } })}
             />
           ))}
+          {pooled ? (
+            <Field data-invalid={poolError ? true : undefined}>
+              <FieldLabel htmlFor={`${id}-pool`}>Connection pool</FieldLabel>
+              <DraftInput
+                id={`${id}-pool`}
+                value={String(edge.connection?.poolSize ?? "")}
+                inputMode="numeric"
+                placeholder={String(DEFAULT_POOL_SIZE)}
+                invalid={poolError !== null}
+                describedBy={`${id}-pool-description`}
+                onUnchanged={() => setPoolError(null)}
+                onCommit={(text) => {
+                  const trimmed = text.trim();
+                  const size = Number(trimmed);
+
+                  if (trimmed === "") {
+                    setPoolError(onPatch({ connection: null }));
+                  } else if (
+                    !Number.isInteger(size) ||
+                    size < 1 ||
+                    size > MAX_POOL_SIZE
+                  ) {
+                    setPoolError(
+                      `Use a whole number from 1 to ${MAX_POOL_SIZE.toLocaleString("en")}.`,
+                    );
+                  } else {
+                    setPoolError(onPatch({ connection: { poolSize: size } }));
+                  }
+                }}
+              />
+              <FieldDescription
+                id={`${id}-pool-description`}
+                className="text-xs"
+              >
+                Connections each replica of {fromLabel} keeps open to {toLabel}.
+                Empty means {DEFAULT_POOL_SIZE}.
+              </FieldDescription>
+              {poolError ? <FieldError>{poolError}</FieldError> : null}
+            </Field>
+          ) : null}
         </InspectorSection>
       ) : null}
 

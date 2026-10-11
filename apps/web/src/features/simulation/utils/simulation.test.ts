@@ -212,6 +212,37 @@ describe("heat", () => {
 });
 
 describe("overlayAt", () => {
+  test("marks a database that refuses connections, with how many were asked for", () => {
+    const g = {
+      ...emptyGraph(),
+      nodes: [
+        createNode("sql-database", { id: "full" }),
+        createNode("sql-database", { id: "roomy" }),
+      ],
+    };
+    const overlay = overlayAt(g, {
+      t: 0,
+      nodes: {
+        full: {
+          ...step(0.3, true, 2_000),
+          connections: { demanded: 1_430, max: 1_000 },
+        },
+        roomy: {
+          ...step(0.3, true, 2_000),
+          connections: { demanded: 200, max: 1_000 },
+        },
+      },
+      edges: {},
+      clients: {},
+    });
+
+    expect(overlay?.nodes.full).toEqual({
+      tone: "saturated",
+      text: "2K/s · 1,430 of 1,000 connections",
+    });
+    expect(overlay?.nodes.roomy).toEqual({ tone: "ok", text: "30% · 2K/s" });
+  });
+
   test("labels each node with its load and weighs edges against the busiest", () => {
     const g = {
       ...emptyGraph(),

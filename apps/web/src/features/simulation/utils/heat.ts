@@ -14,11 +14,15 @@ export const turnedAway = (step: NodeStep): number => {
     : 0;
 };
 
+export const refusesConnections = (step: NodeStep): boolean =>
+  step.connections !== undefined &&
+  step.connections.demanded > step.connections.max;
+
 export const heatOf = (step: NodeStep | undefined): HeatTone => {
   if (!step) return "idle";
   if (!step.up) return "down";
   if (step.reads + step.writes === 0) return "idle";
-  if (step.rho >= SATURATED) return "saturated";
+  if (step.rho >= SATURATED || refusesConnections(step)) return "saturated";
   if (step.rho >= BUSY || turnedAway(step) > 0) return "busy";
 
   return "ok";

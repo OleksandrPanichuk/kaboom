@@ -220,7 +220,12 @@ types (`ItemTypesEditor`), with pure edits in `dynamoEdits.ts`: removing a
 key attribute removes the indexes and item keys that use it, renaming an
 item attribute rewrites the templates that name it, and removing one
 removes the keys built from it. *Copy CloudFormation* copies
-`toCloudFormation`. Edge
+`toCloudFormation`. An optional prop shows its metadata's `fallback`
+while unset, as `maxConnections` does. An edge that opens connections
+(`opensConnections`: a call, read or write into a SQL database or a
+pooler) gets a *Connection pool* field in the edge inspector; empty sends
+`connection: null`. The run overlay names a node that refuses connections
+with how many its callers asked for, in the saturated tone. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
 drawn the same way.
 The *Technology* section picks a node's product from `technologiesFor(kind)`

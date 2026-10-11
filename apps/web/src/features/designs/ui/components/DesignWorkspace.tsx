@@ -4,6 +4,7 @@ import {
   evaluateLoad,
   type Finding,
   type LintHit,
+  opensConnections,
   referencesOf,
   runLints,
   type Track,
@@ -347,6 +348,10 @@ export function DesignWorkspace({
           referencesOf(graph).find((item) => item.edge.id === onlyEdge.id)
             ?.field.name ?? null
         }
+        pooled={opensConnections(
+          onlyEdge.kind,
+          graph.nodes.find((item) => item.id === onlyEdge.to)?.kind ?? "client",
+        )}
         onApply={editor.apply}
         onDelete={removeSelection}
       />
