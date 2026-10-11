@@ -23,6 +23,19 @@ export interface OfficialProblemSync {
 
 export type SyncOutcome = "created" | "versioned" | "unchanged";
 
+export interface CommunityProblemData {
+  authorId: string;
+  forkedFromId: string | null;
+  content: ProblemContent;
+  contentHash: string;
+}
+
+export interface ProblemVersionData {
+  problemId: string;
+  content: ProblemContent;
+  contentHash: string;
+}
+
 export abstract class ProblemsRepository extends Repository {
   public abstract listPublished(
     filter: ProblemFilter,
@@ -39,6 +52,16 @@ export abstract class ProblemsRepository extends Repository {
     problemId: string,
     version: number,
   ): Promise<ProblemVersionEntity | null>;
+
+  public abstract findBySlug(slug: string): Promise<ProblemEntity | null>;
+
+  public abstract findById(id: string): Promise<ProblemWithContent | null>;
+
+  public abstract publishCommunity(
+    data: CommunityProblemData,
+  ): Promise<ProblemEntity>;
+
+  public abstract addVersion(data: ProblemVersionData): Promise<ProblemEntity>;
 
   public abstract syncOfficial(
     problem: OfficialProblemSync,

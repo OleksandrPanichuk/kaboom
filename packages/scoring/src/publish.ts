@@ -146,22 +146,28 @@ const firstOfEach = (entries: readonly Named[], key = (name: string) => name) =>
       index,
   );
 
-export const checkPublishable = (input: unknown): PublishCheck => {
+export const parseProblem = (input: unknown): PublishCheck => {
   const parsed = ProblemContentSchema.safeParse(input);
 
-  if (!parsed.success) {
-    return {
-      ok: false,
-      issues: parsed.error.issues.map((issue) => ({
-        path: issue.path.filter(
-          (part): part is string | number => typeof part !== "symbol",
-        ),
-        message: issue.message,
-      })),
-    };
-  }
+  return parsed.success
+    ? { ok: true, problem: parsed.data }
+    : {
+        ok: false,
+        issues: parsed.error.issues.map((issue) => ({
+          path: issue.path.filter(
+            (part): part is string | number => typeof part !== "symbol",
+          ),
+          message: issue.message,
+        })),
+      };
+};
 
-  const problem = parsed.data;
+export const checkPublishable = (input: unknown): PublishCheck => {
+  const parsed = parseProblem(input);
+
+  if (!parsed.ok) return parsed;
+
+  const { problem } = parsed;
   const issues: PublishIssue[] = [];
   const add = (path: IssuePath, message: string) =>
     issues.push({ path, message });

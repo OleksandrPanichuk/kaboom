@@ -81,6 +81,7 @@ const formatMembers = (rendered: string): string | undefined => {
 const collect = (program: ReturnType<typeof loadProgram>) => {
   const checker = program.getTypeChecker();
   const files = new Map<string, string[]>();
+  const owners = new Map<string, string>();
 
   for (const source of program.getSourceFiles()) {
     if (source.isDeclarationFile) continue;
@@ -107,6 +108,16 @@ const collect = (program: ReturnType<typeof loadProgram>) => {
       if (members === undefined) continue;
 
       const name = exported.getName();
+      const file = relative(SRC_ROOT, source.fileName);
+      const owner = owners.get(name);
+
+      if (owner !== undefined && owner !== file) {
+        throw new Error(
+          `${name} is exported by both ${owner} and ${file}; the generated interfaces would merge, so rename one`,
+        );
+      }
+
+      owners.set(name, file);
 
       blocks.push(
         members.length === 0

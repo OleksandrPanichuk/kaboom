@@ -23,6 +23,7 @@ export {
   HIDDEN_PASSED,
   type IssuePath,
   MAX_HINT_COST,
+  parseProblem,
   type PublicDrill,
   type PublicProblem,
   publicProblem,

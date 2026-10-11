@@ -1,16 +1,13 @@
-import type {
-  DesignTestRequest,
-  DesignTestResult,
-} from "@/platform/design-testing/ports";
+import type { DesignTesterTask } from "@/platform/design-testing/ports";
 
 export type WorkerReply =
   | { ready: true }
-  | { ok: true; result: DesignTestResult }
+  | { ok: true; result: unknown }
   | { ok: false; message: string };
 
 export interface PendingTest {
-  request: DesignTestRequest;
-  resolve: (result: DesignTestResult) => void;
+  task: DesignTesterTask;
+  resolve: (result: unknown) => void;
   reject: (error: Error) => void;
   timer: ReturnType<typeof setTimeout> | null;
   worker: Worker | null;

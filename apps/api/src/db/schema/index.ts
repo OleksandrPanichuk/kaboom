@@ -11,6 +11,8 @@ export * from "./leaderboard_state.schema";
 export * from "./leaderboard_totals.schema";
 export * from "./llm_usage.schema";
 export * from "./problem_attempts.schema";
+export * from "./problem_drafts.schema";
+export * from "./problem_reviews.schema";
 export * from "./problem_versions.schema";
 export * from "./problems.schema";
 export * from "./profiles.schema";

@@ -1,4 +1,5 @@
 import { OFFICIAL_PROBLEMS } from "@repo/problem-library";
+import { checkPublishable } from "@repo/scoring";
 import { afterEach, describe, expect, test } from "bun:test";
 
 import {
@@ -102,6 +103,18 @@ describe("WorkerDesignTester", () => {
     expect(ticks.length).toBeGreaterThan(5);
     expect(longest).toBeLessThan(250);
   }, 60_000);
+
+  test("checks a problem as checkPublishable does, issues and all", async () => {
+    const tester = await pool(1);
+    const { problem } = request();
+
+    expect(await tester.check(problem)).toEqual(checkPublishable(problem));
+
+    const broken = await tester.check({ ...problem, hints: [{ title: "" }] });
+
+    expect(broken.ok).toBe(false);
+    expect(!broken.ok && broken.issues[0]?.path[0]).toBe("hints");
+  });
 
   test("queues past its size and answers every test", async () => {
     const tester = await pool(2);

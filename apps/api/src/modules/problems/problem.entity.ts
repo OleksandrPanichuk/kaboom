@@ -15,6 +15,7 @@ export interface ProblemEntity {
   source: ProblemSource;
   authorId: string | null;
   status: ProblemStatus;
+  forkedFromId: string | null;
   track: Track;
   title: string;
   summary: string;

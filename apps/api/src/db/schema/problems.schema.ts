@@ -1,5 +1,6 @@
 import type { Track } from "@repo/design";
 import {
+  type AnyPgColumn,
   index,
   integer,
   jsonb,
@@ -30,6 +31,10 @@ export const problemsSchema = pgTable(
       onDelete: "set null",
     }),
     status: text("status", { enum: PROBLEM_STATUSES }).notNull(),
+    forkedFromId: uuid("forked_from_id").references(
+      (): AnyPgColumn => problemsSchema.id,
+      { onDelete: "set null" },
+    ),
     track: text("track").$type<Track>().notNull(),
     title: text("title").notNull(),
     summary: text("summary").notNull(),

@@ -1,11 +1,11 @@
-import { testDesign } from "@/platform/design-testing/design-testing.helpers";
-import type { DesignTestRequest } from "@/platform/design-testing/ports";
+import { runTask } from "@/platform/design-testing/design-testing.helpers";
+import type { DesignTesterTask } from "@/platform/design-testing/ports";
 
 declare const self: Worker;
 
-self.onmessage = (event: MessageEvent<DesignTestRequest>) => {
+self.onmessage = (event: MessageEvent<DesignTesterTask>) => {
   try {
-    postMessage({ ok: true, result: testDesign(event.data) });
+    postMessage({ ok: true, result: runTask(event.data) });
   } catch (error) {
     postMessage({
       ok: false,
