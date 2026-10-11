@@ -18,14 +18,17 @@ export {
 } from "./hints";
 export {
   checkPublishable,
+  formatIssue,
   HIDDEN_FAILED,
   HIDDEN_PASSED,
+  type IssuePath,
   MAX_HINT_COST,
   type PublicDrill,
   type PublicProblem,
   publicProblem,
   publicScore,
   type PublishCheck,
+  type PublishIssue,
 } from "./publish";
 export { drillScenario, selectNodes } from "./resolve";
 export {

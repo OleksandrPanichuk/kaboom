@@ -9,6 +9,7 @@ import {
 import { runDrill } from "@repo/scoring";
 import {
   checkPublishable,
+  formatIssue,
   HIDDEN_FAILED,
   publicProblem,
   publicScore,
@@ -232,7 +233,7 @@ describe("taking part beside the request path", () => {
       }),
     );
 
-    expect(!broken.ok && broken.issues.join(" ")).toContain(
+    expect(!broken.ok && broken.issues.map(formatIssue).join(" ")).toContain(
       "only a load drill and a kind that carries traffic",
     );
   });
@@ -496,7 +497,10 @@ describe("publishing", () => {
     });
 
     expect(broken.ok).toBe(false);
-    expect(!broken.ok && broken.issues[0]).toContain("scores 0, not 100");
+    expect(!broken.ok && broken.issues[0]).toMatchObject({
+      path: ["reference", "graph"],
+      message: expect.stringContaining("scores 0, not 100") as unknown,
+    });
   });
 
   test("refuses a rubric item that names a missing drill, and a problem with no public drill", () => {
@@ -518,14 +522,37 @@ describe("publishing", () => {
     });
 
     expect(!broken.ok && broken.issues).toEqual([
-      "Rubric item survives-unseen-faults scores chaos, which needs a public load drill without faults to set the traffic.",
-      "Rubric item ghost names a drill, ghost, the problem does not have.",
-      "A problem needs at least one public drill for solvers to run.",
+      {
+        path: [
+          "rubric",
+          shortener.rubric.findIndex(
+            (item) => item.key === "survives-unseen-faults",
+          ),
+          "check",
+        ],
+        message:
+          "Rubric item survives-unseen-faults scores chaos, which needs a public load drill without faults to set the traffic.",
+      },
+      {
+        path: ["rubric", shortener.rubric.length, "check", "drillId"],
+        message:
+          "Rubric item ghost names a drill, ghost, the problem does not have.",
+      },
+      {
+        path: ["drills"],
+        message:
+          "A problem needs at least one public drill for solvers to run.",
+      },
     ]);
   });
 
   test("refuses content that does not parse", () => {
-    expect(checkPublishable({ slug: "Bad Slug" }).ok).toBe(false);
+    const bad = checkPublishable({ slug: "Bad Slug" });
+
+    expect(bad.ok).toBe(false);
+    expect(!bad.ok && bad.issues.map((issue) => issue.path[0])).toContain(
+      "slug",
+    );
     expect(checkPublishable({ ...shortener, drills: [] }).ok).toBe(false);
   });
 });
@@ -1008,9 +1035,19 @@ describe("interviews", () => {
 
     expect(check.ok).toBe(false);
     expect(check.ok ? [] : check.issues).toEqual([
-      "The interview rubric weighs 85, not 100.",
-      "The interview's phases are out of order.",
-      "The interview runs a drill, no-such-drill, the problem does not have.",
+      {
+        path: ["interview", "rubric"],
+        message: "The interview rubric weighs 85, not 100.",
+      },
+      {
+        path: ["interview", "phases", 1],
+        message: "The interview's phases are out of order.",
+      },
+      {
+        path: ["interview", "drillIds", 0],
+        message:
+          "The interview runs a drill, no-such-drill, the problem does not have.",
+      },
     ]);
   });
 });
@@ -1123,5 +1160,111 @@ describe("scoring the serverless ticket shop", () => {
 
     expect(passed["survives-the-on-sale"]).toBe(true);
     expect(passed["pools-connections"]).toBe(false);
+  });
+});
+
+describe("a publish issue", () => {
+  const official = (slug: string) =>
+    OFFICIAL_PROBLEMS.find((problem) => problem.slug === slug)!;
+
+  test("points at the item type a key-value pattern names", () => {
+    const problem = official("orders-one-table");
+    const index = problem.drills.findIndex(
+      (drill) => drill.kind === "key-value",
+    );
+    const drill = problem.drills[index]!;
+
+    if (drill.kind !== "key-value") throw new Error("not a key-value drill");
+
+    const [pattern, ...rest] = drill.requirements.patterns;
+    const check = checkPublishable({
+      ...problem,
+      drills: problem.drills.map((item, at) =>
+        at === index
+          ? {
+              ...drill,
+              requirements: {
+                ...drill.requirements,
+                patterns: [
+                  { ...pattern!, items: [...pattern!.items, "ghost"] },
+                  ...rest,
+                ],
+              },
+            }
+          : item,
+      ),
+    });
+    const ghost = !check.ok
+      ? check.issues.filter((issue) => issue.message.includes("ghost"))
+      : [];
+
+    expect(ghost.map((issue) => issue.path)).toEqual([
+      [
+        "drills",
+        index,
+        "requirements",
+        "patterns",
+        0,
+        "items",
+        pattern!.items.length,
+      ],
+      [
+        "drills",
+        index,
+        "requirements",
+        "patterns",
+        0,
+        "items",
+        pattern!.items.length,
+      ],
+    ]);
+    expect(formatIssue(ghost[0]!)).toBe(
+      `drills[${index}].requirements.patterns[0].items[${pattern!.items.length}]: Drill ${drill.id} names the item type ghost, which the baseline does not have.`,
+    );
+  });
+
+  test("points at the collection a documents reference names", () => {
+    const problem = official("chat-messages");
+    const index = problem.drills.findIndex(
+      (drill) => drill.kind === "documents",
+    );
+    const drill = problem.drills[index]!;
+
+    if (drill.kind !== "documents") throw new Error("not a documents drill");
+
+    const check = checkPublishable({
+      ...problem,
+      drills: problem.drills.map((item, at) =>
+        at === index
+          ? {
+              ...drill,
+              requirements: {
+                ...drill.requirements,
+                references: [
+                  { ...drill.requirements.references[0]!, to: "ghosts" },
+                ],
+              },
+            }
+          : item,
+      ),
+    });
+
+    expect(!check.ok && check.issues[0]?.path).toEqual([
+      "drills",
+      index,
+      "requirements",
+      "references",
+      0,
+      "to",
+    ]);
+  });
+
+  test("names a parse error by its path", () => {
+    const check = checkPublishable({ ...shortener, hints: [{ title: "" }] });
+    const lines = check.ok ? [] : check.issues.map(formatIssue);
+
+    expect(lines.some((line) => line.startsWith("hints[0].title: "))).toBe(
+      true,
+    );
   });
 });

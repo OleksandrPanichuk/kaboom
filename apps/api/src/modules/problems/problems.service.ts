@@ -1,5 +1,5 @@
 import { OFFICIAL_PROBLEMS } from "@repo/problem-library";
-import { checkPublishable } from "@repo/scoring";
+import { checkPublishable, formatIssue } from "@repo/scoring";
 
 import { makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
@@ -55,7 +55,7 @@ export class ProblemsService extends Service {
 
       if (!check.ok) {
         throw new Error(
-          `Official problem ${content.slug} is not publishable: ${check.issues.join(" ")}`,
+          `Official problem ${content.slug} is not publishable: ${check.issues.map(formatIssue).join(" ")}`,
         );
       }
 

@@ -61,8 +61,28 @@ export const publicProblem = (problem: ProblemContent): PublicProblem => ({
   interviewable: problem.interview !== undefined,
 });
 
+export type IssuePath = ReadonlyArray<string | number>;
+
+export interface PublishIssue {
+  path: IssuePath;
+  message: string;
+}
+
 export type PublishCheck =
-  { ok: true; problem: ProblemContent } | { ok: false; issues: string[] };
+  { ok: true; problem: ProblemContent } | { ok: false; issues: PublishIssue[] };
+
+export const formatIssue = ({ path, message }: PublishIssue): string =>
+  path.length === 0
+    ? message
+    : `${path
+        .map((part, index) =>
+          typeof part === "number"
+            ? `[${part}]`
+            : index === 0
+              ? part
+              : `.${part}`,
+        )
+        .join("")}: ${message}`;
 
 const buildable = (graph: DesignGraph): string | null => {
   const ops: DesignOp[] = [
@@ -91,9 +111,34 @@ const buildable = (graph: DesignGraph): string | null => {
 
 export const MAX_HINT_COST = 50;
 
-const duplicates = (values: string[]) => [
-  ...new Set(values.filter((value, index) => values.indexOf(value) !== index)),
-];
+const repeats = (values: readonly string[]) =>
+  values.flatMap((value, index) =>
+    values.indexOf(value) === index ? [] : [{ value, index }],
+  );
+
+interface Named {
+  name: string;
+  path: IssuePath;
+}
+
+const named = <Item>(
+  items: readonly Item[],
+  at: IssuePath,
+  names: (item: Item) => ReadonlyArray<readonly [string, ...IssuePath]>,
+): Named[] =>
+  items.flatMap((item, index) =>
+    names(item).map(([name, ...field]) => ({
+      name,
+      path: [...at, index, ...field],
+    })),
+  );
+
+const firstOfEach = (entries: readonly Named[], key = (name: string) => name) =>
+  entries.filter(
+    (entry, index) =>
+      entries.findIndex((other) => key(other.name) === key(entry.name)) ===
+      index,
+  );
 
 export const checkPublishable = (input: unknown): PublishCheck => {
   const parsed = ProblemContentSchema.safeParse(input);
@@ -101,186 +146,234 @@ export const checkPublishable = (input: unknown): PublishCheck => {
   if (!parsed.success) {
     return {
       ok: false,
-      issues: parsed.error.issues.map(
-        (issue) => `${issue.path.join(".")}: ${issue.message}`,
-      ),
+      issues: parsed.error.issues.map((issue) => ({
+        path: issue.path.filter(
+          (part): part is string | number => typeof part !== "symbol",
+        ),
+        message: issue.message,
+      })),
     };
   }
 
   const problem = parsed.data;
-  const issues: string[] = [];
+  const issues: PublishIssue[] = [];
+  const add = (path: IssuePath, message: string) =>
+    issues.push({ path, message });
   const drillIds = problem.drills.map((drill) => drill.id);
+  const graphs = [
+    ["baseline", problem.baseline],
+    ["reference solution", problem.reference.graph],
+  ] as const;
 
-  for (const id of duplicates(drillIds))
-    issues.push(`Two drills share the id ${id}.`);
-  for (const key of duplicates(problem.rubric.map((item) => item.key))) {
-    issues.push(`Two rubric items share the key ${key}.`);
+  for (const { value, index } of repeats(drillIds)) {
+    add(["drills", index, "id"], `Two drills share the id ${value}.`);
+  }
+  for (const { value, index } of repeats(
+    problem.rubric.map((item) => item.key),
+  )) {
+    add(["rubric", index, "key"], `Two rubric items share the key ${value}.`);
   }
 
-  for (const item of problem.rubric) {
+  problem.rubric.forEach((item, index) => {
     if (
       item.check.check === "chaos-coverage" &&
       (!chaosBaseline(problem) || !chaosSettings(problem).enabled)
     ) {
-      issues.push(
+      add(
+        ["rubric", index, "check"],
         `Rubric item ${item.key} scores chaos, which needs a public load drill without faults to set the traffic.`,
       );
     }
 
-    const named = drillOf(item.check);
+    const drillId = drillOf(item.check);
 
-    if (item.check.check === "has-node-kind" && named !== undefined) {
-      const drill = problem.drills.find((entry) => entry.id === named);
+    if (item.check.check === "has-node-kind" && drillId !== undefined) {
+      const drill = problem.drills.find((entry) => entry.id === drillId);
 
       if (
         !catalogue[item.check.nodeKind].carriesTraffic ||
         (drill && drill.kind !== "load")
       ) {
-        issues.push(
+        add(
+          ["rubric", index, "check", "drillId"],
           `Rubric item ${item.key} names a drill for ${item.check.nodeKind}, which only a load drill and a kind that carries traffic can use.`,
         );
       }
     }
 
-    if (named !== undefined && !drillIds.includes(named)) {
-      issues.push(
-        `Rubric item ${item.key} names a drill, ${named}, the problem does not have.`,
+    if (drillId !== undefined && !drillIds.includes(drillId)) {
+      add(
+        ["rubric", index, "check", "drillId"],
+        `Rubric item ${item.key} names a drill, ${drillId}, the problem does not have.`,
+      );
+    }
+  });
+
+  for (const [name, graph] of graphs) {
+    const refusal = buildable(graph);
+
+    if (refusal) {
+      add(
+        name === "baseline" ? ["baseline"] : ["reference", "graph"],
+        `The ${name} could not be drawn by a solver: ${refusal}.`,
       );
     }
   }
 
-  for (const [name, graph] of [
-    ["baseline", problem.baseline],
-    ["reference solution", problem.reference.graph],
-  ] as const) {
-    const refusal = buildable(graph);
+  problem.drills.forEach((drill, index) => {
+    const at = ["drills", index, "requirements"] as const;
 
-    if (refusal) {
-      issues.push(`The ${name} could not be drawn by a solver: ${refusal}.`);
-    }
-  }
-
-  for (const drill of problem.drills) {
     if (drill.kind === "key-value") {
       const { patterns, writes, cardinality, apart, ttl } = drill.requirements;
 
       if (patterns.length === 0) {
-        issues.push(
+        add(
+          [...at, "patterns"],
           `Drill ${drill.id} declares no access pattern; a key-value drill checks how items are read.`,
         );
       }
 
-      const named = new Set(
+      const items = firstOfEach(
         [
-          ...patterns.flatMap((item) => item.items),
-          ...writes.map((item) => item.item),
-          ...cardinality.map((item) => item.item),
-          ...apart.flatMap((item) => [item.item, item.from]),
-          ...ttl.map((item) => item.item),
-        ].map((name) => name.toLowerCase()),
+          ...patterns.flatMap((pattern, p) =>
+            pattern.items.map((item, i) => ({
+              name: item,
+              path: [...at, "patterns", p, "items", i],
+            })),
+          ),
+          ...named(writes, [...at, "writes"], (item) => [[item.item, "item"]]),
+          ...named(cardinality, [...at, "cardinality"], (item) => [
+            [item.item, "item"],
+          ]),
+          ...named(apart, [...at, "apart"], (item) => [
+            [item.item, "item"],
+            [item.from, "from"],
+          ]),
+          ...named(ttl, [...at, "ttl"], (item) => [[item.item, "item"]]),
+        ],
+        (name) => name.toLowerCase(),
       );
 
-      for (const [name, graph] of [
-        ["baseline", problem.baseline],
-        ["reference solution", problem.reference.graph],
-      ] as const) {
-        for (const item of named) {
+      for (const [name, graph] of graphs) {
+        for (const item of items) {
+          const wanted = item.name.toLowerCase();
+
           if (
             !graph.nodes.some(
               (node) =>
                 node.kind === "dynamo-table" &&
                 node.props.items.some(
-                  (candidate) => candidate.name.toLowerCase() === item,
+                  (candidate) => candidate.name.toLowerCase() === wanted,
                 ),
             )
           ) {
-            issues.push(
-              `Drill ${drill.id} names the item type ${item}, which the ${name} does not have.`,
+            add(
+              item.path,
+              `Drill ${drill.id} names the item type ${wanted}, which the ${name} does not have.`,
             );
           }
         }
       }
 
-      continue;
+      return;
     }
 
     if (drill.kind === "documents") {
       const { embedded, references, queries, unique, ttl } = drill.requirements;
 
       if (references.length === 0) {
-        issues.push(
+        add(
+          [...at, "references"],
           `Drill ${drill.id} declares no reference; a documents drill checks how collections relate.`,
         );
       }
 
-      const named = new Set([
-        ...embedded.map((item) => item.collection),
-        ...references.flatMap((item) => [item.from, item.to]),
-        ...queries.map((item) => item.collection),
-        ...unique.map((item) => item.collection),
-        ...ttl.map((item) => item.collection),
+      const collections = firstOfEach([
+        ...named(embedded, [...at, "embedded"], (item) => [
+          [item.collection, "collection"],
+        ]),
+        ...named(references, [...at, "references"], (item) => [
+          [item.from, "from"],
+          [item.to, "to"],
+        ]),
+        ...named(queries, [...at, "queries"], (item) => [
+          [item.collection, "collection"],
+        ]),
+        ...named(unique, [...at, "unique"], (item) => [
+          [item.collection, "collection"],
+        ]),
+        ...named(ttl, [...at, "ttl"], (item) => [
+          [item.collection, "collection"],
+        ]),
       ]);
 
-      for (const [name, graph] of [
-        ["baseline", problem.baseline],
-        ["reference solution", problem.reference.graph],
-      ] as const) {
-        for (const id of named) {
+      for (const [name, graph] of graphs) {
+        for (const collection of collections) {
           if (
             !graph.nodes.some(
-              (node) => node.id === id && node.kind === "collection",
+              (node) =>
+                node.id === collection.name && node.kind === "collection",
             )
           ) {
-            issues.push(
-              `Drill ${drill.id} names the collection ${id}, which the ${name} does not have.`,
+            add(
+              collection.path,
+              `Drill ${drill.id} names the collection ${collection.name}, which the ${name} does not have.`,
             );
           }
         }
       }
 
-      continue;
+      return;
     }
 
-    if (drill.kind !== "schema") continue;
+    if (drill.kind !== "schema") return;
 
     const { relationships, columns, queries } = drill.requirements;
 
     if (relationships.length === 0) {
-      issues.push(
+      add(
+        [...at, "relationships"],
         `Drill ${drill.id} declares no relationship; a schema drill checks how tables relate.`,
       );
     }
 
-    const named = new Set([
-      ...relationships.flatMap((item) =>
+    const tables = firstOfEach([
+      ...named(relationships, [...at, "relationships"], (item) =>
         item.cardinality === "one-to-many"
-          ? [item.parent, item.child]
-          : item.between,
+          ? [
+              [item.parent, "parent"],
+              [item.child, "child"],
+            ]
+          : item.between.map((table, i) => [table, "between", i] as const),
       ),
-      ...columns.map((item) => item.table),
-      ...queries.flatMap((item) => [item.from, ...(item.to ? [item.to] : [])]),
+      ...named(columns, [...at, "columns"], (item) => [[item.table, "table"]]),
+      ...named(queries, [...at, "queries"], (item) => [
+        [item.from, "from"],
+        ...(item.to ? ([[item.to, "to"]] as const) : []),
+      ]),
     ]);
 
-    for (const [name, graph] of [
-      ["baseline", problem.baseline],
-      ["reference solution", problem.reference.graph],
-    ] as const) {
-      for (const id of named) {
+    for (const [name, graph] of graphs) {
+      for (const table of tables) {
         if (
-          !graph.nodes.some((node) => node.id === id && node.kind === "table")
+          !graph.nodes.some(
+            (node) => node.id === table.name && node.kind === "table",
+          )
         ) {
-          issues.push(
-            `Drill ${drill.id} names the table ${id}, which the ${name} does not have.`,
+          add(
+            table.path,
+            `Drill ${drill.id} names the table ${table.name}, which the ${name} does not have.`,
           );
         }
       }
     }
-  }
+  });
 
   const hintCost = problem.hints.reduce((sum, hint) => sum + hint.cost, 0);
 
   if (hintCost > MAX_HINT_COST) {
-    issues.push(
+    add(
+      ["hints"],
       `Revealing every hint costs ${hintCost} points; keep it at ${MAX_HINT_COST} or less.`,
     );
   }
@@ -293,33 +386,54 @@ export const checkPublishable = (input: unknown): PublishCheck => {
     );
 
     if (weights !== 100) {
-      issues.push(`The interview rubric weighs ${weights}, not 100.`);
+      add(
+        ["interview", "rubric"],
+        `The interview rubric weighs ${weights}, not 100.`,
+      );
     }
-    for (const key of duplicates(interview.rubric.map((item) => item.key))) {
-      issues.push(`Two interview rubric items share the key ${key}.`);
+    for (const { value, index } of repeats(
+      interview.rubric.map((item) => item.key),
+    )) {
+      add(
+        ["interview", "rubric", index, "key"],
+        `Two interview rubric items share the key ${value}.`,
+      );
     }
-    for (const id of duplicates(interview.phases.map((phase) => phase.id))) {
-      issues.push(`The interview plans the ${id} phase twice.`);
+    for (const { value, index } of repeats(
+      interview.phases.map((phase) => phase.id),
+    )) {
+      add(
+        ["interview", "phases", index, "id"],
+        `The interview plans the ${value} phase twice.`,
+      );
     }
 
     const order = interview.phases.map((phase) =>
       INTERVIEW_PHASES.indexOf(phase.id),
     );
+    const outOfOrder = order.findIndex(
+      (value, index) => index > 0 && value < order[index - 1]!,
+    );
 
-    if (order.some((value, index) => index > 0 && value < order[index - 1]!)) {
-      issues.push("The interview's phases are out of order.");
+    if (outOfOrder !== -1) {
+      add(
+        ["interview", "phases", outOfOrder],
+        "The interview's phases are out of order.",
+      );
     }
-    for (const id of interview.drillIds) {
+    interview.drillIds.forEach((id, index) => {
       if (!drillIds.includes(id)) {
-        issues.push(
+        add(
+          ["interview", "drillIds", index],
           `The interview runs a drill, ${id}, the problem does not have.`,
         );
       }
-    }
+    });
   }
 
   if (!problem.drills.some((drill) => drill.visibility === "public")) {
-    issues.push(
+    add(
+      ["drills"],
       "A problem needs at least one public drill for solvers to run.",
     );
   }
@@ -330,7 +444,8 @@ export const checkPublishable = (input: unknown): PublishCheck => {
     if (reference.score !== 100) {
       const missed = reference.items.filter((item) => !item.passed);
 
-      issues.push(
+      add(
+        ["reference", "graph"],
         `The reference solution scores ${reference.score}, not 100: ${missed.map((item) => `${item.title} (${item.evidence})`).join("; ")}`,
       );
     }
