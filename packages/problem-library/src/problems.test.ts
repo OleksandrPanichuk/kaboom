@@ -515,7 +515,9 @@ describe("publishing", () => {
         visibility: "hidden",
       })),
       rubric: [
-        ...shortener.rubric,
+        ...shortener.rubric.map((item, index) =>
+          index === 0 ? { ...item, weight: item.weight - 5 } : item,
+        ),
         {
           key: "ghost",
           title: "Ghost",
@@ -1023,6 +1025,19 @@ describe("interviews", () => {
       shortener.interview!.facts[0]!.answer,
     );
     expect(JSON.stringify(shown)).not.toContain("clarifies-requirements");
+  });
+
+  test("refuses a rubric whose weights do not add up to 100", () => {
+    const [first, ...rest] = shortener.rubric;
+    const check = checkPublishable({
+      ...shortener,
+      rubric: [{ ...first!, weight: first!.weight - 20 }, ...rest],
+    });
+
+    expect(check.ok ? [] : check.issues).toContainEqual({
+      path: ["rubric"],
+      message: "The rubric weighs 80, not 100.",
+    });
   });
 
   test("refuses an interview whose rubric, phases or drills do not add up", () => {

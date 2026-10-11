@@ -186,6 +186,15 @@ export const checkPublishable = (input: unknown): PublishCheck => {
     add(["rubric", index, "key"], `Two rubric items share the key ${value}.`);
   }
 
+  const rubricWeight = problem.rubric.reduce(
+    (sum, item) => sum + item.weight,
+    0,
+  );
+
+  if (rubricWeight !== 100) {
+    add(["rubric"], `The rubric weighs ${rubricWeight}, not 100.`);
+  }
+
   problem.rubric.forEach((item, index) => {
     if (
       item.check.check === "chaos-coverage" &&
