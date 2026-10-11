@@ -31,7 +31,9 @@ import { formatMonthly } from "@/features/properties/utils";
 
 import { DatabaseField } from "./DatabaseField";
 import { DerivedField } from "./DerivedField";
+import { DocumentIndexesEditor } from "./DocumentIndexesEditor";
 import { DraftInput } from "./DraftInput";
+import { FieldsEditor } from "./FieldsEditor";
 import { InspectorSection } from "./InspectorSection";
 import { KindAbout } from "./KindAbout";
 import { LintCallout } from "./LintCallout";
@@ -237,6 +239,17 @@ export function NodeInspector({
           />
         ) : null}
       </InspectorSection>
+
+      {node.kind === "collection" ? (
+        <>
+          <InspectorSection title="Fields">
+            <FieldsEditor collection={node} edges={edges} onApply={onApply} />
+          </InspectorSection>
+          <InspectorSection title="Indexes">
+            <DocumentIndexesEditor collection={node} onApply={onApply} />
+          </InspectorSection>
+        </>
+      ) : null}
 
       {node.kind === "table" ? (
         <>

@@ -53,12 +53,14 @@ import { type Flow, mergeFlowNodes, toFlow } from "@/features/canvas/utils";
 
 import { CanvasEdgePath } from "./CanvasEdgePath";
 import { CanvasNodeCard } from "./CanvasNodeCard";
+import { CollectionNodeCard } from "./CollectionNodeCard";
 import { GroupLayer } from "./GroupLayer";
 import { TableNodeCard } from "./TableNodeCard";
 
 const NODE_TYPES: NodeTypes = {
   "design-node": CanvasNodeCard,
   "table-node": TableNodeCard,
+  "collection-node": CollectionNodeCard,
 };
 
 const EDGE_TYPES: EdgeTypes = { "design-edge": CanvasEdgePath };

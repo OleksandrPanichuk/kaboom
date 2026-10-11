@@ -2,7 +2,9 @@ import {
   catalogue,
   createNode,
   type DesignGraph,
+  type DesignGroup,
   type DesignNode,
+  type DesignOp,
   type NodeKind,
 } from "@repo/design";
 
@@ -40,4 +42,24 @@ export const newNode = (graph: DesignGraph, kind: NodeKind): DesignNode => {
   }
 
   return node;
+};
+
+export const homeOps = (graph: DesignGraph, node: DesignNode): DesignOp[] => {
+  if (node.kind !== "collection") return [{ op: "add-node", node }];
+
+  const existing = graph.groups.find(
+    (group) => group.kind === "database" && group.engine === "mongodb",
+  );
+  const database: DesignGroup = existing ?? {
+    id: `database-${shortId()}`,
+    kind: "database",
+    label: "Documents",
+    parentId: null,
+    engine: "mongodb",
+  };
+
+  return [
+    ...(existing ? [] : [{ op: "add-group" as const, group: database }]),
+    { op: "add-node", node: { ...node, groupId: database.id } },
+  ];
 };

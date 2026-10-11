@@ -8,11 +8,27 @@ import {
   TABLE_WIDTH,
 } from "@/features/canvas/constants";
 
-export const nodeWidth = (node: DesignNode): number =>
-  node.kind === "table" ? TABLE_WIDTH : NODE_WIDTH;
+import { documentRows } from "./documentRows";
 
-export const nodeHeight = (node: DesignNode): number =>
-  node.kind === "table"
-    ? TABLE_HEADER_HEIGHT +
+export const nodeWidth = (node: DesignNode): number =>
+  node.kind === "table" || node.kind === "collection"
+    ? TABLE_WIDTH
+    : NODE_WIDTH;
+
+export const nodeHeight = (node: DesignNode): number => {
+  if (node.kind === "table") {
+    return (
+      TABLE_HEADER_HEIGHT +
       Math.max(1, node.props.columns.length) * TABLE_ROW_HEIGHT
-    : NODE_HEIGHT;
+    );
+  }
+
+  if (node.kind === "collection") {
+    return (
+      TABLE_HEADER_HEIGHT +
+      (1 + documentRows(node.props.fields).length) * TABLE_ROW_HEIGHT
+    );
+  }
+
+  return NODE_HEIGHT;
+};

@@ -3,6 +3,7 @@ import {
   engineOf,
   isOneToOne,
   type LintHit,
+  referencesOf,
   relationsOf,
 } from "@repo/design";
 import { MarkerType } from "@xyflow/react";
@@ -107,16 +108,35 @@ export const toFlow = (
     return positionOf(id).x + (node ? nodeWidth(node) / 2 : 0);
   };
 
+  for (const reference of referencesOf(graph)) {
+    foreignKeys.set(reference.from.id, [
+      ...(foreignKeys.get(reference.from.id) ?? []),
+      reference.path.join("."),
+    ]);
+    cardinality.set(
+      reference.edge.id,
+      reference.many ? "one-to-many" : "many-to-one",
+    );
+  }
+
   const nodes = graph.nodes.map((node): CanvasNode => {
     const position = positionOf(node.id);
 
     return {
       id: node.id,
-      type: node.kind === "table" ? "table-node" : "design-node",
+      type:
+        node.kind === "table"
+          ? "table-node"
+          : node.kind === "collection"
+            ? "collection-node"
+            : "design-node",
       position,
       data: {
         node,
         hits: hitsByNode.get(node.id) ?? NO_HITS,
+        ...(node.kind === "collection"
+          ? { foreignKeys: foreignKeys.get(node.id) ?? [] }
+          : {}),
         ...(node.kind === "table"
           ? {
               foreignKeys: foreignKeys.get(node.id) ?? [],
@@ -133,7 +153,7 @@ export const toFlow = (
   const lanes = new Map<string, number>();
 
   for (const edge of graph.edges) {
-    if (edge.kind === "relation") continue;
+    if (edge.kind === "relation" || edge.kind === "reference") continue;
 
     const key = pairKey(edge.from, edge.to);
 
@@ -152,15 +172,36 @@ export const toFlow = (
       markerUnits: "userSpaceOnUse",
     };
     const key = pairKey(edge.from, edge.to);
-    const lane = edge.relation ? 0 : (taken.get(key) ?? 0);
     const relation = edge.relation;
+    const reference = edge.reference;
+    const joined = relation !== undefined || reference !== undefined;
+    const lane = joined ? 0 : (taken.get(key) ?? 0);
 
-    if (!relation) taken.set(key, lane + 1);
+    if (!joined) taken.set(key, lane + 1);
 
     return {
       id: edge.id,
       source: edge.from,
       target: edge.to,
+      ...(reference
+        ? (() => {
+            const rightward =
+              edge.from === edge.to || centreOf(edge.from) <= centreOf(edge.to);
+
+            return {
+              sourceHandle: columnHandle(
+                reference.fromField.join("."),
+                "out",
+                rightward ? "right" : "left",
+              ),
+              targetHandle: columnHandle(
+                "_id",
+                "in",
+                rightward && edge.from !== edge.to ? "left" : "right",
+              ),
+            };
+          })()
+        : {}),
       ...(relation
         ? (() => {
             const rightward =
@@ -194,7 +235,7 @@ export const toFlow = (
       data: {
         edge,
         lane,
-        lanes: relation ? 1 : (lanes.get(key) ?? 1),
+        lanes: joined ? 1 : (lanes.get(key) ?? 1),
         reversed: edge.from > edge.to,
         ...(cardinality.has(edge.id)
           ? { cardinality: cardinality.get(edge.id) }

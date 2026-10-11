@@ -25,6 +25,7 @@ import {
   DesignWriter,
   type DesignWriterState,
   dissolveRegionOps,
+  homeOps,
   newNode,
   orientRelation,
   placementOps,
@@ -193,7 +194,7 @@ export const useDesignEditor = (
     (kind: NodeKind, position: { x: number; y: number }) => {
       const node = newNode(writer.state.graph, kind);
 
-      if (writer.apply([{ op: "add-node", node }]) === null) {
+      if (writer.apply(homeOps(writer.state.graph, node)) === null) {
         moveNodes({ [node.id]: position });
       }
     },
@@ -213,6 +214,29 @@ export const useDesignEditor = (
 
       if (!source || !target) {
         return "One of those nodes is no longer in the design.";
+      }
+
+      if (source.kind === "collection" && target.kind === "collection") {
+        const fromSource = fromHandle?.includes(":out:") ?? false;
+        const handle = fromSource ? fromHandle : toHandle;
+        const field = columnOfHandle(handle);
+
+        if (!field || field === "_id") {
+          return "Draw a reference from a field that holds an id to the other collection.";
+        }
+
+        return {
+          op: "add-edge",
+          edge: {
+            id: `edge-${crypto.randomUUID().slice(0, 8)}`,
+            from: fromSource ? from : to,
+            to: fromSource ? to : from,
+            kind: "reference",
+            label: "",
+            props: EdgePropsSchema.parse({}),
+            reference: { fromField: field.split(".") },
+          },
+        };
       }
 
       if (source.kind === "table" && target.kind === "table") {
