@@ -7,6 +7,7 @@ import { designQuery, designsListKey } from "./designs.queries";
 
 export interface CreateDesignVariables {
   name: string;
+  kind?: "system" | "schema";
 }
 
 export interface RenameDesignVariables {

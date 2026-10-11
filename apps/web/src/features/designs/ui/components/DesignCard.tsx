@@ -1,6 +1,6 @@
 import type { DesignSummaryModel } from "@repo/api-client";
 import { Link } from "@tanstack/react-router";
-import { Ellipsis, Network, Pencil, Trash2 } from "lucide-react";
+import { Database, Ellipsis, Network, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -28,7 +28,11 @@ export function DesignCard({ design }: DesignCardProps) {
   return (
     <li className="group relative flex min-w-0 items-start gap-3 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] transition-colors hover:border-indigo-200 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50">
       <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-indigo-200/60 bg-indigo-50 text-indigo-700">
-        <Network aria-hidden="true" className="size-4" />
+        {design.kind === "schema" ? (
+          <Database aria-hidden="true" className="size-4" />
+        ) : (
+          <Network aria-hidden="true" className="size-4" />
+        )}
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5 py-0.5">
         <Link
@@ -39,6 +43,7 @@ export function DesignCard({ design }: DesignCardProps) {
           {design.name}
         </Link>
         <p className="truncate text-sm text-muted-foreground">
+          {design.kind === "schema" ? "Schema · " : ""}
           <time dateTime={design.updatedAt}>
             {formatEditedAt(design.updatedAt)}
           </time>

@@ -1,5 +1,7 @@
 import type { DesignGraph } from "@repo/design";
 
+import type { DesignKind } from "@/db";
+
 import type { DesignModel, DesignSummaryModel } from "./design.model";
 
 export type DesignLayout = Record<string, { x: number; y: number }>;
@@ -8,6 +10,7 @@ export interface DesignEntity {
   id: string;
   ownerId: string;
   name: string;
+  kind: DesignKind;
   graph: DesignGraph;
   layout: DesignLayout;
   revision: number;
@@ -19,7 +22,7 @@ export interface DesignEntity {
 
 export type DesignSummaryEntity = Pick<
   DesignEntity,
-  "id" | "name" | "revision" | "createdAt" | "updatedAt"
+  "id" | "name" | "kind" | "revision" | "createdAt" | "updatedAt"
 >;
 
 export class DesignEntity {
@@ -27,6 +30,7 @@ export class DesignEntity {
     return {
       id: entity.id,
       name: entity.name,
+      kind: entity.kind,
       graph: entity.graph,
       layout: entity.layout,
       revision: entity.revision,
@@ -43,6 +47,7 @@ export class DesignEntity {
     return {
       id: entity.id,
       name: entity.name,
+      kind: entity.kind,
       revision: entity.revision,
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString(),

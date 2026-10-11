@@ -11,3 +11,9 @@ export {
   MAX_OPS_PER_BATCH,
   type NodePatch,
 } from "./schema";
+export {
+  type DocumentKind,
+  holdsSchema,
+  schemaFamilies,
+  schemaRefusal,
+} from "./validate/schemas";

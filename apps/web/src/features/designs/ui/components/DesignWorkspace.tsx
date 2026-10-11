@@ -95,13 +95,16 @@ export function DesignWorkspace({
   title,
   actions,
   leadingTabs,
-  simulation: withSimulation = true,
+  simulation: simulationRequested = true,
   initialTab = "node",
   transport,
   readOnly = false,
-  track,
+  track: requestedTrack,
 }: DesignWorkspaceProps) {
   const { data: design } = useSuspenseQuery(designQuery(designId));
+  const track: Track | undefined =
+    requestedTrack ?? (design.kind === "schema" ? "data-model" : undefined);
+  const withSimulation = simulationRequested && design.kind !== "schema";
   const editor = useDesignEditor(designId, transport);
   const [selection, setSelection] = useState<Selection>(NOTHING);
   const [regionId, setRegionId] = useState<string | null>(null);
@@ -283,6 +286,7 @@ export function DesignWorkspace({
 
   const inspector = (
     <WorkspaceInspector
+      document={design.kind}
       graph={graph}
       editor={editor}
       nodes={selectedNodes}

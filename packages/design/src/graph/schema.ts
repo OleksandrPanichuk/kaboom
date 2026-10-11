@@ -59,6 +59,14 @@ export const TechnologyRefSchema: z.ZodType<TechnologyRef> = z.strictObject({
   props: z.record(z.string(), z.unknown()).default({}),
 });
 
+export interface SchemaRef {
+  designId: string;
+}
+
+export const SchemaRefSchema: z.ZodType<SchemaRef> = z.strictObject({
+  designId: z.uuid(),
+});
+
 export interface NodeOf<Kind extends NodeKind> {
   id: string;
   kind: Kind;
@@ -67,6 +75,7 @@ export interface NodeOf<Kind extends NodeKind> {
   notes: string;
   props: NodeProps<Kind>;
   technology: TechnologyRef | null;
+  schema?: SchemaRef;
 }
 
 export type DesignNode = { [Kind in NodeKind]: NodeOf<Kind> }[NodeKind];
@@ -84,6 +93,7 @@ const nodeSchemaFor = (definition: NodeKindDefinition) =>
     notes: NotesSchema.default(""),
     props: definition.props.default(definition.props.parse({})),
     technology: TechnologyRefSchema.nullable().default(null),
+    schema: SchemaRefSchema.optional(),
   });
 
 export const DesignNodeSchema = z.discriminatedUnion(

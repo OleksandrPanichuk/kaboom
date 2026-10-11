@@ -4,6 +4,7 @@ import {
   type DesignGraph,
   type DesignGroup,
   type DesignNode,
+  holdsSchema,
   type LintHit,
   opensConnections,
   referencesOf,
@@ -27,7 +28,10 @@ import {
   SelectionInspector,
 } from "@/features/properties";
 
+import { SchemaPicker } from "./SchemaPicker";
+
 interface WorkspaceInspectorProps {
+  document: "system" | "schema";
   graph: DesignGraph;
   editor: DesignEditor;
   nodes: DesignNode[];
@@ -42,6 +46,7 @@ interface WorkspaceInspectorProps {
 }
 
 export function WorkspaceInspector({
+  document,
   graph,
   editor,
   nodes,
@@ -100,6 +105,14 @@ export function WorkspaceInspector({
         edges={graph.edges}
         onApply={editor.apply}
         onDelete={onDelete}
+        schemaField={
+          document === "system" && holdsSchema(node.kind) ? (
+            <SchemaPicker
+              node={node}
+              onPatch={(patch) => editor.updateNode(node.id, patch)}
+            />
+          ) : null
+        }
       />
     );
   }

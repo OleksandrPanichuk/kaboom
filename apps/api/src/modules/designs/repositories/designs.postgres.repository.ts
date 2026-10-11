@@ -2,7 +2,7 @@ import { migrateGraph } from "@repo/design";
 import { and, eq, isNull } from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";
-import { type DesignRow, designsSchema } from "@/db";
+import { type DesignKind, type DesignRow, designsSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
 import { Keyset } from "@/db/pagination";
 
@@ -49,11 +49,13 @@ export class PostgresDesignsRepository extends DesignsRepository {
   public async listOwned(
     ownerId: string,
     page: PageRequest,
+    kind?: DesignKind,
   ): Promise<Page<DesignSummaryEntity>> {
     const rows = await this.db
       .select({
         id: designsSchema.id,
         name: designsSchema.name,
+        kind: designsSchema.kind,
         revision: designsSchema.revision,
         createdAt: designsSchema.createdAt,
         updatedAt: designsSchema.updatedAt,
@@ -62,6 +64,7 @@ export class PostgresDesignsRepository extends DesignsRepository {
       .where(
         and(
           eq(designsSchema.ownerId, ownerId),
+          kind ? eq(designsSchema.kind, kind) : undefined,
           NEWEST_FIRST.after(page.cursor),
         ),
       )

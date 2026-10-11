@@ -14,7 +14,7 @@ import {
   type NodePatch,
 } from "@repo/design";
 import { ChevronRight, Database as DatabaseIcon, Trash2 } from "lucide-react";
-import { useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/Field";
@@ -60,6 +60,7 @@ interface NodeInspectorProps {
   edges?: readonly DesignEdge[];
   onApply?: (ops: DesignOp[]) => CommitResult;
   onDelete: () => void;
+  schemaField?: ReactNode;
 }
 
 export function NodeInspector({
@@ -75,6 +76,7 @@ export function NodeInspector({
   edges = [],
   onApply = () => null,
   onDelete,
+  schemaField = null,
 }: NodeInspectorProps) {
   const id = useId();
   const [labelError, setLabelError] = useState<string | null>(null);
@@ -314,6 +316,10 @@ export function NodeInspector({
             />
           </InspectorSection>
         </>
+      ) : null}
+
+      {schemaField ? (
+        <InspectorSection title="Schema">{schemaField}</InspectorSection>
       ) : null}
 
       <TechnologySection node={node} onPatch={onPatch} />

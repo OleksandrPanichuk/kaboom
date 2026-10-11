@@ -16,6 +16,14 @@ export const designsQuery = infiniteQueryOptions({
   getNextPageParam: (page) => page.nextCursor,
 });
 
+export const schemaDesignsQuery = queryOptions({
+  queryKey: [...designsListKey, "schema"],
+  queryFn: async () =>
+    unwrap(
+      await api.api.designs.get({ query: { kind: "schema", limit: 100 } }),
+    ),
+});
+
 export const designQuery = (id: string) =>
   queryOptions({
     queryKey: ["designs", "detail", id],

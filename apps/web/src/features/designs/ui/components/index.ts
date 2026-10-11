@@ -10,4 +10,5 @@ export * from "./DesignWorkspace";
 export * from "./PanelPlaceholder";
 export * from "./RenameDesignDialog";
 export * from "./ReplayBar";
+export * from "./SchemaPicker";
 export * from "./WorkspaceInspector";

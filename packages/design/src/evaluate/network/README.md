@@ -43,11 +43,11 @@ Clients and external APIs are the internet themselves and are left out.
 
 ## Findings
 
-| Kind              | When                                                                              |
-| ----------------- | --------------------------------------------------------------------------------- |
-| `blocked-path`    | a connection is blocked                                                           |
-| `exposed-store`   | a stateful node, other than an entry point, is reachable from the internet        |
-| `exposed-service` | a node that is neither stateful nor an entry point is reachable from the internet |
+| Kind              | When                                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------- |
+| `blocked-path`    | a connection is blocked                                                                              |
+| `exposed-store`   | a stateful node, other than an entry point, is reachable from the internet                           |
+| `exposed-service` | a node that is neither stateful nor an entry point is reachable from the internet                    |
 | `open-store`      | a stateful node that serves traffic in a VPC has no security group, or one that admits the whole VPC |
 
 Entry points are clients, DNS, CDNs, load balancers, API gateways, rate

@@ -6,12 +6,29 @@ import { createDesignMutation } from "@/features/designs/api";
 import { DesignNameDialog } from "./DesignNameDialog";
 
 interface CreateDesignDialogProps {
+  kind: "system" | "schema";
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (design: DesignModel) => void;
 }
 
+const COPY = {
+  system: {
+    title: "New design",
+    description:
+      "Name the system you are about to design. You can change it later.",
+    submit: "Create design",
+  },
+  schema: {
+    title: "New schema",
+    description:
+      "A schema holds databases and their tables, collections or DynamoDB tables. A database in any of your systems can name it.",
+    submit: "Create schema",
+  },
+} as const;
+
 export function CreateDesignDialog({
+  kind,
   open,
   onOpenChange,
   onCreated,
@@ -27,14 +44,16 @@ export function CreateDesignDialog({
     <DesignNameDialog
       open={open}
       onOpenChange={changeOpen}
-      title="New design"
-      description="Name the system you are about to design. You can change it later."
-      submitLabel="Create design"
+      title={COPY[kind].title}
+      description={COPY[kind].description}
+      submitLabel={COPY[kind].submit}
       pendingLabel="Creating…"
       defaultName=""
       pending={create.isPending}
       error={create.error}
-      onSubmit={(name) => create.mutate({ name }, { onSuccess: onCreated })}
+      onSubmit={(name) =>
+        create.mutate({ name, kind }, { onSuccess: onCreated })
+      }
     />
   );
 }

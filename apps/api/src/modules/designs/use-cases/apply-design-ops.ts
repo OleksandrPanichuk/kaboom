@@ -1,4 +1,4 @@
-import { applyOps, type DesignOp } from "@repo/design";
+import { applyOps, type DesignOp, schemaRefusal } from "@repo/design";
 
 import { makeRepository } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
@@ -36,6 +36,42 @@ export class ApplyDesignOpsUseCase extends UseCase<Options, Result> {
 
   private readonly revisions = makeRepository(DesignRevisionsRepository);
 
+  private async assertSchemas(
+    ownerId: string,
+    ops: readonly DesignOp[],
+    graph: DesignEntity["graph"],
+  ): Promise<void> {
+    for (const [index, op] of ops.entries()) {
+      const target =
+        op.op === "add-node"
+          ? { id: op.node.id, named: op.node.schema }
+          : op.op === "update-node"
+            ? { id: op.id, named: op.patch.schema }
+            : null;
+
+      if (!target?.named) continue;
+
+      const { id, named } = target;
+      const node = graph.nodes.find((candidate) => candidate.id === id);
+      const schema = await this.designs.findOwned(named.designId, ownerId);
+      const refusal =
+        schema?.kind !== "schema"
+          ? "No schema design of yours has that id"
+          : node
+            ? schemaRefusal(node.kind, schema.graph)
+            : null;
+
+      if (refusal) {
+        throw new DesignOpRejectedError({
+          ok: false,
+          index,
+          reason: "invalid-op",
+          message: refusal,
+        });
+      }
+    }
+  }
+
   public execute({
     ownerId,
     id,
@@ -56,9 +92,11 @@ export class ApplyDesignOpsUseCase extends UseCase<Options, Result> {
         throw new DesignRevisionConflictError(design.revision);
       }
 
-      const result = applyOps(design.graph, ops);
+      const result = applyOps(design.graph, ops, { document: design.kind });
 
       if (!result.ok) throw new DesignOpRejectedError(result);
+
+      await this.assertSchemas(ownerId, ops, result.graph);
 
       const number = design.revision + 1;
       const graphHash = hashGraph(result.graph);
