@@ -16,6 +16,7 @@
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "llm:smoke": "bun scripts/llm-smoke.ts",
+    "user:role": "bun scripts/set-role.ts",
     "eval": "bun test ./evals/interviewer.eval.ts --timeout 180000"
   },
   "dependencies": {

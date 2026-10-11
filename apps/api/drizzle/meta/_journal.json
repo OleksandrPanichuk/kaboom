@@ -169,6 +169,13 @@
       "when": 1791729528603,
       "tag": "0023_submissions_all_passed",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791734350152,
+      "tag": "0024_user_roles",
+      "breakpoints": true
     }
   ]
 }

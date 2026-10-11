@@ -19,6 +19,7 @@ export class UserEntity {
       name: user.name,
       email: user.email,
       emailVerified: UserEntity.isEmailVerified(user),
+      role: user.role,
     };
   }
 

@@ -1,5 +1,6 @@
 import { make, makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
+import type { UserRole } from "@/db";
 import { Cache } from "@/platform/cache";
 
 import { type UpdateUserData, UserLifecycle, UsersRepository } from "./ports";
@@ -67,6 +68,14 @@ export class UsersService extends Service {
   public async markEmailVerified(id: string, verifiedAt: Date): Promise<void> {
     await this.repo.markEmailVerified(id, verifiedAt);
     await this.invalidate(id);
+  }
+
+  public async setRole(id: string, role: UserRole): Promise<UserEntity> {
+    const user = await this.repo.setRole(id, role);
+
+    await this.invalidate(id);
+
+    return user;
   }
 
   public invalidate(id: string): Promise<void> {
