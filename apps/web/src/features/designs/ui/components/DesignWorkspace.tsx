@@ -303,6 +303,11 @@ export function DesignWorkspace({
           )
           .map((node) => labelOf(node.id))}
         onRename={(label) => editor.renameRegion(region.id, label)}
+        onEngineChange={(engine) =>
+          editor.apply([
+            { op: "update-group", id: region.id, patch: { engine } },
+          ])
+        }
         onDissolve={() => {
           editor.dissolveRegion(region.id);
           setRegionId(null);
@@ -337,6 +342,7 @@ export function DesignWorkspace({
         fromLabel={labelOf(onlyEdge.from)}
         toLabel={labelOf(onlyEdge.to)}
         columns={relationColumns(graph, onlyEdge.id)}
+        onApply={editor.apply}
         onDelete={removeSelection}
       />
     ) : selectedNodes.length + selectedEdges.length > 1 ? (

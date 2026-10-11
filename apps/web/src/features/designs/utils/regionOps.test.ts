@@ -9,6 +9,7 @@ import {
 import { describe, expect, test } from "bun:test";
 
 import {
+  NEW_DATABASE,
   NEW_PRIVATE_SUBNET,
   NEW_PUBLIC_SUBNET,
   NEW_REGION,
@@ -176,5 +177,29 @@ describe("subnet placement", () => {
 
     expect(next.groups).toEqual([]);
     expect(next.nodes.map((node) => node.groupId)).toEqual([null, null, null]);
+  });
+});
+
+describe("databases", () => {
+  test("puts a table into a new database of the engine asked for, and back out", () => {
+    const start: DesignGraph = {
+      ...emptyGraph(),
+      nodes: [createNode("table", { id: "orders" })],
+    };
+    const placed = run(
+      start,
+      placementOps(start, ["orders"], `${NEW_DATABASE}mysql`),
+    );
+    const database = placed.groups[0]!;
+
+    expect(database).toMatchObject({
+      kind: "database",
+      engine: "mysql",
+      label: "Database 1",
+    });
+    expect(placed.nodes[0]!.groupId).toBe(database.id);
+    expect(run(placed, placementOps(placed, ["orders"], null)).groups).toEqual(
+      [],
+    );
   });
 });

@@ -75,7 +75,7 @@ function CanvasEdgePathComponent(props: EdgeProps<CanvasEdge>) {
               transform: `translate(${props.targetPosition === Position.Left ? "-100%" : "0"}, -100%) translate(${props.targetX + (props.targetPosition === Position.Left ? -8 : 8)}px, ${props.targetY - 2}px)`,
             }}
           >
-            1
+            {data.optional ? "0..1" : "1"}
           </span>
         </EdgeLabelRenderer>
       ) : null}

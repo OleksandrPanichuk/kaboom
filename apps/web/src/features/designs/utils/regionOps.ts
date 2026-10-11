@@ -2,11 +2,14 @@ import {
   type DesignGraph,
   type DesignGroup,
   type DesignOp,
+  type Engine,
+  ENGINES,
   GROUP_KIND_LABELS,
   type GroupKind,
 } from "@repo/design";
 
 import {
+  NEW_DATABASE,
   NEW_PRIVATE_SUBNET,
   NEW_PUBLIC_SUBNET,
   NEW_REGION,
@@ -35,12 +38,17 @@ const newGroup = (
   graph: DesignGraph,
   kind: GroupKind,
   parentId: string | null,
+  engine?: Engine,
 ): DesignGroup => ({
   id: `${kind}-${crypto.randomUUID().slice(0, 8)}`,
   kind,
   label: nextLabel(graph, kind),
   parentId,
+  ...(engine ? { engine } : {}),
 });
+
+export const databasesOf = (graph: DesignGraph): DesignGroup[] =>
+  graph.groups.filter((group) => group.kind === "database");
 
 export const emptiedRegionOps = (
   graph: DesignGraph,
@@ -83,6 +91,16 @@ const targetGroup = (
   graph: DesignGraph,
   target: RegionTarget,
 ): { created: DesignGroup[]; groupId: string | null } => {
+  if (target?.startsWith(NEW_DATABASE)) {
+    const engine = target.slice(NEW_DATABASE.length);
+
+    if ((ENGINES as readonly string[]).includes(engine)) {
+      const database = newGroup(graph, "database", null, engine as Engine);
+
+      return { created: [database], groupId: database.id };
+    }
+  }
+
   if (target === NEW_REGION) {
     const region = newGroup(graph, "region", null);
 

@@ -191,6 +191,28 @@ describe("toFlow with tables", () => {
     ]);
   });
 
+  test("dashes a relation whose foreign key may be empty, and knows each table's engine", () => {
+    const optional = graph();
+
+    optional.nodes[1]!.props.columns[1]!.nullable = true;
+
+    const { nodes, edges } = toFlow(optional, {});
+
+    expect(
+      edges.map((edge) => [
+        edge.data?.optional ?? false,
+        edge.style?.strokeDasharray,
+      ]),
+    ).toEqual([
+      [true, "5 4"],
+      [false, undefined],
+    ]);
+    expect(nodes.map((node) => node.data.engine)).toEqual([
+      "postgres",
+      "postgres",
+    ]);
+  });
+
   test("draws a one-to-one relation with an arrow at both ends", () => {
     const { edges } = toFlow(graph(), {});
 

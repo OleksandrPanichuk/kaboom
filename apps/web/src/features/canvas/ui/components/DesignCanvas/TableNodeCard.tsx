@@ -1,7 +1,14 @@
-import { Handle, type NodeProps, Position, useConnection } from "@xyflow/react";
+import { isSqlEngine, writeType } from "@repo/design";
+import {
+  Handle,
+  type NodeProps,
+  Position,
+  useConnection,
+  useUpdateNodeInternals,
+} from "@xyflow/react";
 import { cn } from "cn";
 import { Info, KeyRound, Link2, Table2, TriangleAlert } from "lucide-react";
-import { Fragment, memo } from "react";
+import { Fragment, memo, useEffect } from "react";
 
 import { BaseNode } from "@/components/flow/BaseNode";
 import {
@@ -15,9 +22,18 @@ import { columnHandle } from "@/features/canvas/utils";
 const HANDLE =
   "!size-2.5 !rounded-full !border-2 !border-white !bg-violet-500 shadow-sm transition-opacity";
 
-function TableNodeCardComponent({ data }: NodeProps<CanvasNode>) {
+function TableNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
   const { node, hits } = data;
   const connecting = useConnection((connection) => connection.inProgress);
+  const updateNodeInternals = useUpdateNodeInternals();
+  const order =
+    node.kind === "table"
+      ? node.props.columns.map((column) => column.id).join("|")
+      : "";
+
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, order, updateNodeInternals]);
   const handleClass = cn(
     HANDLE,
     connecting
@@ -122,8 +138,21 @@ function TableNodeCardComponent({ data }: NodeProps<CanvasNode>) {
                   unique
                 </span>
               ) : null}
+              {column.generated?.kind === "identity" ||
+              column.default?.kind === "uuid" ? (
+                <span
+                  title="Fills itself in"
+                  className="shrink-0 rounded bg-sky-50 px-1 text-[10px] font-medium text-sky-700"
+                >
+                  auto
+                </span>
+              ) : null}
               <span className="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground">
-                {column.type}
+                {column.type !== "enum" &&
+                data.engine &&
+                isSqlEngine(data.engine)
+                  ? writeType(data.engine, column)
+                  : column.type}
               </span>
             </li>
           ))}

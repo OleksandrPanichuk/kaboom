@@ -1,6 +1,7 @@
 import type { DesignGraph } from "../graph";
 import type { LintHit } from "./define-lint";
 import {
+  crossDatabaseRelation,
   deadEndNode,
   dualWrite,
   duplicateSchedule,
@@ -34,6 +35,7 @@ export const lints = {
   [setNullNotNullable.id]: setNullNotNullable,
   [unindexedForeignKey.id]: unindexedForeignKey,
   [engineUnsupported.id]: engineUnsupported,
+  [crossDatabaseRelation.id]: crossDatabaseRelation,
 } as const;
 
 export type LintId = keyof typeof lints;

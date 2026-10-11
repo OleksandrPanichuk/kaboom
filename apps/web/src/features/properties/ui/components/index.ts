@@ -1,4 +1,6 @@
 export * from "./ChecksPanel";
+export * from "./ColumnDetails";
+export * from "./DatabaseField";
 export * from "./DerivedField";
 export * from "./DraftInput";
 export * from "./EdgeInspector";
@@ -10,6 +12,7 @@ export * from "./LintCallout";
 export * from "./NodeInspector";
 export * from "./PropFieldControl";
 export * from "./RegionField";
+export * from "./RelationSection";
 export * from "./SelectionInspector";
 export * from "./SubnetField";
 export * from "./TableColumnsEditor";

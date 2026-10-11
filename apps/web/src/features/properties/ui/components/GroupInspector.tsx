@@ -1,5 +1,9 @@
 import {
   type DesignGroup,
+  type Engine,
+  ENGINE_FAMILIES,
+  ENGINE_LABELS,
+  ENGINES,
   GROUP_KIND_LABELS,
   type GroupKind,
 } from "@repo/design";
@@ -15,7 +19,19 @@ import {
 import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { Field, FieldError, FieldLabel } from "@/components/ui/Field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/Field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 
 import { DraftInput } from "./DraftInput";
 import { InspectorSection } from "./InspectorSection";
@@ -46,6 +62,7 @@ interface GroupInspectorProps {
   group: DesignGroup;
   members: string[];
   onRename: (label: string) => string | null;
+  onEngineChange?: (engine: Engine) => string | null;
   onDissolve: () => void;
 }
 
@@ -53,6 +70,7 @@ export function GroupInspector({
   group,
   members,
   onRename,
+  onEngineChange = () => null,
   onDissolve,
 }: GroupInspectorProps) {
   const kind = GROUP_KIND_LABELS[group.kind];
@@ -60,6 +78,12 @@ export function GroupInspector({
   const Icon = ICONS[group.kind];
   const id = useId();
   const [error, setError] = useState<string | null>(null);
+  const [engineError, setEngineError] = useState<string | null>(null);
+  const engines = group.engine
+    ? ENGINES.filter(
+        (engine) => ENGINE_FAMILIES[engine] === ENGINE_FAMILIES[group.engine!],
+      )
+    : [];
 
   return (
     <div className="flex flex-col">
@@ -95,6 +119,36 @@ export function GroupInspector({
           />
           {error ? <FieldError>{error}</FieldError> : null}
         </Field>
+        {group.engine ? (
+          <Field data-invalid={engineError ? true : undefined}>
+            <FieldLabel htmlFor={`${id}-engine`}>Engine</FieldLabel>
+            <Select
+              value={group.engine}
+              items={engines.map((engine) => ({
+                value: engine,
+                label: ENGINE_LABELS[engine],
+              }))}
+              onValueChange={(next) => {
+                if (next) setEngineError(onEngineChange(next));
+              }}
+            >
+              <SelectTrigger id={`${id}-engine`} className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {engines.map((engine) => (
+                  <SelectItem key={engine} value={engine}>
+                    {ENGINE_LABELS[engine]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldDescription className="text-xs">
+              Checks name what the new engine lacks.
+            </FieldDescription>
+            {engineError ? <FieldError>{engineError}</FieldError> : null}
+          </Field>
+        ) : null}
         <div className="flex flex-col gap-1">
           <p className="text-xs font-medium text-muted-foreground">Nodes</p>
           <ul className="flex flex-col gap-0.5 text-sm">

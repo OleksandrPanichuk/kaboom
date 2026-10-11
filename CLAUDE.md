@@ -831,6 +831,10 @@ as `CREATE TYPE`, identities as `GENERATED … AS IDENTITY`,
 `AUTO_INCREMENT` or SQLite's `INTEGER PRIMARY KEY AUTOINCREMENT`, defaults,
 checks, MySQL's `ON UPDATE CURRENT_TIMESTAMP`, and SQLite's foreign keys
 inside `CREATE TABLE`, since it cannot add them afterwards.
+A foreign key between two databases cannot exist, but moving a table out
+must stay possible, so the `cross-database-relation` lint names it rather
+than `applyOps` refusing it, and `toDDL` writes only the keys inside each
+database.
 
 What a table can answer lives in `data-model/tables.ts`: its primary key,
 whether a lookup's columns lead a key or an index (`indexedBy`), whether a
