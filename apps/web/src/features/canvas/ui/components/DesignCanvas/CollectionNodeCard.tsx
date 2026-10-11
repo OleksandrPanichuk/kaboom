@@ -1,7 +1,13 @@
-import { Handle, type NodeProps, Position, useConnection } from "@xyflow/react";
+import {
+  Handle,
+  type NodeProps,
+  Position,
+  useConnection,
+  useUpdateNodeInternals,
+} from "@xyflow/react";
 import { cn } from "cn";
 import { FileJson, Info, KeyRound, Link2, TriangleAlert } from "lucide-react";
-import { Fragment, memo } from "react";
+import { Fragment, memo, useEffect } from "react";
 
 import { BaseNode } from "@/components/flow/BaseNode";
 import {
@@ -22,9 +28,20 @@ const HANDLE =
 
 const SIDES = ["left", "right"] as const;
 
-function CollectionNodeCardComponent({ data }: NodeProps<CanvasNode>) {
+function CollectionNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
   const { node, hits } = data;
   const connecting = useConnection((connection) => connection.inProgress);
+  const updateNodeInternals = useUpdateNodeInternals();
+  const order =
+    node.kind === "collection"
+      ? documentRows(node.props.fields)
+          .map((row) => row.path.join("."))
+          .join("|")
+      : "";
+
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, order, updateNodeInternals]);
   const handleClass = cn(
     HANDLE,
     connecting
