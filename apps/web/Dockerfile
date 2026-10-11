@@ -9,6 +9,8 @@ COPY apps/web/package.json apps/web/
 COPY apps/api/package.json apps/api/
 COPY packages/api-client/package.json packages/api-client/
 COPY packages/design/package.json packages/design/
+COPY packages/scoring/package.json packages/scoring/
+COPY packages/problem-library/package.json packages/problem-library/
 COPY packages/eslint-config/package.json packages/eslint-config/
 COPY packages/typescript-config/package.json packages/typescript-config/
 COPY cli-tools/api-codegen/package.json cli-tools/api-codegen/

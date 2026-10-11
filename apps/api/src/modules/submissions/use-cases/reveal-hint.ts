@@ -1,4 +1,4 @@
-import { type RevealedHint, revealedHints } from "@repo/design";
+import { type RevealedHint, revealedHints } from "@repo/scoring";
 
 import { makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";

@@ -1,4 +1,4 @@
-import { OFFICIAL_PROBLEMS } from "@repo/design/library";
+import { OFFICIAL_PROBLEMS } from "@repo/problem-library";
 import { createGuest, createUser } from "@tests/helpers";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { eq } from "drizzle-orm";

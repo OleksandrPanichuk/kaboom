@@ -1,4 +1,4 @@
-import type { InterviewRubricItem } from "@repo/design";
+import type { InterviewRubricItem } from "@repo/scoring";
 import z from "zod";
 
 import type { ReviewItem } from "../review.entity";

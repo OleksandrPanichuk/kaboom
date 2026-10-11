@@ -1,4 +1,8 @@
-import { INTERVIEW_DIMENSIONS, TEST_STATUSES, TEST_SUITES } from "@repo/design";
+import {
+  INTERVIEW_DIMENSIONS,
+  TEST_STATUSES,
+  TEST_SUITES,
+} from "@repo/scoring";
 import { t } from "elysia";
 
 import { SUBMISSION_REVIEW_STATUSES } from "@/db";

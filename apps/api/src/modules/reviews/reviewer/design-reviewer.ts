@@ -1,11 +1,11 @@
+import type { Track } from "@repo/design";
 import {
   type DrillScore,
   type ItemScore,
   type ProblemContent,
   type ReviewDimension,
-  type Track,
   TRACK_DEFINITIONS,
-} from "@repo/design";
+} from "@repo/scoring";
 import z from "zod";
 
 import { getEnv } from "@/configs";

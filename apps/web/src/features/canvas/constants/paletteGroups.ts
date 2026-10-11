@@ -1,9 +1,5 @@
-import {
-  type NodeKind,
-  type Track,
-  TRACK_DEFINITIONS,
-  TRACKS,
-} from "@repo/design";
+import { type NodeKind, type Track, TRACKS } from "@repo/design";
+import { TRACK_DEFINITIONS } from "@repo/scoring";
 
 export interface PaletteGroup {
   track: Track;

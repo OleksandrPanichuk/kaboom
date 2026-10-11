@@ -1,4 +1,4 @@
-import { penalised } from "@repo/design";
+import { penalised } from "@repo/scoring";
 
 import { DESIGN_REVIEW_WEIGHT } from "./submissions.constants";
 

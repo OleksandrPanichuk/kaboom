@@ -1,4 +1,5 @@
-import type { ProblemContent, Track } from "@repo/design";
+import type { Track } from "@repo/design";
+import type { ProblemContent } from "@repo/scoring";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";

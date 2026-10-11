@@ -1,4 +1,4 @@
-import type { DrillScore, ItemScore } from "@repo/design";
+import type { DrillScore, ItemScore } from "@repo/scoring";
 
 import type { EvidenceNoteRow } from "@/db";
 import type { InterviewMessageEntity } from "@/modules/interviews";

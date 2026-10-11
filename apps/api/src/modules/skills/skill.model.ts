@@ -1,4 +1,5 @@
-import { INTERVIEW_DIMENSIONS, TRACKS } from "@repo/design";
+import { TRACKS } from "@repo/design";
+import { INTERVIEW_DIMENSIONS } from "@repo/scoring";
 import { t } from "elysia";
 
 export const SkillSummaryModel = t.Object({

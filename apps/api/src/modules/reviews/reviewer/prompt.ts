@@ -1,4 +1,5 @@
-import { type Track, TRACK_DEFINITIONS } from "@repo/design";
+import type { Track } from "@repo/design";
+import { TRACK_DEFINITIONS } from "@repo/scoring";
 
 import type { PinnedProblem } from "@/modules/interviews";
 

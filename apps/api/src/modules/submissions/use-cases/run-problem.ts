@@ -1,4 +1,4 @@
-import type { TestReport } from "@repo/design";
+import type { TestReport } from "@repo/scoring";
 
 import { make, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";

@@ -4,7 +4,7 @@ import type {
   ItemScore,
   RevealedHint,
   TestReport,
-} from "@repo/design";
+} from "@repo/scoring";
 
 import type { SubmissionReviewStatus } from "@/db";
 

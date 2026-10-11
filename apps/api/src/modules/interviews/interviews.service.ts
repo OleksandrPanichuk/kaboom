@@ -1,4 +1,4 @@
-import type { InterviewContent, ProblemContent } from "@repo/design";
+import type { InterviewContent, ProblemContent } from "@repo/scoring";
 
 import { make, makeRepository, makeService } from "@/core/registry";
 import { Service } from "@/core/service";

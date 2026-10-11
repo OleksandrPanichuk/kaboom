@@ -1,4 +1,4 @@
-import { INTERVIEW_PHASES } from "@repo/design";
+import { INTERVIEW_PHASES } from "@repo/scoring";
 import z from "zod";
 
 import { makeRepository, makeService } from "@/core/registry";

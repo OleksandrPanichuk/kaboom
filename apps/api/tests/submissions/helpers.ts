@@ -1,5 +1,5 @@
 import type { DesignOp } from "@repo/design";
-import { OFFICIAL_PROBLEMS } from "@repo/design/library";
+import { OFFICIAL_PROBLEMS } from "@repo/problem-library";
 import type { TestClient } from "@tests/helpers";
 import { expect } from "bun:test";
 

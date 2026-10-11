@@ -1,9 +1,8 @@
 import { describe, expect, test } from "bun:test";
 
+import { edge, graph, node } from "../build";
+import { NODE_KINDS } from "../catalogue";
 import { PRICES } from "../pricing";
-import { OFFICIAL_PROBLEMS } from "../problems/library";
-import { edge, graph, node } from "../problems/library/build";
-import { scoreSubmission } from "../scoring/score";
 import { costOf, nodeCost } from "./cost";
 
 describe("costOf", () => {
@@ -115,54 +114,15 @@ describe("found in review", () => {
   });
 });
 
-describe("a budget on a problem", () => {
-  const shortener = OFFICIAL_PROBLEMS.find(
-    (problem) => problem.slug === "url-shortener",
-  )!;
-  const budget = (design: ReturnType<typeof graph>) =>
-    scoreSubmission(shortener, design).items.find(
-      (item) => item.key === "fits-the-budget",
-    )!;
-
-  test("is met by the reference", () => {
-    expect(budget(shortener.reference.graph).passed).toBe(true);
-  });
-
-  test("names what costs the most when it is blown", () => {
-    const lavish = {
-      ...shortener.reference.graph,
-      nodes: shortener.reference.graph.nodes.map((item) =>
-        item.id === "api"
-          ? { ...item, props: { ...item.props, replicas: 100 } }
-          : item,
-      ),
-    } as typeof shortener.reference.graph;
-    const item = budget(lavish);
-
-    expect(item.passed).toBe(false);
-    expect(item.evidence).toContain("over the $4,000 budget");
-    expect(item.evidence).toContain("Shortener API $5,600");
-  });
-
-  test("waits for a design that works", () => {
-    const empty = graph(
-      [node("users", "client", "Users", { rps: 10_000 })],
-      [],
-    );
-
-    expect(budget(empty)).toMatchObject({ passed: false });
-    expect(budget(empty).evidence).toContain("once “A normal day” passes");
-  });
-});
-
 describe("prices", () => {
   test("cost a design with every kind without failing", () => {
-    for (const problem of OFFICIAL_PROBLEMS) {
-      const estimate = costOf(problem.reference.graph);
+    const estimate = costOf(
+      graph(NODE_KINDS.map((kind) => node(kind, kind, kind))),
+    );
 
-      expect(Number.isFinite(estimate.monthlyUsd)).toBe(true);
-      expect(estimate.nodes.every((item) => item.monthlyUsd >= 0)).toBe(true);
-    }
+    expect(Number.isFinite(estimate.monthlyUsd)).toBe(true);
+    expect(estimate.nodes).toHaveLength(NODE_KINDS.length);
+    expect(estimate.nodes.every((item) => item.monthlyUsd >= 0)).toBe(true);
   });
 
   test("charge DNS for its zone and a client nothing", () => {

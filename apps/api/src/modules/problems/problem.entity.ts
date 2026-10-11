@@ -1,9 +1,9 @@
+import type { Track } from "@repo/design";
 import {
   type ProblemContent,
   type PublicProblem,
   publicProblem,
-  type Track,
-} from "@repo/design";
+} from "@repo/scoring";
 
 import type { ProblemDifficulty, ProblemSource, ProblemStatus } from "@/db";
 

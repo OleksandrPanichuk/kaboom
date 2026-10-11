@@ -24,6 +24,8 @@
     "@elysia/cors": "^1.4.2",
     "@elysiajs/openapi": "1.4.16",
     "@repo/design": "*",
+    "@repo/problem-library": "*",
+    "@repo/scoring": "*",
     "@sentry/bun": "^11.0.0",
     "bullmq": "^6.3.4",
     "drizzle-orm": "^0.45.2",

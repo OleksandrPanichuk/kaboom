@@ -1,4 +1,4 @@
-import type { InterviewPhase } from "@repo/design";
+import type { InterviewPhase } from "@repo/scoring";
 import z from "zod";
 
 import type { LlmTool } from "@/platform/llm";

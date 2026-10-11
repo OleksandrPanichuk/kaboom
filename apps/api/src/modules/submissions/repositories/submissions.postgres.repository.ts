@@ -1,9 +1,5 @@
-import type {
-  DesignGraph,
-  DrillScore,
-  ItemScore,
-  TestReport,
-} from "@repo/design";
+import type { DesignGraph } from "@repo/design";
+import type { DrillScore, ItemScore, TestReport } from "@repo/scoring";
 import { and, count, desc, eq, gte, isNotNull, ne, sql } from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";

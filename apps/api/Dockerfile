@@ -9,6 +9,8 @@ COPY apps/api/package.json apps/api/
 COPY packages/eslint-config/package.json packages/eslint-config/
 COPY packages/typescript-config/package.json packages/typescript-config/
 COPY packages/design/package.json packages/design/
+COPY packages/scoring/package.json packages/scoring/
+COPY packages/problem-library/package.json packages/problem-library/
 RUN bun install --frozen-lockfile --linker hoisted --filter '@repo/api...'
 
 FROM base AS dev
@@ -18,6 +20,8 @@ COPY package.json turbo.json ./
 COPY packages/typescript-config packages/typescript-config
 COPY packages/eslint-config packages/eslint-config
 COPY packages/design packages/design
+COPY packages/scoring packages/scoring
+COPY packages/problem-library packages/problem-library
 COPY apps/api apps/api
 
 WORKDIR /app/apps/api

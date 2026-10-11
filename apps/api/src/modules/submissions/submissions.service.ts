@@ -1,4 +1,4 @@
-import { hintPenalty, revealedHints } from "@repo/design";
+import { hintPenalty, revealedHints } from "@repo/scoring";
 
 import { makeRepository, makeService } from "@/core/registry";
 import { Service } from "@/core/service";

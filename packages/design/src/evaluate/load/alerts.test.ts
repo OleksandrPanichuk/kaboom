@@ -1,9 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import { runLints } from "../../lints";
-import { latencyRegression } from "../../problems/library/latency-regression";
-import { ProblemContentSchema } from "../../problems/schema";
-import { scoreSubmission } from "../../scoring/score";
 import { evaluateLoad } from "./evaluate-load";
 import { edge, graph, node } from "./fixtures";
 
@@ -69,30 +66,5 @@ describe("alerts", () => {
     });
 
     expect(result.alerts[0]?.firedAt).toBeNull();
-  });
-});
-
-describe("a watches check", () => {
-  test("fails when the alert's target is not scraped, since it could never fire", () => {
-    const content = ProblemContentSchema.parse(latencyRegression);
-    const unscraped = {
-      ...content.reference.graph,
-      edges: content.reference.graph.edges.filter(
-        (item) => item.kind !== "scrapes",
-      ),
-    };
-    const item = (design: typeof unscraped) =>
-      scoreSubmission(content, design).items.find(
-        (entry) => entry.key === "pages-on-latency",
-      );
-
-    expect(item(content.reference.graph)?.passed).toBe(true);
-    expect(item(unscraped)).toMatchObject({ passed: false });
-    expect(item(unscraped)?.evidence).toContain("nothing scrapes");
-    expect(
-      scoreSubmission(content, unscraped).items.find(
-        (entry) => entry.key === "pages-within-minutes",
-      )?.passed,
-    ).toBe(false);
   });
 });

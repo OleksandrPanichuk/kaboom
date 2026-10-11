@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import { NODE_KINDS } from "../catalogue";
-import { OFFICIAL_PROBLEMS } from "../problems/library";
 import { HANDBOOK_ARTICLES } from "./articles";
 
 describe("handbook", () => {
@@ -13,12 +12,9 @@ describe("handbook", () => {
   });
 
   test.each(HANDBOOK_ARTICLES.map((article) => [article.slug, article]))(
-    "%s names kinds and problems that exist",
+    "%s names kinds that exist",
     (_, article) => {
-      const problems = OFFICIAL_PROBLEMS.map((problem) => problem.slug);
-
       for (const kind of article.kinds) expect(NODE_KINDS).toContain(kind);
-      for (const slug of article.problems) expect(problems).toContain(slug);
       expect(article.summary.length).toBeLessThanOrEqual(120);
     },
   );

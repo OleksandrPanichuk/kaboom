@@ -1,5 +1,5 @@
-import type { InterviewDimension } from "@repo/design";
-import { OFFICIAL_PROBLEMS } from "@repo/design/library";
+import { OFFICIAL_PROBLEMS } from "@repo/problem-library";
+import type { InterviewDimension } from "@repo/scoring";
 import { describe, expect, test } from "bun:test";
 
 import {
