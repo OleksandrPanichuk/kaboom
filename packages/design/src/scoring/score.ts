@@ -3,6 +3,7 @@ import { costOf, type NodeLoad } from "../cost";
 import type { EvaluationResult } from "../evaluate/result";
 import type { DesignGraph } from "../graph";
 import { runLints } from "../lints";
+import type { CheckRef, ProblemContent, RubricItem } from "../problems/schema";
 import {
   chaosBaseline,
   type ChaosCase,
@@ -11,7 +12,9 @@ import {
   chaosSettings,
   loadedNodes,
   runChaosCase,
-} from "../testing/chaos";
+} from "./chaos";
+import { type DrillOutcome, runDrill } from "./drills";
+import { drillScenario, selectNodes } from "./resolve";
 import {
   affordable,
   CHAOS_SEEDS,
@@ -20,10 +23,7 @@ import {
   type Variation,
   VARIATION_BUDGET,
   varied,
-} from "../testing/variation";
-import { type DrillOutcome, runDrill } from "./drills";
-import { drillScenario, selectNodes } from "./resolve";
-import type { CheckRef, ProblemContent, RubricItem } from "./schema";
+} from "./variation";
 
 export interface ItemScore {
   key: string;

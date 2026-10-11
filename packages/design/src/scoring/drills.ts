@@ -12,15 +12,6 @@ import type {
 import type { LoadScenarioInput } from "../evaluate/scenario";
 import { evaluateSchema } from "../evaluate/schema";
 import type { DesignGraph } from "../graph";
-import {
-  type Assertion,
-  assertion,
-  failuresOf,
-  fromFinding,
-  structural,
-} from "../testing/assertion";
-import { vary } from "../testing/variation";
-import { drillScenario, selectNodes } from "./resolve";
 import type {
   DocumentsDrill,
   Drill,
@@ -29,7 +20,17 @@ import type {
   NetworkDrill,
   PipelineDrill,
   SchemaDrill,
-} from "./schema";
+} from "../problems/schema";
+import {
+  type Assertion,
+  assertion,
+  failuresOf,
+  fromFinding,
+  structural,
+} from "./assertion";
+import { drillScenario, selectNodes } from "./resolve";
+import { structuralFindings } from "./structural-lints";
+import { vary } from "./variation";
 
 export interface DrillOutcome {
   drillId: string;
@@ -252,7 +253,11 @@ const runSchemaDrill = (
   drill: SchemaDrill,
   graph: DesignGraph,
 ): DrillOutcome => {
-  const result = evaluateSchema(graph, drill.requirements);
+  const evaluated = evaluateSchema(graph, drill.requirements);
+  const result = {
+    ...evaluated,
+    findings: [...evaluated.findings, ...structuralFindings(graph)],
+  };
   const assertions: Assertion[] = [];
 
   if (!graph.edges.some((edge) => edge.kind === "relation")) {

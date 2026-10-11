@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { HOURS_PER_MONTH, perMillion } from "../../cost/prices";
+import { HOURS_PER_MONTH, perMillion } from "../../pricing";
 import { defineTechnology } from "../define-technology";
 import { choice, count, toggle } from "../kinds/shared";
 

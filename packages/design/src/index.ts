@@ -7,5 +7,6 @@ export * from "./graph";
 export * from "./handbook";
 export * from "./lints";
 export * from "./ops";
+export * from "./pricing";
 export * from "./problems";
-export * from "./testing";
+export * from "./scoring";

@@ -1,22 +1,9 @@
-export { type DrillOutcome, runDrill } from "./drills";
 export {
   hintPenalty,
   penalised,
   type RevealedHint,
   revealedHints,
 } from "./hints";
-export {
-  checkPublishable,
-  HIDDEN_FAILED,
-  HIDDEN_PASSED,
-  MAX_HINT_COST,
-  type PublicDrill,
-  type PublicProblem,
-  publicProblem,
-  publicScore,
-  type PublishCheck,
-} from "./publish";
-export { drillScenario, selectNodes } from "./resolve";
 export {
   type CheckRef,
   CheckRefSchema,
@@ -53,11 +40,3 @@ export {
   type RubricItem,
   RubricItemSchema,
 } from "./schema";
-export {
-  type DrillRunner,
-  drillRunner,
-  type DrillScore,
-  type ItemScore,
-  type Score,
-  scoreSubmission,
-} from "./score";

@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { runLints } from "../../lints";
 import { latencyRegression } from "../../problems/library/latency-regression";
 import { ProblemContentSchema } from "../../problems/schema";
-import { scoreSubmission } from "../../problems/score";
+import { scoreSubmission } from "../../scoring/score";
 import { evaluateLoad } from "./evaluate-load";
 import { edge, graph, node } from "./fixtures";
 

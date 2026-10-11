@@ -2,9 +2,9 @@ import { describe, expect, test } from "bun:test";
 
 import { column, index, references, table } from "../data-model/fixtures";
 import { emptyGraph } from "../graph";
+import { DrillSchema, type SchemaDrill } from "../problems/schema";
 import { runDrill } from "./drills";
 import { checkPublishable } from "./publish";
-import type { SchemaDrill } from "./schema";
 import { scoreSubmission } from "./score";
 
 const tables = (withAuthor: boolean) => [
@@ -125,5 +125,23 @@ describe("schema drills", () => {
       "Drill authors names the table comments, which the baseline does not have.",
       "Drill authors names the table comments, which the reference solution does not have.",
     ]);
+  });
+});
+
+describe("a schema drill's structural lints", () => {
+  test("fail a drill that forbids them, beside the requirements", () => {
+    const keyless = {
+      ...reference,
+      nodes: [table("users", [column("id", "bigint")]), reference.nodes[1]!],
+    };
+    const outcome = runDrill(
+      DrillSchema.parse({ ...drill, expect: { forbid: ["keyless-table"] } }),
+      keyless,
+    );
+
+    expect(outcome.findings.map((finding) => finding.kind)).toContain(
+      "keyless-table",
+    );
+    expect(outcome.passed).toBe(false);
   });
 });

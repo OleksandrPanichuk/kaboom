@@ -1,10 +1,15 @@
 import { describe, expect, test } from "bun:test";
 
 import { createNode, type DesignGraph, emptyGraph } from "../graph";
+import { hintPenalty, penalised, revealedHints } from "../problems/hints";
+import { OFFICIAL_PROBLEMS } from "../problems/library";
+import { edge, graph, node, region, within } from "../problems/library/build";
+import {
+  type CheckRef,
+  type LoadDrill,
+  ProblemContentSchema,
+} from "../problems/schema";
 import { runDrill } from "./drills";
-import { hintPenalty, penalised, revealedHints } from "./hints";
-import { OFFICIAL_PROBLEMS } from "./library";
-import { edge, graph, node, region, within } from "./library/build";
 import {
   checkPublishable,
   HIDDEN_FAILED,
@@ -12,7 +17,6 @@ import {
   publicScore,
 } from "./publish";
 import { drillScenario, selectNodes } from "./resolve";
-import { type CheckRef, type LoadDrill, ProblemContentSchema } from "./schema";
 import { scoreSubmission } from "./score";
 
 const shortener = OFFICIAL_PROBLEMS.find(

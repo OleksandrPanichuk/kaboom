@@ -1,13 +1,13 @@
 import { catalogue } from "../catalogue";
 import { type DesignGraph, emptyGraph } from "../graph";
 import { applyOps, type DesignOp } from "../ops";
-import { chaosBaseline, chaosSettings } from "../testing/chaos";
 import {
   drillOf,
   INTERVIEW_PHASES,
   type ProblemContent,
   ProblemContentSchema,
-} from "./schema";
+} from "../problems/schema";
+import { chaosBaseline, chaosSettings } from "./chaos";
 import { type Score, scoreSubmission } from "./score";
 
 export interface PublicDrill {

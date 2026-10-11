@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
+import { PRICES } from "../pricing";
 import { OFFICIAL_PROBLEMS } from "../problems/library";
 import { edge, graph, node } from "../problems/library/build";
-import { scoreSubmission } from "../problems/score";
+import { scoreSubmission } from "../scoring/score";
 import { costOf, nodeCost } from "./cost";
-import { PRICES } from "./prices";
 
 describe("costOf", () => {
   test("prices compute by the replica and a store by its instances", () => {

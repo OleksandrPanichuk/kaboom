@@ -1,6 +1,6 @@
 import type { Fault, LoadScenarioInput } from "../evaluate/scenario";
 import type { DesignGraph, DesignNode } from "../graph";
-import type { DrillFault, LoadDrill, NodeSelector } from "./schema";
+import type { DrillFault, LoadDrill, NodeSelector } from "../problems/schema";
 
 const isReplica = (graph: DesignGraph, id: string): boolean =>
   graph.edges.some((edge) => edge.kind === "replication" && edge.to === id);
