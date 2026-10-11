@@ -4,6 +4,7 @@ export { artifactRegistryKind } from "./artifact-registry";
 export { cacheKind } from "./cache";
 export { cdnKind } from "./cdn";
 export { clientKind } from "./client";
+export * from "./columns";
 export { configMapKind } from "./config-map";
 export { coordinationKind } from "./coordination";
 export { dnsKind } from "./dns";
@@ -27,13 +28,5 @@ export { securityGroupKind } from "./security-group";
 export { serviceKind } from "./service";
 export { sqlDatabaseKind } from "./sql-database";
 export { streamKind } from "./stream";
-export {
-  type Column,
-  COLUMN_TYPES,
-  type ColumnType,
-  MAX_COLUMNS,
-  MAX_INDEXES,
-  type TableIndex,
-  tableKind,
-} from "./table";
+export { MAX_COLUMNS, MAX_INDEXES, tableKind } from "./table";
 export { workerKind } from "./worker";

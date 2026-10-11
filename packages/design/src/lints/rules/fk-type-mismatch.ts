@@ -6,13 +6,13 @@ export const fkTypeMismatch = defineLint({
   title: "Foreign key of another type",
   severity: "warning",
   run: (graph) =>
-    relationsOf(graph)
-      .filter(
-        ({ foreignKey, referenced }) => foreignKey.type !== referenced.type,
-      )
-      .map(({ edge, from, to, foreignKey, referenced }) => ({
-        message: `${columnName(from, foreignKey)} is ${foreignKey.type} but references ${columnName(to, referenced)}, a ${referenced.type}; give them one type.`,
-        nodeIds: [from.id, to.id],
-        edgeIds: [edge.id],
-      })),
+    relationsOf(graph).flatMap(({ edge, from, to, pairs }) =>
+      pairs
+        .filter((pair) => pair.from.type !== pair.to.type)
+        .map((pair) => ({
+          message: `${columnName(from, pair.from)} is ${pair.from.type} but references ${columnName(to, pair.to)}, a ${pair.to.type}; give them one type.`,
+          nodeIds: [from.id, to.id],
+          edgeIds: [edge.id],
+        })),
+    ),
 });

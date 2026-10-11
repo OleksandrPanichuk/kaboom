@@ -794,6 +794,29 @@ that would leave a relation without its columns is refused, so a client
 removes the relation first in the same batch. `update-edge` changes only
 `onDelete`; changing a relation's columns is a delete and an add.
 
+A **database** is a group with an `engine` (`postgres`, `mysql`,
+`sqlite`, `mongodb`, `dynamodb`), drawn as a box like a region. It sits on
+its own or in a region, holds only the kinds of its engine (tables in the
+three SQL engines), and changes engine only within its family. A table
+outside any database is PostgreSQL. `data-model/engines.ts` knows what each
+SQL engine has and how it writes it (`writeType`: `uuid` is `char(36)` in
+MySQL, `numeric` is `decimal`), and the `engine-unsupported` lint names
+what a table's engine lacks: a type, a varchar without a length in MySQL,
+an update to now outside MySQL, an identity SQLite cannot number.
+
+A column may carry a `length` (varchar, char), a `precision` and `scale`
+(numeric), `values` (enum), a `default` (a literal, `now`, `uuid` or an
+expression), a `generated` identity or stored expression, `onUpdate: now`
+and `checks` (`min`, `max`, `minLength`, `in`), each validated against its
+type. A composite foreign key keeps its first pair in `fromColumn` and
+`toColumn` and the rest in `moreColumns`, and references exactly a primary
+key or a unique key. Every one of these is an optional field, absent when
+unused, and none needed a graph version: a version bump changes the hash
+of every stored graph, and `replayRevisions` checks a replayed graph
+against the hash its revision stored, so a bump would break the history of
+every design. `graph/stored.test.ts` pins that what was stored before parses
+to exactly the same graph. Keep it that way.
+
 What a table can answer lives in `data-model/tables.ts`: its primary key,
 whether a lookup's columns lead a key or an index (`indexedBy`), whether a
 set of columns is unique (`uniqueOver`), and every relation resolved to its

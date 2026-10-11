@@ -1,6 +1,8 @@
 import type { Column } from "../../catalogue";
 import {
   columnName,
+  columnsName,
+  foreignKeyIds,
   indexedBy,
   isOneToOne,
   keyOrders,
@@ -48,6 +50,12 @@ const STRUCTURAL_LINTS = [
   ["fk-type-mismatch", "fk-type-mismatch"],
   ["set-null-not-nullable", "set-null-not-nullable"],
 ] as const satisfies ReadonlyArray<readonly [keyof typeof lints, FindingKind]>;
+
+const fkName = (relation: ResolvedRelation): string =>
+  columnsName(
+    relation.from,
+    relation.pairs.map((pair) => pair.from),
+  );
 
 const byName = (table: TableNode, name: string): Column | undefined =>
   table.props.columns.find(
@@ -166,7 +174,7 @@ export const evaluateSchema = (
         requirement: "relationship",
         label,
         expected,
-        actual: columnName(many.from, many.foreignKey),
+        actual: fkName(many),
         passed: true,
         nodeIds,
         edgeIds: [many.edge.id],
@@ -183,12 +191,12 @@ export const evaluateSchema = (
         requirement: "relationship",
         label,
         expected,
-        actual: `${columnName(wrong!.from, wrong!.foreignKey)} points the other way`,
+        actual: `${fkName(wrong!)} points the other way`,
         passed: false,
         nodeIds,
         edgeIds: backward.map((relation) => relation.edge.id),
         finding: "wrong-cardinality",
-        message: `${columnName(wrong!.from, wrong!.foreignKey)} gives a row of ${nameOf(parent)} one row of ${nameOf(child)}, but it has many; the foreign key belongs on ${nameOf(child)}.`,
+        message: `${fkName(wrong!)} gives a row of ${nameOf(parent)} one row of ${nameOf(child)}, but it has many; the foreign key belongs on ${nameOf(child)}.`,
       });
       return;
     }
@@ -200,12 +208,12 @@ export const evaluateSchema = (
         requirement: "relationship",
         label,
         expected,
-        actual: `${columnName(unique!.from, unique!.foreignKey)} is unique`,
+        actual: `${fkName(unique!)} is unique`,
         passed: false,
         nodeIds,
         edgeIds: forward.map((relation) => relation.edge.id),
         finding: "wrong-cardinality",
-        message: `${columnName(unique!.from, unique!.foreignKey)} is unique, so a row of ${nameOf(parent)} can have only one row of ${nameOf(child)}.`,
+        message: `${fkName(unique!)} is unique, so a row of ${nameOf(parent)} can have only one row of ${nameOf(child)}.`,
       });
       return;
     }
@@ -244,7 +252,7 @@ export const evaluateSchema = (
         requirement: "relationship",
         label,
         expected,
-        actual: columnName(one.from, one.foreignKey),
+        actual: fkName(one),
         passed: true,
         nodeIds,
         edgeIds: [one.edge.id],
@@ -260,15 +268,13 @@ export const evaluateSchema = (
       requirement: "relationship",
       label,
       expected,
-      actual: loose
-        ? `${columnName(loose.from, loose.foreignKey)} is not unique`
-        : "no relation",
+      actual: loose ? `${fkName(loose)} is not unique` : "no relation",
       passed: false,
       nodeIds,
       edgeIds: direct.map((relation) => relation.edge.id),
       finding: loose ? "wrong-cardinality" : "missing-relationship",
       message: loose
-        ? `${columnName(loose.from, loose.foreignKey)} is not unique, so a row of ${nameOf(loose.to.id)} could have many rows of ${nameOf(loose.from.id)}.`
+        ? `${fkName(loose)} is not unique, so a row of ${nameOf(loose.to.id)} could have many rows of ${nameOf(loose.from.id)}.`
         : `Nothing relates ${nameOf(a)} and ${nameOf(b)}.`,
     });
   };
@@ -295,12 +301,12 @@ export const evaluateSchema = (
         requirement: "relationship",
         label,
         expected,
-        actual: `${columnName(wrong!.from, wrong!.foreignKey)} links them directly`,
+        actual: `${fkName(wrong!)} links them directly`,
         passed: false,
         nodeIds,
         edgeIds: direct.map((relation) => relation.edge.id),
         finding: "wrong-cardinality",
-        message: `${columnName(wrong!.from, wrong!.foreignKey)} lets a row of ${nameOf(wrong!.from.id)} have only one row of ${nameOf(wrong!.to.id)}; a many-to-many link needs a table of its own.`,
+        message: `${fkName(wrong!)} lets a row of ${nameOf(wrong!.from.id)} have only one row of ${nameOf(wrong!.to.id)}; a many-to-many link needs a table of its own.`,
       });
       return;
     }
@@ -319,13 +325,15 @@ export const evaluateSchema = (
               right !== left &&
               left.to.id === a &&
               right.to.id === b &&
-              right.foreignKey.id !== left.foreignKey.id,
+              foreignKeyIds(right).every(
+                (id) => !foreignKeyIds(left).includes(id),
+              ),
           )
           .map((right) => ({ junction, left, right })),
       );
     });
     const unique = candidates.find(({ junction, left, right }) =>
-      uniqueOver(junction, [left.foreignKey.id, right.foreignKey.id]),
+      uniqueOver(junction, [...foreignKeyIds(left), ...foreignKeyIds(right)]),
     );
 
     if (unique) {
@@ -486,12 +494,12 @@ export const evaluateSchema = (
 
         hops.push({
           table: found.junction,
-          columns: [inbound.foreignKey],
+          columns: inbound.pairs.map((pair) => pair.from),
           many: true,
         });
         hops.push({
           table: outbound.to,
-          columns: [outbound.referenced],
+          columns: outbound.pairs.map((pair) => pair.to),
           many: false,
         });
         continue;
@@ -503,10 +511,14 @@ export const evaluateSchema = (
         relation.from.id === next
           ? {
               table: relation.from,
-              columns: [relation.foreignKey],
+              columns: relation.pairs.map((pair) => pair.from),
               many: found.cardinality === "one-to-many",
             }
-          : { table: relation.to, columns: [relation.referenced], many: false },
+          : {
+              table: relation.to,
+              columns: relation.pairs.map((pair) => pair.to),
+              many: false,
+            },
       );
     }
 

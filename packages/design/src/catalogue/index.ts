@@ -37,14 +37,24 @@ export {
   RelationPatchSchema,
   RelationSchema,
 } from "./edges";
+export * from "./engines";
 export {
   ALERT_SIGNALS,
   type Column,
   COLUMN_TYPES,
+  type ColumnChecks,
+  type ColumnDefault,
+  type ColumnGenerated,
   type ColumnType,
+  INTEGER_TYPES,
   MAX_COLUMNS,
+  MAX_ENUM_VALUES,
   MAX_INDEXES,
+  NUMBER_TYPES,
   type TableIndex,
+  TEXT_TYPES,
+  TIME_TYPES,
+  TIMESTAMP_TYPES,
 } from "./kinds";
 export {
   describeProps,

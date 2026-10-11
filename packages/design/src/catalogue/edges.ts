@@ -75,6 +75,11 @@ const onDelete = z.enum(ON_DELETE_ACTIONS);
 export const RelationSchema = z.strictObject({
   fromColumn: columnRef,
   toColumn: columnRef,
+  moreColumns: z
+    .array(z.strictObject({ fromColumn: columnRef, toColumn: columnRef }))
+    .min(1)
+    .max(7)
+    .optional(),
   onDelete: prop(onDelete.default("restrict"), {
     title: "On delete",
     description:

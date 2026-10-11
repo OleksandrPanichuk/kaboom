@@ -4,6 +4,7 @@ import {
   type GroupKind,
 } from "@repo/design";
 import {
+  Database,
   Globe,
   Lock,
   type LucideIcon,
@@ -26,6 +27,7 @@ const ICONS: Record<GroupKind, LucideIcon> = {
   vpc: Network,
   "public-subnet": Globe,
   "private-subnet": Lock,
+  database: Database,
 };
 
 const ABOUT: Record<GroupKind, string> = {
@@ -36,6 +38,8 @@ const ABOUT: Record<GroupKind, string> = {
     "The internet can reach what sits here, unless a security group stops it. Load balancers and NAT gateways belong here.",
   "private-subnet":
     "Nothing outside the VPC reaches what sits here, and it calls out only through a NAT gateway in a public subnet.",
+  database:
+    "The tables of one database. Its engine decides which types, defaults and indexes they may use, and how the schema is written as SQL.",
 };
 
 interface GroupInspectorProps {

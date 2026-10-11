@@ -1,4 +1,9 @@
-import { columnName, indexedBy, relationsOf } from "../../data-model";
+import {
+  columnsName,
+  foreignKeyIds,
+  indexedBy,
+  relationsOf,
+} from "../../data-model";
 import { defineLint } from "../define-lint";
 
 export const unindexedForeignKey = defineLint({
@@ -7,9 +12,12 @@ export const unindexedForeignKey = defineLint({
   severity: "info",
   run: (graph) =>
     relationsOf(graph)
-      .filter(({ from, foreignKey }) => !indexedBy(from, [foreignKey.id]))
-      .map(({ edge, from, to, foreignKey }) => ({
-        message: `No index leads with ${columnName(from, foreignKey)}, so finding the rows of a ${to.label || to.id}, or deleting one, reads all of ${from.label || from.id}.`,
+      .filter((relation) => !indexedBy(relation.from, foreignKeyIds(relation)))
+      .map(({ edge, from, to, pairs }) => ({
+        message: `No index leads with ${columnsName(
+          from,
+          pairs.map((pair) => pair.from),
+        )}, so finding the rows of a ${to.label || to.id}, or deleting one, reads all of ${from.label || from.id}.`,
         nodeIds: [from.id],
         edgeIds: [edge.id],
       })),

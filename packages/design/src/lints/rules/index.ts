@@ -1,6 +1,7 @@
 export { deadEndNode } from "./dead-end-node";
 export { dualWrite } from "./dual-write";
 export { duplicateSchedule } from "./duplicate-schedule";
+export { engineUnsupported } from "./engine-unsupported";
 export { failoverNowhere } from "./failover-nowhere";
 export { fkTypeMismatch } from "./fk-type-mismatch";
 export { noPrimaryKey } from "./no-primary-key";

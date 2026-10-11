@@ -5,6 +5,8 @@ import {
   EdgeKindSchema,
   type EdgeProps,
   EdgePropsSchema,
+  type Engine,
+  ENGINES,
   NODE_KINDS,
   type NodeKind,
   type NodeKindDefinition,
@@ -30,6 +32,7 @@ export const GROUP_KINDS = [
   "vpc",
   "public-subnet",
   "private-subnet",
+  "database",
 ] as const;
 
 export type GroupKind = (typeof GROUP_KINDS)[number];
@@ -39,6 +42,7 @@ export const GROUP_KIND_LABELS: Readonly<Record<GroupKind, string>> = {
   vpc: "VPC",
   "public-subnet": "Public subnet",
   "private-subnet": "Private subnet",
+  database: "Database",
 };
 
 export interface TechnologyRef {
@@ -111,6 +115,7 @@ export interface DesignGroup {
   kind: GroupKind;
   label: string;
   parentId: string | null;
+  engine?: Engine;
 }
 
 export const DesignGroupSchema: z.ZodType<DesignGroup> = z.strictObject({
@@ -118,6 +123,7 @@ export const DesignGroupSchema: z.ZodType<DesignGroup> = z.strictObject({
   kind: z.enum(GROUP_KINDS),
   label: LabelSchema,
   parentId: IdSchema.nullable().default(null),
+  engine: z.enum(ENGINES).optional(),
 });
 
 export interface DesignGraph {

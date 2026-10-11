@@ -5,7 +5,14 @@ import {
 } from "@repo/design";
 import { useNodes, ViewportPortal } from "@xyflow/react";
 import { cn } from "cn";
-import { Globe, Lock, type LucideIcon, MapPin, Network } from "lucide-react";
+import {
+  Database,
+  Globe,
+  Lock,
+  type LucideIcon,
+  MapPin,
+  Network,
+} from "lucide-react";
 
 import {
   NODE_HEIGHT,
@@ -34,12 +41,14 @@ const ICONS: Record<GroupKind, LucideIcon> = {
   vpc: Network,
   "public-subnet": Globe,
   "private-subnet": Lock,
+  database: Database,
 };
 
 const TONES: Partial<Record<GroupKind, string>> = {
   vpc: "border-zinc-300 bg-zinc-100/40 text-zinc-700",
   "public-subnet": "border-sky-300 bg-sky-50/60 text-sky-800",
   "private-subnet": "border-emerald-300 bg-emerald-50/60 text-emerald-800",
+  database: "border-violet-300 bg-violet-50/50 text-violet-800",
 };
 
 const union = (a: Box | undefined, b: Box): Box =>

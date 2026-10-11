@@ -3,9 +3,13 @@ import {
   catalogue,
   derivedProps,
   EdgePropsSchema,
+  ENGINE_FAMILIES,
+  ENGINE_LABELS,
+  type EngineFamily,
   findTechnology,
   isNodeKind,
 } from "../catalogue";
+import { isKeyExactly, relationPairs } from "../data-model/tables";
 import {
   type DesignEdge,
   type DesignGraph,
@@ -83,6 +87,55 @@ const assertNesting = (graph: DesignGraph, group: DesignGroup): void => {
     reject(
       "invalid-op",
       `Group ${group.id} is a region; nothing holds a region`,
+    );
+  }
+
+  if (
+    group.kind === "database" &&
+    parent !== null &&
+    parent.kind !== "region"
+  ) {
+    reject(
+      "invalid-op",
+      `Group ${group.id} is a database; a database sits in a region or on its own`,
+    );
+  }
+
+  if ((group.kind === "database") !== (group.engine !== undefined)) {
+    reject(
+      "invalid-op",
+      group.kind === "database"
+        ? `Database ${group.id} names no engine`
+        : `Group ${group.id} is a ${group.kind}; only a database has an engine`,
+    );
+  }
+};
+
+const FAMILY_KINDS: Readonly<Record<EngineFamily, readonly string[]>> = {
+  sql: ["table"],
+  document: [],
+  "key-value": [],
+};
+
+const FAMILY_HOLDS: Readonly<Record<EngineFamily, string>> = {
+  sql: "tables",
+  document: "collections",
+  "key-value": "DynamoDB tables",
+};
+
+const assertPlacement = (graph: DesignGraph, node: DesignNode): void => {
+  if (node.groupId === null) return;
+
+  const group = findGroup(graph, node.groupId);
+
+  if (group.kind !== "database" || group.engine === undefined) return;
+
+  const family = ENGINE_FAMILIES[group.engine];
+
+  if (!FAMILY_KINDS[family].includes(node.kind)) {
+    reject(
+      "invalid-op",
+      `${node.label || node.id} is a ${node.kind}; a ${ENGINE_LABELS[group.engine]} database holds ${FAMILY_HOLDS[family]}`,
     );
   }
 };
@@ -431,49 +484,82 @@ const assertRelation = (
       `Relation ${edge.id} names no columns; it joins a foreign key to the column it references`,
     );
 
-  const foreignKey =
-    from.props.columns.find((column) => column.id === relation.fromColumn) ??
-    reject(
-      "invalid-edge",
-      `Relation ${edge.id} starts at column ${relation.fromColumn}, which ${from.label || from.id} does not have`,
-    );
-  const referenced =
-    to.props.columns.find((column) => column.id === relation.toColumn) ??
-    reject(
-      "invalid-edge",
-      `Relation ${edge.id} references column ${relation.toColumn}, which ${to.label || to.id} does not have`,
-    );
+  const pairs = relationPairs(relation).map((pair) => ({
+    from:
+      from.props.columns.find((column) => column.id === pair.fromColumn) ??
+      reject(
+        "invalid-edge",
+        `Relation ${edge.id} starts at column ${pair.fromColumn}, which ${from.label || from.id} does not have`,
+      ),
+    to:
+      to.props.columns.find((column) => column.id === pair.toColumn) ??
+      reject(
+        "invalid-edge",
+        `Relation ${edge.id} references column ${pair.toColumn}, which ${to.label || to.id} does not have`,
+      ),
+  }));
+  const foreignKeys = pairs.map((pair) => pair.from);
+  const referenced = pairs.map((pair) => pair.to);
+  const fromName = from.label || from.id;
+  const toName = to.label || to.id;
+  const listed = (columns: typeof foreignKeys) =>
+    columns.length === 1
+      ? columns[0]!.name
+      : `(${columns.map((column) => column.name).join(", ")})`;
 
-  const keyColumns = to.props.columns.filter((column) => column.primaryKey);
-  const wholeKey =
-    keyColumns.length === 1 && keyColumns[0]!.id === referenced.id;
-
-  if (!wholeKey && !referenced.unique) {
+  if (
+    new Set(foreignKeys.map((column) => column.id)).size !== pairs.length ||
+    new Set(referenced.map((column) => column.id)).size !== pairs.length
+  ) {
     reject(
       "invalid-edge",
-      `${to.label || to.id}.${referenced.name} is neither the primary key of ${to.label || to.id} nor unique, so a foreign key cannot reference it`,
+      `Relation ${edge.id} names a column twice; each column of a composite key appears once`,
     );
   }
 
-  if (from.id === to.id && foreignKey.id === referenced.id) {
+  if (
+    !isKeyExactly(
+      to,
+      referenced.map((column) => column.id),
+    )
+  ) {
     reject(
       "invalid-edge",
-      `${from.label || from.id}.${foreignKey.name} cannot reference itself`,
+      pairs.length === 1
+        ? `${toName}.${referenced[0]!.name} is neither the primary key of ${toName} nor unique, so a foreign key cannot reference it`
+        : `${toName}.${listed(referenced)} is neither the primary key of ${toName} nor a unique key, so a foreign key cannot reference it`,
     );
   }
 
-  const taken = graph.edges.some(
-    (other) =>
-      other.id !== edge.id &&
-      other.kind === "relation" &&
-      other.from === edge.from &&
-      other.relation?.fromColumn === relation.fromColumn,
-  );
+  if (from.id === to.id && pairs.every((pair) => pair.from.id === pair.to.id)) {
+    reject(
+      "invalid-edge",
+      `${fromName}.${listed(foreignKeys)} cannot reference itself`,
+    );
+  }
+
+  const ids = new Set(foreignKeys.map((column) => column.id));
+  const taken = graph.edges.some((other) => {
+    if (
+      other.id === edge.id ||
+      other.kind !== "relation" ||
+      other.from !== edge.from ||
+      !other.relation
+    ) {
+      return false;
+    }
+
+    const theirs = relationPairs(other.relation).map((pair) => pair.fromColumn);
+
+    return theirs.length === ids.size && theirs.every((id) => ids.has(id));
+  });
 
   if (taken) {
     reject(
       "invalid-edge",
-      `${from.label || from.id}.${foreignKey.name} already references a table; a column is one foreign key`,
+      pairs.length === 1
+        ? `${fromName}.${foreignKeys[0]!.name} already references a table; a column is one foreign key`
+        : `${fromName}.${listed(foreignKeys)} already references a table`,
     );
   }
 };
@@ -517,6 +603,7 @@ const addNode = (
 
   assertFreeId(graph, node.id);
   assertGroup(graph, node.groupId);
+  assertPlacement(graph, node);
 
   const technology = parseTechnology(node, node.technology);
 
@@ -577,6 +664,7 @@ const updateNode = (
     assertGroup(graph, patch.groupId);
     previous.groupId = node.groupId;
     node.groupId = patch.groupId;
+    assertPlacement(graph, node);
   }
 
   if (patch.technology !== undefined) {
@@ -733,6 +821,25 @@ const updateGroup = (
   if (patch.label !== undefined) {
     previous.label = group.label;
     group.label = patch.label;
+  }
+
+  if (patch.engine !== undefined) {
+    const current =
+      group.engine ??
+      reject(
+        "invalid-op",
+        `Group ${id} is a ${group.kind}; only a database has an engine`,
+      );
+
+    if (ENGINE_FAMILIES[patch.engine] !== ENGINE_FAMILIES[current]) {
+      reject(
+        "invalid-op",
+        `${group.label || id} is a ${ENGINE_LABELS[current]} database; it can change only to another engine of its kind`,
+      );
+    }
+
+    previous.engine = current;
+    group.engine = patch.engine;
   }
 
   return [{ op: "update-group", id, patch: previous }];

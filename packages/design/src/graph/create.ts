@@ -2,6 +2,7 @@ import {
   catalogue,
   type EdgeKind,
   EdgePropsSchema,
+  type Engine,
   type NodeKind,
   type Relation,
 } from "../catalogue";
@@ -72,6 +73,7 @@ export interface CreateGroupOptions {
   kind: GroupKind;
   label: string;
   parentId?: string | null;
+  engine?: Engine;
 }
 
 export const createGroup = ({
@@ -79,4 +81,11 @@ export const createGroup = ({
   kind,
   label,
   parentId = null,
-}: CreateGroupOptions): DesignGroup => ({ id, kind, label, parentId });
+  engine,
+}: CreateGroupOptions): DesignGroup => ({
+  id,
+  kind,
+  label,
+  parentId,
+  ...(engine ? { engine } : {}),
+});
