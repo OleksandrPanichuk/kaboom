@@ -8,7 +8,7 @@ import {
   type LeaderboardPeriod,
   WEEK_MS,
 } from "../leaderboard.constants";
-import { LeaderboardEntity, type LeaderboardView } from "../leaderboard.entity";
+import type { LeaderboardFilter, LeaderboardView } from "../leaderboard.entity";
 import { LeaderboardRepository } from "../ports";
 
 export interface GetLeaderboardUseCaseOptions {
@@ -24,21 +24,17 @@ export class GetLeaderboardUseCase extends UseCase<Options, Result> {
   private readonly repository = makeRepository(LeaderboardRepository);
 
   public async execute({ userId, period, track }: Options): Promise<Result> {
-    const [standings, profile] = await Promise.all([
-      this.repository.standings({
-        period,
-        track,
-        since: period === "week" ? new Date(Date.now() - WEEK_MS) : null,
-      }),
-      this.repository.findProfile(userId),
-    ]);
-    const listed = LeaderboardEntity.listed(standings);
-
-    return {
+    const filter: LeaderboardFilter = {
       period,
       track,
-      entries: listed.slice(0, LEADERBOARD_SIZE),
-      me: { ...LeaderboardEntity.standingOf(standings, userId), profile },
+      since: period === "week" ? new Date(Date.now() - WEEK_MS) : null,
     };
+    const [entries, standing, profile] = await Promise.all([
+      this.repository.board(filter, LEADERBOARD_SIZE),
+      this.repository.standingOf(userId, filter),
+      this.repository.findProfile(userId),
+    ]);
+
+    return { period, track, entries, me: { ...standing, profile } };
   }
 }

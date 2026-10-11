@@ -11,16 +11,6 @@ export interface LeaderboardProfileEntity {
   visible: boolean;
 }
 
-export interface Standing {
-  userId: string;
-  handle: string | null;
-  displayName: string | null;
-  avatarKey: string | null;
-  visible: boolean;
-  points: number;
-  solved: number;
-}
-
 export interface ListedStanding {
   userId: string;
   position: number;
@@ -43,6 +33,12 @@ export interface UserStanding {
   position: number | null;
 }
 
+export interface OfficialRule {
+  id: string;
+  difficulty: string;
+  track: string;
+}
+
 export interface LeaderboardView {
   period: LeaderboardPeriod;
   track: Track | null;
@@ -51,53 +47,6 @@ export interface LeaderboardView {
 }
 
 export class LeaderboardEntity {
-  public static listed(standings: readonly Standing[]): ListedStanding[] {
-    let position = 0;
-    let previous: number | null = null;
-
-    return standings
-      .filter(
-        (
-          standing,
-        ): standing is Standing & { handle: string; displayName: string } =>
-          standing.visible &&
-          standing.handle !== null &&
-          standing.displayName !== null,
-      )
-      .map((standing, index) => {
-        if (standing.points !== previous) {
-          position = index + 1;
-          previous = standing.points;
-        }
-
-        return {
-          userId: standing.userId,
-          position,
-          handle: standing.handle,
-          displayName: standing.displayName,
-          avatarKey: standing.avatarKey,
-          points: standing.points,
-          solved: standing.solved,
-        };
-      });
-  }
-
-  public static standingOf(
-    standings: readonly Standing[],
-    userId: string,
-  ): UserStanding {
-    const mine = standings.find((standing) => standing.userId === userId);
-    const listed = LeaderboardEntity.listed(standings).find(
-      (standing) => standing.userId === userId,
-    );
-
-    return {
-      points: mine?.points ?? 0,
-      solved: mine?.solved ?? 0,
-      position: listed?.position ?? null,
-    };
-  }
-
   public static normalize(
     view: LeaderboardView,
     rankName: (points: number) => string,

@@ -6,7 +6,7 @@ export {
   type LeaderboardProfileEntity,
   type LeaderboardView,
   type ListedStanding,
-  type Standing,
+  type OfficialRule,
   type UserStanding,
 } from "./leaderboard.entity";
 export * from "./leaderboard.model";
@@ -15,6 +15,7 @@ export {
   type LeaderboardActions,
   leaderboardRoutes,
 } from "./leaderboard.routes";
+export { LeaderboardService } from "./leaderboard.service";
 export * from "./ports";
 export * from "./repositories";
 export * from "./use-cases";
