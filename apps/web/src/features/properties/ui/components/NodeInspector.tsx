@@ -33,8 +33,11 @@ import { DatabaseField } from "./DatabaseField";
 import { DerivedField } from "./DerivedField";
 import { DocumentIndexesEditor } from "./DocumentIndexesEditor";
 import { DraftInput } from "./DraftInput";
+import { DynamoIndexesEditor } from "./DynamoIndexesEditor";
 import { FieldsEditor } from "./FieldsEditor";
 import { InspectorSection } from "./InspectorSection";
+import { ItemTypesEditor } from "./ItemTypesEditor";
+import { KeySchemaEditor } from "./KeySchemaEditor";
 import { KindAbout } from "./KindAbout";
 import { LintCallout } from "./LintCallout";
 import { type CommitResult, PropFieldControl } from "./PropFieldControl";
@@ -247,6 +250,20 @@ export function NodeInspector({
           </InspectorSection>
           <InspectorSection title="Indexes">
             <DocumentIndexesEditor collection={node} onApply={onApply} />
+          </InspectorSection>
+        </>
+      ) : null}
+
+      {node.kind === "dynamo-table" ? (
+        <>
+          <InspectorSection title="Keys">
+            <KeySchemaEditor table={node} onApply={onApply} />
+          </InspectorSection>
+          <InspectorSection title="Indexes">
+            <DynamoIndexesEditor table={node} onApply={onApply} />
+          </InspectorSection>
+          <InspectorSection title="Item types">
+            <ItemTypesEditor table={node} onApply={onApply} />
           </InspectorSection>
         </>
       ) : null}

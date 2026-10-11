@@ -9,9 +9,12 @@ import {
 } from "@/features/canvas/constants";
 
 import { documentRows } from "./documentRows";
+import { dynamoRows } from "./dynamoRows";
 
 export const nodeWidth = (node: DesignNode): number =>
-  node.kind === "table" || node.kind === "collection"
+  node.kind === "table" ||
+  node.kind === "collection" ||
+  node.kind === "dynamo-table"
     ? TABLE_WIDTH
     : NODE_WIDTH;
 
@@ -28,6 +31,10 @@ export const nodeHeight = (node: DesignNode): number => {
       TABLE_HEADER_HEIGHT +
       (1 + documentRows(node.props.fields).length) * TABLE_ROW_HEIGHT
     );
+  }
+
+  if (node.kind === "dynamo-table") {
+    return TABLE_HEADER_HEIGHT + dynamoRows(node).length * TABLE_ROW_HEIGHT;
   }
 
   return NODE_HEIGHT;

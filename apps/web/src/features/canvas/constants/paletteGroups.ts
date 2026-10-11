@@ -67,4 +67,5 @@ export const PALETTE_GROUPS: PaletteGroup[] = [
   },
   { track: "data-model", label: "Schema", kinds: ["table"] },
   { track: "data-model", label: "Documents", kinds: ["collection"] },
+  { track: "data-model", label: "Key-value", kinds: ["dynamo-table"] },
 ];

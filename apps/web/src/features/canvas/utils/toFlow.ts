@@ -129,7 +129,9 @@ export const toFlow = (
           ? "table-node"
           : node.kind === "collection"
             ? "collection-node"
-            : "design-node",
+            : node.kind === "dynamo-table"
+              ? "dynamo-table-node"
+              : "design-node",
       position,
       data: {
         node,

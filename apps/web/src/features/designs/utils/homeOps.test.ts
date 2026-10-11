@@ -38,6 +38,23 @@ describe("homeOps", () => {
     ]);
   });
 
+  test("keeps a DynamoDB table apart from the MongoDB database", () => {
+    const documents = run(
+      emptyGraph(),
+      homeOps(emptyGraph(), createNode("collection", { id: "orders" })),
+    );
+    const both = run(
+      documents,
+      homeOps(documents, createNode("dynamo-table", { id: "events" })),
+    );
+
+    expect(both.groups.map((group) => group.engine)).toEqual([
+      "mongodb",
+      "dynamodb",
+    ]);
+    expect(both.nodes[1]!.groupId).toBe(both.groups[1]!.id);
+  });
+
   test("adds anything else as it is", () => {
     const node = createNode("table", { id: "orders" });
 

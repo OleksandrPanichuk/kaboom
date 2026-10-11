@@ -30,7 +30,8 @@ export type CanvasNodeData = Record<string, unknown> & {
   engine?: Engine;
 };
 
-export type CanvasNodeType = "design-node" | "table-node" | "collection-node";
+export type CanvasNodeType =
+  "design-node" | "table-node" | "collection-node" | "dynamo-table-node";
 
 export type CanvasNode = Node<CanvasNodeData, CanvasNodeType>;
 
