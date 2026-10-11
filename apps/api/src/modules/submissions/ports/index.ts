@@ -2,6 +2,7 @@ export {
   type CreateAttemptData,
   ProblemAttemptsRepository,
 } from "./problem-attempts.repository";
+export { ScoreBoard } from "./score-board";
 export {
   type SolutionReveal,
   SolutionRevealsRepository,

@@ -70,6 +70,7 @@ export const submissionsSchema = pgTable(
       table.id,
     ),
     index("submissions_problem_id_score_idx").on(table.problemId, table.score),
+    index("submissions_created_at_idx").on(table.createdAt),
   ],
 );
 

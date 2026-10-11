@@ -1,4 +1,4 @@
-import { makeRepository, makeService } from "@/core/registry";
+import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { transaction } from "@/db/executor";
 import { describeDesign } from "@/modules/interviews";
@@ -6,6 +6,7 @@ import { ProblemsService } from "@/modules/problems";
 import { SkillsService } from "@/modules/skills";
 import {
   blendedScore,
+  ScoreBoard,
   type SubmissionEntity,
   SubmissionsRepository,
 } from "@/modules/submissions";
@@ -60,6 +61,7 @@ export class ReviewSubmissionUseCase extends UseCase<Options, Result> {
       });
 
       if (reviewed) {
+        await make(ScoreBoard).scored(submission.userId, submission.problemId);
         await makeService(SkillsService).recordSubmission({
           userId: submission.userId,
           problemId: submission.problemId,

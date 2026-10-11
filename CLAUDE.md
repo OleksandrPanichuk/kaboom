@@ -775,15 +775,37 @@ holds one as multipart, so a caller writes `put({ file })`.
 
 ## Leaderboard
 
-`leaderboard` ranks people by points, computed on read from submissions:
-each official problem's best counted score times its difficulty weight,
-the same arithmetic as `/progress`. `?period=week` counts only submissions
-of the last seven days and `?track=` only that track's problems; the rank
-name shows only all time and across tracks, where it means what the ranks
-say. Everyone whose profile is visible is listed, by display name, handle
-and avatar. Tied points share a place, and `LeaderboardEntity.listed`
-decides places for the board and a profile alike. `me` is the caller's
-own standing, with a position only when they are listed.
+`leaderboard` ranks people by points: each official problem's best
+counted score times its difficulty weight, the same arithmetic as
+`/progress`. Everyone whose profile is visible is listed, by display
+name, handle and avatar. Tied points share a place (`rank()`), and `me`
+is the caller's own standing, with a position only when they are listed.
+The rank name shows only all time and across tracks, where it means what
+the ranks say.
+
+All time is precomputed. `leaderboard_points` keeps each user's best
+counted score per official problem, and `leaderboard_totals` each
+user's points and solved count per scope (`all` and every track),
+indexed by scope and points, so a page of the board is an indexed read
+rather than an aggregate over every submission. `submissions` declares
+the `ScoreBoard` port and `leaderboard` binds it: submitting calls it
+after the insert, and a review calls it inside its own transaction once
+it has blended the score. `refresh` recomputes that one problem's best
+from the submissions and then the user's totals, under a per-user
+advisory lock, so it is idempotent and a lower score after a review is
+taken as readily as a higher one.
+
+What the totals depend on beyond submissions (the weights, the solved
+threshold, and each official problem's difficulty and track) is hashed
+into `leaderboard_state`. `leaderboardModule.start` runs after the
+official problems sync, and rebuilds both tables from the submissions
+when the hash differs, so a new problem version that changes a
+difficulty, or a change to `DIFFICULTY_WEIGHT`, needs no migration. A
+test pins that the kept totals equal a rebuild.
+
+`?period=week` stays computed on read from the last seven days of
+submissions (`submissions_created_at_idx`), a set that stays small, and
+`?track=` reads that track's scope.
 
 ## DevOps track
 

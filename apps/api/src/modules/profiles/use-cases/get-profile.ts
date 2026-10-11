@@ -1,7 +1,7 @@
 import { makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import {
-  LeaderboardEntity,
+  LEADERBOARD_FILTER_ALL_TIME,
   LeaderboardRepository,
 } from "@/modules/leaderboard";
 import { SkillsService } from "@/modules/skills";
@@ -37,8 +37,8 @@ export class GetProfileUseCase extends UseCase<Options, Result> {
       throw new ProfileNotFoundError(`No profile ${handle}`);
     }
 
-    const [standings, skills, recent] = await Promise.all([
-      this.leaderboard.standings({ period: "all", track: null, since: null }),
+    const [standing, skills, recent] = await Promise.all([
+      this.leaderboard.standingOf(profile.userId, LEADERBOARD_FILTER_ALL_TIME),
       this.skills.summaryFor(profile.userId),
       this.submissions.listRecentForUser(profile.userId, RECENT_SUBMISSIONS),
     ]);
@@ -46,7 +46,7 @@ export class GetProfileUseCase extends UseCase<Options, Result> {
     return {
       profile,
       own,
-      standing: LeaderboardEntity.standingOf(standings, profile.userId),
+      standing,
       skills,
       recent: recent
         .filter((submission) => submission.counted)

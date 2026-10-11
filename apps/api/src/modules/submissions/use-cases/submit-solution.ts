@@ -9,7 +9,11 @@ import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { DesignTester } from "@/platform/design-testing";
 
-import { SubmissionReviewScheduler, SubmissionsRepository } from "../ports";
+import {
+  ScoreBoard,
+  SubmissionReviewScheduler,
+  SubmissionsRepository,
+} from "../ports";
 import type { SubmissionEntity } from "../submission.entity";
 import { SUBMIT_SEEDS } from "../submissions.constants";
 import { SubmissionPendingChangesError } from "../submissions.errors";
@@ -74,6 +78,7 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       tests,
     });
 
+    await make(ScoreBoard).scored(userId, attempt.problemId);
     await make(SubmissionReviewScheduler).schedule(inserted.id);
 
     return (

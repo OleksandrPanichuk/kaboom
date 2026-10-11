@@ -2,10 +2,12 @@ import { createGuest, createUser, type TestUser } from "@tests/helpers";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { eq } from "drizzle-orm";
 
-import { make } from "@/core/registry";
-import { getDatabase, submissionsSchema } from "@/db";
+import { make, makeService } from "@/core/registry";
+import { getDatabase, leaderboardStateSchema, submissionsSchema } from "@/db";
+import { LeaderboardService } from "@/modules/leaderboard";
 import { ProblemsService } from "@/modules/problems";
 
+import { model } from "../reviews/helpers";
 import { buildReference, start } from "../submissions/helpers";
 
 interface Board {
@@ -36,6 +38,27 @@ const solveShortener = async (user: TestUser) => {
 
 const join = (user: TestUser, handle: string, visible = true) =>
   user.patch("/api/profiles/me", { handle, visible });
+
+const reviewedAt = (scores: [number, number, number]) =>
+  model().enqueue([
+    {
+      type: "tool-use",
+      id: "design-review-1",
+      name: "submit_design_review",
+      input: {
+        summary: "Sound.",
+        strengths: ["A cache."],
+        improvements: ["Failover."],
+        items: (["design", "scaling", "reliability"] as const).map(
+          (dimension, index) => ({
+            dimension,
+            score: scores[index],
+            rationale: "Fine.",
+          }),
+        ),
+      },
+    },
+  ]);
 
 const board = (user: TestUser, query = "") =>
   user.get<Board>(`/api/leaderboard${query}`);
@@ -120,6 +143,47 @@ describe("the leaderboard", () => {
     expect(
       (await board(ada, "?track=system-design")).body.entries[0],
     ).toMatchObject({ handle: "ada", rank: null });
+  });
+
+  test("takes the score a review leaves, not the one before it", async () => {
+    const ada = await createUser();
+
+    reviewedAt([2, 1, 3]);
+    await solveShortener(ada);
+
+    expect((await board(ada)).body.me).toMatchObject({
+      points: 90,
+      position: 1,
+    });
+  });
+
+  test("keeps the totals a rebuild from every submission would give", async () => {
+    const ada = await createUser({ name: "Ada" });
+    const grace = await createUser({ name: "Grace" });
+    const alan = await createUser({ name: "Alan" });
+
+    await solveShortener(ada);
+    reviewedAt([2, 1, 3]);
+    await solveShortener(grace);
+    await solveShortener(alan);
+    await alan.patch("/api/profiles/me", { visible: false });
+
+    const views = async () =>
+      Promise.all(
+        ["", "?track=system-design", "?track=devops"].flatMap((query) =>
+          [ada, alan].map(async (user) => (await board(user, query)).body),
+        ),
+      );
+    const kept = await views();
+
+    await getDatabase().delete(leaderboardStateSchema);
+    expect(await makeService(LeaderboardService).rebuildIfStale()).toBe(true);
+    expect(await views()).toEqual(kept);
+    expect(await makeService(LeaderboardService).rebuildIfStale()).toBe(false);
+    expect(kept[0]!.entries.map((entry) => entry.displayName)).toEqual([
+      "Ada",
+      "Grace",
+    ]);
   });
 
   test("needs a session", async () => {
