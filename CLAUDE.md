@@ -867,7 +867,14 @@ often an item is written are facts of the problem. An attribute with
 `shards` is write sharding: it spreads the writes, and a pattern is served
 by querying every shard, so a random suffix the problem never mentions
 cannot pass for one. `toCloudFormation` writes an `AWS::DynamoDB::Table`
-per table.
+per table. *Orders in one DynamoDB table* and *A game leaderboard in
+DynamoDB* practise it: customers, orders and lines in one table with an
+inverted index, lines kept as items of their own, and a status index and a
+ranking index sharded against their launch-day writes, with scores that
+expire. Their baselines list the item types and their attributes, so the
+facts have names to attach to, and leave the keys to the solver. A
+reference with every item's keys taken away passes no drill, as a
+reference without its edges does.
 *A product catalogue with variants* and *Chat messages in MongoDB*
 practise it: variants embedded and read with their product, reviews and
 messages that reference their parent instead of piling into it, indexes
