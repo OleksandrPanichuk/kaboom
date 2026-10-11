@@ -121,18 +121,66 @@ export const shapeOf = (schema: JsonSchema): FieldShape => {
   }
 };
 
+const ACRONYMS: Readonly<Record<string, string>> = {
+  api: "API",
+  cdn: "CDN",
+  dns: "DNS",
+  fk: "FK",
+  id: "id",
+  nat: "NAT",
+  nosql: "NoSQL",
+  slo: "SLO",
+  spof: "SPOF",
+  sql: "SQL",
+  ttl: "TTL",
+  vpc: "VPC",
+};
+
 export const humanize = (key: string): string => {
   const words = key
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .replace(/[-_]+/g, " ")
     .toLowerCase()
-    .trim();
+    .trim()
+    .split(/\s+/)
+    .map((word) => ACRONYMS[word] ?? word)
+    .join(" ");
 
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
 
+const UNIT_IN_TITLE = /\s*\((s|ms|\$|points)\)$/;
+
 export const labelOf = (key: string, schema: JsonSchema): string =>
-  typeof schema.title === "string" ? schema.title : humanize(key);
+  typeof schema.title === "string"
+    ? schema.title.replace(UNIT_IN_TITLE, "")
+    : humanize(key);
+
+export const singular = (label: string): string =>
+  label.endsWith("ies")
+    ? `${label.slice(0, -3)}y`
+    : label.endsWith("s") && !label.endsWith("ss")
+      ? label.slice(0, -1)
+      : label;
+
+const SCALARS = new Set(["string", "number", "enum", "boolean"]);
+
+export const isFlatItem = (schema: JsonSchema): boolean => {
+  const shape = shapeOf(schema);
+
+  if (shape.kind !== "object") return false;
+
+  const fields = Object.values(shape.properties).map(shapeOf);
+
+  return (
+    fields.length > 0 &&
+    fields.length <= 4 &&
+    fields.every(
+      (field) =>
+        SCALARS.has(field.kind) && !(field.kind === "string" && field.long),
+    )
+  );
+};
 
 export const descriptionOf = (schema: JsonSchema): string | null =>
   typeof schema.description === "string" ? schema.description : null;
@@ -239,3 +287,10 @@ export const samePath = (
 
 export const listOf = (value: unknown): unknown[] =>
   Array.isArray(value) ? (value as unknown[]) : [];
+
+export const startsWith = (
+  path: ReadonlyArray<string | number>,
+  prefix: ReadonlyArray<string | number>,
+): boolean =>
+  prefix.length <= path.length &&
+  prefix.every((part, index) => part === path[index]);

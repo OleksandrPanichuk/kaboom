@@ -348,14 +348,22 @@ from the draft's linked designs. Its forms write top-level fields, and tags
 are a multi-select (`TagsField`) suggesting the tags published problems
 use. Drills, rubric, hints, interview and chaos are `SchemaSection`s: a
 `SchemaForm` drawn from `authoringSchema(section)`, the JSON Schema of the
-validator itself, so a new drill or check kind needs no UI code. A union
-becomes a kind select that keeps the shared fields, an enum list toggle
-chips, an optional group an *Add* button, and a field marked `ref`
-(`drill`, `table`, `collection`, `item`) a select over what the draft
-holds (`draftRefs`). New values start from `default`s and `examples`;
-an issue shows under the field whose path it names. *Edit as JSON*
-stays, for whoever prefers it. An issue's path picks its section (`sectionOf`), which the
-issues list jumps to. *Edit in the designer* opens the linked design at
+validator itself, so a new drill or check kind needs no UI code. A list of
+objects is a column of collapsible rows, each summarised in one line
+(`summaryOf`: its kind, title, id, a weight beside it, and up to four
+facts); a list of up to four plain fields is a table edited in place. A
+union becomes a kind picker that keeps the shared fields, a short enum
+or tri-state boolean a segmented control, a long enum list the chosen
+chips and an *Add* picker, an optional group an *Add* button, and a
+field marked `ref` (`drill`, `table`, `collection`, `item`) a select over
+what the draft holds (`draftRefs`). Numbers carry their unit (`unitOf`):
+seconds are typed as `m:ss`, a share from 0 to 1 as a percentage, and
+`ms`, `×` or `pts` sit inside the input. Help text opens from the label.
+New values start from `default`s and `examples`; an issue shows under the
+field whose path it names. The editor is a full-width page with the
+sections down the left, each with its state, and the issues in a strip
+above them: following one opens the rows on its path and focuses the
+field. *Edit as JSON* stays, for whoever prefers it. *Edit in the designer* opens the linked design at
 `/designs/$designId?draft=…`, whose back link returns to the draft.
 `ForkProblemButton` starts a draft from a published problem, on its start
 screen and in its Task tab.
