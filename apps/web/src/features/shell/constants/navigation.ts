@@ -6,6 +6,7 @@ import {
   type LucideIcon,
   MessagesSquare,
   Network,
+  PencilLine,
   Puzzle,
   ShieldCheck,
   Trophy,
@@ -45,6 +46,10 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Progress", icon: ChartNoAxesColumn, to: "/progress" },
       { label: "Leaderboard", icon: Trophy, to: "/leaderboard" },
     ],
+  },
+  {
+    label: "Create",
+    items: [{ label: "My problems", icon: PencilLine, to: "/authoring" }],
   },
 ];
 

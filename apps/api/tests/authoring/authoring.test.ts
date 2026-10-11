@@ -7,6 +7,7 @@ import { ProblemDraftsRepository } from "@/modules/authoring";
 import { ProblemsService } from "@/modules/problems";
 import { UsersService } from "@/modules/users";
 
+import { applyOps, type DesignBody } from "../designs/helpers";
 import { buildReference, start } from "../submissions/helpers";
 
 interface Issue {
@@ -20,6 +21,7 @@ interface Draft {
   status: string;
   problem: { slug: string; currentVersion: number } | null;
   forkedFrom: { slug: string } | null;
+  designs: { baseline: string | null; reference: string | null };
   issues: Issue[];
   reviews: Array<{ id: string; status: string; feedback: string | null }>;
   code?: string;
@@ -334,5 +336,75 @@ describe("points on a community problem", () => {
         await author.get<{ problems: Array<{ slug: string }> }>("/api/progress")
       ).body.problems.map((problem) => problem.slug),
     ).not.toContain(slug);
+  });
+});
+
+describe("a draft's designs", () => {
+  test("are opened once from the draft's graphs, then are what the draft reads", async () => {
+    const author = await verified();
+    const draft = await fork(author);
+    const opened = await author.post<{ designId: string }>(
+      `/api/problem-drafts/${draft.id}/designs/reference`,
+      {},
+    );
+    const again = await author.post<{ designId: string }>(
+      `/api/problem-drafts/${draft.id}/designs/reference`,
+      {},
+    );
+
+    expect(opened.status).toBe(200);
+    expect(again.body.designId).toBe(opened.body.designId);
+
+    const design = await author.get<DesignBody>(
+      `/api/designs/${opened.body.designId}`,
+    );
+    const reference = (
+      draft.content.reference as { graph: DesignBody["graph"] }
+    ).graph;
+
+    expect(design.body.graph.nodes.map((node) => node.id).sort()).toEqual(
+      reference.nodes.map((node) => node.id).sort(),
+    );
+
+    const cache = reference.nodes.find((node) => node.kind === "cache")!;
+
+    await applyOps(author, opened.body.designId, design.body.revision, [
+      { op: "remove-node", id: cache.id },
+    ]);
+
+    const read = (await author.get<Draft>(`/api/problem-drafts/${draft.id}`))
+      .body;
+    const graph = (read.content.reference as { graph: DesignBody["graph"] })
+      .graph;
+    const checked = await author.post<{ ok: boolean; issues: Issue[] }>(
+      `/api/problem-drafts/${draft.id}/check`,
+      {},
+    );
+
+    expect(read.designs).toEqual({
+      baseline: null,
+      reference: opened.body.designId,
+    });
+    expect(graph.nodes.some((node) => node.id === cache.id)).toBe(false);
+    expect(checked.body.ok).toBe(false);
+    expect(checked.body.issues[0]!.path).toEqual(["reference", "graph"]);
+
+    const saved = await save(author, draft.id, draft.content);
+
+    expect(
+      (saved.body.content.reference as { graph: DesignBody["graph"] }).graph
+        .nodes.length,
+    ).toBe(graph.nodes.length);
+  });
+
+  test("belong to the draft's author", async () => {
+    const author = await verified();
+    const other = await verified();
+    const draft = await fork(author);
+
+    expect(
+      (await other.post(`/api/problem-drafts/${draft.id}/designs/baseline`, {}))
+        .status,
+    ).toBe(404);
   });
 });

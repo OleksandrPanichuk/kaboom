@@ -51,6 +51,16 @@ export const ProblemDraftModel = t.Object({
     }),
   ),
   forkedFrom: t.Nullable(LinkedProblemModel),
+  designs: t.Object(
+    {
+      baseline: t.Nullable(t.String({ format: "uuid" })),
+      reference: t.Nullable(t.String({ format: "uuid" })),
+    },
+    {
+      description:
+        "The designs the baseline and reference are edited in; once linked, the draft reads its graphs from them",
+    },
+  ),
   issues: t.Array(PublishIssueModel, {
     description:
       "What does not parse yet; the full check runs on check and submit",

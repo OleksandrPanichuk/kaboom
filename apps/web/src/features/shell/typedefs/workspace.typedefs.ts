@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 export interface WorkspaceBackLink {
   to: NonNullable<LinkProps["to"]>;
+  params?: LinkProps["params"];
   label: string;
 }
 

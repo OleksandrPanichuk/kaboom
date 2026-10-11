@@ -6,6 +6,7 @@ import { type DBExecutor, getExecutor } from "@/db/executor";
 import type { DraftEntity } from "../draft.entity";
 import {
   type CreateDraftData,
+  type DraftDesignPart,
   ProblemDraftsRepository,
 } from "../ports/problem-drafts.repository";
 
@@ -71,6 +72,21 @@ export class PostgresProblemDraftsRepository extends ProblemDraftsRepository {
     await this.db
       .update(problemDraftsSchema)
       .set({ problemId })
+      .where(eq(problemDraftsSchema.id, id));
+  }
+
+  public async linkDesign(
+    id: string,
+    part: DraftDesignPart,
+    designId: string,
+  ): Promise<void> {
+    await this.db
+      .update(problemDraftsSchema)
+      .set(
+        part === "baseline"
+          ? { baselineDesignId: designId }
+          : { referenceDesignId: designId },
+      )
       .where(eq(problemDraftsSchema.id, id));
   }
 
