@@ -1,5 +1,6 @@
 export * from "./columnHandles";
 export * from "./documentRows";
+export * from "./dynamoRows";
 export * from "./findFreeSpot";
 export * from "./markColor";
 export * from "./mergeFlowNodes";

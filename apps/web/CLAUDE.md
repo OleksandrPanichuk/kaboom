@@ -208,7 +208,19 @@ where removing a field also removes its references and index keys) and
 document indexes with a direction per key, unique, sparse and a TTL on a
 single date. *Copy for MongoDB* copies `toMongo`. A new node is placed by
 its real size, and every taken node's measured one, so tables and
-collections land clear of each other. Edge
+collections land clear of each other.
+A DynamoDB table is drawn by `DynamoTableNodeCard` (`dynamo-table-node`):
+its partition and sort key, its indexes and its item types with their key
+templates (`dynamoRows`), and no handles, since nothing joins it to
+another node. The palette's *Key-value* group puts it in the design's
+DynamoDB database, which `homeOps` creates with the first, and a new one
+starts keyed by `PK` and `SK`. The inspector edits the key attributes
+(`KeySchemaEditor`), the indexes (`DynamoIndexesEditor`) and the item
+types (`ItemTypesEditor`), with pure edits in `dynamoEdits.ts`: removing a
+key attribute removes the indexes and item keys that use it, renaming an
+item attribute rewrites the templates that name it, and removing one
+removes the keys built from it. *Copy CloudFormation* copies
+`toCloudFormation`. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
 drawn the same way.
 The *Technology* section picks a node's product from `technologiesFor(kind)`

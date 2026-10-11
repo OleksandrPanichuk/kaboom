@@ -63,7 +63,8 @@ export function NodePalette({ track, onAdd }: NodePaletteProps) {
           y: rect.top + rect.height / 2,
         })
       : { x: 0, y: 0 };
-    const wide = kind === "table" || kind === "collection";
+    const wide =
+      kind === "table" || kind === "collection" || kind === "dynamo-table";
     const size = {
       width: wide ? TABLE_WIDTH : NODE_WIDTH,
       height: wide ? TABLE_HEADER_HEIGHT + 2 * TABLE_ROW_HEIGHT : NODE_HEIGHT,

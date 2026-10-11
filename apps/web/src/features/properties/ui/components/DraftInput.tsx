@@ -10,6 +10,9 @@ interface DraftInputProps {
   placeholder?: string;
   invalid: boolean;
   describedBy?: string;
+  className?: string;
+  "aria-label"?: string;
+  title?: string;
   onCommit: (text: string) => void;
   onUnchanged?: () => void;
 }
@@ -22,6 +25,9 @@ export function DraftInput({
   placeholder,
   invalid,
   describedBy,
+  className,
+  "aria-label": ariaLabel,
+  title,
   onCommit,
   onUnchanged,
 }: DraftInputProps) {
@@ -58,6 +64,9 @@ export function DraftInput({
       autoComplete="off"
       aria-invalid={invalid || undefined}
       aria-describedby={describedBy}
+      aria-label={ariaLabel}
+      title={title}
+      className={className}
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commit}
       onKeyDown={onKeyDown}

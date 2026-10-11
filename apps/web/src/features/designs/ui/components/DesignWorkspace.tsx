@@ -402,6 +402,13 @@ export function DesignWorkspace({
                 className={cn(actions && "max-sm:hidden")}
               />
             ) : null}
+            {graph.nodes.some((node) => node.kind === "dynamo-table") ? (
+              <CopySqlButton
+                graph={graph}
+                format="cloudformation"
+                className={cn(actions && "max-sm:hidden")}
+              />
+            ) : null}
             <Button
               variant="ghost"
               size="icon"
