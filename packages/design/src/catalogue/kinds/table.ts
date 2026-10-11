@@ -16,6 +16,12 @@ export const tableKind = defineNodeKind({
   replicable: false,
   carriesTraffic: false,
   distribution: "by-share",
+  home: {
+    family: "sql",
+    required: false,
+    engine: "postgres",
+    label: "Database",
+  },
   docs: {
     summary:
       "Rows of one kind of thing, with typed columns, a primary key and the indexes that make its lookups fast.",

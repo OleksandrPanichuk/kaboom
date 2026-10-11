@@ -10,6 +10,7 @@ export {
   defineNodeKind,
   type NodeKindDefinition,
   type NodeKindDocs,
+  type NodeKindHome,
   type Track,
   TRACK_LABELS,
   TRACKS,

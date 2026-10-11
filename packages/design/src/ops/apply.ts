@@ -113,11 +113,7 @@ const assertNesting = (graph: DesignGraph, group: DesignGroup): void => {
   }
 };
 
-const FAMILY_KINDS: Readonly<Record<EngineFamily, readonly string[]>> = {
-  sql: ["table"],
-  document: ["collection"],
-  "key-value": ["dynamo-table"],
-};
+const homeOf = (kind: DesignNode["kind"]) => catalogue[kind].home;
 
 const FAMILY_HOLDS: Readonly<Record<EngineFamily, string>> = {
   sql: "tables",
@@ -125,21 +121,16 @@ const FAMILY_HOLDS: Readonly<Record<EngineFamily, string>> = {
   "key-value": "DynamoDB tables",
 };
 
-const ENGINE_ONLY: Readonly<Record<string, EngineFamily>> = {
-  collection: "document",
-  "dynamo-table": "key-value",
-};
-
 const assertPlacement = (graph: DesignGraph, node: DesignNode): void => {
-  const only = ENGINE_ONLY[node.kind];
+  const home = homeOf(node.kind);
 
-  if (only !== undefined) {
-    const home = graph.groups.find((group) => group.id === node.groupId);
+  if (home?.required) {
+    const group = graph.groups.find((item) => item.id === node.groupId);
 
-    if (!home?.engine || ENGINE_FAMILIES[home.engine] !== only) {
+    if (!group?.engine || ENGINE_FAMILIES[group.engine] !== home.family) {
       reject(
         "invalid-op",
-        `${node.label || node.id} is a ${node.kind}; it lives in a ${only === "document" ? "MongoDB" : "DynamoDB"} database`,
+        `${node.label || node.id} is a ${node.kind}; it lives in a ${ENGINE_LABELS[home.engine]} database`,
       );
     }
   }
@@ -152,7 +143,7 @@ const assertPlacement = (graph: DesignGraph, node: DesignNode): void => {
 
   const family = ENGINE_FAMILIES[group.engine];
 
-  if (!FAMILY_KINDS[family].includes(node.kind)) {
+  if (homeOf(node.kind)?.family !== family) {
     reject(
       "invalid-op",
       `${node.label || node.id} is a ${node.kind}; a ${ENGINE_LABELS[group.engine]} database holds ${FAMILY_HOLDS[family]}`,

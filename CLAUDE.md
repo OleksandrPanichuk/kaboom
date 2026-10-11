@@ -569,6 +569,17 @@ folder may import which: `pricing` at the bottom, then `catalogue`,
 check) at the top. A folder never imports one above it, so the package can
 later split along these lines. A new folder gets a row in that test.
 
+What a node kind does lives in one typed table per concern, each a
+`{ [Kind in NodeKind]: … }` so a new kind fails to compile until every
+table has its row: `LOAD_BEHAVIOURS` (`evaluate/load/behaviours.ts`:
+capacity, base latency, what it forwards, throttling, connection limits,
+replicas), `KIND_COSTS` (`cost/cost.ts`) and `LOST_INSTANCES`
+(`scoring/chaos.ts`). Where a kind may live is its definition's `home`
+(an engine family, and whether it must sit in a database of it), which
+`applyOps` and the web's `homeOps` both read. In the web, icons are keyed
+by `NodeKind` and card types sit in `nodeCards.ts`, which also decides
+which kinds draw wide.
+
 ## Tests on a problem
 
 `runTests(problem, graph, { include })` in `packages/design/src/scoring`

@@ -8,6 +8,7 @@ import {
 } from "@repo/design";
 import { MarkerType } from "@xyflow/react";
 
+import { cardOf } from "@/features/canvas/constants";
 import {
   EDGE_KIND_STYLES,
   GRID_COLUMNS,
@@ -124,14 +125,7 @@ export const toFlow = (
 
     return {
       id: node.id,
-      type:
-        node.kind === "table"
-          ? "table-node"
-          : node.kind === "collection"
-            ? "collection-node"
-            : node.kind === "dynamo-table"
-              ? "dynamo-table-node"
-              : "design-node",
+      type: cardOf(node.kind),
       position,
       data: {
         node,

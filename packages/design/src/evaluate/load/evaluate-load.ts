@@ -28,6 +28,7 @@ import {
   forwardedBy,
   holdsPools,
   intrinsicErrorRateOf,
+  isReplicated,
   SATURATION,
   SYNCHRONOUS,
   throttleLimitOf,
@@ -117,12 +118,6 @@ const autoscaled = (topo: Topology, node: DesignNode): ScalingPolicy | null => {
   return null;
 };
 
-const reportsReplicas = (node: DesignNode): boolean =>
-  node.kind === "service" ||
-  node.kind === "worker" ||
-  node.kind === "scheduler" ||
-  node.kind === "k8s-deployment";
-
 const initialReplicas = (topo: Topology, node: DesignNode): number => {
   if (node.kind === "k8s-deployment") {
     const policy = autoscaled(topo, node);
@@ -132,9 +127,7 @@ const initialReplicas = (topo: Topology, node: DesignNode): number => {
       : node.props.replicas;
   }
 
-  return node.kind === "service" ||
-    node.kind === "worker" ||
-    node.kind === "scheduler"
+  return isReplicated(node) && "replicas" in node.props
     ? node.props.replicas
     : 1;
 };
@@ -607,7 +600,7 @@ const runStep = (
       ...(limit !== null && up
         ? { throttled: offered * (1 - admittedFraction) }
         : {}),
-      ...(reportsReplicas(node) ? { replicas: conditions.replicas } : {}),
+      ...(isReplicated(node) ? { replicas: conditions.replicas } : {}),
       ...(connectionLimit !== null
         ? { connections: { demanded, max: connectionLimit } }
         : {}),

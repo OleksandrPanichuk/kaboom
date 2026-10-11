@@ -1,162 +1,43 @@
-import { DEFAULT_MAX_CONNECTIONS, type EdgeKind } from "../../catalogue";
+import type { EdgeKind } from "../../catalogue";
 import type { DesignNode } from "../../graph";
+import {
+  behaviourOf,
+  type Capacity,
+  type Channels,
+  type NodeConditions,
+} from "./behaviours";
 
-export interface Channels {
-  reads: number;
-  writes: number;
-}
-
-export interface Capacity {
-  reads: number;
-  writes: number;
-  shared: boolean;
-}
-
-export interface NodeConditions {
-  capacityFactor: number;
-  replicas: number;
-  upReplicas: number;
-  hitRatio: number;
-  connectionThroughput: number;
-}
+export type { Capacity, Channels, NodeConditions } from "./behaviours";
 
 export const SATURATION = 0.95;
 
-const shared = (value: number): Capacity => ({
-  reads: value,
-  writes: value,
-  shared: true,
-});
-
-const separate = (reads: number, writes: number): Capacity => ({
-  reads,
-  writes,
-  shared: false,
-});
-
 export const capacityOf = (
   node: DesignNode,
-  {
-    capacityFactor,
-    replicas,
-    upReplicas,
-    connectionThroughput,
-  }: NodeConditions,
+  conditions: NodeConditions,
 ): Capacity => {
-  const scale = (capacity: Capacity): Capacity => ({
-    ...capacity,
-    reads: capacity.reads * capacityFactor,
-    writes: capacity.writes * capacityFactor,
-  });
+  const raw = behaviourOf(node).capacity(node, conditions);
+  const scale = (value: number) =>
+    Number.isFinite(value) ? value * conditions.capacityFactor : value;
 
-  switch (node.kind) {
-    case "client":
-    case "scheduler":
-    case "coordination":
-    case "dns":
-    case "k8s-service":
-    case "hpa":
-    case "config-map":
-    case "secret":
-    case "alert":
-    case "monitoring":
-    case "pipeline-stage":
-    case "artifact-registry":
-    case "security-group":
-    case "nat-gateway":
-    case "table":
-    case "collection":
-    case "dynamo-table":
-      return shared(Number.POSITIVE_INFINITY);
-    case "search-index":
-      return scale(
-        separate(
-          node.props.shards *
-            node.props.replicas *
-            node.props.queryCapacityPerCopy,
-          node.props.shards * node.props.indexCapacityPerShard,
-        ),
-      );
-    case "service":
-    case "k8s-deployment":
-      return scale(shared(replicas * node.props.capacityRpsPerReplica));
-    case "worker":
-      return scale(shared(replicas * node.props.capacityMsgPerReplica));
-    case "load-balancer":
-    case "cdn":
-    case "api-gateway":
-    case "rate-limiter":
-    case "ingress":
-      return scale(shared(node.props.capacityRps));
-    case "external-api":
-      return shared(Number.POSITIVE_INFINITY);
-    case "cache":
-      return scale(
-        separate(node.props.readCapacityRps, node.props.writeCapacityRps),
-      );
-    case "sql-database":
-      return scale(
-        separate(
-          node.props.readCapacityRps * node.props.shards * (1 + upReplicas),
-          node.props.writeCapacityRps * node.props.shards,
-        ),
-      );
-    case "nosql-database":
-      return scale(
-        separate(
-          node.props.partitions * node.props.readCapacityPerPartition,
-          node.props.partitions * node.props.writeCapacityPerPartition,
-        ),
-      );
-    case "object-storage":
-      return scale(
-        separate(node.props.readCapacityRps, node.props.writeCapacityRps),
-      );
-    case "queue":
-    case "stream":
-      return scale(shared(node.props.capacityMsgPerSecond));
-    case "connection-pooler":
-      return scale(
-        shared(Math.min(node.props.capacityRps, connectionThroughput)),
-      );
-  }
+  return { ...raw, reads: scale(raw.reads), writes: scale(raw.writes) };
 };
 
-export const connectionLimitOf = (node: DesignNode): number | null => {
-  switch (node.kind) {
-    case "sql-database":
-      return node.props.maxConnections ?? DEFAULT_MAX_CONNECTIONS;
-    case "connection-pooler":
-      return node.props.maxClientConnections;
-    default:
-      return null;
-  }
-};
+export const connectionLimitOf = (node: DesignNode): number | null =>
+  behaviourOf(node).connectionLimit?.(node) ?? null;
 
-export const holdsPools = (node: DesignNode): boolean =>
-  node.kind === "service" ||
-  node.kind === "worker" ||
-  node.kind === "scheduler" ||
-  node.kind === "k8s-deployment";
+export const isReplicated = (node: DesignNode): boolean =>
+  behaviourOf(node).replicated === true;
+
+export const holdsPools = isReplicated;
 
 export const throttleLimitOf = (
   node: DesignNode,
   capacityFactor: number,
-): number | null => {
-  switch (node.kind) {
-    case "api-gateway":
-      return node.props.throttle.enabled ? node.props.throttle.limitRps : null;
-    case "rate-limiter":
-      return node.props.limitRps;
-    case "external-api":
-      return node.props.rateLimitRps * capacityFactor;
-    default:
-      return null;
-  }
-};
+): number | null =>
+  behaviourOf(node).throttleLimit?.(node, capacityFactor) ?? null;
 
 export const intrinsicErrorRateOf = (node: DesignNode): number =>
-  node.kind === "external-api" ? node.props.errorRate : 0;
+  behaviourOf(node).intrinsicErrorRate?.(node) ?? 0;
 
 export const utilisation = (load: Channels, capacity: Capacity): number => {
   if (capacity.shared) {
@@ -184,85 +65,46 @@ export const consumerLimit = (capacity: Capacity): number =>
     ? capacity.reads
     : Math.max(capacity.reads, capacity.writes));
 
-export const baseLatencyOf = (node: DesignNode): number => {
-  switch (node.kind) {
-    case "client":
-    case "scheduler":
-    case "dns":
-    case "queue":
-    case "stream":
-    case "k8s-service":
-    case "hpa":
-    case "config-map":
-    case "secret":
-    case "alert":
-    case "monitoring":
-    case "pipeline-stage":
-    case "artifact-registry":
-    case "security-group":
-    case "nat-gateway":
-    case "table":
-    case "collection":
-    case "dynamo-table":
-      return 0;
-    case "worker":
-      return node.props.processingMs;
-    default:
-      return node.props.baseLatencyMs;
-  }
-};
+export const baseLatencyOf = (node: DesignNode): number =>
+  behaviourOf(node).baseLatency(node);
 
 export const forwardedBy = (
   node: DesignNode,
   served: Channels,
   hitRatio: number,
-): Channels => {
-  switch (node.kind) {
-    case "cache":
-    case "cdn":
-      return { reads: served.reads * (1 - hitRatio), writes: served.writes };
-    case "sql-database":
-    case "nosql-database":
-      return { reads: 0, writes: served.writes };
-    case "object-storage":
-    case "external-api":
-    case "search-index":
-    case "coordination":
-      return { reads: 0, writes: 0 };
-    default:
-      return served;
-  }
+): Channels => behaviourOf(node).forwards?.(served, hitRatio) ?? served;
+
+const NOTHING = { reads: false, writes: false } as const;
+const BOTH = { reads: true, writes: true } as const;
+const WRITES = { reads: false, writes: true } as const;
+
+const CARRIED: Readonly<
+  Record<EdgeKind, { readonly reads: boolean; readonly writes: boolean }>
+> = {
+  "sync-call": BOTH,
+  "async-message": BOTH,
+  read: { reads: true, writes: false },
+  write: WRITES,
+  "change-feed": WRITES,
+  replication: NOTHING,
+  lock: NOTHING,
+  mounts: NOTHING,
+  scales: NOTHING,
+  watches: NOTHING,
+  scrapes: NOTHING,
+  "pipeline-next": NOTHING,
+  publishes: NOTHING,
+  protects: NOTHING,
+  admits: NOTHING,
+  relation: NOTHING,
+  reference: NOTHING,
 };
 
 export const carries = (
   kind: EdgeKind,
-): { reads: boolean; writes: boolean } => {
-  switch (kind) {
-    case "read":
-      return { reads: true, writes: false };
-    case "write":
-      return { reads: false, writes: true };
-    case "change-feed":
-      return { reads: false, writes: true };
-    case "replication":
-    case "lock":
-    case "mounts":
-    case "scales":
-    case "watches":
-    case "scrapes":
-    case "pipeline-next":
-    case "publishes":
-    case "protects":
-    case "admits":
-    case "relation":
-    case "reference":
-      return { reads: false, writes: false };
-    default:
-      return { reads: true, writes: true };
-  }
-};
+): { readonly reads: boolean; readonly writes: boolean } => CARRIED[kind];
 
 export const feedsOnlyChanges = (node: DesignNode): boolean =>
-  node.kind === "sql-database" || node.kind === "nosql-database";
+  behaviourOf(node).feedsOnlyChanges === true;
 
 export const SYNCHRONOUS = new Set<EdgeKind>(["sync-call", "read", "write"]);
