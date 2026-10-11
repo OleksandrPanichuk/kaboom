@@ -741,6 +741,18 @@ scored against. Moving on is the solver's choice: `POST
 version. Hints already revealed carry over, as many as the new version has,
 at its costs. Earlier submissions keep the version they were scored on.
 
+## Publishing a problem
+
+`checkPublishable` (`@repo/scoring`) answers `{ ok: false, issues }`,
+each issue a `{ path, message }` whose path leads into the problem's
+content (`["drills", 2, "requirements", "queries", 0, "from"]`), so an
+editor can mark the field. A parse error keeps zod's path; a rule names
+the field that breaks it, and a name a drill uses but the designs lack
+is reported where that name is written. `formatIssue` writes one as
+`drills[2].requirements.queries[0].from: …` for logs and errors. Every
+official problem round-trips through JSON unchanged
+(`official.test.ts`), so stored content is the authored form.
+
 ## Other people's solutions
 
 A submission records `all_passed` when its report has passed tests and

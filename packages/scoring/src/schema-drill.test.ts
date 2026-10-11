@@ -3,7 +3,7 @@ import { schemaFixtures } from "@repo/design/fixtures";
 import { describe, expect, test } from "bun:test";
 
 import { runDrill } from "./drills";
-import { checkPublishable } from "./publish";
+import { checkPublishable, formatIssue } from "./publish";
 import { DrillSchema, type SchemaDrill } from "./schema";
 import { scoreSubmission } from "./score";
 
@@ -82,7 +82,7 @@ describe("schema drills", () => {
   test("fail a design with no relations, so the reference without edges passes nothing", () => {
     const check = checkPublishable(problem);
 
-    if (!check.ok) throw new Error(check.issues.join(" "));
+    if (!check.ok) throw new Error(check.issues.map(formatIssue).join(" "));
 
     const outcome = runDrill(check.problem.drills[0]!, {
       ...reference,
@@ -98,7 +98,7 @@ describe("schema drills", () => {
   test("report each requirement as an assertion, and each forbidden finding", () => {
     const check = checkPublishable(problem);
 
-    if (!check.ok) throw new Error(check.issues.join(" "));
+    if (!check.ok) throw new Error(check.issues.map(formatIssue).join(" "));
 
     const outcome = runDrill(check.problem.drills[0] as SchemaDrill, reference);
 
@@ -122,10 +122,24 @@ describe("schema drills", () => {
       ],
     });
 
+    const at = ["drills", 0, "requirements"];
+
     expect(!check.ok && check.issues).toEqual([
-      "Drill authors declares no relationship; a schema drill checks how tables relate.",
-      "Drill authors names the table comments, which the baseline does not have.",
-      "Drill authors names the table comments, which the reference solution does not have.",
+      {
+        path: [...at, "relationships"],
+        message:
+          "Drill authors declares no relationship; a schema drill checks how tables relate.",
+      },
+      {
+        path: [...at, "columns", 0, "table"],
+        message:
+          "Drill authors names the table comments, which the baseline does not have.",
+      },
+      {
+        path: [...at, "columns", 0, "table"],
+        message:
+          "Drill authors names the table comments, which the reference solution does not have.",
+      },
     ]);
   });
 });
