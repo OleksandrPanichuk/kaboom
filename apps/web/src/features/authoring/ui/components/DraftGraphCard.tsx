@@ -24,7 +24,7 @@ export function DraftGraphCard({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative h-72 overflow-hidden rounded-xl border bg-zinc-50/70">
+      <div className="relative h-72 overflow-hidden rounded-xl border bg-background">
         {design.nodes.length === 0 ? (
           <p className="grid h-full place-items-center text-sm text-muted-foreground">
             Nothing drawn yet.

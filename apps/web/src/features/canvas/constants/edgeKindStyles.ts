@@ -12,7 +12,7 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
   "sync-call": {
     description: "The source waits for an answer before it replies itself.",
     label: "Sync call",
-    style: { stroke: "var(--color-zinc-500)", strokeWidth: 1.5 },
+    style: { stroke: "var(--muted-foreground)", strokeWidth: 1.5 },
     animated: false,
   },
   "async-message": {
@@ -20,7 +20,7 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
       "The source hands work over and moves on; it never waits for the result.",
     label: "Async message",
     style: {
-      stroke: "var(--color-indigo-500)",
+      stroke: "var(--interactive)",
       strokeWidth: 1.5,
       strokeDasharray: "6 4",
     },
@@ -36,7 +36,7 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
   write: {
     description: "The source changes what a store holds.",
     label: "Write",
-    style: { stroke: "var(--color-amber-600)", strokeWidth: 1.5 },
+    style: { stroke: "var(--warning)", strokeWidth: 1.5 },
     animated: false,
   },
   "change-feed": {
@@ -67,7 +67,7 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
       "The target keeps a copy of the source; it carries no request load.",
     label: "Replication",
     style: {
-      stroke: "var(--color-zinc-400)",
+      stroke: "var(--muted-foreground)",
       strokeWidth: 1.5,
       strokeDasharray: "2 4",
     },
@@ -78,7 +78,7 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
       "The source's pods read this config or secret when they start; it carries no request load.",
     label: "Mounts",
     style: {
-      stroke: "var(--color-emerald-600)",
+      stroke: "var(--success)",
       strokeWidth: 1.5,
       strokeDasharray: "2 4",
     },
@@ -112,7 +112,7 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
       "The source collects the target's metrics, so alerts on the target can fire; it carries no request load.",
     label: "Scrapes",
     style: {
-      stroke: "var(--color-amber-500)",
+      stroke: "var(--warning)",
       strokeWidth: 1.5,
       strokeDasharray: "1 4",
       strokeLinecap: "round",
@@ -131,7 +131,7 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
       "The stage pushes what it built to this registry; it carries no request load.",
     label: "Publishes",
     style: {
-      stroke: "var(--color-emerald-600)",
+      stroke: "var(--success)",
       strokeWidth: 1.5,
       strokeDasharray: "6 4",
     },
@@ -142,7 +142,7 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
       "The security group decides who may connect to the target; it carries no request load.",
     label: "Protects",
     style: {
-      stroke: "var(--color-amber-600)",
+      stroke: "var(--warning)",
       strokeWidth: 1.5,
       strokeDasharray: "2 4",
     },
@@ -153,7 +153,7 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
       "The security group lets the target, or the members of the target group, connect; it carries no request load.",
     label: "Admits",
     style: {
-      stroke: "var(--color-amber-600)",
+      stroke: "var(--warning)",
       strokeWidth: 1.5,
       strokeDasharray: "1 4",
       strokeLinecap: "round",
@@ -171,7 +171,7 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
     description:
       "A field holding the _id of a document in the target collection; it carries no request load.",
     label: "Reference",
-    style: { stroke: "var(--color-emerald-600)", strokeWidth: 1.5 },
+    style: { stroke: "var(--success)", strokeWidth: 1.5 },
     animated: false,
   },
 };

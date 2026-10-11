@@ -19,7 +19,7 @@ const labelOf = (id: DraftSectionId) =>
 export function DraftIssues({ issues, checked, onJump }: DraftIssuesProps) {
   if (checked?.ok) {
     return (
-      <p className="flex items-start gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900">
+      <p className="flex items-start gap-2 rounded-xl bg-success-surface px-3 py-2.5 text-sm text-success-foreground">
         <CircleCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         Passes the publish check. It is ready to send for review.
       </p>
@@ -45,11 +45,11 @@ export function DraftIssues({ issues, checked, onJump }: DraftIssuesProps) {
             <button
               type="button"
               onClick={() => onJump(section)}
-              className="flex w-full items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2 text-left text-sm hover:bg-amber-50"
+              className="flex w-full items-start gap-2 rounded-xl border border-warning-border bg-warning-surface/70 px-3 py-2 text-left text-sm hover:bg-warning-surface"
             >
               <TriangleAlert
                 aria-hidden="true"
-                className="mt-0.5 size-4 shrink-0 text-amber-600"
+                className="mt-0.5 size-4 shrink-0 text-warning"
               />
               <span className="flex min-w-0 flex-col gap-0.5">
                 <span className="text-pretty">{issue.message}</span>

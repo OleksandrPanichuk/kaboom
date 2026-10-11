@@ -57,8 +57,8 @@ export function ChipsField({
               className={cn(
                 "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-40",
                 on
-                  ? "border-indigo-300 bg-indigo-50 text-indigo-800"
-                  : "border-black/10 text-muted-foreground hover:bg-zinc-50",
+                  ? "border-interactive-border bg-interactive-surface text-interactive-foreground"
+                  : "border-border text-muted-foreground hover:bg-muted/60",
               )}
             >
               {humanize(item)}

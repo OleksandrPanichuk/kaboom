@@ -16,14 +16,12 @@ export function AuthLayout({
   footer,
 }: AuthLayoutProps) {
   return (
-    <main className="relative flex min-h-svh overflow-hidden bg-[#f7f7fa] px-4 py-8 sm:px-6 sm:py-12">
+    <main className="relative flex min-h-svh overflow-hidden bg-background px-4 py-8 sm:px-6 sm:py-12">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
-        <div className="absolute -top-48 left-1/2 size-[34rem] -translate-x-1/2 rounded-full bg-indigo-200/45 blur-3xl" />
-        <div className="absolute right-[-12rem] bottom-[-16rem] size-[32rem] rounded-full bg-sky-100/70 blur-3xl" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(24,24,27,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(24,24,27,0.035)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:linear-gradient(to_bottom,black,transparent_80%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--grid-line)_1px,transparent_1px),linear-gradient(to_bottom,var(--grid-line)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:linear-gradient(to_bottom,black,transparent_80%)]" />
       </div>
 
       <div className="relative mx-auto flex w-full max-w-md flex-col justify-center">
@@ -34,7 +32,7 @@ export function AuthLayout({
           </span>
         </div>
 
-        <section className="auth-panel rounded-3xl border border-black/[0.07] bg-white/95 p-5 shadow-[0_24px_70px_-32px_rgba(24,24,27,0.35)] backdrop-blur sm:p-8">
+        <section className="auth-panel rounded-3xl border border-border bg-card p-5 shadow-card sm:p-8">
           <div className="mb-7 flex flex-col gap-2">
             <h1 className="text-2xl font-semibold tracking-[-0.035em] text-balance sm:text-[1.75rem]">
               {title}

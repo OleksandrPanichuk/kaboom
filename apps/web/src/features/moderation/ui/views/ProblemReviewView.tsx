@@ -24,7 +24,7 @@ const record = (value: unknown): Record<string, unknown> =>
 
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-black/[0.07] bg-white p-4 sm:p-5">
+    <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
       <h2 className="font-semibold">{title}</h2>
       {children}
     </section>
@@ -33,7 +33,7 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
 
 function Json({ value }: { value: unknown }) {
   return (
-    <pre className="max-h-96 overflow-auto rounded-xl bg-zinc-50 p-3 text-xs leading-5">
+    <pre className="max-h-96 overflow-auto rounded-xl bg-muted/60 p-3 text-xs leading-5">
       {value === undefined ? "None" : JSON.stringify(value, null, 2)}
     </pre>
   );
@@ -58,7 +58,7 @@ export function ProblemReviewView({
       : null;
 
   return (
-    <div className="flex-1 bg-zinc-50/70 px-4 py-6 sm:px-8 sm:py-8">
+    <div className="flex-1 bg-background px-4 py-6 sm:px-8 sm:py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <div className="flex flex-col gap-3">
           <Link
@@ -82,7 +82,7 @@ export function ProblemReviewView({
               <Link
                 to="/u/$handle"
                 params={{ handle: review.author.handle }}
-                className="font-medium text-indigo-700 hover:underline"
+                className="font-medium text-interactive-foreground hover:underline"
               >
                 {review.author.displayName}
               </Link>
@@ -92,7 +92,7 @@ export function ProblemReviewView({
             · /problems/{review.slug} · {STATUS[review.status]}
           </p>
           {changed ? (
-            <p className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950 text-pretty">
+            <p className="rounded-xl border border-interactive-border bg-interactive-surface px-4 py-3 text-sm text-interactive-foreground text-pretty">
               An update to a published problem. Changed:{" "}
               <span className="font-medium">
                 {changed.length > 0 ? changed.join(", ") : "nothing visible"}
@@ -101,7 +101,7 @@ export function ProblemReviewView({
             </p>
           ) : null}
           {review.feedback ? (
-            <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm whitespace-pre-line text-amber-950">
+            <p className="rounded-xl border border-warning-border bg-warning-surface px-4 py-3 text-sm whitespace-pre-line text-warning-foreground">
               {review.feedback}
             </p>
           ) : null}

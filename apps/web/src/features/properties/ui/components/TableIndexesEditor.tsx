@@ -146,7 +146,7 @@ export function TableIndexesEditor({
           {indexes.map((index) => (
             <li
               key={index.id}
-              className="flex min-w-0 items-center gap-2 rounded-lg border border-black/[0.07] bg-white py-1 pr-1 pl-2.5"
+              className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card py-1 pr-1 pl-2.5"
             >
               <span className="flex min-w-0 flex-col">
                 <span className="truncate font-mono text-xs">
@@ -169,7 +169,7 @@ export function TableIndexesEditor({
                 ) : null}
               </span>
               {index.unique ? (
-                <span className="shrink-0 rounded bg-zinc-100 px-1 text-[10px] font-medium text-zinc-600">
+                <span className="shrink-0 rounded bg-muted px-1 text-[10px] font-medium text-muted-foreground">
                   unique
                 </span>
               ) : null}
@@ -192,7 +192,7 @@ export function TableIndexesEditor({
       )}
 
       {columns.length > 0 ? (
-        <div className="flex flex-col gap-2.5 rounded-xl border border-dashed border-black/10 p-2.5">
+        <div className="flex flex-col gap-2.5 rounded-xl border border-dashed border-border p-2.5">
           <p className="text-xs font-medium">New index</p>
           {methods.length > 1 ? (
             <Field>

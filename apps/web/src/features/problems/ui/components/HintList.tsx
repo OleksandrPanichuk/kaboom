@@ -46,14 +46,14 @@ export function HintList({
           return (
             <li
               key={hint.index}
-              className="flex flex-col gap-2 rounded-xl border border-black/[0.07] bg-white p-3"
+              className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3"
             >
               <div className="flex min-w-0 items-start justify-between gap-3">
                 <p className="flex min-w-0 items-center gap-1.5 text-sm font-medium">
                   {shown ? (
                     <Lightbulb
                       aria-hidden="true"
-                      className="size-3.5 shrink-0 text-amber-600"
+                      className="size-3.5 shrink-0 text-warning"
                     />
                   ) : (
                     <Lock

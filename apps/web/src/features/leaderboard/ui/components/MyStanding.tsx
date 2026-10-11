@@ -21,10 +21,10 @@ export function MyStanding({ me }: MyStandingProps) {
   return (
     <section
       aria-labelledby="me-title"
-      className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] sm:p-5"
+      className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-5"
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-indigo-200/60 bg-indigo-50 text-indigo-700">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-interactive-border/60 bg-interactive-surface text-interactive-foreground">
           <Trophy aria-hidden="true" className="size-4" />
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">

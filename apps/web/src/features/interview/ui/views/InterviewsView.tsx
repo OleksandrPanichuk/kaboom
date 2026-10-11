@@ -25,7 +25,7 @@ export function InterviewsView({ onOpen }: InterviewsViewProps) {
   const { data } = useSuspenseQuery(interviewsQuery);
 
   return (
-    <div className="flex-1 bg-zinc-50/70 px-4 py-8 sm:px-8 sm:py-10">
+    <div className="flex-1 bg-background px-4 py-8 sm:px-8 sm:py-10">
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex min-w-0 flex-col gap-1">
@@ -45,7 +45,7 @@ export function InterviewsView({ onOpen }: InterviewsViewProps) {
           />
         </div>
         {data.items.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-black/10 px-6 py-12 text-center">
+          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border px-6 py-12 text-center">
             <MessagesSquare
               aria-hidden="true"
               className="size-6 text-muted-foreground"
@@ -61,7 +61,7 @@ export function InterviewsView({ onOpen }: InterviewsViewProps) {
             {data.items.map((interview) => (
               <li
                 key={interview.id}
-                className="relative flex min-w-0 flex-col gap-1 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] hover:border-indigo-200 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50"
+                className="relative flex min-w-0 flex-col gap-1 rounded-2xl border border-border bg-card p-4 shadow-card hover:border-interactive-border has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50"
               >
                 <Link
                   to={
@@ -78,7 +78,7 @@ export function InterviewsView({ onOpen }: InterviewsViewProps) {
                   <span
                     className={cn(
                       interview.status === "active" &&
-                        "font-medium text-indigo-700",
+                        "font-medium text-interactive-foreground",
                     )}
                   >
                     {STATUS[interview.status] ?? interview.status}

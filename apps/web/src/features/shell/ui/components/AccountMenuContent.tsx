@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut } from "lucide-react";
+import { LogOut, Monitor, Moon, Sun } from "lucide-react";
 import type { ComponentProps } from "react";
 
 import {
@@ -8,10 +8,19 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
 } from "@/components/ui/DropdownMenu";
 import { signOutMutation, useCurrentUser } from "@/features/auth";
 import { ACCOUNT_LINKS } from "@/features/shell/constants";
+import { type ThemePreference, useThemeStore } from "@/features/shell/store";
+
+const THEMES = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "Match the system", icon: Monitor },
+] as const;
 
 type ContentProps = ComponentProps<typeof DropdownMenuContent>;
 
@@ -29,6 +38,8 @@ export function AccountMenuContent({
   const user = useCurrentUser();
   const signOut = useMutation(signOutMutation);
   const navigate = useNavigate();
+  const theme = useThemeStore((state) => state.theme);
+  const setTheme = useThemeStore((state) => state.setTheme);
 
   return (
     <DropdownMenuContent
@@ -57,6 +68,21 @@ export function AccountMenuContent({
             {link.label}
           </DropdownMenuItem>
         ))}
+      </DropdownMenuGroup>
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup>
+        <DropdownMenuLabel>Theme</DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={theme}
+          onValueChange={(value) => setTheme(value as ThemePreference)}
+        >
+          {THEMES.map((option) => (
+            <DropdownMenuRadioItem key={option.value} value={option.value}>
+              <option.icon aria-hidden="true" />
+              {option.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
       <DropdownMenuItem

@@ -28,7 +28,7 @@ export function OAuthButtons({ redirect }: OAuthButtonsProps) {
             href={oauthSignInUrl(provider, redirect)}
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "h-9 rounded-xl bg-white text-[0.8125rem]",
+              "h-9 rounded-xl bg-card text-[0.8125rem]",
             )}
           >
             <Icon className="size-4" />

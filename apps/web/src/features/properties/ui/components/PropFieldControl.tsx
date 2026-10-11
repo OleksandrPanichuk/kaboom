@@ -52,7 +52,7 @@ export function PropFieldControl({
     const group = (value ?? {}) as Record<string, unknown>;
 
     return (
-      <fieldset className="flex flex-col gap-3 rounded-xl border border-black/[0.07] p-3">
+      <fieldset className="flex flex-col gap-3 rounded-xl border border-border p-3">
         <legend className="px-1 text-sm font-medium">{meta.title}</legend>
         {meta.description ? (
           <p className="-mt-1 text-xs leading-5 text-muted-foreground">

@@ -47,7 +47,7 @@ export function StartInterviewButton({
           You already have an interview running.{" "}
           <button
             type="button"
-            className="font-medium text-indigo-700 underline-offset-2 hover:underline"
+            className="font-medium text-interactive-foreground underline-offset-2 hover:underline"
             onClick={() => onOpen(running)}
           >
             Go back to it

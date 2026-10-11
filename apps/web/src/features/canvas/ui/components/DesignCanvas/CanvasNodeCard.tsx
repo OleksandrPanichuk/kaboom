@@ -15,7 +15,7 @@ import type { CanvasNode } from "@/features/canvas/typedefs";
 import { TechnologyMark } from "./TechnologyMark";
 
 const HANDLE =
-  "!size-3 !rounded-full !border-2 !border-white !bg-indigo-500 shadow-sm transition-opacity";
+  "!size-3 !rounded-full !border-2 !border-white !bg-interactive shadow-sm transition-opacity";
 
 function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
   const { node } = data;
@@ -43,7 +43,7 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
     <BaseNode
       style={{ width: NODE_WIDTH }}
       data-tone={overlay?.tone}
-      className="group/node rounded-xl border-black/10 data-[tone=busy]:border-amber-300 data-[tone=busy]:bg-amber-50/60 data-[tone=down]:border-dashed data-[tone=down]:border-red-400 data-[tone=down]:bg-red-50/60 data-[tone=ok]:border-emerald-300 data-[tone=saturated]:border-red-400 data-[tone=saturated]:bg-red-50/70 bg-white shadow-[0_8px_24px_-18px_rgba(24,24,27,0.5)] hover:ring-0 in-[.selected]:border-indigo-400 in-[.selected]:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
+      className="group/node rounded-xl border-border data-[tone=busy]:border-warning-border data-[tone=busy]:bg-warning-surface/60 data-[tone=down]:border-dashed data-[tone=down]:border-destructive data-[tone=down]:bg-danger-surface/60 data-[tone=ok]:border-success-border data-[tone=saturated]:border-destructive data-[tone=saturated]:bg-danger-surface/70 bg-card shadow-card hover:ring-0 in-[.selected]:border-interactive in-[.selected]:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
     >
       <Handle type="target" position={Position.Left} className={handleClass} />
       {hits.length > 0 ? (
@@ -53,7 +53,9 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
           title={hits.map((hit) => hit.message).join("\n")}
           className={cn(
             "absolute -top-2 -right-2 grid size-5 place-items-center rounded-full border-2 border-white shadow-sm",
-            warns ? "bg-amber-500 text-white" : "bg-zinc-400 text-white",
+            warns
+              ? "bg-warning text-background"
+              : "bg-muted-foreground text-background",
           )}
         >
           <BadgeIcon aria-hidden="true" className="size-3" />
@@ -61,11 +63,11 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
       ) : null}
       <div className="flex items-center gap-2.5 p-2.5">
         {product ? (
-          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-black/10 bg-white">
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-border bg-card">
             <TechnologyMark technology={product} className="size-5" />
           </span>
         ) : (
-          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-indigo-200/60 bg-indigo-50 text-indigo-700">
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-interactive-border/60 bg-interactive-surface text-interactive-foreground">
             <Icon aria-hidden="true" className="size-4" />
           </span>
         )}
@@ -83,12 +85,12 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
           className={cn(
             "border-t px-2.5 py-1 text-[11px] font-medium tabular-nums",
             overlay.tone === "saturated" || overlay.tone === "down"
-              ? "border-red-200 text-red-700"
+              ? "border-danger-border text-danger-foreground"
               : overlay.tone === "busy"
-                ? "border-amber-200 text-amber-800"
+                ? "border-warning-border text-warning-foreground"
                 : overlay.tone === "ok"
-                  ? "border-emerald-200 text-emerald-800"
-                  : "border-black/[0.06] text-muted-foreground",
+                  ? "border-success-border text-success-foreground"
+                  : "border-border text-muted-foreground",
           )}
         >
           {overlay.text}

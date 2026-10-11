@@ -18,15 +18,15 @@ export function LintCallout({ hit, title, action }: LintCalloutProps) {
       className={cn(
         "flex gap-2.5 rounded-xl border p-3 text-sm",
         warning
-          ? "border-amber-200 bg-amber-50/70 text-amber-950"
-          : "border-black/[0.07] bg-zinc-50 text-foreground",
+          ? "border-warning-border bg-warning-surface/70 text-warning-foreground"
+          : "border-border bg-muted/60 text-foreground",
       )}
     >
       <Icon
         aria-hidden="true"
         className={cn(
           "mt-0.5 size-4 shrink-0",
-          warning ? "text-amber-600" : "text-zinc-500",
+          warning ? "text-warning" : "text-muted-foreground",
         )}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-1">

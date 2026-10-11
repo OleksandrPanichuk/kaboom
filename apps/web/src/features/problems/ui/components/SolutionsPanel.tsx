@@ -56,9 +56,9 @@ export function SolutionsPanel({
         className={cn(
           "flex gap-2.5 border-b px-4 py-3 text-sm leading-5",
           solved
-            ? "bg-emerald-50 text-emerald-950"
+            ? "bg-success-surface text-success-foreground"
             : until
-              ? "bg-amber-50 text-amber-950"
+              ? "bg-warning-surface text-warning-foreground"
               : "text-muted-foreground",
         )}
       >
@@ -67,9 +67,9 @@ export function SolutionsPanel({
           className={cn(
             "mt-0.5 size-4 shrink-0",
             solved
-              ? "text-emerald-600"
+              ? "text-success"
               : until
-                ? "text-amber-600"
+                ? "text-warning"
                 : "text-muted-foreground",
           )}
         />
@@ -115,7 +115,7 @@ export function SolutionsPanel({
               {shown.solutions.map((solution, index) => (
                 <li
                   key={`${solution.submittedAt}-${index}`}
-                  className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-black/[0.07] bg-white p-3"
+                  className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-border bg-card p-3"
                 >
                   <div className="flex min-w-0 flex-col">
                     <p className="text-sm font-medium">
@@ -149,7 +149,7 @@ export function SolutionsPanel({
         </PanelSection>
       ) : (
         <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
-          <span className="grid size-9 place-items-center rounded-xl bg-zinc-100 text-zinc-700">
+          <span className="grid size-9 place-items-center rounded-xl bg-muted text-subtle-foreground">
             <Users aria-hidden="true" className="size-4" />
           </span>
           <p className="text-sm leading-5 text-muted-foreground text-pretty">

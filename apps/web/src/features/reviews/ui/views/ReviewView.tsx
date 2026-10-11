@@ -34,7 +34,7 @@ export function ReviewView({ interviewId, onOpenInterview }: ReviewViewProps) {
   const endedAt = interview.endedAt ?? interview.startedAt;
 
   return (
-    <div className="flex-1 bg-zinc-50/70 px-4 py-8 sm:px-8 sm:py-10">
+    <div className="flex-1 bg-background px-4 py-8 sm:px-8 sm:py-10">
       <div className="mx-auto flex max-w-3xl flex-col gap-6">
         <Link
           to="/interviews"
@@ -125,13 +125,13 @@ function Notice({ title, body, busy = false, children }: NoticeProps) {
   return (
     <section
       role={busy ? "status" : undefined}
-      className="flex flex-col gap-3 rounded-2xl border border-black/[0.07] bg-white p-5 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] sm:p-6"
+      className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6"
     >
       <h2 className="flex items-center gap-2 font-semibold">
         {busy ? (
           <LoaderCircle
             aria-hidden="true"
-            className="size-4 animate-spin text-indigo-600"
+            className="size-4 animate-spin text-interactive"
           />
         ) : null}
         {title}

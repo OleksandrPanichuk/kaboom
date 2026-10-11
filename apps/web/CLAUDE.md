@@ -405,6 +405,23 @@ Every screen works from 320px wide, and the page never scrolls sideways.
 - Check a layout change at 375px and 320px in the browser before calling it
   done.
 
+## Colour and theme
+
+Colours come from the theme's tokens in `styles/globals.css`, never from
+Tailwind's palette: `bg-card`, `text-muted-foreground`, `border-border`,
+and for meaning `interactive` (links, focus, selection), `success`,
+`warning` and `danger`, each with `-surface`, `-border` and `-foreground`
+shades. `primary` is the Ember brand colour, kept for the action that
+matters on a screen. `shadow-card` is the one card shadow, and
+`font-mono` (Geist Mono) is for what a machine typed: ids, slugs, paths.
+Every token has a dark value under `.dark`; `ThemeSync` (in the root
+route) sets the class from the user menu's choice, light, dark or the
+system's, and `index.html` sets it before the first paint. React Flow
+reads its colours from `--xy-*` variables mapped to the same tokens.
+`styles/tokens.test.ts` fails on a palette class outside
+`components/ui`; violet, sky and teal stay allowed for categories on the
+canvas.
+
 ## Naming
 
 | What | File | Example |

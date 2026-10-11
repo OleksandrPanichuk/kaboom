@@ -24,7 +24,7 @@ export function UserAvatar({
       {url ? <AvatarImage src={url} alt="" /> : null}
       <AvatarFallback
         className={cn(
-          "bg-indigo-50 font-medium text-indigo-700",
+          "bg-interactive-surface font-medium text-interactive-foreground",
           size === "xl" && "text-2xl",
         )}
       >

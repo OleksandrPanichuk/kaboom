@@ -131,11 +131,11 @@ export function NodeInspector({
     <div className="flex flex-col">
       <div className="flex items-center gap-3 border-b px-4 py-3">
         {product ? (
-          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-black/10 bg-white">
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-border bg-card">
             <TechnologyMark technology={product} className="size-5" />
           </span>
         ) : (
-          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-indigo-200/60 bg-indigo-50 text-indigo-700">
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-interactive-border/60 bg-interactive-surface text-interactive-foreground">
             <Icon aria-hidden="true" className="size-4" />
           </span>
         )}

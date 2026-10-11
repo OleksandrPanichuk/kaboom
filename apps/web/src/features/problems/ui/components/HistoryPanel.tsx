@@ -39,7 +39,7 @@ export function HistoryPanel({ slug }: HistoryPanelProps) {
   if (data.items.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-        <span className="grid size-9 place-items-center rounded-xl bg-zinc-100 text-zinc-700">
+        <span className="grid size-9 place-items-center rounded-xl bg-muted text-subtle-foreground">
           <History aria-hidden="true" className="size-4" />
         </span>
         <p className="text-sm font-medium">Nothing submitted yet</p>
@@ -71,7 +71,7 @@ export function HistoryPanel({ slug }: HistoryPanelProps) {
                 {submission.score}
               </span>
               {!submission.counted ? (
-                <span className="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900">
+                <span className="shrink-0 rounded-md bg-warning-surface px-1.5 py-0.5 text-xs font-medium text-warning-foreground">
                   Not counted
                 </span>
               ) : null}

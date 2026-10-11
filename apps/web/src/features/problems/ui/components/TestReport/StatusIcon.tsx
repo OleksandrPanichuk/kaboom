@@ -10,9 +10,9 @@ interface StatusIconProps {
 }
 
 const ICONS = {
-  passed: { Icon: CircleCheck, tone: "text-emerald-600" },
-  failed: { Icon: CircleX, tone: "text-red-600" },
-  flaky: { Icon: CircleDashed, tone: "text-amber-600" },
+  passed: { Icon: CircleCheck, tone: "text-success" },
+  failed: { Icon: CircleX, tone: "text-destructive" },
+  flaky: { Icon: CircleDashed, tone: "text-warning" },
   skipped: { Icon: CircleMinus, tone: "text-muted-foreground" },
 } as const;
 

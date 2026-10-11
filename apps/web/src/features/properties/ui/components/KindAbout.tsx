@@ -42,7 +42,7 @@ export function KindAbout({ kind, label, docs }: KindAboutProps) {
           to="/handbook"
           hash={kind}
           target="_blank"
-          className="self-start text-sm font-medium text-indigo-700 underline-offset-2 hover:underline"
+          className="self-start text-sm font-medium text-interactive-foreground underline-offset-2 hover:underline"
         >
           More in the handbook
         </Link>

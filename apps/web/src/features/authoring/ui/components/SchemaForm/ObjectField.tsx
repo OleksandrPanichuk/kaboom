@@ -112,7 +112,7 @@ export function ObjectField({
   if (bare) return body;
 
   return (
-    <fieldset className="flex flex-col gap-3 rounded-xl border border-black/[0.07] p-3 sm:p-4">
+    <fieldset className="flex flex-col gap-3 rounded-xl border border-border p-3 sm:p-4">
       <legend className="px-1 text-sm font-medium">{label}</legend>
       {description ? (
         <p className="-mt-1 text-sm text-muted-foreground text-pretty">

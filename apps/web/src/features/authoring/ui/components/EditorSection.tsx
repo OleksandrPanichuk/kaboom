@@ -22,8 +22,8 @@ export function EditorSection({
       aria-labelledby={`section-${id}-title`}
       tabIndex={-1}
       className={cn(
-        "flex scroll-mt-20 flex-col gap-4 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] outline-none sm:p-5",
-        issues > 0 && "border-amber-300",
+        "flex scroll-mt-20 flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-card outline-none sm:p-5",
+        issues > 0 && "border-warning-border",
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -38,7 +38,7 @@ export function EditorSection({
           ) : null}
         </div>
         {issues > 0 ? (
-          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 tabular-nums">
+          <span className="shrink-0 rounded-full bg-warning-surface px-2 py-0.5 text-xs font-medium text-warning-foreground tabular-nums">
             {issues} {issues === 1 ? "issue" : "issues"}
           </span>
         ) : null}

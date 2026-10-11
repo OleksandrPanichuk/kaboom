@@ -1,6 +1,6 @@
 export const scoreTone = (score: number): string =>
   score >= 80
-    ? "text-emerald-700"
+    ? "text-success-foreground"
     : score >= 40
-      ? "text-amber-700"
-      : "text-red-700";
+      ? "text-warning-foreground"
+      : "text-danger-foreground";

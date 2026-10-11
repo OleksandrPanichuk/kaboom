@@ -67,7 +67,7 @@ export function FieldsEditor({
       return (
         <li key={field.id} className="flex flex-col gap-1.5">
           <div
-            className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-black/[0.07] bg-white p-2"
+            className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-border bg-card p-2"
             style={{ marginLeft: depth * 12 }}
           >
             <div className="flex min-w-0 items-center gap-1.5">
@@ -172,7 +172,7 @@ export function FieldsEditor({
                 aria-pressed={field.required}
                 className={cn(
                   field.required &&
-                    "border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100",
+                    "border-success-border bg-success-surface text-success-foreground hover:bg-success-surface",
                 )}
                 onClick={() =>
                   apply(

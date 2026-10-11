@@ -75,7 +75,7 @@ export function SchemaPicker({ node, onPatch }: SchemaPickerProps) {
           <Link
             to="/designs/$designId"
             params={{ designId: current }}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-700 hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-interactive-foreground hover:underline"
           >
             <ExternalLink aria-hidden="true" className="size-3.5" />
             Open schema

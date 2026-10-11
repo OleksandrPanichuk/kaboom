@@ -17,7 +17,7 @@ export function ProblemCredit({ problem }: ProblemCreditProps) {
           <Link
             to="/u/$handle"
             params={{ handle: problem.author.handle }}
-            className="font-medium text-indigo-700 hover:underline"
+            className="font-medium text-interactive-foreground hover:underline"
           >
             {problem.author.displayName}
           </Link>
@@ -30,7 +30,7 @@ export function ProblemCredit({ problem }: ProblemCreditProps) {
           <Link
             to="/problems/$slug"
             params={{ slug: problem.forkedFrom.slug }}
-            className="font-medium text-indigo-700 hover:underline"
+            className="font-medium text-interactive-foreground hover:underline"
           >
             {problem.forkedFrom.title}
           </Link>

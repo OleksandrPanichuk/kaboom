@@ -30,7 +30,9 @@ export function PhaseClock({ interview }: PhaseClockProps) {
       aria-label={`${phaseLabel(interview.phase)}, ${formatDuration(used)} of ${plan?.minutes ?? "?"} minutes`}
       className={cn(
         "hidden items-center gap-1.5 rounded-md px-2 py-1 text-xs tabular-nums md:inline-flex",
-        over ? "bg-amber-50 text-amber-800" : "text-muted-foreground",
+        over
+          ? "bg-warning-surface text-warning-foreground"
+          : "text-muted-foreground",
       )}
     >
       <Timer aria-hidden="true" className="size-3.5" />

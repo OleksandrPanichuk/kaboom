@@ -88,7 +88,7 @@ function CanvasEdgePathComponent(props: EdgeProps<CanvasEdge>) {
       {label ? (
         <EdgeLabelRenderer>
           <div
-            className="nodrag nopan pointer-events-auto absolute rounded-md border border-zinc-200 bg-white px-1.5 py-0.5 text-[11px] font-medium text-zinc-600"
+            className="nodrag nopan pointer-events-auto absolute rounded-md border border-border bg-card px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground"
             style={{
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
             }}

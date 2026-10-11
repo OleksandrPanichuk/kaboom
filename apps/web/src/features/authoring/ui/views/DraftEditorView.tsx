@@ -76,7 +76,7 @@ export function DraftEditorView({
     DRAFT_SECTIONS.find((section) => section.id === id)!.label;
 
   return (
-    <div className="flex-1 bg-zinc-50/70 px-4 py-6 sm:px-8 sm:py-8">
+    <div className="flex-1 bg-background px-4 py-6 sm:px-8 sm:py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <div className="flex flex-col gap-3">
           <Link
@@ -114,7 +114,7 @@ export function DraftEditorView({
                     <Link
                       to="/problems/$slug"
                       params={{ slug: draft.problem.slug }}
-                      className="font-medium text-indigo-700 hover:underline"
+                      className="font-medium text-interactive-foreground hover:underline"
                     >
                       /problems/{draft.problem.slug}
                     </Link>
@@ -129,7 +129,7 @@ export function DraftEditorView({
                   <Link
                     to="/problems/$slug"
                     params={{ slug: draft.forkedFrom.slug }}
-                    className="font-medium text-indigo-700 hover:underline"
+                    className="font-medium text-interactive-foreground hover:underline"
                   >
                     {draft.forkedFrom.title}
                   </Link>
@@ -173,7 +173,7 @@ export function DraftEditorView({
             </p>
           ) : null}
           {draft.status === "changes-requested" && latest?.feedback ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            <div className="rounded-xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning-foreground">
               <p className="font-medium">A moderator asked for changes</p>
               <p className="mt-1 whitespace-pre-line text-pretty">
                 {latest.feedback}
@@ -181,7 +181,7 @@ export function DraftEditorView({
             </div>
           ) : null}
           {draft.status === "in-review" ? (
-            <p className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950 text-pretty">
+            <p className="rounded-xl border border-interactive-border bg-interactive-surface px-4 py-3 text-sm text-interactive-foreground text-pretty">
               A moderator is reviewing what you sent. You can keep editing; the
               review covers the version you sent, and you can send a newer one
               after withdrawing it.
@@ -333,7 +333,7 @@ export function DraftEditorView({
           </div>
 
           <aside className="flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
-            <section className="flex flex-col gap-3 rounded-2xl border border-black/[0.07] bg-white p-4 sm:p-5">
+            <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
               <h2 className="font-semibold">Issues</h2>
               <DraftIssues
                 issues={editor.issues}
@@ -341,7 +341,7 @@ export function DraftEditorView({
                 onJump={jump}
               />
             </section>
-            <section className="flex flex-col gap-3 rounded-2xl border border-black/[0.07] bg-white p-4 sm:p-5">
+            <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
               <h2 className="font-semibold">Reviews</h2>
               <DraftReviews reviews={draft.reviews} />
             </section>

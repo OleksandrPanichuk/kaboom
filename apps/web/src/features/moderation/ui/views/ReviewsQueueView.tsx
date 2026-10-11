@@ -22,7 +22,7 @@ export function ReviewsQueueView({
   const { data } = useSuspenseQuery(reviewsQuery(status));
 
   return (
-    <div className="flex-1 bg-zinc-50/70 px-4 py-8 sm:px-8 sm:py-10">
+    <div className="flex-1 bg-background px-4 py-8 sm:px-8 sm:py-10">
       <div className="mx-auto flex max-w-3xl flex-col gap-6">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-semibold tracking-[-0.04em]">Reviews</h1>
@@ -34,7 +34,7 @@ export function ReviewsQueueView({
         <div
           role="tablist"
           aria-label="Review status"
-          className="flex w-fit gap-1 rounded-xl border border-black/[0.07] bg-white p-1"
+          className="flex w-fit gap-1 rounded-xl border border-border bg-card p-1"
         >
           {TABS.map((tab) => (
             <button
@@ -45,7 +45,7 @@ export function ReviewsQueueView({
               onClick={() => onStatusChange(tab.value)}
               className={cn(
                 "rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground",
-                status === tab.value && "bg-zinc-900 text-white",
+                status === tab.value && "bg-foreground text-background",
               )}
             >
               {tab.label}

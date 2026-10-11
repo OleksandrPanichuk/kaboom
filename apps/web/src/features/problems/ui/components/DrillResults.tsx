@@ -11,17 +11,17 @@ export function DrillResults({ drills }: DrillResultsProps) {
       {drills.map((drill) => (
         <li
           key={drill.id}
-          className="flex min-w-0 gap-2.5 rounded-xl border border-black/[0.07] bg-white p-3"
+          className="flex min-w-0 gap-2.5 rounded-xl border border-border bg-card p-3"
         >
           {drill.passed ? (
             <CircleCheck
               aria-label="Passed"
-              className="mt-0.5 size-4 shrink-0 text-emerald-600"
+              className="mt-0.5 size-4 shrink-0 text-success"
             />
           ) : (
             <CircleX
               aria-label="Failed"
-              className="mt-0.5 size-4 shrink-0 text-red-600"
+              className="mt-0.5 size-4 shrink-0 text-destructive"
             />
           )}
           <div className="flex min-w-0 flex-col gap-1">

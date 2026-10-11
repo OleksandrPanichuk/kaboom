@@ -18,26 +18,26 @@ const when = (at: string) =>
 export function ReviewsTable({ reviews }: ReviewsTableProps) {
   if (reviews.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-black/10 px-4 py-10 text-center text-sm text-muted-foreground">
+      <p className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
         Nothing here.
       </p>
     );
   }
 
   return (
-    <ul className="flex flex-col divide-y overflow-hidden rounded-2xl border border-black/[0.07] bg-white">
+    <ul className="flex flex-col divide-y overflow-hidden rounded-2xl border border-border bg-card">
       {reviews.map((review) => (
         <li key={review.id}>
           <Link
             to="/moderation/$reviewId"
             params={{ reviewId: review.id }}
-            className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50"
+            className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/60"
           >
             <span className="flex min-w-0 flex-col gap-0.5">
               <span className="flex min-w-0 items-center gap-2">
                 <span className="truncate font-medium">{review.title}</span>
                 {review.update ? (
-                  <span className="shrink-0 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                  <span className="shrink-0 rounded-full bg-interactive-surface px-2 py-0.5 text-xs font-medium text-interactive-foreground">
                     Update
                   </span>
                 ) : null}

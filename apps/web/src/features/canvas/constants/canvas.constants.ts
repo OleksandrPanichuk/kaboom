@@ -15,7 +15,7 @@ export const REGION_LABEL_HEIGHT = 30;
 
 export const REGION_TONES = [
   "border-sky-300 bg-sky-50/60 text-sky-800",
-  "border-emerald-300 bg-emerald-50/60 text-emerald-800",
+  "border-success-border bg-success-surface/60 text-success-foreground",
   "border-violet-300 bg-violet-50/60 text-violet-800",
-  "border-amber-300 bg-amber-50/60 text-amber-800",
+  "border-warning-border bg-warning-surface/60 text-warning-foreground",
 ] as const;

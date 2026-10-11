@@ -21,7 +21,7 @@ import type { CanvasNode } from "@/features/canvas/typedefs";
 import { type DynamoRow, dynamoRows } from "@/features/canvas/utils";
 
 const ROW =
-  "flex items-center gap-1.5 px-3 text-xs not-last:border-b not-last:border-black/[0.05]";
+  "flex items-center gap-1.5 px-3 text-xs not-last:border-b not-last:border-border";
 
 function Row({ row }: { row: DynamoRow }) {
   switch (row.kind) {
@@ -35,12 +35,12 @@ function Row({ row }: { row: DynamoRow }) {
           {row.role === "partition" ? (
             <KeyRound
               aria-label="Partition key"
-              className="size-3 shrink-0 text-amber-600"
+              className="size-3 shrink-0 text-warning"
             />
           ) : (
             <ArrowDownWideNarrow
               aria-label="Sort key"
-              className="size-3 shrink-0 text-amber-600"
+              className="size-3 shrink-0 text-warning"
             />
           )}
           <span className="min-w-0 truncate font-mono font-semibold">
@@ -71,7 +71,7 @@ function Row({ row }: { row: DynamoRow }) {
         <>
           <Box
             aria-label="Item type"
-            className="size-3 shrink-0 text-orange-600"
+            className="size-3 shrink-0 text-warning"
           />
           <span className="shrink-0 font-mono font-medium">
             {row.item.name}
@@ -98,7 +98,7 @@ function DynamoTableNodeCardComponent({ data }: NodeProps<CanvasNode>) {
   return (
     <BaseNode
       style={{ width: TABLE_WIDTH }}
-      className="group/node overflow-visible rounded-xl border-black/10 bg-white shadow-[0_8px_24px_-18px_rgba(24,24,27,0.5)] hover:ring-0 in-[.selected]:border-orange-400 in-[.selected]:shadow-[0_0_0_3px_rgba(251,146,60,0.2)]"
+      className="group/node overflow-visible rounded-xl border-border bg-card shadow-card hover:ring-0 in-[.selected]:border-warning in-[.selected]:shadow-[0_0_0_3px_rgba(251,146,60,0.2)]"
     >
       {hits.length > 0 ? (
         <span
@@ -107,19 +107,21 @@ function DynamoTableNodeCardComponent({ data }: NodeProps<CanvasNode>) {
           title={hits.map((hit) => hit.message).join("\n")}
           className={cn(
             "absolute -top-2 -right-2 z-10 grid size-5 place-items-center rounded-full border-2 border-white shadow-sm",
-            warns ? "bg-amber-500 text-white" : "bg-zinc-400 text-white",
+            warns
+              ? "bg-warning text-background"
+              : "bg-muted-foreground text-background",
           )}
         >
           <BadgeIcon aria-hidden="true" className="size-3" />
         </span>
       ) : null}
       <div
-        className="flex items-center gap-2 rounded-t-xl border-b border-black/[0.07] bg-orange-50/70 px-3"
+        className="flex items-center gap-2 rounded-t-xl border-b border-border bg-warning-surface/70 px-3"
         style={{ height: TABLE_HEADER_HEIGHT }}
       >
         <KeySquare
           aria-hidden="true"
-          className="size-4 shrink-0 text-orange-700"
+          className="size-4 shrink-0 text-warning-foreground"
         />
         <span className="truncate font-mono text-sm font-semibold tracking-[-0.01em]">
           {node.label || node.id}
@@ -129,7 +131,7 @@ function DynamoTableNodeCardComponent({ data }: NodeProps<CanvasNode>) {
         {dynamoRows(node).map((row) => (
           <li
             key={row.id}
-            className={cn(ROW, row.kind === "item" && "bg-orange-50/30")}
+            className={cn(ROW, row.kind === "item" && "bg-warning-surface/30")}
             style={{ height: TABLE_ROW_HEIGHT }}
           >
             <Row row={row} />

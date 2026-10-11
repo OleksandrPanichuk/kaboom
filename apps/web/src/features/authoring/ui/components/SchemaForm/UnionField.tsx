@@ -34,7 +34,7 @@ export function UnionField({
   );
 
   return (
-    <fieldset className="flex flex-col gap-3 rounded-xl border border-black/[0.07] p-3 sm:p-4">
+    <fieldset className="flex flex-col gap-3 rounded-xl border border-border p-3 sm:p-4">
       <legend className="px-1 text-sm font-medium">{label}</legend>
       <ScalarField
         shape={{ kind: "enum", values: labels }}

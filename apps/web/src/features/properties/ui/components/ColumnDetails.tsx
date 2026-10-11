@@ -153,7 +153,7 @@ export function ColumnDetails({ column, onPatch }: ColumnDetailsProps) {
   const computed = column.generated;
 
   return (
-    <div className="grid gap-2.5 border-t border-black/[0.06] pt-2.5 sm:grid-cols-2">
+    <div className="grid gap-2.5 border-t border-border pt-2.5 sm:grid-cols-2">
       {type === "varchar" || type === "char" ? (
         <SmallInput
           id={`${id}-length`}

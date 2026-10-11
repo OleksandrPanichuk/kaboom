@@ -8,8 +8,7 @@ import { skillsQuery } from "@/features/skills";
 
 import { SkillSparkline } from "./SkillSparkline";
 
-const CARD =
-  "rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)]";
+const CARD = "rounded-2xl border border-border bg-card p-4 shadow-card";
 
 export function SkillTrends() {
   const { data: history } = useSuspenseQuery(skillHistoryQuery);
@@ -70,10 +69,10 @@ export function SkillTrends() {
                     className={cn(
                       "flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium",
                       trend.change === null || trend.change === 0
-                        ? "bg-zinc-100 text-zinc-600"
+                        ? "bg-muted text-muted-foreground"
                         : trend.change > 0
-                          ? "bg-emerald-50 text-emerald-800"
-                          : "bg-red-50 text-red-800",
+                          ? "bg-success-surface text-success-foreground"
+                          : "bg-danger-surface text-danger-foreground",
                     )}
                   >
                     <Icon aria-hidden="true" className="size-3.5" />
@@ -95,10 +94,10 @@ export function SkillTrends() {
       ) : null}
       {trends.length > 0 ? (
         <details className="group text-sm">
-          <summary className="w-fit cursor-pointer rounded font-medium text-indigo-700 outline-none select-none focus-visible:ring-2 focus-visible:ring-ring/50">
+          <summary className="w-fit cursor-pointer rounded font-medium text-interactive-foreground outline-none select-none focus-visible:ring-2 focus-visible:ring-ring/50">
             Show as a table
           </summary>
-          <div className="mt-2 overflow-x-auto rounded-xl border border-black/[0.07] bg-white">
+          <div className="mt-2 overflow-x-auto rounded-xl border border-border bg-card">
             <table className="w-full text-left text-sm">
               <thead className="text-xs text-muted-foreground">
                 <tr>

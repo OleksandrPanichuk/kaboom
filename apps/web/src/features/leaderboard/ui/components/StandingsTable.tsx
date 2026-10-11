@@ -14,14 +14,14 @@ export function StandingsTable({ entries, me }: StandingsTableProps) {
 
   if (entries.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-black/10 px-4 py-10 text-center text-sm text-muted-foreground">
+      <p className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
         Nobody is on this board yet.
       </p>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-black/[0.07] bg-white">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-card">
       <table className="w-full text-left text-sm">
         <thead className="text-xs text-muted-foreground">
           <tr>
@@ -46,7 +46,7 @@ export function StandingsTable({ entries, me }: StandingsTableProps) {
               <tr
                 key={entry.handle}
                 aria-current={mine ? "true" : undefined}
-                className={cn("border-t", mine && "bg-indigo-50/70")}
+                className={cn("border-t", mine && "bg-interactive-surface/70")}
               >
                 <td className="px-4 py-2.5 font-semibold text-muted-foreground">
                   {entry.position}
@@ -66,7 +66,7 @@ export function StandingsTable({ entries, me }: StandingsTableProps) {
                       <span className="truncate font-medium group-hover:underline">
                         {entry.displayName}
                         {mine ? (
-                          <span className="ml-2 text-xs font-normal text-indigo-700">
+                          <span className="ml-2 text-xs font-normal text-interactive-foreground">
                             you
                           </span>
                         ) : null}

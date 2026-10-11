@@ -8,7 +8,7 @@ export function DesignsGridSkeleton() {
       {PLACEHOLDERS.map((key) => (
         <li
           key={key}
-          className="flex items-start gap-3 rounded-2xl border border-black/[0.07] bg-white p-4"
+          className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4"
         >
           <Skeleton className="size-10 shrink-0 rounded-xl" />
           <div className="flex flex-1 flex-col gap-2 py-1">

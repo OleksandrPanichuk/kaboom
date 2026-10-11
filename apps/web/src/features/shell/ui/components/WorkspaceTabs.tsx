@@ -42,7 +42,7 @@ export function WorkspaceTabs({
               {tab.label}
             </span>
             {tab.badge ? (
-              <span className="min-w-5 rounded-full bg-amber-100 px-1.5 text-xs font-semibold text-amber-800 tabular-nums">
+              <span className="min-w-5 rounded-full bg-warning-surface px-1.5 text-xs font-semibold text-warning-foreground tabular-nums">
                 {tab.badge}
               </span>
             ) : null}

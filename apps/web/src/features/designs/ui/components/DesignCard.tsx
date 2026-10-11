@@ -26,8 +26,8 @@ export function DesignCard({ design }: DesignCardProps) {
   const [dialog, setDialog] = useState<OpenDialog>(null);
 
   return (
-    <li className="group relative flex min-w-0 items-start gap-3 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] transition-colors hover:border-indigo-200 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50">
-      <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-indigo-200/60 bg-indigo-50 text-indigo-700">
+    <li className="group relative flex min-w-0 items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-card transition-colors hover:border-interactive-border has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50">
+      <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-interactive-border/60 bg-interactive-surface text-interactive-foreground">
         {design.kind === "schema" ? (
           <Database aria-hidden="true" className="size-4" />
         ) : (

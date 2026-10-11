@@ -69,7 +69,7 @@ export function SkillSparkline({ label, points }: SkillSparklineProps) {
           <path
             d={path}
             fill="none"
-            className="stroke-indigo-500"
+            className="stroke-interactive"
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -81,14 +81,14 @@ export function SkillSparkline({ label, points }: SkillSparklineProps) {
               x2={x(active)}
               y1={0}
               y2={HEIGHT}
-              className="stroke-zinc-300"
+              className="stroke-muted-foreground"
               vectorEffect="non-scaling-stroke"
             />
           ) : null}
         </svg>
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute size-2.5 -translate-1/2 rounded-full bg-indigo-600 ring-2 ring-white"
+          className="pointer-events-none absolute size-2.5 -translate-1/2 rounded-full bg-interactive ring-2 ring-white"
           style={{
             left: `${(x(shown) / WIDTH) * 100}%`,
             top: `${(y(focus.value) / HEIGHT) * 100}%`,

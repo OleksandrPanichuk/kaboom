@@ -10,8 +10,7 @@ interface ReviewReportProps {
   review: ReviewModel;
 }
 
-const CARD =
-  "rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] sm:p-6";
+const CARD = "rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6";
 
 export function ReviewReport({ review }: ReviewReportProps) {
   return (
@@ -35,21 +34,23 @@ export function ReviewReport({ review }: ReviewReportProps) {
             Design checks {review.designScore} / 100
           </p>
         </div>
-        <p className="leading-7 text-zinc-800 text-pretty">{review.summary}</p>
+        <p className="leading-7 text-subtle-foreground text-pretty">
+          {review.summary}
+        </p>
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <ReviewList
           title="What went well"
           icon={<Sparkles aria-hidden="true" className="size-3.5" />}
-          tone="text-emerald-700 bg-emerald-50 border-emerald-200/60"
+          tone="text-success-foreground bg-success-surface border-success-border/60"
           items={review.strengths}
           empty="Nothing stood out yet."
         />
         <ReviewList
           title="Practise next"
           icon={<Target aria-hidden="true" className="size-3.5" />}
-          tone="text-indigo-700 bg-indigo-50 border-indigo-200/60"
+          tone="text-interactive-foreground bg-interactive-surface border-interactive-border/60"
           items={review.improvements}
           empty="Nothing to add."
         />
@@ -85,12 +86,12 @@ export function ReviewReport({ review }: ReviewReportProps) {
               {check.passed ? (
                 <CircleCheck
                   aria-label="Passed"
-                  className="mt-0.5 size-4 shrink-0 text-emerald-600"
+                  className="mt-0.5 size-4 shrink-0 text-success"
                 />
               ) : (
                 <CircleX
                   aria-label="Failed"
-                  className="mt-0.5 size-4 shrink-0 text-red-600"
+                  className="mt-0.5 size-4 shrink-0 text-destructive"
                 />
               )}
               <div className="flex min-w-0 flex-col gap-0.5">
@@ -133,7 +134,7 @@ function ReviewList({ title, icon, tone, items, empty }: ReviewListProps) {
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">{empty}</p>
       ) : (
-        <ul className="flex list-disc flex-col gap-2 pl-5 text-sm leading-6 text-zinc-700 marker:text-zinc-300">
+        <ul className="flex list-disc flex-col gap-2 pl-5 text-sm leading-6 text-subtle-foreground marker:text-muted-foreground">
           {items.map((item) => (
             <li key={item} className="text-pretty">
               {item}

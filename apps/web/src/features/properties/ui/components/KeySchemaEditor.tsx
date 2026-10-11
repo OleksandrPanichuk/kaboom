@@ -61,7 +61,7 @@ export function KeySchemaEditor({ table, onApply }: KeySchemaEditorProps) {
           {attributes.map((attribute) => (
             <li
               key={attribute.id}
-              className="flex min-w-0 items-center gap-1.5 rounded-xl border border-black/[0.07] bg-white p-1.5"
+              className="flex min-w-0 items-center gap-1.5 rounded-xl border border-border bg-card p-1.5"
             >
               <div className="min-w-0 flex-1">
                 <DraftInput

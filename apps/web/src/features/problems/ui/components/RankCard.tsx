@@ -15,9 +15,9 @@ export function RankCard() {
   return (
     <section
       aria-label="Your rank"
-      className="flex items-center gap-4 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] sm:p-5"
+      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-5"
     >
-      <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-indigo-200/60 bg-indigo-50 text-indigo-700">
+      <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-interactive-border/60 bg-interactive-surface text-interactive-foreground">
         <Trophy aria-hidden="true" className="size-5" />
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -37,10 +37,10 @@ export function RankCard() {
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(share * 100)}
-          className="h-1.5 overflow-hidden rounded-full bg-zinc-100"
+          className="h-1.5 overflow-hidden rounded-full bg-muted"
         >
           <div
-            className="h-full rounded-full bg-indigo-500"
+            className="h-full rounded-full bg-interactive"
             style={{ width: `${Math.round(share * 100)}%` }}
           />
         </div>

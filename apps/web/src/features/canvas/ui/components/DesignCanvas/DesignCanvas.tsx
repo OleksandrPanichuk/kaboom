@@ -50,6 +50,7 @@ import type {
   DesignLayout,
 } from "@/features/canvas/typedefs";
 import { type Flow, mergeFlowNodes, toFlow } from "@/features/canvas/utils";
+import { useResolvedTheme } from "@/features/shell";
 
 import { CanvasEdgePath } from "./CanvasEdgePath";
 import { CanvasNodeCard } from "./CanvasNodeCard";
@@ -76,7 +77,7 @@ const DELETE_KEYS = ["Backspace", "Delete"];
 const MULTI_SELECT_KEYS = ["Shift", "Meta", "Control"];
 
 const CONNECTION_LINE = {
-  stroke: "var(--color-indigo-500)",
+  stroke: "var(--interactive)",
   strokeWidth: 1.5,
   strokeDasharray: "4 4",
 };
@@ -124,6 +125,7 @@ export function DesignCanvas({
   readOnly = false,
 }: DesignCanvasProps) {
   const { screenToFlowPosition, fitView } = useReactFlow();
+  const colorMode = useResolvedTheme();
   const flow = useMemo(
     () => toFlow(graph, layout, hits, overlay),
     [graph, layout, hits, overlay],
@@ -305,6 +307,7 @@ export function DesignCanvas({
       onDrop={onDrop}
     >
       <ReactFlow<CanvasNode, CanvasEdge>
+        colorMode={colorMode}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -328,7 +331,7 @@ export function DesignCanvas({
         fitViewOptions={readOnly ? FIT_EVERYTHING : FIT_VIEW}
         minZoom={0.2}
         maxZoom={2}
-        className="design-canvas bg-zinc-50"
+        className="design-canvas bg-muted/60"
         aria-label="Design canvas"
       >
         {graph.groups.length > 0 ? (
@@ -358,15 +361,16 @@ export function DesignCanvas({
             zoomable
             position="bottom-right"
             className="!hidden sm:!block"
-            nodeColor="var(--color-indigo-200)"
-            nodeStrokeColor="var(--color-indigo-400)"
-            maskColor="rgba(250,250,250,0.7)"
+            nodeColor="var(--interactive-border)"
+            nodeStrokeColor="var(--interactive)"
+            maskColor="color-mix(in srgb, var(--muted) 75%, transparent)"
+            bgColor="var(--card)"
           />
         )}
       </ReactFlow>
       {empty && !readOnly ? (
         <div className="pointer-events-none absolute inset-0 grid place-items-center p-6">
-          <div className="flex max-w-xs flex-col items-center gap-1.5 rounded-2xl border border-black/[0.07] bg-white/90 p-5 text-center shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] backdrop-blur">
+          <div className="flex max-w-xs flex-col items-center gap-1.5 rounded-2xl border border-border bg-card/90 p-5 text-center shadow-card backdrop-blur">
             <p className="font-semibold tracking-[-0.02em]">
               Start with a node
             </p>

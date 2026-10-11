@@ -16,10 +16,10 @@ export function KindEntry({ kind }: KindEntryProps) {
   return (
     <li
       id={kind}
-      className="flex min-w-0 scroll-mt-24 flex-col gap-3 rounded-2xl border border-black/[0.07] bg-white p-4 sm:p-5"
+      className="flex min-w-0 scroll-mt-24 flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5"
     >
       <div className="flex items-center gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-indigo-200/60 bg-indigo-50 text-indigo-700">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-interactive-border/60 bg-interactive-surface text-interactive-foreground">
           <Icon aria-hidden="true" className="size-4" />
         </span>
         <h3 className="font-semibold tracking-[-0.02em]">{definition.label}</h3>
@@ -53,7 +53,7 @@ export function KindEntry({ kind }: KindEntryProps) {
               key={article.slug}
               to="/handbook/$slug"
               params={{ slug: article.slug }}
-              className="font-medium text-indigo-700 underline-offset-2 hover:underline"
+              className="font-medium text-interactive-foreground underline-offset-2 hover:underline"
             >
               {article.title}
             </Link>

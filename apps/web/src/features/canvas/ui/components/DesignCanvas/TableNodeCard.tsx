@@ -51,7 +51,7 @@ function TableNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
   return (
     <BaseNode
       style={{ width: TABLE_WIDTH }}
-      className="group/node overflow-visible rounded-xl border-black/10 bg-white shadow-[0_8px_24px_-18px_rgba(24,24,27,0.5)] hover:ring-0 in-[.selected]:border-violet-400 in-[.selected]:shadow-[0_0_0_3px_rgba(139,92,246,0.18)]"
+      className="group/node overflow-visible rounded-xl border-border bg-card shadow-card hover:ring-0 in-[.selected]:border-violet-400 in-[.selected]:shadow-[0_0_0_3px_rgba(139,92,246,0.18)]"
     >
       {hits.length > 0 ? (
         <span
@@ -60,14 +60,16 @@ function TableNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
           title={hits.map((hit) => hit.message).join("\n")}
           className={cn(
             "absolute -top-2 -right-2 z-10 grid size-5 place-items-center rounded-full border-2 border-white shadow-sm",
-            warns ? "bg-amber-500 text-white" : "bg-zinc-400 text-white",
+            warns
+              ? "bg-warning text-background"
+              : "bg-muted-foreground text-background",
           )}
         >
           <BadgeIcon aria-hidden="true" className="size-3" />
         </span>
       ) : null}
       <div
-        className="flex items-center gap-2 rounded-t-xl border-b border-black/[0.07] bg-violet-50/70 px-3"
+        className="flex items-center gap-2 rounded-t-xl border-b border-border bg-violet-50/70 px-3"
         style={{ height: TABLE_HEADER_HEIGHT }}
       >
         <Table2
@@ -90,7 +92,7 @@ function TableNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
           {columns.map((column) => (
             <li
               key={column.id}
-              className="relative flex items-center gap-1.5 px-3 text-xs not-last:border-b not-last:border-black/[0.05]"
+              className="relative flex items-center gap-1.5 px-3 text-xs not-last:border-b not-last:border-border"
               style={{ height: TABLE_ROW_HEIGHT }}
             >
               {(["left", "right"] as const).map((edge) => (
@@ -113,7 +115,7 @@ function TableNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
                 {column.primaryKey ? (
                   <KeyRound
                     aria-label="Primary key"
-                    className="size-3 text-amber-600"
+                    className="size-3 text-warning"
                   />
                 ) : foreignKeys.has(column.id) ? (
                   <Link2
@@ -134,7 +136,7 @@ function TableNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
                 ) : null}
               </span>
               {column.unique && !column.primaryKey ? (
-                <span className="shrink-0 rounded bg-zinc-100 px-1 text-[10px] font-medium text-zinc-600">
+                <span className="shrink-0 rounded bg-muted px-1 text-[10px] font-medium text-muted-foreground">
                   unique
                 </span>
               ) : null}

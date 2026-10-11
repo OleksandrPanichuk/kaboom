@@ -50,7 +50,7 @@ export function TaskPanel({
           {problem.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-700"
+              className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-subtle-foreground"
             >
               {tag}
             </span>

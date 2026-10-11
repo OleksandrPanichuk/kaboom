@@ -33,7 +33,7 @@ export function ProblemStart({
   ).length;
 
   return (
-    <main className="min-h-dvh bg-zinc-50/70 px-4 py-6 sm:px-8 sm:py-10">
+    <main className="min-h-dvh bg-background px-4 py-6 sm:px-8 sm:py-10">
       <div className="mx-auto flex max-w-2xl flex-col gap-6">
         <Link
           to="/problems"
@@ -57,7 +57,7 @@ export function ProblemStart({
           </p>
           <ProblemCredit problem={problem} />
         </div>
-        <div className="rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] sm:p-6">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6">
           <Markdown>{problem.statement}</Markdown>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
