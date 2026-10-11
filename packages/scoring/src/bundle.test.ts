@@ -14,6 +14,7 @@ import {
   bundleOf,
   flattenBundle,
   schemaReferences,
+  splitSchemas,
 } from "./bundle";
 
 const orders = graph(
@@ -74,5 +75,50 @@ describe("a design bundle", () => {
 
     expect(bundleConflicts(bundle)).toEqual(["orders"]);
     expect(() => flattenBundle(bundle)).toThrow("share the ids orders");
+  });
+});
+
+describe("splitting a design", () => {
+  const combined = graph(
+    [
+      node("api", "service", "API"),
+      node("db", "sql-database", "DB"),
+      ...orders.nodes,
+    ],
+    [...orders.edges],
+    [{ ...database("shop", "Shop", "postgres"), storedOn: "db" }],
+  );
+
+  test("moves each database that sits on a node into a schema of its own", () => {
+    const { system, schemas } = splitSchemas(combined);
+
+    expect(system.nodes.map((item) => item.id)).toEqual(["api", "db"]);
+    expect(system.groups).toEqual([]);
+    expect(system.edges).toEqual([]);
+    expect(schemas).toEqual([{ holder: "db", graph: orders }]);
+  });
+
+  test("leaves a design whose databases sit on nothing as it is", () => {
+    expect(splitSchemas(orders)).toEqual({ system: orders, schemas: [] });
+  });
+
+  test("flattens back to the design it came from", () => {
+    const { system, schemas } = splitSchemas(combined);
+    const named = {
+      ...system,
+      nodes: system.nodes.map((item) =>
+        item.id === "db" ? { ...item, schema: { designId: "s1" } } : item,
+      ),
+    };
+    const flat = flattenBundle({
+      system: named,
+      schemas: { s1: schemas[0]!.graph },
+    });
+
+    expect(flat.groups).toEqual(combined.groups);
+    expect(flat.edges).toEqual(combined.edges);
+    expect(flat.nodes.map(({ schema: _schema, ...item }) => item)).toEqual(
+      combined.nodes,
+    );
   });
 });

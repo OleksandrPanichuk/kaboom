@@ -82,3 +82,66 @@ export const flattenBundle = (bundle: DesignBundle): DesignGraph => {
     bundle.system,
   );
 };
+
+export interface SplitSchema {
+  holder: string;
+  graph: DesignGraph;
+}
+
+export interface SplitDesign {
+  system: DesignGraph;
+  schemas: SplitSchema[];
+}
+
+export const splitSchemas = (combined: DesignGraph): SplitDesign => {
+  const holders = new Set(combined.nodes.map((node) => node.id));
+  const placed = combined.groups.filter(
+    (group) =>
+      group.kind === "database" &&
+      group.storedOn !== undefined &&
+      holders.has(group.storedOn),
+  );
+
+  if (placed.length === 0) return { system: combined, schemas: [] };
+
+  const holderOf = new Map(
+    placed.map((group) => [group.id, group.storedOn!] as const),
+  );
+  const moved = new Map(
+    combined.nodes
+      .filter((node) => node.groupId !== null && holderOf.has(node.groupId))
+      .map((node) => [node.id, holderOf.get(node.groupId!)!] as const),
+  );
+  const edgeHolder = (from: string, to: string) =>
+    moved.has(from) && moved.get(from) === moved.get(to)
+      ? moved.get(from)!
+      : null;
+  const order = [...new Set(placed.map((group) => group.storedOn!))];
+
+  return {
+    system: {
+      ...combined,
+      nodes: combined.nodes.filter((node) => !moved.has(node.id)),
+      edges: combined.edges.filter(
+        (edge) => edgeHolder(edge.from, edge.to) === null,
+      ),
+      groups: combined.groups.filter((group) => !holderOf.has(group.id)),
+    },
+    schemas: order.map((holder) => ({
+      holder,
+      graph: {
+        ...combined,
+        nodes: combined.nodes.filter((node) => moved.get(node.id) === holder),
+        edges: combined.edges.filter(
+          (edge) => edgeHolder(edge.from, edge.to) === holder,
+        ),
+        groups: placed
+          .filter((group) => group.storedOn === holder)
+          .map(({ storedOn: _storedOn, ...group }) => ({
+            ...group,
+            parentId: null,
+          })),
+      },
+    })),
+  };
+};

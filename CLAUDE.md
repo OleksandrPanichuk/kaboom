@@ -1175,9 +1175,20 @@ scores as before. A schema that reuses an id the design or another schema
 has would make the graph ambiguous, so `bundleOf` refuses it with `409
 DESIGN_SCHEMA_CONFLICT` rather than scoring it.
 
-Still to come: problems and attempts that hold separate schemas, the
-canvas naming a database's schema, and migrating combined designs; until
-then combined problems keep `storedOn`.
+A problem is still authored as one graph, its tables in databases that
+name their node with `storedOn`. Starting an attempt splits it
+(`splitSchemas`): each node's databases, their tables and the relations
+between them become a schema design of the solver's own, named after the
+problem and the node, and the node references it, so the attempt's
+system holds no tables. Every official reference scores 100 through a
+split and a flatten (`problems.test.ts`). The attempt keeps the system's
+`designId`; its schemas are reached through it. An interview stays one
+graph, because the interviewer sees only what reaches its own design.
+The designer takes `?from=` (a problem or a design), and the schema
+picker passes it, so a schema opened from an attempt leads back to it.
+
+Still to come: the canvas naming a database's schema, and migrating
+existing combined designs, which is `splitSchemas` applied to them.
 
 ## Technologies
 

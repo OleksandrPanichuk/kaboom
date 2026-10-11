@@ -19,7 +19,7 @@ import {
   publicScore,
 } from "@repo/scoring";
 import { drillScenario, selectNodes } from "@repo/scoring";
-import { scoreSubmission } from "@repo/scoring";
+import { flattenBundle, scoreSubmission, splitSchemas } from "@repo/scoring";
 import { describe, expect, test } from "bun:test";
 
 import { OFFICIAL_PROBLEMS } from ".";
@@ -37,6 +37,29 @@ describe("official problems", () => {
     (_, problem) => {
       expect(checkPublishable(problem)).toMatchObject({ ok: true });
       expect(scoreSubmission(problem, problem.reference.graph).score).toBe(100);
+    },
+  );
+
+  test.each(OFFICIAL_PROBLEMS.map((problem) => [problem.slug, problem]))(
+    "%s scores the same with its databases split into schemas",
+    (_, problem) => {
+      const { system, schemas } = splitSchemas(problem.reference.graph);
+      const named = {
+        ...system,
+        nodes: system.nodes.map((item) =>
+          schemas.some((schema) => schema.holder === item.id)
+            ? { ...item, schema: { designId: `schema-${item.id}` } }
+            : item,
+        ),
+      };
+      const flat = flattenBundle({
+        system: named,
+        schemas: Object.fromEntries(
+          schemas.map((schema) => [`schema-${schema.holder}`, schema.graph]),
+        ),
+      });
+
+      expect(scoreSubmission(problem, flat).score).toBe(100);
     },
   );
 
