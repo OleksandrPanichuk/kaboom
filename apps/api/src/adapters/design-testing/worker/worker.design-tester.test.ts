@@ -1,4 +1,4 @@
-import { OFFICIAL_PROBLEMS } from "@repo/design/library";
+import { OFFICIAL_PROBLEMS } from "@repo/problem-library";
 import { afterEach, describe, expect, test } from "bun:test";
 
 import {

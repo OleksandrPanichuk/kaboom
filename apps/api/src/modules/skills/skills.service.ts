@@ -1,4 +1,4 @@
-import type { InterviewDimension } from "@repo/design";
+import type { InterviewDimension } from "@repo/scoring";
 
 import { makeRepository, makeService } from "@/core/registry";
 import { Service } from "@/core/service";

@@ -1,4 +1,4 @@
-import { publicScore } from "@repo/design";
+import { publicScore } from "@repo/scoring";
 
 import { getEnv } from "@/configs";
 import { make, makeRepository, makeService } from "@/core/registry";

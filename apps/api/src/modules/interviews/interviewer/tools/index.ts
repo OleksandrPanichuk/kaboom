@@ -1,4 +1,4 @@
-import type { InterviewPhase } from "@repo/design";
+import type { InterviewPhase } from "@repo/scoring";
 
 import type { InterviewerTool } from "../define-tool";
 import { editDesignTool } from "./edit-design";

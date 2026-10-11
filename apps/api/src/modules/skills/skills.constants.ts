@@ -1,4 +1,4 @@
-import type { InterviewDimension } from "@repo/design";
+import type { InterviewDimension } from "@repo/scoring";
 
 export const SKILL_SCORING_VERSION = 1;
 

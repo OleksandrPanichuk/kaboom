@@ -1,4 +1,4 @@
-import type { DrillScore, InterviewDimension, ItemScore } from "@repo/design";
+import type { DrillScore, InterviewDimension, ItemScore } from "@repo/scoring";
 
 import type { ReviewModel } from "./review.model";
 

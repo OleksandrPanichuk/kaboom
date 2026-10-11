@@ -1,4 +1,4 @@
-import { INTERVIEW_DIMENSIONS } from "@repo/design";
+import { INTERVIEW_DIMENSIONS } from "@repo/scoring";
 import { t } from "elysia";
 
 import { DrillResultModel, ItemResultModel } from "@/modules/submissions";

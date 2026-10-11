@@ -1,9 +1,9 @@
+import { TRACKS } from "@repo/design";
 import {
   INTERVIEW_DIMENSIONS,
   type InterviewDimension,
   type ProblemContent,
-  TRACKS,
-} from "@repo/design";
+} from "@repo/scoring";
 
 import type {
   NextProblem,

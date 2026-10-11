@@ -1,9 +1,5 @@
-import type {
-  DesignGraph,
-  DrillScore,
-  ItemScore,
-  TestReport,
-} from "@repo/design";
+import type { DesignGraph } from "@repo/design";
+import type { DrillScore, ItemScore, TestReport } from "@repo/scoring";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";

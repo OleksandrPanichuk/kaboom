@@ -1,8 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import { DesignOpBatchSchema } from "../ops";
-import { OFFICIAL_PROBLEMS } from "../problems/library";
-import { ProblemContentSchema } from "../problems/schema";
 import { canonicalize } from "./canonicalize";
 import { DesignGraphSchema } from "./schema";
 
@@ -97,13 +95,5 @@ describe("what was stored before production data models", () => {
     expect(DesignOpBatchSchema.parse(structuredClone(ops))).toEqual(
       ops as never,
     );
-  });
-
-  test("every official problem round-trips through its stored JSON unchanged", () => {
-    for (const problem of OFFICIAL_PROBLEMS) {
-      const json: unknown = JSON.parse(JSON.stringify(problem));
-
-      expect(ProblemContentSchema.parse(json)).toEqual(problem);
-    }
   });
 });

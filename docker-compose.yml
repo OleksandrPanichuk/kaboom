@@ -37,9 +37,13 @@ services:
       - ./apps/api:/app/apps/api
       - ./packages/typescript-config:/app/packages/typescript-config
       - ./packages/design:/app/packages/design
+      - ./packages/scoring:/app/packages/scoring
+      - ./packages/problem-library:/app/packages/problem-library
       - /app/node_modules
       - /app/apps/api/node_modules
       - /app/packages/design/node_modules
+      - /app/packages/scoring/node_modules
+      - /app/packages/problem-library/node_modules
     networks:
       - main_network
 
@@ -60,11 +64,13 @@ services:
       - ./apps/api:/app/apps/api:ro
       - ./packages/api-client:/app/packages/api-client
       - ./packages/design:/app/packages/design
+      - ./packages/scoring:/app/packages/scoring
       - /app/node_modules
       - /app/apps/web/node_modules
       - /app/apps/api/node_modules
       - /app/packages/api-client/node_modules
       - /app/packages/design/node_modules
+      - /app/packages/scoring/node_modules
     networks:
       - main_network
 

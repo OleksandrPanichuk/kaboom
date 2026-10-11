@@ -1,9 +1,5 @@
-import type {
-  DesignGraph,
-  ProblemContent,
-  Score,
-  TestReport,
-} from "@repo/design";
+import type { DesignGraph } from "@repo/design";
+import type { ProblemContent, Score, TestReport } from "@repo/scoring";
 
 import { Port } from "@/core/port";
 

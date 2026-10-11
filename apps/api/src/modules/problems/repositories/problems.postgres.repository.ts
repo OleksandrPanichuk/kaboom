@@ -1,4 +1,4 @@
-import { type ProblemContent, ProblemContentSchema } from "@repo/design";
+import { type ProblemContent, ProblemContentSchema } from "@repo/scoring";
 import { and, asc, eq } from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";

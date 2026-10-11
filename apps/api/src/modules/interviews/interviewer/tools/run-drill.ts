@@ -1,4 +1,4 @@
-import { drillScenario, runDrill, TRACK_DEFINITIONS } from "@repo/design";
+import { drillScenario, runDrill, TRACK_DEFINITIONS } from "@repo/scoring";
 import z from "zod";
 
 import { make, makeService } from "@/core/registry";

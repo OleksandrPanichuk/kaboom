@@ -6,8 +6,8 @@ import {
   type LintHit,
   runLints,
   type Track,
-  vary,
 } from "@repo/design";
+import { vary } from "@repo/scoring";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { cn } from "cn";
 import {

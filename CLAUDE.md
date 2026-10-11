@@ -559,22 +559,35 @@ hint penalty, so the model can move a score but never decide it. A failed
 review leaves the deterministic score in place and marks the submission
 `failed`.
 
-## The design package's layers
+## The design packages
 
-`@repo/design` is layered by folder, and `src/layers.test.ts` pins which
-folder may import which: `pricing` at the bottom, then `catalogue`,
-`graph`, `data-model`, the evaluators, lints and ops, then `problems`
-(the problem schema, hints and the official library) and `scoring`
-(drills, rubric checks, chaos, variation, `runTests` and the publish
-check) at the top. A folder never imports one above it, so the package can
-later split along these lines. A new folder gets a row in that test.
+The model and its rules are three packages, each depending only on the
+ones before it:
+
+- **`@repo/design`**: the graph, the node and edge catalogue, pricing,
+  `applyOps`, the data-model helpers and exporters, the evaluators, lints
+  and cost. `@repo/design/build` holds the graph builders (`node`, `table`,
+  `within`, `pooled`, …) that problems and tests are written with, and
+  `@repo/design/fixtures` the evaluators' own test fixtures.
+- **`@repo/scoring`**: the problem schema, hints, the track registry, and
+  everything that runs a problem: drills, rubric checks, chaos, variation,
+  `runTests`, `scoreSubmission` and `checkPublishable`.
+- **`@repo/problem-library`**: the official problems, and the tests that
+  run them. Only the API imports it.
+
+Inside `@repo/design`, `src/layers.test.ts` pins which folder may import
+which: `pricing` at the bottom, then `catalogue`, `graph`, `data-model`,
+then the evaluators, lints, ops and cost. A folder never imports one above
+it, so the package can split further along these lines. A new folder gets
+a row in that test. A test in a lower package never imports a higher one:
+a test that needs an official problem lives in the library.
 
 What a node kind does lives in one typed table per concern, each a
 `{ [Kind in NodeKind]: … }` so a new kind fails to compile until every
 table has its row: `LOAD_BEHAVIOURS` (`evaluate/load/behaviours.ts`:
 capacity, base latency, what it forwards, throttling, connection limits,
 replicas), `KIND_COSTS` (`cost/cost.ts`) and `LOST_INSTANCES`
-(`scoring/chaos.ts`). Where a kind may live is its definition's `home`
+(`@repo/scoring`, `chaos.ts`). Where a kind may live is its definition's `home`
 (an engine family, and whether it must sit in a database of it), which
 `applyOps` and the web's `homeOps` both read. `ops/apply.ts` is only the
 dispatcher and the undo bookkeeping; each domain's rules sit in
@@ -586,7 +599,7 @@ which kinds draw wide.
 
 ## Tests on a problem
 
-`runTests(problem, graph, { include })` in `packages/design/src/scoring`
+`runTests(problem, graph, { include })` in `@repo/scoring`
 turns a problem's drills and rubric checks into a report, grouped in the
 suites `functional`, `load`, `faults`, `chaos` and `constraints`. Each test carries
 assertions, each with what it measured, what it expected, what it got, the
@@ -604,7 +617,7 @@ A public load test carries the scenario it ran, its faults resolved to
 node ids; the browser evaluates it again to replay it, rather than the
 server sending every step.
 
-The `chaos` suite is drawn from the design itself (`scoring/chaos.ts`), so
+The `chaos` suite is drawn from the design itself (`chaos.ts` in `@repo/scoring`), so
 it cannot be learned by heart: a design with more parts gets more faults.
 Each case is one failure the model says a design can survive, in the SPOF
 lint's own terms, drawn only from the nodes the baseline drill loads, so a
@@ -651,7 +664,7 @@ the design at the traffic of a named drill, and only once that drill
 passes, since a design that does not work costs nothing worth comparing.
 
 A load test also runs on varied inputs, so a design sized to the letter
-of the spec shows it. `vary(graph, scenario, seed)` (`scoring/variation.ts`)
+of the spec shows it. `vary(graph, scenario, seed)` (`variation.ts` in `@repo/scoring`)
 is deterministic per seed: traffic moves by up to 5 % a minute with one
 short burst, a fault starts up to 30 s off and lasts a quarter more or
 less, and each node's capacity moves by 5 % and its latency by up to 15 %;
@@ -791,7 +804,7 @@ it. A rule drill has nothing to play on the canvas, so the interviewer's
 `run_drill` answers it from its outcome and stores no simulation run.
 
 What a track is lives in one place, `TRACK_DEFINITIONS`
-(`problems/tracks.ts`): its noun, the three dimensions its challenges are
+(`tracks.ts` in `@repo/scoring`): its noun, the three dimensions its challenges are
 reviewed on, whether its load drills ask that writes reach a store, and its
 palette sections. The API's prompts and the web's palette read it; only the
 interviewer's and reviewer's prose stay in the API, keyed by track.

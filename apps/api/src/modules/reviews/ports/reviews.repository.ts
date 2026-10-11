@@ -1,4 +1,4 @@
-import type { DrillScore, ItemScore } from "@repo/design";
+import type { DrillScore, ItemScore } from "@repo/scoring";
 
 import { Repository } from "@/core/repository";
 

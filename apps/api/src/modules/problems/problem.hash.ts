@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { ProblemContent } from "@repo/design";
+import type { ProblemContent } from "@repo/scoring";
 
 const stable = (value: unknown): unknown => {
   if (Array.isArray(value)) return value.map(stable);

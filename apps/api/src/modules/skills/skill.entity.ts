@@ -1,4 +1,5 @@
-import type { InterviewDimension, Track } from "@repo/design";
+import type { Track } from "@repo/design";
+import type { InterviewDimension } from "@repo/scoring";
 
 export interface SkillScoreEntity {
   id: string;

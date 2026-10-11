@@ -19,6 +19,8 @@
         "@elysia/cors": "^1.4.2",
         "@elysiajs/openapi": "1.4.16",
         "@repo/design": "*",
+        "@repo/problem-library": "*",
+        "@repo/scoring": "*",
         "@sentry/bun": "^11.0.0",
         "bullmq": "^6.3.4",
         "drizzle-orm": "^0.45.2",
@@ -50,6 +52,7 @@
         "@fontsource-variable/geist": "^5.3.0",
         "@repo/api-client": "*",
         "@repo/design": "*",
+        "@repo/scoring": "*",
         "@tanstack/react-query": "^5.104.0",
         "@tanstack/react-router": "^1.170.39",
         "@xyflow/react": "^12.12.0",
@@ -149,6 +152,36 @@
         "prettier": "3.9.8",
         "typescript": "6.0.3",
         "typescript-eslint": "^8",
+      },
+    },
+    "packages/problem-library": {
+      "name": "@repo/problem-library",
+      "version": "0.0.0",
+      "dependencies": {
+        "@repo/design": "*",
+        "@repo/scoring": "*",
+      },
+      "devDependencies": {
+        "@repo/eslint-config": "*",
+        "@repo/typescript-config": "*",
+        "@types/bun": "^1.4.2",
+        "eslint": "10.11.0",
+        "typescript": "6.0.3",
+      },
+    },
+    "packages/scoring": {
+      "name": "@repo/scoring",
+      "version": "0.0.0",
+      "dependencies": {
+        "@repo/design": "*",
+        "zod": "^4.5.4",
+      },
+      "devDependencies": {
+        "@repo/eslint-config": "*",
+        "@repo/typescript-config": "*",
+        "@types/bun": "^1.4.2",
+        "eslint": "10.11.0",
+        "typescript": "6.0.3",
       },
     },
     "packages/typescript-config": {
@@ -456,6 +489,10 @@
     "@repo/eslint-config": ["@repo/eslint-config@workspace:packages/eslint-config"],
 
     "@repo/generator": ["@repo/generator@workspace:cli-tools/generator"],
+
+    "@repo/problem-library": ["@repo/problem-library@workspace:packages/problem-library"],
+
+    "@repo/scoring": ["@repo/scoring@workspace:packages/scoring"],
 
     "@repo/typescript-config": ["@repo/typescript-config@workspace:packages/typescript-config"],
 

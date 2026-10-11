@@ -1,5 +1,5 @@
-import type { ProblemContent } from "@repo/design";
-import { OFFICIAL_PROBLEMS } from "@repo/design/library";
+import { OFFICIAL_PROBLEMS } from "@repo/problem-library";
+import type { ProblemContent } from "@repo/scoring";
 import { createGuest, createUser } from "@tests/helpers";
 import { beforeEach, describe, expect, test } from "bun:test";
 

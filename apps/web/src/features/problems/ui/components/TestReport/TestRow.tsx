@@ -1,5 +1,6 @@
 import type { TestResultModel } from "@repo/api-client";
-import { HOLDS_LABEL, type LoadScenarioInput } from "@repo/design";
+import type { LoadScenarioInput } from "@repo/design";
+import { HOLDS_LABEL } from "@repo/scoring";
 import { cn } from "cn";
 import { ChevronRight, EyeOff, Play } from "lucide-react";
 import { useId, useState } from "react";

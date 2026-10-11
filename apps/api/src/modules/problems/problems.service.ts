@@ -1,5 +1,5 @@
-import { checkPublishable } from "@repo/design";
-import { OFFICIAL_PROBLEMS } from "@repo/design/library";
+import { OFFICIAL_PROBLEMS } from "@repo/problem-library";
+import { checkPublishable } from "@repo/scoring";
 
 import { makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";

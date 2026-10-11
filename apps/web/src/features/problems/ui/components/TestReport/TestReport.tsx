@@ -1,5 +1,5 @@
 import type { TestReportModel } from "@repo/api-client";
-import { TEST_SUITES } from "@repo/design";
+import { TEST_SUITES } from "@repo/scoring";
 
 import type { ReplayRequest } from "@/features/designs";
 

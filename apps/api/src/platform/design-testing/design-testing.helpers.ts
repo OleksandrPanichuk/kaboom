@@ -1,4 +1,4 @@
-import { drillRunner, runTests, scoreSubmission } from "@repo/design";
+import { drillRunner, runTests, scoreSubmission } from "@repo/scoring";
 
 import type { DesignTestRequest, DesignTestResult } from "./ports";
 

@@ -11,22 +11,12 @@ const LAYERS: Readonly<Record<string, readonly string[]>> = {
   catalogue: ["pricing"],
   graph: ["catalogue"],
   handbook: ["catalogue"],
+  build: ["catalogue", "graph"],
   "data-model": ["catalogue", "graph"],
   cost: ["catalogue", "graph", "pricing"],
   ops: ["catalogue", "graph", "data-model"],
   lints: ["catalogue", "graph", "data-model"],
   evaluate: ["catalogue", "graph", "data-model"],
-  problems: ["catalogue", "graph", "evaluate", "lints"],
-  scoring: [
-    "catalogue",
-    "graph",
-    "data-model",
-    "cost",
-    "ops",
-    "lints",
-    "evaluate",
-    "problems",
-  ],
 };
 
 const sources = (folder: string): string[] =>

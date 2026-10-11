@@ -1,7 +1,7 @@
 export * from "./documents";
 export { evaluate, type ScenarioInput } from "./evaluate";
 export * from "./key-value";
-export { evaluateLoad } from "./load";
+export { evaluateLoad, SYNCHRONOUS } from "./load";
 export { evaluateNetwork } from "./network";
 export { evaluatePipeline, RUNNER_SETUP_MINUTES } from "./pipeline";
 export type {

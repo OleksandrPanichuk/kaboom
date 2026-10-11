@@ -1,4 +1,4 @@
-import type { DrillScore, ItemScore } from "@repo/design";
+import type { DrillScore, ItemScore } from "@repo/scoring";
 import { avg, count, desc, eq } from "drizzle-orm";
 
 import { problemsSchema, type ReviewRow, reviewsSchema } from "@/db";

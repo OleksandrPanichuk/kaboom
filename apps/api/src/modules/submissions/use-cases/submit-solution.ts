@@ -3,7 +3,7 @@ import {
   penalised,
   publicReport,
   publicScore,
-} from "@repo/design";
+} from "@repo/scoring";
 
 import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
