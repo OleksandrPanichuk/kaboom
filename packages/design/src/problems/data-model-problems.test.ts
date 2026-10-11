@@ -429,3 +429,122 @@ describe("chat messages in MongoDB", () => {
     expect(failing("chat-messages", scanned)).toEqual(["mentions"]);
   });
 });
+
+type DynamoTable = Extract<DesignNode, { kind: "dynamo-table" }>;
+
+const editDynamo = (
+  graph: DesignGraph,
+  tableId: string,
+  change: (table: DynamoTable) => void,
+): DesignGraph => {
+  const copy = structuredClone(graph);
+
+  change(copy.nodes.find((node) => node.id === tableId) as DynamoTable);
+
+  return copy;
+};
+
+const itemOf = (table: DynamoTable, name: string) =>
+  table.props.items.find((item) => item.name === name)!;
+
+describe("orders in one DynamoDB table", () => {
+  const reference = problem("orders-one-table").reference.graph;
+
+  test("catches order lines kept as a list inside the order", () => {
+    const embedded = editDynamo(reference, "shop", (shop) => {
+      shop.props.items = shop.props.items.filter(
+        (item) => item.name !== "OrderLine",
+      );
+      itemOf(shop, "Order").attributes.push({
+        id: "lines",
+        name: "lines",
+        type: "L",
+      });
+    });
+
+    expect(failing("orders-one-table", embedded)).toEqual(["order-page"]);
+  });
+
+  test("catches orders kept only in a partition of their own", () => {
+    const apart = editDynamo(reference, "shop", (shop) => {
+      const order = itemOf(shop, "Order");
+
+      order.keys = { ...order.keys, PK: "ORDER#{orderId}", SK: "ORDER" };
+    });
+
+    expect(failing("orders-one-table", apart)).toEqual(["customer-page"]);
+  });
+
+  test("catches a status index that runs hot or carries too little", () => {
+    const unsharded = editDynamo(reference, "shop", (shop) => {
+      const order = itemOf(shop, "Order");
+
+      order.attributes = order.attributes.filter(
+        (attribute) => attribute.name !== "shard",
+      );
+      order.keys = { ...order.keys, GSI2PK: "STATUS#{status}" };
+    });
+    const keysOnly = editDynamo(reference, "shop", (shop) => {
+      const gsi2 = shop.props.indexes.find((index) => index.name === "GSI2")!;
+
+      gsi2.projection = "keys-only";
+      delete gsi2.include;
+    });
+
+    expect(failing("orders-one-table", unsharded)).toEqual(["sale-peak"]);
+    expect(failing("orders-one-table", keysOnly)).toEqual([
+      "status-board",
+      "sale-peak",
+    ]);
+  });
+
+  test("does not take a random suffix for shards", () => {
+    const random = editDynamo(reference, "shop", (shop) => {
+      const shard = itemOf(shop, "Order").attributes.find(
+        (attribute) => attribute.name === "shard",
+      )!;
+
+      delete shard.shards;
+    });
+
+    expect(failing("orders-one-table", random)).toEqual([
+      "status-board",
+      "sale-peak",
+    ]);
+  });
+});
+
+describe("a game leaderboard in DynamoDB", () => {
+  const reference = problem("game-leaderboard").reference.graph;
+
+  test("catches a ranking index with one partition a board", () => {
+    const unsharded = editDynamo(reference, "scores", (scores) => {
+      const score = itemOf(scores, "Score");
+
+      score.keys = { ...score.keys, GSI1PK: "BOARD#{boardId}" };
+    });
+
+    expect(failing("game-leaderboard", unsharded)).toEqual(["launch-day"]);
+  });
+
+  test("catches a board read by scanning, and scores that never expire", () => {
+    const scanned = editDynamo(reference, "scores", (scores) => {
+      scores.props.indexes = [];
+      scores.props.keySchema.attributes =
+        scores.props.keySchema.attributes.slice(0, 2);
+      for (const item of scores.props.items) {
+        delete item.keys.GSI1PK;
+        delete item.keys.GSI1SK;
+      }
+    });
+    const lasting = editDynamo(reference, "scores", (scores) => {
+      scores.props.ttlAttribute = "";
+    });
+
+    expect(failing("game-leaderboard", scanned)).toEqual([
+      "top-of-board",
+      "launch-day",
+    ]);
+    expect(failing("game-leaderboard", lasting)).toEqual(["daily-boards"]);
+  });
+});

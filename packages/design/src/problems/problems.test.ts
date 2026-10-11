@@ -43,9 +43,26 @@ describe("official problems", () => {
   );
 
   test.each(OFFICIAL_PROBLEMS.map((problem) => [problem.slug, problem]))(
-    "%s: the reference's nodes with no edges between them pass no drill",
+    "%s: the reference's nodes with nothing joining them pass no drill",
     (_, problem) => {
-      const hollow = { ...problem.reference.graph, edges: [] };
+      const hollow = {
+        ...problem.reference.graph,
+        edges: [],
+        nodes: problem.reference.graph.nodes.map((node) =>
+          node.kind === "dynamo-table"
+            ? {
+                ...node,
+                props: {
+                  ...node.props,
+                  items: node.props.items.map((item) => ({
+                    ...item,
+                    keys: {},
+                  })),
+                },
+              }
+            : node,
+        ),
+      };
       const passed = problem.drills
         .map((drill) => runDrill(drill, hollow))
         .filter((outcome) => outcome.passed)

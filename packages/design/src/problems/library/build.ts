@@ -3,9 +3,13 @@ import type {
   ColumnType,
   DocumentField,
   DocumentIndex,
+  DynamoIndex,
   EdgeKind,
   EdgeProps,
   Engine,
+  ItemAttribute,
+  ItemType,
+  KeyAttribute,
   NodeKind,
   OnDeleteAction,
   TableIndex,
@@ -146,3 +150,65 @@ export const refers = (
   }),
   reference: { fromField: path },
 });
+
+export const keyAttribute = (
+  name: string,
+  type: KeyAttribute["type"] = "S",
+): KeyAttribute => ({ id: name, name, type });
+
+export const attribute = (
+  name: string,
+  type: ItemAttribute["type"] = "S",
+  extra: Partial<Omit<ItemAttribute, "id" | "name" | "type">> = {},
+): ItemAttribute => ({ id: name, name, type, ...extra });
+
+export const itemType = (
+  name: string,
+  attributes: ItemAttribute[],
+  keys: Record<string, string> = {},
+): ItemType => ({ id: name, name, attributes, keys });
+
+export const globalIndex = (
+  name: string,
+  partitionKey: string,
+  sortKey: string | null,
+  projection: Pick<DynamoIndex, "projection" | "include"> = {
+    projection: "all",
+  },
+): DynamoIndex => ({
+  id: name,
+  name,
+  kind: "global",
+  partitionKey,
+  sortKey,
+  ...projection,
+});
+
+export const dynamoTable = (
+  tableId: string,
+  groupId: string,
+  {
+    attributes = [],
+    partitionKey = null,
+    sortKey = null,
+    indexes = [],
+    items = [],
+    ttlAttribute = "",
+  }: {
+    attributes?: KeyAttribute[];
+    partitionKey?: string | null;
+    sortKey?: string | null;
+    indexes?: DynamoIndex[];
+    items?: ItemType[];
+    ttlAttribute?: string;
+  } = {},
+): DesignNode =>
+  within(
+    groupId,
+    node(tableId, "dynamo-table", tableId, {
+      keySchema: { attributes, partitionKey, sortKey },
+      indexes,
+      items,
+      ttlAttribute,
+    }),
+  );
