@@ -1,6 +1,6 @@
 import type { DesignModel } from "@repo/api-client";
 import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Database, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -19,22 +19,28 @@ interface DesignsViewProps {
 export function DesignsView({ onCreated }: DesignsViewProps) {
   const { data, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useSuspenseInfiniteQuery(designsQuery);
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState<"system" | "schema" | null>(null);
   const designs = data.pages.flatMap((page) => page.items);
 
   return (
     <DesignsPage
       action={
         designs.length > 0 ? (
-          <Button className="shrink-0" onClick={() => setCreating(true)}>
-            <Plus aria-hidden="true" />
-            New design
-          </Button>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setCreating("schema")}>
+              <Database aria-hidden="true" />
+              New schema
+            </Button>
+            <Button onClick={() => setCreating("system")}>
+              <Plus aria-hidden="true" />
+              New design
+            </Button>
+          </div>
         ) : null
       }
     >
       {designs.length === 0 ? (
-        <DesignsEmpty onCreate={() => setCreating(true)} />
+        <DesignsEmpty onCreate={() => setCreating("system")} />
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {designs.map((design) => (
@@ -53,8 +59,11 @@ export function DesignsView({ onCreated }: DesignsViewProps) {
         </Button>
       ) : null}
       <CreateDesignDialog
-        open={creating}
-        onOpenChange={setCreating}
+        kind={creating ?? "system"}
+        open={creating !== null}
+        onOpenChange={(open) => {
+          if (!open) setCreating(null);
+        }}
         onCreated={onCreated}
       />
     </DesignsPage>

@@ -32,6 +32,8 @@ export {
   MAX_NODES,
   type NodeFor,
   type NodeOf,
+  type SchemaRef,
+  SchemaRefSchema,
   type TechnologyRef,
   TechnologyRefSchema,
 } from "./schema";

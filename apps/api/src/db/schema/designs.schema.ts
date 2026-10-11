@@ -10,6 +10,9 @@ import {
 
 import { usersSchema } from "./users.schema";
 
+export const DESIGN_KINDS = ["system", "schema"] as const;
+export type DesignKind = (typeof DESIGN_KINDS)[number];
+
 export type DesignLayoutRow = Record<string, { x: number; y: number }>;
 
 export const designsSchema = pgTable(
@@ -20,6 +23,7 @@ export const designsSchema = pgTable(
       .notNull()
       .references(() => usersSchema.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    kind: text("kind", { enum: DESIGN_KINDS }).notNull().default("system"),
     graph: jsonb("graph").$type<unknown>().notNull(),
     layout: jsonb("layout").$type<DesignLayoutRow>().notNull().default({}),
     revision: integer("revision").notNull().default(0),

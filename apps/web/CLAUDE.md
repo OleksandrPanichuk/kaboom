@@ -360,6 +360,14 @@ the cached lists, so the queue never shows a decided review. Nav items
 may carry a `minimumRole`, and the sidebar shows *Reviews* to moderators
 and admins only; the API refuses everyone else anyway.
 
+A schema design opens in `DesignWorkspace` with the data-model palette
+and no Run tab, since nothing in it carries load. The designs page
+creates either kind and marks schemas. A SQL or NoSQL database's
+inspector gets a *Schema* section (`SchemaPicker`, passed to
+`NodeInspector` as `schemaField` so properties stay presentational): it
+lists the user's schemas, opens the chosen one, and creates a new one
+named after the node.
+
 `features/simulation` runs `evaluateLoad` in the browser while the Run tab
 is open, on a deferred graph so typing stays smooth, and turns a step into
 the canvas overlay (`overlayAt`); the canvas only draws it. A saved run posts

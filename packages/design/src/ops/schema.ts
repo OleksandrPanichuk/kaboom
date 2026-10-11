@@ -18,6 +18,8 @@ import {
   type DesignNode,
   DesignNodeSchema,
   IdSchema,
+  type SchemaRef,
+  SchemaRefSchema,
   type TechnologyRef,
   TechnologyRefSchema,
 } from "../graph";
@@ -30,6 +32,7 @@ export interface NodePatch {
   groupId?: string | null;
   props?: Record<string, unknown>;
   technology?: TechnologyRef | null;
+  schema?: SchemaRef | null;
 }
 
 export interface GroupPatch {
@@ -69,6 +72,7 @@ const NodePatchSchema = z.strictObject({
   groupId: IdSchema.nullable().optional(),
   props: z.record(z.string(), z.unknown()).optional(),
   technology: TechnologyRefSchema.nullable().optional(),
+  schema: SchemaRefSchema.nullable().optional(),
 });
 
 const EdgePatchSchema = z.strictObject({

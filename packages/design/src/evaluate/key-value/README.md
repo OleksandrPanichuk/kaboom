@@ -85,7 +85,7 @@ otherwise (`item-too-large`).
 
 ## TTL
 
-`ttl: { item }`: the item's table names an attribute in *Expire by*, and
+`ttl: { item }`: the item's table names an attribute in _Expire by_, and
 the item has it as a number, which DynamoDB reads as epoch seconds.
 
 ## Findings

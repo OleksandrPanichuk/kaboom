@@ -2,6 +2,7 @@ import { type DesignGraph, emptyGraph } from "@repo/design";
 
 import { makeRepository } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
+import type { DesignKind } from "@/db";
 import { transaction } from "@/db/executor";
 
 import type { DesignEntity } from "../design.entity";
@@ -11,6 +12,7 @@ import { DesignRevisionsRepository, DesignsRepository } from "../ports";
 export interface CreateDesignUseCaseOptions {
   ownerId: string;
   name: string;
+  kind?: DesignKind;
   baseline?: DesignGraph;
 }
 
@@ -22,7 +24,7 @@ export class CreateDesignUseCase extends UseCase<Options, Result> {
 
   private readonly revisions = makeRepository(DesignRevisionsRepository);
 
-  public execute({ ownerId, name, baseline }: Options): Promise<Result> {
+  public execute({ ownerId, name, kind, baseline }: Options): Promise<Result> {
     const graph = baseline ?? emptyGraph();
     const graphHash = hashGraph(graph);
 
@@ -30,6 +32,7 @@ export class CreateDesignUseCase extends UseCase<Options, Result> {
       const design = await this.designs.insert({
         ownerId,
         name,
+        kind,
         graph,
         graphHash,
       });

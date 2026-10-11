@@ -1,7 +1,7 @@
 import { MAX_GROUPS, MAX_NODES } from "@repo/design";
 import { t } from "elysia";
 
-import { DESIGN_REVISION_AUTHORS } from "@/db";
+import { DESIGN_KINDS, DESIGN_REVISION_AUTHORS } from "@/db";
 
 const COORDINATE = { minimum: -1_000_000, maximum: 1_000_000 };
 
@@ -15,6 +15,10 @@ export type DesignLayoutModel = typeof DesignLayoutModel.static;
 export const DesignModel = t.Object({
   id: t.String({ format: "uuid" }),
   name: t.String(),
+  kind: t.UnionEnum(DESIGN_KINDS, {
+    description:
+      "A system draws the architecture; a schema draws only databases and what they hold, for a system's database to name",
+  }),
   graph: t.Unknown(),
   layout: DesignLayoutModel,
   revision: t.Integer(),
@@ -28,6 +32,7 @@ export type DesignModel = typeof DesignModel.static;
 export const DesignSummaryModel = t.Object({
   id: t.String({ format: "uuid" }),
   name: t.String(),
+  kind: t.UnionEnum(DESIGN_KINDS),
   revision: t.Integer(),
   createdAt: t.String({ format: "date-time" }),
   updatedAt: t.String({ format: "date-time" }),

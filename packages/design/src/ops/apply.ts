@@ -34,6 +34,11 @@ import {
   parseTechnology,
 } from "./validate/props";
 import { assertRelationsOf } from "./validate/relations";
+import {
+  assertInDocument,
+  assertSchemaHolder,
+  type DocumentKind,
+} from "./validate/schemas";
 
 export type ApplyOpsResult =
   | { ok: true; graph: DesignGraph; inverse: DesignOp[]; applied: DesignOp[] }
@@ -41,6 +46,7 @@ export type ApplyOpsResult =
 
 export interface ApplyOpsOptions {
   derive?: boolean;
+  document?: DocumentKind;
 }
 
 interface Applied {
@@ -78,6 +84,8 @@ const addNode = (
   assertFreeId(graph, node.id);
   assertGroup(graph, node.groupId);
   assertPlacement(graph, node);
+
+  assertSchemaHolder(node);
 
   const technology = parseTechnology(node, node.technology);
 
@@ -154,6 +162,15 @@ const updateNode = (
 
     previous.technology = node.technology;
     node.technology = technology;
+  }
+
+  if (patch.schema !== undefined) {
+    previous.schema = node.schema ?? null;
+
+    if (patch.schema === null) delete node.schema;
+    else node.schema = { designId: patch.schema.designId };
+
+    assertSchemaHolder(node);
   }
 
   const before = node.props as Record<string, unknown>;
@@ -399,7 +416,7 @@ const applyOne = (
 export const applyOps = (
   graph: DesignGraph,
   ops: readonly DesignOp[],
-  { derive = true }: ApplyOpsOptions = {},
+  { derive = true, document = "system" }: ApplyOpsOptions = {},
 ): ApplyOpsResult => {
   const draft = structuredClone(graph);
   const inverse: DesignOp[][] = [];
@@ -407,6 +424,10 @@ export const applyOps = (
 
   for (const [index, op] of ops.entries()) {
     try {
+      if (op.op === "add-node") assertInDocument(document, { node: op.node });
+      if (op.op === "add-group")
+        assertInDocument(document, { group: op.group });
+
       const result = applyOne(draft, op, derive);
 
       inverse.push(result.inverse);

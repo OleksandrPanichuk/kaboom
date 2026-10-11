@@ -1132,6 +1132,26 @@ MySQL lacks. Their baselines put the tables in a database of their engine.
 Challenges on this track are reviewed on design, integrity and query
 performance.
 
+## Schema and system designs
+
+A design has a `kind`: a `system` (the default, so every older design is
+one) or a `schema`. A schema holds only databases and what they hold;
+`applyOps(graph, ops, { document: "schema" })` refuses any other node or
+group. A SQL or NoSQL database node in a system may name a schema with an
+optional `schema: { designId }`, beside `technology`, set and cleared
+through `update-node` (`null` removes it, and undo restores its absence).
+`applyOps` refuses it on any other kind; the family check needs the other
+design, so `ApplyDesignOpsUseCase` makes it after applying: the named
+design must be the caller's own schema, and `schemaRefusal` must accept
+its databases for the node's kind (a SQL database takes SQL engines, a
+NoSQL one MongoDB or DynamoDB). A deleted schema leaves the reference in
+place, and the web names it as missing.
+
+This is the first part of the review's plan. Scoring still reads one
+graph, combined problems keep `storedOn`, and nothing migrates combined
+designs yet: resolving references into a frozen bundle for runs and
+submissions comes before problems or attempts use separate schemas.
+
 ## Technologies
 
 A node may name the product it runs on: `technology: { id, props }`, from
