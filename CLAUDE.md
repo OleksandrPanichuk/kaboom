@@ -889,6 +889,18 @@ which bounds what it passes on at `poolSize × 1000 / latency` a second.
 hold a connection, scaled into the thousands by an on-sale. The rules are
 in the load README.
 
+A database group may name the node that holds it: an optional
+`storedOn`, the id of an `sql-database` for a SQL engine or a
+`nosql-database` for MongoDB and DynamoDB. It is a field of the group, as
+edges join nodes and a group is not one. `applyOps` refuses a node of the
+wrong kind, and removing the node clears the link in the same op, its
+inverse restoring it. The load model reads nothing from the schema, so a
+problem that holds both an architecture and its tables scores them with
+load drills and schema drills side by side. *Checkout under a flash sale*
+does: a checkout service that autoscales past the database's connections
+unless pooled, and the orders tables behind it. A problem's palette offers
+its own track and the tracks of the kinds already in the design.
+
 A new prop on an existing kind is optional with no default
 (`optionalCount`, its `fallback` in the metadata for the inspector), for the
 same reason no graph version is bumped: a default would appear in every

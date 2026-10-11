@@ -29,6 +29,7 @@ import {
   CanvasProvider,
   DesignCanvas,
   NodePalette,
+  paletteTracks,
 } from "@/features/canvas";
 import { designQuery } from "@/features/designs/api";
 import {
@@ -247,6 +248,27 @@ export function DesignWorkspace({
       },
     );
 
+  const showGroup = (groupId: string) => {
+    const inside = (id: string | null): boolean => {
+      const group = editor.graph.groups.find((item) => item.id === id);
+
+      return (
+        group !== undefined && (group.id === groupId || inside(group.parentId))
+      );
+    };
+
+    focusingRef.current = true;
+    setRegionId(groupId);
+    setTab("node");
+    setFocus((current) => ({
+      nodeIds: editor.graph.nodes
+        .filter((node) => inside(node.groupId))
+        .map((node) => node.id),
+      token: (current?.token ?? 0) + 1,
+      groupId,
+    }));
+  };
+
   const showHit = useCallback((hit: LintHit) => {
     focusingRef.current = true;
     setFocus((current) => ({
@@ -310,6 +332,20 @@ export function DesignWorkspace({
             { op: "update-group", id: region.id, patch: { engine } },
           ])
         }
+        hosts={graph.nodes
+          .filter(
+            (node) =>
+              node.kind ===
+              (region.engine === "mongodb" || region.engine === "dynamodb"
+                ? "nosql-database"
+                : "sql-database"),
+          )
+          .map((node) => ({ id: node.id, label: labelOf(node.id) }))}
+        onStoredOnChange={(storedOn) =>
+          editor.apply([
+            { op: "update-group", id: region.id, patch: { storedOn } },
+          ])
+        }
         onDissolve={() => {
           editor.dissolveRegion(region.id);
           setRegionId(null);
@@ -326,6 +362,7 @@ export function DesignWorkspace({
           )
           .map((edge) => labelOf(edge.to))}
         groups={graph.groups}
+        onShowGroup={showGroup}
         cost={
           estimate.nodes.find((item) => item.nodeId === onlyNode.id) ?? null
         }
@@ -445,7 +482,10 @@ export function DesignWorkspace({
               This design is locked: it was submitted and can no longer change.
             </p>
           ) : (
-            <NodePalette track={track} onAdd={editor.addNode} />
+            <NodePalette
+              tracks={paletteTracks(track, graph)}
+              onAdd={editor.addNode}
+            />
           ),
         }}
         tabsLabel="Inspector"

@@ -85,6 +85,7 @@ export interface CanvasFocus {
   nodeIds: string[];
   token: number;
   select?: boolean;
+  groupId?: string;
 }
 
 interface DesignCanvasProps {
@@ -152,7 +153,7 @@ export function DesignCanvas({
   if (focus && focused !== focus.token && focus.select !== false) {
     setFocused(focus.token);
 
-    const wanted = new Set(focus.nodeIds);
+    const wanted = new Set(focus.groupId === undefined ? focus.nodeIds : []);
 
     setNodes((current) =>
       current.map((node) => ({ ...node, selected: wanted.has(node.id) })),
@@ -333,6 +334,9 @@ export function DesignCanvas({
         {graph.groups.length > 0 ? (
           <GroupLayer
             groups={graph.groups}
+            nodeLabels={Object.fromEntries(
+              graph.nodes.map((node) => [node.id, node.label || node.id]),
+            )}
             selectedId={selectedRegionId}
             onSelect={selectRegion}
           />

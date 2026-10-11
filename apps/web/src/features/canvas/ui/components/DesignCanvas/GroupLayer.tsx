@@ -26,6 +26,7 @@ import type { CanvasNode } from "@/features/canvas/typedefs";
 
 interface GroupLayerProps {
   groups: DesignGroup[];
+  nodeLabels?: Readonly<Record<string, string>>;
   selectedId: string | null;
   onSelect: (id: string) => void;
 }
@@ -89,7 +90,12 @@ const depthOf = (groups: DesignGroup[], group: DesignGroup): number => {
   return depth;
 };
 
-export function GroupLayer({ groups, selectedId, onSelect }: GroupLayerProps) {
+export function GroupLayer({
+  groups,
+  nodeLabels = {},
+  selectedId,
+  onSelect,
+}: GroupLayerProps) {
   const nodes = useNodes<CanvasNode>();
   const inside = new Map<string, Box>();
 
@@ -170,6 +176,9 @@ export function GroupLayer({ groups, selectedId, onSelect }: GroupLayerProps) {
               <span className="truncate">
                 {group.label || kind}
                 {group.engine ? ` · ${ENGINE_LABELS[group.engine]}` : ""}
+                {group.storedOn
+                  ? ` · on ${nodeLabels[group.storedOn] ?? group.storedOn}`
+                  : ""}
               </span>
             </button>
           </div>

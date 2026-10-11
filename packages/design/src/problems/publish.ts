@@ -65,9 +65,23 @@ export type PublishCheck =
 
 const buildable = (graph: DesignGraph): string | null => {
   const ops: DesignOp[] = [
-    ...graph.groups.map((group): DesignOp => ({ op: "add-group", group })),
+    ...graph.groups.map(({ storedOn: _, ...group }): DesignOp => ({
+      op: "add-group",
+      group,
+    })),
     ...graph.nodes.map((node): DesignOp => ({ op: "add-node", node })),
     ...graph.edges.map((edge): DesignOp => ({ op: "add-edge", edge })),
+    ...graph.groups.flatMap((group): DesignOp[] =>
+      group.storedOn === undefined
+        ? []
+        : [
+            {
+              op: "update-group",
+              id: group.id,
+              patch: { storedOn: group.storedOn },
+            },
+          ],
+    ),
   ];
   const result = applyOps(emptyGraph(), ops);
 

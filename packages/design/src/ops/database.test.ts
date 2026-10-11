@@ -164,3 +164,82 @@ describe("composite foreign keys", () => {
     ).toContain("names a column twice");
   });
 });
+
+describe("a database stored on a node", () => {
+  const primary = createNode("sql-database", { id: "primary" });
+  const documents = createNode("nosql-database", { id: "documents" });
+  const placed = apply([
+    { op: "add-node", node: primary },
+    { op: "add-node", node: documents },
+    { op: "add-group", group: shop },
+  ]).graph;
+
+  test("names a node of its family, and undo takes the link away", () => {
+    const { graph, inverse } = apply(
+      [{ op: "update-group", id: "shop", patch: { storedOn: "primary" } }],
+      placed,
+    );
+
+    expect(graph.groups[0]?.storedOn).toBe("primary");
+    expect(canonicalize(apply(inverse, graph).graph)).toBe(
+      canonicalize(placed),
+    );
+  });
+
+  test("refuses a node of the wrong kind, a missing one, and a group that is no database", () => {
+    expect(
+      refusal(
+        [{ op: "update-group", id: "shop", patch: { storedOn: "documents" } }],
+        placed,
+      ),
+    ).toContain("lives on a sql database");
+    expect(
+      refusal(
+        [{ op: "update-group", id: "shop", patch: { storedOn: "ghost" } }],
+        placed,
+      ),
+    ).toContain("does not have");
+    expect(
+      refusal([
+        { op: "add-node", node: primary },
+        {
+          op: "add-group",
+          group: {
+            ...createGroup({ id: "eu", kind: "region", label: "EU" }),
+            storedOn: "primary",
+          },
+        },
+      ]),
+    ).toContain("only a database");
+  });
+
+  test("loses the link when the node goes, and undo brings both back", () => {
+    const stored = apply(
+      [{ op: "update-group", id: "shop", patch: { storedOn: "primary" } }],
+      placed,
+    ).graph;
+    const { graph, inverse } = apply(
+      [{ op: "remove-node", id: "primary" }],
+      stored,
+    );
+
+    expect(graph.groups[0]?.storedOn).toBeUndefined();
+    expect(canonicalize(apply(inverse, graph).graph)).toBe(
+      canonicalize(stored),
+    );
+  });
+
+  test("keeps the link through a change of engine within its family", () => {
+    const stored = apply(
+      [{ op: "update-group", id: "shop", patch: { storedOn: "primary" } }],
+      placed,
+    ).graph;
+
+    expect(
+      apply(
+        [{ op: "update-group", id: "shop", patch: { engine: "postgres" } }],
+        stored,
+      ).graph.groups[0]?.storedOn,
+    ).toBe("primary");
+  });
+});

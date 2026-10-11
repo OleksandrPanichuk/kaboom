@@ -30,18 +30,20 @@ import { findFreeSpot } from "@/features/canvas/utils";
 import { useWorkspacePanels } from "@/features/shell";
 
 interface NodePaletteProps {
-  track?: Track;
+  tracks?: readonly Track[];
   onAdd: (kind: NodeKind, position: { x: number; y: number }) => void;
 }
 
-const paletteFor = (track: Track | undefined): PaletteGroup[] => {
-  if (track !== undefined) {
-    return PALETTE_GROUPS.filter((group) => group.track === track);
-  }
-
+const paletteFor = (tracks: readonly Track[] | undefined): PaletteGroup[] => {
+  const groups =
+    tracks === undefined
+      ? PALETTE_GROUPS
+      : tracks.flatMap((track) =>
+          PALETTE_GROUPS.filter((group) => group.track === track),
+        );
   const seen = new Set<NodeKind>();
 
-  return PALETTE_GROUPS.flatMap((group) => {
+  return groups.flatMap((group) => {
     const kinds = group.kinds.filter((kind) => !seen.has(kind));
 
     for (const kind of kinds) seen.add(kind);
@@ -50,7 +52,7 @@ const paletteFor = (track: Track | undefined): PaletteGroup[] => {
   });
 };
 
-export function NodePalette({ track, onAdd }: NodePaletteProps) {
+export function NodePalette({ tracks, onAdd }: NodePaletteProps) {
   const flow = useReactFlow();
   const { closePanels } = useWorkspacePanels();
 
@@ -94,12 +96,13 @@ export function NodePalette({ track, onAdd }: NodePaletteProps) {
         <p className="px-1 text-xs leading-5 text-muted-foreground">
           Drag a node onto the canvas, or click it to place it in the middle.
         </p>
-        {paletteFor(track).map((group, index, shown) => (
+        {paletteFor(tracks).map((group, index, shown) => (
           <section
             key={`${group.track}:${group.label}`}
             className="flex flex-col gap-1"
           >
-            {track === undefined && shown[index - 1]?.track !== group.track ? (
+            {(tracks === undefined || tracks.length > 1) &&
+            shown[index - 1]?.track !== group.track ? (
               <h2 className="px-1 pt-1 text-sm font-semibold">
                 {TRACK_LABELS[group.track]}
               </h2>

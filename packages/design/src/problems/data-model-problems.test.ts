@@ -548,3 +548,55 @@ describe("a game leaderboard in DynamoDB", () => {
     expect(failing("game-leaderboard", lasting)).toEqual(["daily-boards"]);
   });
 });
+
+describe("checkout under a flash sale", () => {
+  const reference = problem("flash-sale-checkout").reference.graph;
+
+  test("catches a service that connects to the database itself", () => {
+    const direct: DesignGraph = {
+      ...reference,
+      nodes: reference.nodes.filter((node) => node.id !== "pooler"),
+      edges: [
+        ...reference.edges.filter(
+          (edge) => edge.from !== "pooler" && edge.to !== "pooler",
+        ),
+        {
+          id: "direct",
+          from: "checkout",
+          to: "orders-db",
+          kind: "sync-call",
+          label: "",
+          props: { share: 1, fanOut: 1, timeoutMs: 1_000, retries: 0 },
+        },
+      ],
+    };
+
+    expect(failing("flash-sale-checkout", direct)).toEqual([
+      "survives-the-sale",
+      "pools-connections",
+    ]);
+  });
+
+  test("catches a pooler whose own pool is too small for the sale", () => {
+    const starved: DesignGraph = {
+      ...reference,
+      edges: reference.edges.map((edge) =>
+        edge.from === "pooler"
+          ? { ...edge, connection: { poolSize: 10 } }
+          : edge,
+      ),
+    };
+
+    expect(failing("flash-sale-checkout", starved)).toEqual([
+      "survives-the-sale",
+    ]);
+  });
+
+  test("catches a product's orders read without an index, and nothing else", () => {
+    const unindexed = edit(reference, "order_lines", (lines) => {
+      lines.props.indexes = [];
+    });
+
+    expect(failing("flash-sale-checkout", unindexed)).toEqual(["sales-report"]);
+  });
+});
