@@ -19,6 +19,7 @@ import { rateLimitedApi } from "./rate-limited-api";
 import { roomBooking } from "./room-booking";
 import { schemaMigration } from "./schema-migration";
 import { secretRotation } from "./secret-rotation";
+import { serverlessTickets } from "./serverless-tickets";
 import { shopOrders } from "./shop-orders";
 import { signupAudit } from "./signup-audit";
 import { threeTierVpc } from "./three-tier-vpc";
@@ -35,6 +36,7 @@ export const OFFICIAL_PROBLEMS: ProblemContent[] = [
   productCatalogue,
   cardPayments,
   fareSearch,
+  serverlessTickets,
   zeroDowntimeRollout,
   latencyRegression,
   monorepoPipeline,

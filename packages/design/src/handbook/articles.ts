@@ -139,6 +139,28 @@ A call from one region to another takes longer, about 70 ms in Kaboom. Keep the 
 For a region to take over, it must hold everything the request path needs: servers, streams, workers, and a copy of the data that can be promoted. Size each region to carry all the traffic, because after a failover it does.`,
 };
 
+export const connectionPooling: HandbookArticle = {
+  slug: "connection-pooling",
+  title: "Connection pooling",
+  summary:
+    "A database accepts a limited number of connections, and every replica of every caller holds its own.",
+  kinds: ["connection-pooler", "sql-database"],
+  problems: ["serverless-tickets", "fare-search"],
+  body: `A SQL database serves each client over a **connection**, and each connection costs it memory, so it accepts only so many at once. In Kaboom a database accepts 1,000 unless it is given a larger limit, and a larger limit needs a larger instance.
+
+## Every replica holds a pool
+
+An application keeps a **pool** of connections open and reuses them, ten by default. The pool belongs to one process, so a service with forty replicas holds four hundred connections, and autoscaling it multiplies them. A database asked for more than its limit refuses the rest, and those requests fail however often they are retried.
+
+## Functions make it worse
+
+A serverless function runs one request at a time and usually opens its own connection, so a burst that starts two thousand instances asks for two thousand connections, mostly idle.
+
+## A pooler in between
+
+A **connection pooler** (PgBouncer, RDS Proxy) accepts thousands of client connections and keeps a small pool of its own to the database, lending a server connection to a client for one transaction at a time. Its own pool then bounds the throughput: a connection carries about \`1,000 / query time in ms\` requests a second, so at 5 ms, 200 connections carry 40,000. Too small a pool queues the requests at the pooler.`,
+};
+
 export const HANDBOOK_ARTICLES: readonly HandbookArticle[] = [
   caching,
   replication,
@@ -146,4 +168,5 @@ export const HANDBOOK_ARTICLES: readonly HandbookArticle[] = [
   backPressure,
   idempotency,
   multiRegion,
+  connectionPooling,
 ];

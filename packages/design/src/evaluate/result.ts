@@ -29,6 +29,7 @@ export interface NodeStep {
   replicas?: number;
   backlog?: number;
   throttled?: number;
+  connections?: { demanded: number; max: number };
   rollout?: RolloutStep;
 }
 
@@ -66,6 +67,7 @@ export const FINDING_KINDS = [
   "stale-secret",
   "schema-break",
   "retry-storm",
+  "connections-exhausted",
   "untested-deploy",
   "unscanned-deploy",
   "blocked-path",

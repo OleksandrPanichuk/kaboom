@@ -10,6 +10,13 @@ export const count = (fallback: number, meta: FieldMeta) =>
     ...meta,
   });
 
+export const optionalCount = (fallback: number, meta: FieldMeta) =>
+  prop(z.number().int().min(1).max(10_000).optional(), {
+    unit: "count",
+    fallback,
+    ...meta,
+  });
+
 export const rate = (
   fallback: number,
   meta: FieldMeta & { unit?: "req/s" | "msg/s" },

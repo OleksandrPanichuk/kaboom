@@ -1,5 +1,6 @@
 import z from "zod";
 
+import type { NodeKind } from "./catalogue";
 import { prop } from "./prop-meta";
 
 export const EDGE_KINDS = [
@@ -97,6 +98,21 @@ export const ReferenceSchema = z.strictObject({
 });
 
 export type Reference = z.output<typeof ReferenceSchema>;
+
+export const DEFAULT_POOL_SIZE = 10;
+export const MAX_POOL_SIZE = 10_000;
+
+const POOLED_EDGE_KINDS: readonly EdgeKind[] = ["sync-call", "read", "write"];
+
+export const opensConnections = (kind: EdgeKind, target: NodeKind): boolean =>
+  POOLED_EDGE_KINDS.includes(kind) &&
+  (target === "sql-database" || target === "connection-pooler");
+
+export const ConnectionSchema = z.strictObject({
+  poolSize: z.number().int().min(1).max(MAX_POOL_SIZE),
+});
+
+export type Connection = z.output<typeof ConnectionSchema>;
 
 export const RelationPatchSchema = z.strictObject({
   onDelete: onDelete.optional(),

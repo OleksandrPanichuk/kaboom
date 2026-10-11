@@ -137,6 +137,7 @@ describe("a node with a technology", () => {
     expect(update?.op === "update-node" && update.patch.props).toEqual({
       readCapacityRps: 40_000,
       writeCapacityRps: 9_000,
+      maxConnections: 5_000,
     });
     expect(replayed.ok && replayed.graph).toEqual(changed.graph);
   });

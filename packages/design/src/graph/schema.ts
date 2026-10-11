@@ -2,6 +2,8 @@ import z from "zod";
 
 import {
   catalogue,
+  type Connection,
+  ConnectionSchema,
   EdgeKindSchema,
   type EdgeProps,
   EdgePropsSchema,
@@ -101,6 +103,7 @@ export interface DesignEdge {
   props: EdgeProps;
   relation?: Relation;
   reference?: Reference;
+  connection?: Connection;
 }
 
 export const DesignEdgeSchema: z.ZodType<DesignEdge> = z.strictObject({
@@ -112,6 +115,7 @@ export const DesignEdgeSchema: z.ZodType<DesignEdge> = z.strictObject({
   props: EdgePropsSchema.default(EdgePropsSchema.parse({})),
   relation: RelationSchema.optional(),
   reference: ReferenceSchema.optional(),
+  connection: ConnectionSchema.optional(),
 });
 
 export interface DesignGroup {

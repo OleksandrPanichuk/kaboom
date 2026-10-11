@@ -283,7 +283,7 @@ The *Travellers* client is already on the canvas. Build what it talks to.`,
   },
   reference: {
     notes:
-      "Three regions, each with a balancer, ninety search replicas and a fare cache, and DNS splitting travellers by latency. A region carries a third of the traffic on a normal day and half once another is lost, so ninety replicas are 56 % busy normally and 83 % busy after a loss, a little more while the database fails over. Saved searches live in one SQL primary in Europe with automatic failover and a replica in each other region. About $17,000 a month. Two regions that keep enough running to carry everything need about 340 replicas and cost about $20,500. Two regions that autoscale from what a normal day needs pass as well, and cost less: the budget pays for the floor, and the autoscaler adds replicas within seconds of a region going down.",
+      "Three regions, each with a balancer, ninety search replicas and a fare cache, and DNS splitting travellers by latency. A region carries a third of the traffic on a normal day and half once another is lost, so ninety replicas are 56 % busy normally and 83 % busy after a loss, a little more while the database fails over. Saved searches live in one SQL primary in Europe with automatic failover and a replica in each other region. Every search replica holds a pool of ten connections to it, 2,700 in all, so it accepts 3,000; sized four times the base for its writes, it gets that limit at no extra cost. About $17,000 a month. Two regions that keep enough running to carry everything need about 340 replicas and cost about $20,500. Two regions that autoscale from what a normal day needs pass as well, and cost less: the budget pays for the floor, and the autoscaler adds replicas within seconds of a region going down.",
     graph: graph(
       [
         travellers(),
@@ -295,6 +295,7 @@ The *Travellers* client is already on the canvas. Build what it talks to.`,
             failover: "automatic",
             readCapacityRps: 10_000,
             writeCapacityRps: 4_000,
+            maxConnections: 3_000,
           }),
         ),
         within("us", node("replica-us", "sql-database", "Replica US")),
