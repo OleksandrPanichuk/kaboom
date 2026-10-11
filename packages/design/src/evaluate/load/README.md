@@ -192,7 +192,8 @@ backlog (its lag), drained by that edge's target alone.
 
 ## Time and faults
 
-A step runs, in order:
+A step runs, in order (`runStep` calls one function per phase, over the
+`StepContext` that `prepareStep` builds):
 
 1. fault onsets and ends, failover timers, and rollouts;
 2. autoscaler decisions taken on the previous step;
