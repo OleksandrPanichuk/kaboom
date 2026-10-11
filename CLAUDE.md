@@ -576,7 +576,11 @@ capacity, base latency, what it forwards, throttling, connection limits,
 replicas), `KIND_COSTS` (`cost/cost.ts`) and `LOST_INSTANCES`
 (`scoring/chaos.ts`). Where a kind may live is its definition's `home`
 (an engine family, and whether it must sit in a database of it), which
-`applyOps` and the web's `homeOps` both read. In the web, icons are keyed
+`applyOps` and the web's `homeOps` both read. `ops/apply.ts` is only the
+dispatcher and the undo bookkeeping; each domain's rules sit in
+`ops/validate/` (placement and stored-on links, props and technologies,
+edges, relations, references), so a new rule goes in its domain's file.
+In the web, icons are keyed
 by `NodeKind` and card types sit in `nodeCards.ts`, which also decides
 which kinds draw wide.
 
