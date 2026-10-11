@@ -9,3 +9,5 @@ export const DIFFICULTY_TONES = {
   medium: "border-warning-border bg-warning-surface text-warning-foreground",
   hard: "border-danger-border bg-danger-surface text-danger-foreground",
 } as const;
+
+export const SOLVED_SCORE = 80;

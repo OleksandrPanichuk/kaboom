@@ -1,18 +1,17 @@
 import { Skeleton } from "@/components/ui/Skeleton";
 
-const PLACEHOLDERS = ["a", "b", "c", "d"];
+const PLACEHOLDERS = ["a", "b", "c", "d", "e", "f"];
 
 export function ProblemsListSkeleton() {
   return (
-    <ul aria-hidden="true" className="grid gap-3 md:grid-cols-2">
+    <ul
+      aria-hidden="true"
+      className="divide-y divide-border rounded-2xl border border-border bg-card"
+    >
       {PLACEHOLDERS.map((key) => (
-        <li
-          key={key}
-          className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5"
-        >
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-3.5 w-full" />
-          <Skeleton className="h-3.5 w-1/3" />
+        <li key={key} className="flex flex-col gap-2 px-4 py-4 sm:px-5">
+          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-3.5 w-2/3" />
         </li>
       ))}
     </ul>
