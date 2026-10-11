@@ -2,6 +2,7 @@ import { make, makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
 import { Cache } from "@/platform/cache";
 
+import { type UpdateUserData, UserLifecycle, UsersRepository } from "./ports";
 import {
   CachedUserSchema,
   USER_CACHE_TTL_MS,
@@ -9,7 +10,6 @@ import {
 } from "./user.cache";
 import { UserEntity } from "./user.entity";
 import { UserNotFoundError } from "./users.errors";
-import { type UpdateUserData, UsersRepository } from "./users.repository";
 
 export interface CreateUserInput {
   name: string;
@@ -21,10 +21,14 @@ export class UsersService extends Service {
   private readonly cache = make(Cache);
 
   public async create({ name, email }: CreateUserInput): Promise<UserEntity> {
-    return this.repo.insert({
+    const user = await this.repo.insert({
       name,
       email: UserEntity.normalizeEmail(email),
     });
+
+    await make(UserLifecycle).created(user);
+
+    return user;
   }
 
   public async findById(id: string): Promise<UserEntity | null> {

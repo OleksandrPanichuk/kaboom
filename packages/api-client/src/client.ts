@@ -124,6 +124,23 @@ const serializeQuery = (query: Query | undefined): string => {
   return serialized ? `?${serialized}` : "";
 };
 
+const hasFile = (body: unknown): body is Record<string, unknown> =>
+  body !== null &&
+  typeof body === "object" &&
+  Object.values(body).some((value) => value instanceof Blob);
+
+const formOf = (body: Record<string, unknown>): FormData => {
+  const form = new FormData();
+
+  for (const [key, value] of Object.entries(body)) {
+    if (value === undefined) continue;
+
+    form.append(key, value instanceof Blob ? value : String(value));
+  }
+
+  return form;
+};
+
 const send = async (
   options: ApiClientOptions,
   trail: string[],
@@ -137,6 +154,7 @@ const send = async (
     ((hasBody ? second : first) as
       (RequestOptions & { query?: Query }) | undefined) ?? {};
   const fetcher = options.fetch ?? globalThis.fetch;
+  const multipart = hasBody && hasFile(first);
 
   const response = await fetcher(
     `${options.url}${resolvePath(trail, params)}${serializeQuery(request.query)}`,
@@ -145,12 +163,14 @@ const send = async (
       credentials: "include",
       signal: request.signal,
       headers: {
-        ...(hasBody ? { "content-type": "application/json" } : {}),
+        ...(hasBody && !multipart
+          ? { "content-type": "application/json" }
+          : {}),
         ...options.headers?.(),
         ...request.headers,
       },
       ...(hasBody && first !== undefined
-        ? { body: JSON.stringify(first) }
+        ? { body: multipart ? formOf(first) : JSON.stringify(first) }
         : {}),
     },
   );

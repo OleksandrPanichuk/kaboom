@@ -5,10 +5,10 @@ import { usersSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
 import { Keyset } from "@/db/pagination";
 
+import type { CreateUserData, UpdateUserData } from "../ports";
+import { UsersRepository } from "../ports";
 import { UserEntity } from "../user.entity";
 import { UserNotFoundError } from "../users.errors";
-import type { CreateUserData, UpdateUserData } from "../users.repository";
-import { UsersRepository } from "../users.repository";
 
 const BY_CREATION = new Keyset<UserEntity>({
   sort: usersSchema.createdAt,

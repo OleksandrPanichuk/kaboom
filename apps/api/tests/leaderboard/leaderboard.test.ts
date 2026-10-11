@@ -12,6 +12,8 @@ interface Board {
   entries: Array<{
     position: number;
     handle: string;
+    displayName: string;
+    avatarUrl: string | null;
     points: number;
     solved: number;
     rank: string | null;
@@ -33,13 +35,7 @@ const solveShortener = async (user: TestUser) => {
 };
 
 const join = (user: TestUser, handle: string, visible = true) =>
-  user.put<{ handle: string; visible: boolean; code?: string }>(
-    "/api/leaderboard/me",
-    {
-      handle,
-      visible,
-    },
-  );
+  user.patch("/api/profiles/me", { handle, visible });
 
 const board = (user: TestUser, query = "") =>
   user.get<Board>(`/api/leaderboard${query}`);
@@ -49,18 +45,19 @@ beforeEach(async () => {
 });
 
 describe("the leaderboard", () => {
-  test("is empty, and says the caller is not on it, before anyone joins", async () => {
-    const user = await createUser();
+  test("is empty, and gives no place to someone without points, before anyone scores", async () => {
+    const user = await createUser({ name: "Ada Lovelace" });
     const response = await board(user);
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
       entries: [],
-      me: { handle: null, visible: false, points: 0, position: null },
+      me: { visible: true, points: 0, position: null },
     });
+    expect(response.body.me.handle).toMatch(/^ada-lovelac-[0-9a-f]{8}$/);
   });
 
-  test("lists only people who chose a handle and to be shown, sharing a place on a tie", async () => {
+  test("lists everyone visible by display name and handle, sharing a place on a tie", async () => {
     const ada = await createUser({ name: "Ada Lovelace" });
     const grace = await createUser({ name: "Grace Hopper" });
     const hidden = await createUser();
@@ -75,10 +72,26 @@ describe("the leaderboard", () => {
     const mine = await board(hidden);
 
     expect(seen.body.entries).toEqual([
-      { position: 1, handle: "ada", points: 100, solved: 1, rank: "Middle" },
-      { position: 1, handle: "grace", points: 100, solved: 1, rank: "Middle" },
+      {
+        position: 1,
+        handle: "ada",
+        displayName: "Ada Lovelace",
+        avatarUrl: null,
+        points: 100,
+        solved: 1,
+        rank: "Middle",
+      },
+      {
+        position: 1,
+        handle: "grace",
+        displayName: "Grace Hopper",
+        avatarUrl: null,
+        points: 100,
+        solved: 1,
+        rank: "Middle",
+      },
     ]);
-    expect(JSON.stringify(seen.body)).not.toContain("Ada Lovelace");
+    expect(JSON.stringify(seen.body)).not.toContain(ada.email);
     expect(mine.body.me).toEqual({
       handle: "shy",
       visible: false,
@@ -107,24 +120,6 @@ describe("the leaderboard", () => {
     expect(
       (await board(ada, "?track=system-design")).body.entries[0],
     ).toMatchObject({ handle: "ada", rank: null });
-  });
-
-  test("keeps a handle to one person, and refuses one that breaks the pattern", async () => {
-    const ada = await createUser();
-    const grace = await createUser();
-
-    expect((await join(ada, "ada")).status).toBe(200);
-    expect((await join(ada, "ada", false)).body).toEqual({
-      handle: "ada",
-      visible: false,
-    });
-
-    const taken = await join(grace, "ada");
-
-    expect(taken.status).toBe(409);
-    expect(taken.body.code).toBe("HANDLE_TAKEN");
-    expect((await join(grace, "A")).status).toBe(422);
-    expect((await join(grace, "-grace")).status).toBe(422);
   });
 
   test("needs a session", async () => {

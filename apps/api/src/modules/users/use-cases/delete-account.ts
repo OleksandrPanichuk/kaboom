@@ -1,14 +1,14 @@
-import { makeRepository, makeService } from "@/core/registry";
+import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { AccountsRepository, AccountsService } from "@/modules/accounts";
 import { SessionsService } from "@/modules/sessions";
 
+import { UserLifecycle, UsersRepository } from "../ports";
 import { UserEntity } from "../user.entity";
 import {
   AccountDeletionNotConfirmedError,
   AccountDeletionUnauthorizedError,
 } from "../users.errors";
-import { UsersRepository } from "../users.repository";
 import { UsersService } from "../users.service";
 
 export interface DeleteAccountUseCaseOptions {
@@ -45,6 +45,7 @@ export class DeleteAccountUseCase extends UseCase<Options, Result> {
     await this.verifyPassword(userId, password);
 
     await this.sessionsService.revokeAllForUser(userId);
+    await make(UserLifecycle).deleting(user);
     await this.usersService.invalidate(userId);
     await this.usersRepository.deleteById(userId);
   }

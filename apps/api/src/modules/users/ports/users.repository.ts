@@ -1,7 +1,7 @@
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
 
-import type { UserEntity } from "./user.entity";
+import type { UserEntity } from "../user.entity";
 
 export interface CreateUserData {
   name: string;

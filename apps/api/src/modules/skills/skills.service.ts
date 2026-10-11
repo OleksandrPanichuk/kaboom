@@ -5,7 +5,7 @@ import { Service } from "@/core/service";
 import { ProblemsService } from "@/modules/problems";
 
 import { SkillScoresRepository } from "./ports";
-import type { SkillsView } from "./skill.entity";
+import type { SkillSummary, SkillsView } from "./skill.entity";
 import {
   SKILL_SCORING_VERSION,
   SUBMISSION_SKILL_WEIGHT,
@@ -80,6 +80,10 @@ export class SkillsService extends Service {
         scoringVersion: SKILL_SCORING_VERSION,
       })),
     );
+  }
+
+  public async summaryFor(userId: string): Promise<SkillSummary[]> {
+    return summarise(await this.scores.listFor(userId), new Date());
   }
 
   public async viewFor(userId: string): Promise<SkillsView> {

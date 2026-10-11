@@ -1,4 +1,10 @@
 export * from "./dto";
+export {
+  type CreateUserData,
+  type UpdateUserData,
+  UserLifecycle,
+  UsersRepository,
+} from "./ports";
 export { PostgresUsersRepository } from "./repositories";
 export {
   DeleteAccountUseCase,
@@ -20,11 +26,6 @@ export {
 } from "./users.errors";
 export { usersModule } from "./users.module";
 export { usersPlugin } from "./users.plugin";
-export {
-  type CreateUserData,
-  type UpdateUserData,
-  UsersRepository,
-} from "./users.repository";
 export {
   type CreateUserInput as CreateUserServiceInput,
   UsersService,
