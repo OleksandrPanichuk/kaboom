@@ -1,6 +1,8 @@
 import type {
   Column,
   ColumnType,
+  DocumentField,
+  DocumentIndex,
   EdgeKind,
   EdgeProps,
   Engine,
@@ -112,4 +114,35 @@ export const references = (
 ): DesignEdge => ({
   ...createEdge({ id: `${from}-${fromColumn}-fk`, from, to, kind: "relation" }),
   relation: { fromColumn, toColumn, onDelete },
+});
+
+export const field = (
+  name: string,
+  type: DocumentField["type"],
+  extra: Partial<Omit<DocumentField, "id" | "name" | "type">> = {},
+): DocumentField => ({ id: name, name, type, required: false, ...extra });
+
+export const collection = (
+  collectionId: string,
+  groupId: string,
+  fields: DocumentField[] = [],
+  indexes: DocumentIndex[] = [],
+): DesignNode =>
+  within(
+    groupId,
+    node(collectionId, "collection", collectionId, { fields, indexes }),
+  );
+
+export const refers = (
+  from: string,
+  path: string[],
+  to: string,
+): DesignEdge => ({
+  ...createEdge({
+    id: `${from}-${path.join("-")}-ref`,
+    from,
+    to,
+    kind: "reference",
+  }),
+  reference: { fromField: path },
 });

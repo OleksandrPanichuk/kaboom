@@ -1,7 +1,9 @@
 import { type ProblemContent, ProblemContentSchema } from "../schema";
 import { blogTags } from "./blog-tags";
 import { cardPayments } from "./card-payments";
+import { catalogueVariants } from "./catalogue-variants";
 import { chat } from "./chat";
+import { chatMessages } from "./chat-messages";
 import { fareSearch } from "./fare-search";
 import { jobQueue } from "./job-queue";
 import { latencyRegression } from "./latency-regression";
@@ -43,4 +45,6 @@ export const OFFICIAL_PROBLEMS: ProblemContent[] = [
   signupAudit,
   jobQueue,
   productSearch,
+  catalogueVariants,
+  chatMessages,
 ].map((problem) => ProblemContentSchema.parse(problem));
