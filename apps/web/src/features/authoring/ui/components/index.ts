@@ -7,3 +7,6 @@ export * from "./DraftStatusBadge";
 export * from "./EditorSection";
 export * from "./ForkProblemButton";
 export * from "./JsonField";
+export * from "./SchemaForm";
+export * from "./SchemaSection";
+export * from "./TagsField";

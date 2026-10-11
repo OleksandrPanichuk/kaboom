@@ -344,9 +344,17 @@ editor (`/authoring/$draftId`), a shell page rather than a workspace,
 since the canvas lives elsewhere. `useDraftEditor` keeps the content in
 local state, saves it 0.8 s after the last edit, and takes back only the
 baseline and reference graphs from the server's answer, which reads them
-from the draft's linked designs. Its forms write top-level fields;
-drills, rubric, hints, interview and chaos are `JsonField`s that save once
-they parse. An issue's path picks its section (`sectionOf`), which the
+from the draft's linked designs. Its forms write top-level fields, and tags
+are a multi-select (`TagsField`) suggesting the tags published problems
+use. Drills, rubric, hints, interview and chaos are `SchemaSection`s: a
+`SchemaForm` drawn from `authoringSchema(section)`, the JSON Schema of the
+validator itself, so a new drill or check kind needs no UI code. A union
+becomes a kind select that keeps the shared fields, an enum list toggle
+chips, an optional group an *Add* button, and a field marked `ref`
+(`drill`, `table`, `collection`, `item`) a select over what the draft
+holds (`draftRefs`). New values start from `default`s and `examples`;
+an issue shows under the field whose path it names. *Edit as JSON*
+stays, for whoever prefers it. An issue's path picks its section (`sectionOf`), which the
 issues list jumps to. *Edit in the designer* opens the linked design at
 `/designs/$designId?draft=…`, whose back link returns to the draft.
 `ForkProblemButton` starts a draft from a published problem, on its start

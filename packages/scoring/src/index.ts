@@ -1,5 +1,11 @@
 export { type Assertion } from "./assertion";
 export {
+  AUTHORING_SECTIONS,
+  authoringSchema,
+  type AuthoringSection,
+  type JsonSchema,
+} from "./authoring";
+export {
   chaosBaseline,
   type ChaosCase,
   chaosCases,

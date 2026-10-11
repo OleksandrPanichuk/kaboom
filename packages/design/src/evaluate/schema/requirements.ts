@@ -2,7 +2,11 @@ import z from "zod";
 
 import { COLUMN_TYPES, FILTER_OPERATORS } from "../../catalogue";
 
-const TableRef = z.string().min(1).max(64);
+const TableRef = z
+  .string()
+  .min(1)
+  .max(64)
+  .meta({ ref: "table", description: "A table of the baseline, by its id" });
 const ColumnRef = z
   .string()
   .regex(/^[a-z_][a-z0-9_]*$/i)
@@ -11,19 +15,31 @@ const ColumnRef = z
 export const RelationshipRequirementSchema = z.discriminatedUnion(
   "cardinality",
   [
-    z.strictObject({
-      cardinality: z.literal("one-to-many"),
-      parent: TableRef,
-      child: TableRef,
-    }),
-    z.strictObject({
-      cardinality: z.literal("one-to-one"),
-      between: z.tuple([TableRef, TableRef]),
-    }),
-    z.strictObject({
-      cardinality: z.literal("many-to-many"),
-      between: z.tuple([TableRef, TableRef]),
-    }),
+    z
+      .strictObject({
+        cardinality: z.literal("one-to-many"),
+        parent: TableRef,
+        child: TableRef,
+      })
+      .meta({
+        title: "One to many",
+        description: "Each parent row has any number of child rows",
+      }),
+    z
+      .strictObject({
+        cardinality: z.literal("one-to-one"),
+        between: z.tuple([TableRef, TableRef]),
+      })
+      .meta({ title: "One to one" }),
+    z
+      .strictObject({
+        cardinality: z.literal("many-to-many"),
+        between: z.tuple([TableRef, TableRef]),
+      })
+      .meta({
+        title: "Many to many",
+        description: "Needs a junction table the solver adds",
+      }),
   ],
 );
 export type RelationshipRequirement = z.output<
@@ -83,9 +99,21 @@ export const QueryRequirementSchema = z
 export type QueryRequirement = z.output<typeof QueryRequirementSchema>;
 
 export const SchemaRequirementsSchema = z.strictObject({
-  relationships: z.array(RelationshipRequirementSchema).max(20).default([]),
-  columns: z.array(ColumnRequirementSchema).max(40).default([]),
-  queries: z.array(QueryRequirementSchema).max(20).default([]),
+  relationships: z
+    .array(RelationshipRequirementSchema)
+    .max(20)
+    .default([])
+    .meta({ description: "How the baseline's tables must relate" }),
+  columns: z
+    .array(ColumnRequirementSchema)
+    .max(40)
+    .default([])
+    .meta({ description: "Columns a table must have, and how they are typed" }),
+  queries: z
+    .array(QueryRequirementSchema)
+    .max(20)
+    .default([])
+    .meta({ description: "Lookups an index must serve" }),
 });
 export type SchemaRequirements = z.output<typeof SchemaRequirementsSchema>;
 export type SchemaRequirementsInput = z.input<typeof SchemaRequirementsSchema>;

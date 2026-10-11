@@ -3,7 +3,8 @@ import z from "zod";
 const ItemName = z
   .string()
   .regex(/^[a-z_][a-z0-9_]*$/i)
-  .max(63);
+  .max(63)
+  .meta({ ref: "item", description: "An item type of a DynamoDB table" });
 const AttributeName = z
   .string()
   .regex(/^[a-z_][a-z0-9_]*$/i)

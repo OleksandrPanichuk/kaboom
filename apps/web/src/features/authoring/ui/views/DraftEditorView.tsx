@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 import { ArrowLeft, GitFork, ListChecks, Send, Undo2 } from "lucide-react";
+import { useMemo } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { Field, FieldLabel } from "@/components/ui/Field";
@@ -23,9 +24,14 @@ import {
   DraftReviews,
   DraftStatusBadge,
   EditorSection,
-  JsonField,
+  SchemaSection,
 } from "@/features/authoring/ui/components";
-import { asContent, sectionOf, textOf } from "@/features/authoring/utils";
+import {
+  asContent,
+  draftRefs,
+  sectionOf,
+  textOf,
+} from "@/features/authoring/utils";
 
 interface DraftEditorViewProps {
   draftId: string;
@@ -54,6 +60,7 @@ export function DraftEditorView({
   const open = useMutation(openDraftDesignMutation);
   const { draft, content, setField } = editor;
   const reference = asContent(content.reference);
+  const refs = useMemo(() => draftRefs(content), [content]);
   const latest = draft.reviews[0];
   const issuesIn = (section: DraftSectionId) =>
     editor.issues.filter((issue) => sectionOf(issue.path) === section).length;
@@ -259,10 +266,12 @@ export function DraftEditorView({
               description="Scenarios the design must survive: load, schema, documents, key-value, pipeline or network."
               issues={issuesIn("drills")}
             >
-              <JsonField
-                label="Drills"
-                description="A list of drills, as in the handbook's problem format."
+              <SchemaSection
+                section="drills"
+                noun="drills"
                 value={content.drills}
+                refs={refs}
+                issues={editor.issues}
                 onChange={(value) => setField("drills", value)}
               />
             </EditorSection>
@@ -272,10 +281,12 @@ export function DraftEditorView({
               description="What a submission is scored on; the weights add up to 100."
               issues={issuesIn("rubric")}
             >
-              <JsonField
-                label="Rubric"
-                description="A list of items, each with a key, title, weight and check."
+              <SchemaSection
+                section="rubric"
+                noun="rubric"
                 value={content.rubric}
+                refs={refs}
+                issues={editor.issues}
                 onChange={(value) => setField("rubric", value)}
               />
             </EditorSection>
@@ -285,30 +296,36 @@ export function DraftEditorView({
               description="Up to three, each with a points cost; at most 50 in all."
               issues={issuesIn("hints")}
             >
-              <JsonField
-                label="Hints"
-                description="A list of { title, body, cost }."
+              <SchemaSection
+                section="hints"
+                noun="hints"
                 value={content.hints}
+                refs={refs}
+                issues={editor.issues}
                 onChange={(value) => setField("hints", value)}
               />
             </EditorSection>
             <EditorSection
               id="advanced"
               title={label("advanced")}
-              description="Optional. Leave empty for a challenge without an interview or chaos settings."
+              description="Optional. A challenge needs neither; add an interview to practise it with the interviewer, and chaos settings to tune the generated faults."
               issues={issuesIn("advanced")}
             >
-              <JsonField
-                label="Interview"
-                description="Phases, rubric and drills for a mock interview."
+              <SchemaSection
+                section="interview"
+                noun="an interview"
                 value={content.interview}
+                refs={refs}
+                issues={editor.issues}
                 optional
                 onChange={(value) => setField("interview", value)}
               />
-              <JsonField
-                label="Chaos"
-                description="When faults start, how long they last and what availability must hold."
+              <SchemaSection
+                section="chaos"
+                noun="chaos settings"
                 value={content.chaos}
+                refs={refs}
+                issues={editor.issues}
                 optional
                 onChange={(value) => setField("chaos", value)}
               />

@@ -14,11 +14,9 @@ import {
   DIFFICULTY_OPTIONS,
   TRACK_OPTIONS,
 } from "@/features/authoring/constants";
-import {
-  type DraftContent,
-  tagsFromText,
-  textOf,
-} from "@/features/authoring/utils";
+import { type DraftContent, textOf } from "@/features/authoring/utils";
+
+import { TagsField } from "./TagsField";
 
 interface DraftDetailsFormProps {
   content: DraftContent;
@@ -121,16 +119,9 @@ export function DraftDetailsForm({
         options={DIFFICULTY_OPTIONS}
         onChange={(value) => onChange("difficulty", value)}
       />
-      <Field className="sm:col-span-2">
-        <FieldLabel htmlFor={`${id}-tags`}>Tags</FieldLabel>
-        <Input
-          id={`${id}-tags`}
-          defaultValue={tags.join(", ")}
-          placeholder="caching, queues"
-          onBlur={(event) => onChange("tags", tagsFromText(event.target.value))}
-        />
-        <FieldDescription>Separated by commas, up to ten.</FieldDescription>
-      </Field>
+      <div className="sm:col-span-2">
+        <TagsField value={tags} onChange={(next) => onChange("tags", next)} />
+      </div>
       <Field className="sm:col-span-2">
         <FieldLabel htmlFor={`${id}-summary`}>Summary</FieldLabel>
         <Textarea
