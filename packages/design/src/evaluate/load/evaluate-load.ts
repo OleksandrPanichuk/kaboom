@@ -248,13 +248,13 @@ export const evaluateLoad = (
   };
 };
 
-const runStep = (
+const prepareStep = (
   topo: Topology,
   scenario: LoadScenario,
   memory: Memory,
   log: FindingLog,
   index: number,
-): EvaluationStep => {
+) => {
   const t = index * scenario.stepSeconds;
   const multiplier = multiplierAt(scenario, t);
   const state = new Map<string, FaultState>();
@@ -500,6 +500,67 @@ const runStep = (
     };
     received.set(edge.to, add(received.get(edge.to) ?? zero(), flow));
   };
+
+  return {
+    topo,
+    scenario,
+    memory,
+    log,
+    index,
+    t,
+    multiplier,
+    state,
+    isUp,
+    cutSince,
+    isCut,
+    attempts,
+    stranded,
+    persistent,
+    attemptsOf,
+    rollouts,
+    staleShares,
+    rolloutShape,
+    conditionsOf,
+    poolThroughputOf,
+    connectionsInto,
+    refusedShares,
+    received,
+    edges,
+    nodes,
+    emitted,
+    send,
+  };
+};
+
+type StepContext = ReturnType<typeof prepareStep>;
+
+const propagate = (ctx: StepContext): void => {
+  const {
+    topo,
+    scenario,
+    memory,
+    log,
+    index,
+    t,
+    multiplier,
+    state,
+    isUp,
+    cutSince,
+    isCut,
+    attempts,
+    stranded,
+    attemptsOf,
+    staleShares,
+    rolloutShape,
+    conditionsOf,
+    connectionsInto,
+    refusedShares,
+    received,
+    edges,
+    nodes,
+    emitted,
+    send,
+  } = ctx;
 
   for (const node of topo.order) {
     const conditions = conditionsOf(node);
@@ -767,6 +828,10 @@ const runStep = (
 
     nodes[node.id] = step;
   }
+};
+
+const spreadReplicaReads = (ctx: StepContext): void => {
+  const { topo, conditionsOf, nodes } = ctx;
 
   for (const [replicaId, primaryId] of topo.primaryOf) {
     const primary = nodes[primaryId];
@@ -782,6 +847,20 @@ const runStep = (
 
     nodes[replicaId] = { ...replica, rho: replica.up ? readRho : 0 };
   }
+};
+
+const combineErrorRates = (ctx: StepContext): void => {
+  const {
+    topo,
+    state,
+    isCut,
+    attempts,
+    stranded,
+    persistent,
+    refusedShares,
+    edges,
+    nodes,
+  } = ctx;
 
   for (const node of [...topo.order].reverse()) {
     const step = nodes[node.id]!;
@@ -834,6 +913,12 @@ const runStep = (
       ),
     );
   }
+};
+
+const pathLatencies = (
+  ctx: StepContext,
+): Map<string, { p50: number; p99: number }> => {
+  const { topo, isCut, edges, nodes } = ctx;
 
   const pathLatency = new Map<string, { p50: number; p99: number }>();
 
@@ -868,6 +953,15 @@ const runStep = (
       p99: step.p99 + slowest.p99,
     });
   }
+
+  return pathLatency;
+};
+
+const clientSteps = (
+  ctx: StepContext,
+  pathLatency: Map<string, { p50: number; p99: number }>,
+): Record<string, ClientStep> => {
+  const { topo, scenario, log, index, nodes, emitted } = ctx;
 
   const clients: Record<string, ClientStep> = {};
 
@@ -910,6 +1004,22 @@ const runStep = (
       });
     }
   }
+
+  return clients;
+};
+
+const noteNodeFindings = (ctx: StepContext): void => {
+  const {
+    topo,
+    memory,
+    log,
+    index,
+    t,
+    staleShares,
+    conditionsOf,
+    refusedShares,
+    nodes,
+  } = ctx;
 
   for (const node of topo.order) {
     const step = nodes[node.id]!;
@@ -1083,6 +1193,10 @@ const runStep = (
       }
     }
   }
+};
+
+const remember = (ctx: StepContext): void => {
+  const { topo, memory, log, index, attempts, persistent, nodes } = ctx;
 
   for (const [id, step] of Object.entries(nodes)) {
     memory.lastError.set(id, step.errorRate);
@@ -1105,8 +1219,27 @@ const runStep = (
       });
     }
   }
+};
 
-  return { t, nodes, edges, clients };
+const runStep = (
+  topo: Topology,
+  scenario: LoadScenario,
+  memory: Memory,
+  log: FindingLog,
+  index: number,
+): EvaluationStep => {
+  const ctx = prepareStep(topo, scenario, memory, log, index);
+
+  propagate(ctx);
+  spreadReplicaReads(ctx);
+  combineErrorRates(ctx);
+
+  const clients = clientSteps(ctx, pathLatencies(ctx));
+
+  noteNodeFindings(ctx);
+  remember(ctx);
+
+  return { t: ctx.t, nodes: ctx.nodes, edges: ctx.edges, clients };
 };
 
 const split = (
