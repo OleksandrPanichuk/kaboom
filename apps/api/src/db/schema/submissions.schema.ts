@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -54,6 +55,7 @@ export const submissionsSchema = pgTable(
     reviewPromptVersion: integer("review_prompt_version"),
     hintPenalty: integer("hint_penalty").notNull().default(0),
     counted: boolean("counted").notNull().default(true),
+    allPassed: boolean("all_passed").notNull().default(false),
     graph: jsonb("graph").$type<unknown>(),
     items: jsonb("items").$type<unknown[]>().notNull(),
     drills: jsonb("drills").$type<unknown[]>().notNull(),
@@ -71,6 +73,9 @@ export const submissionsSchema = pgTable(
     ),
     index("submissions_problem_id_score_idx").on(table.problemId, table.score),
     index("submissions_created_at_idx").on(table.createdAt),
+    index("submissions_user_id_problem_id_all_passed_idx")
+      .on(table.userId, table.problemId)
+      .where(sql`${table.allPassed}`),
   ],
 );
 

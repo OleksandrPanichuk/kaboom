@@ -142,6 +142,7 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
           content: (
             <SolutionsPanel
               lockedUntil={attempt.lockedUntil}
+              solved={attempt.solved}
               shown={solutions.data ?? null}
               pending={solutions.isPending}
               error={solutions.error ? errorMessage(solutions.error) : null}

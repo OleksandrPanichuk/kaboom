@@ -80,10 +80,17 @@ export const submitSolutionMutation = mutationOptions({
   mutationKey: ["problems", "submit"],
   mutationFn: async ({ slug, revision }: SubmitVariables) =>
     unwrap(await api.api.problems(slug).submissions.post({ revision })),
-  onSuccess: (_submission, { slug }, _mutateResult, { client }) =>
-    Promise.all([
+  onSuccess: (submission, { slug }, _mutateResult, { client }) => {
+    if (submission.allPassed) {
+      client.setQueryData(attemptQuery(slug).queryKey, (attempt) =>
+        attempt ? { ...attempt, solved: true } : attempt,
+      );
+    }
+
+    return Promise.all([
       client.invalidateQueries({ queryKey: submissionsQuery(slug).queryKey }),
       client.invalidateQueries({ queryKey: progressQuery.queryKey }),
       client.invalidateQueries({ queryKey: ["problems", "list"] }),
-    ]),
+    ]);
+  },
 });

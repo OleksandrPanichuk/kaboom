@@ -20,7 +20,7 @@ export interface RevealSolutionsUseCaseOptions {
 type Options = RevealSolutionsUseCaseOptions;
 
 interface Result {
-  lockedUntil: Date;
+  lockedUntil: Date | null;
   solutions: SharedSolution[];
 }
 
@@ -40,7 +40,15 @@ export class RevealSolutionsUseCase extends UseCase<Options, Result> {
 
   public async execute({ userId, slug }: Options): Promise<Result> {
     const { problem } = await this.problems.getPublished(slug);
-    const reveal = await this.reveals.reveal(userId, problem.id, new Date());
+    const lockedUntil = (await this.submissions.hasPassedAll(
+      userId,
+      problem.id,
+    ))
+      ? await this.service.lockOf(userId, problem.id)
+      : this.service.lockedUntil(
+          (await this.reveals.reveal(userId, problem.id, new Date()))
+            .revealedAt,
+        );
     const solutions = await this.submissions.listSolutions(
       problem.id,
       userId,
@@ -49,7 +57,7 @@ export class RevealSolutionsUseCase extends UseCase<Options, Result> {
     );
 
     return {
-      lockedUntil: this.service.lockedUntil(reveal.revealedAt)!,
+      lockedUntil,
       solutions: solutions.map((solution) => ({
         ...solution,
         graph: withoutNotes(solution.graph),

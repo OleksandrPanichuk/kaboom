@@ -56,6 +56,25 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
     return toEntity(row!);
   }
 
+  public async hasPassedAll(
+    userId: string,
+    problemId: string,
+  ): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: submissionsSchema.id })
+      .from(submissionsSchema)
+      .where(
+        and(
+          eq(submissionsSchema.userId, userId),
+          eq(submissionsSchema.problemId, problemId),
+          eq(submissionsSchema.allPassed, true),
+        ),
+      )
+      .limit(1);
+
+    return row !== undefined;
+  }
+
   public async findById(id: string): Promise<ReviewableSubmission | null> {
     const [row] = await this.db
       .select()

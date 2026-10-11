@@ -13,7 +13,7 @@ import { buildReference, start } from "./helpers";
 const PATH = "/api/problems/url-shortener";
 
 interface Solutions {
-  lockedUntil: string;
+  lockedUntil: string | null;
   solutions: Array<{
     score: number;
     graph: { nodes: Array<{ id: string; notes: string }> };
@@ -24,6 +24,12 @@ interface Solutions {
 interface Submission {
   score: number;
   counted: boolean;
+  allPassed: boolean;
+}
+
+interface Attempt {
+  lockedUntil: string | null;
+  solved: boolean;
 }
 
 interface Progress {
@@ -74,7 +80,7 @@ describe("other solvers' solutions", () => {
       shown.body.solutions[0]!.graph.nodes.every((node) => node.notes === ""),
     ).toBe(true);
     expect(
-      new Date(shown.body.lockedUntil).getTime() - Date.now(),
+      new Date(shown.body.lockedUntil!).getTime() - Date.now(),
     ).toBeGreaterThan(6.9 * DAY);
   });
 
@@ -103,16 +109,46 @@ describe("other solvers' solutions", () => {
     expect(progress?.lockedUntil).not.toBeNull();
   });
 
-  test("keeps the points earned before looking", async () => {
+  test("open without a lock once a submission passed every test", async () => {
     const solver = await createUser();
+    const other = await createUser();
 
-    await solve(solver);
-    await reveal(solver);
+    await solve(other);
+    expect((await solver.get<Attempt>(`${PATH}/attempt`)).status).not.toBe(200);
+    expect((await solve(solver)).body).toMatchObject({
+      score: 100,
+      allPassed: true,
+    });
+    expect((await solver.get<Attempt>(`${PATH}/attempt`)).body).toMatchObject({
+      solved: true,
+      lockedUntil: null,
+    });
 
+    const shown = await reveal(solver);
     const again = await solver.post<Submission>(`${PATH}/submissions`, {});
 
-    expect(again.body.counted).toBe(false);
-    expect(await progressOf(solver)).toMatchObject({ bestScore: 100 });
+    expect(shown.body.lockedUntil).toBeNull();
+    expect(shown.body.solutions).toHaveLength(1);
+    expect(again.body.counted).toBe(true);
+    expect(await progressOf(solver)).toMatchObject({
+      bestScore: 100,
+      lockedUntil: null,
+    });
+  });
+
+  test("still lock after a submission that failed a test, keeping its points", async () => {
+    const trier = await createUser();
+
+    await start(trier);
+
+    const partial = await trier.post<Submission>(`${PATH}/submissions`, {});
+
+    expect(partial.body.allPassed).toBe(false);
+    expect((await trier.get<Attempt>(`${PATH}/attempt`)).body.solved).toBe(
+      false,
+    );
+    expect((await reveal(trier)).body.lockedUntil).not.toBeNull();
+    expect((await solve(trier)).body.counted).toBe(false);
   });
 
   test("counts again once seven days have passed since the last look", async () => {

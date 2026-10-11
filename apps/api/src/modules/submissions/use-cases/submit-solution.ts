@@ -17,6 +17,7 @@ import {
 import type { SubmissionEntity } from "../submission.entity";
 import { SUBMIT_SEEDS } from "../submissions.constants";
 import { SubmissionPendingChangesError } from "../submissions.errors";
+import { passesEverything } from "../submissions.helpers";
 import { SubmissionsService } from "../submissions.service";
 
 export interface SubmitSolutionUseCaseOptions {
@@ -72,6 +73,7 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       reviewStatus: "pending",
       hintPenalty: penalty,
       counted: lockedUntil === null,
+      allPassed: passesEverything(report),
       graph: design.graph,
       items: shown.items,
       drills: shown.drills,

@@ -20,6 +20,7 @@ export interface CreateSubmissionData {
   reviewStatus: SubmissionReviewStatus;
   hintPenalty: number;
   counted: boolean;
+  allPassed: boolean;
   graph: DesignGraph;
   items: ItemScore[];
   drills: DrillScore[];
@@ -71,6 +72,11 @@ export abstract class SubmissionsRepository extends Repository {
   ): Promise<RecentSubmission[]>;
 
   public abstract insert(data: CreateSubmissionData): Promise<SubmissionEntity>;
+
+  public abstract hasPassedAll(
+    userId: string,
+    problemId: string,
+  ): Promise<boolean>;
 
   public abstract findById(id: string): Promise<ReviewableSubmission | null>;
 

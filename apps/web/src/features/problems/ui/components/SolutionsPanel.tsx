@@ -1,7 +1,7 @@
 import type { SolutionsModel } from "@repo/api-client";
 import { cn } from "cn";
-import { Eye, TriangleAlert, Users } from "lucide-react";
-import { useState } from "react";
+import { CircleCheck, Eye, TriangleAlert, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import {
   AlertDialog,
@@ -25,6 +25,7 @@ import { SolutionPreview } from "./SolutionPreview";
 
 interface SolutionsPanelProps {
   lockedUntil: string | null;
+  solved: boolean;
   shown: SolutionsModel | null;
   pending: boolean;
   error: string | null;
@@ -33,6 +34,7 @@ interface SolutionsPanelProps {
 
 export function SolutionsPanel({
   lockedUntil,
+  solved,
   shown,
   pending,
   error,
@@ -41,25 +43,53 @@ export function SolutionsPanel({
   const [asking, setAsking] = useState(false);
   const [viewing, setViewing] = useState<number | null>(null);
   const opened = viewing !== null ? shown?.solutions[viewing] : undefined;
-  const until = shown?.lockedUntil ?? lockedUntil;
+  const until = shown ? shown.lockedUntil : lockedUntil;
+  const Icon = solved ? CircleCheck : TriangleAlert;
+
+  useEffect(() => {
+    if (solved && !shown && !pending && !error) onReveal();
+  }, [solved, shown, pending, error, onReveal]);
 
   return (
     <div className="flex flex-col">
       <div
         className={cn(
           "flex gap-2.5 border-b px-4 py-3 text-sm leading-5",
-          until ? "bg-amber-50 text-amber-950" : "text-muted-foreground",
+          solved
+            ? "bg-emerald-50 text-emerald-950"
+            : until
+              ? "bg-amber-50 text-amber-950"
+              : "text-muted-foreground",
         )}
       >
-        <TriangleAlert
+        <Icon
           aria-hidden="true"
           className={cn(
             "mt-0.5 size-4 shrink-0",
-            until ? "text-amber-600" : "text-muted-foreground",
+            solved
+              ? "text-emerald-600"
+              : until
+                ? "text-amber-600"
+                : "text-muted-foreground",
           )}
         />
         <p className="text-pretty">
-          {until ? (
+          {solved ? (
+            <>
+              You passed every test, so other solutions are open and looking
+              costs nothing.
+              {until ? (
+                <>
+                  {" "}
+                  From your earlier look, submissions here count again{" "}
+                  <span className="font-medium">
+                    {formatLockedUntil(until)}
+                  </span>
+                  .
+                </>
+              ) : null}
+            </>
+          ) : until ? (
             <>
               You have looked at other solutions. Your submissions here are
               still scored but do not count toward points until{" "}
@@ -67,7 +97,7 @@ export function SolutionsPanel({
               Points you earned before stay.
             </>
           ) : (
-            "Looking at other solutions spoils the problem: for seven days after, your submissions here are scored but do not count toward points. Points you have already earned stay."
+            "Pass every test to open other solutions for free. Looking before that spoils the problem: for seven days after, your submissions here are scored but do not count toward points. Points you have already earned stay."
           )}
         </p>
       </div>
@@ -129,7 +159,7 @@ export function SolutionsPanel({
           <Button
             variant="outline"
             disabled={pending}
-            onClick={() => setAsking(true)}
+            onClick={() => (solved ? onReveal() : setAsking(true))}
           >
             {pending
               ? "Loading…"
