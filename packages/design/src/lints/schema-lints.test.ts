@@ -86,4 +86,36 @@ describe("schema lints", () => {
 
     expect(lints["unindexed-foreign-key"].run(graph)).toEqual([]);
   });
+
+  test("cross-database-relation flags a foreign key between two databases", () => {
+    const graph = {
+      ...graphOf(
+        [
+          { ...users(), groupId: "shop" },
+          table("sessions", [
+            column("id", "uuid", { primaryKey: true }),
+            column("user_id", "bigint"),
+          ]),
+        ],
+        [references("sessions", "user_id", "users")],
+      ),
+      groups: [
+        {
+          id: "shop",
+          kind: "database" as const,
+          label: "Shop",
+          parentId: null,
+          engine: "mysql" as const,
+        },
+      ],
+    };
+
+    expect(
+      lints["cross-database-relation"].run(graph).map((hit) => hit.edgeIds),
+    ).toEqual([["sessions.user_id"]]);
+
+    graph.nodes[1] = { ...graph.nodes[1]!, groupId: "shop" };
+
+    expect(lints["cross-database-relation"].run(graph)).toEqual([]);
+  });
 });

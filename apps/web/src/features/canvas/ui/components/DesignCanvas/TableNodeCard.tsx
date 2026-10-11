@@ -1,3 +1,4 @@
+import { isSqlEngine, writeType } from "@repo/design";
 import { Handle, type NodeProps, Position, useConnection } from "@xyflow/react";
 import { cn } from "cn";
 import { Info, KeyRound, Link2, Table2, TriangleAlert } from "lucide-react";
@@ -122,8 +123,21 @@ function TableNodeCardComponent({ data }: NodeProps<CanvasNode>) {
                   unique
                 </span>
               ) : null}
+              {column.generated?.kind === "identity" ||
+              column.default?.kind === "uuid" ? (
+                <span
+                  title="Fills itself in"
+                  className="shrink-0 rounded bg-sky-50 px-1 text-[10px] font-medium text-sky-700"
+                >
+                  auto
+                </span>
+              ) : null}
               <span className="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground">
-                {column.type}
+                {column.type !== "enum" &&
+                data.engine &&
+                isSqlEngine(data.engine)
+                  ? writeType(data.engine, column)
+                  : column.type}
               </span>
             </li>
           ))}

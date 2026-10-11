@@ -107,7 +107,9 @@ describe("table edits", () => {
     expect(indexProblem(posts(), ["author", "at"])).toContain("already exists");
     expect(indexProblem(posts(), ["at", "author"])).toBeNull();
     expect(
-      propsOf(addIndex(posts(), ["id", "at"], true))?.indexes.at(-1),
+      propsOf(
+        addIndex(posts(), { columns: ["id", "at"], unique: true }),
+      )?.indexes.at(-1),
     ).toMatchObject({
       columns: ["id", "at"],
       unique: true,

@@ -1,5 +1,6 @@
 import {
   type DesignGraph,
+  engineOf,
   isOneToOne,
   type LintHit,
   relationsOf,
@@ -82,6 +83,7 @@ export const toFlow = (
   const relations = relationsOf(graph);
   const foreignKeys = new Map<string, string[]>();
   const cardinality = new Map<string, RelationCardinality>();
+  const optional = new Set<string>();
 
   for (const relation of relations) {
     foreignKeys.set(relation.from.id, [
@@ -92,6 +94,10 @@ export const toFlow = (
       relation.edge.id,
       isOneToOne(relation) ? "one-to-one" : "many-to-one",
     );
+
+    if (relation.pairs.some((pair) => pair.from.nullable)) {
+      optional.add(relation.edge.id);
+    }
   }
 
   const positionOf = (id: string) => layout[id] ?? placements[id]!;
@@ -112,7 +118,10 @@ export const toFlow = (
         node,
         hits: hitsByNode.get(node.id) ?? NO_HITS,
         ...(node.kind === "table"
-          ? { foreignKeys: foreignKeys.get(node.id) ?? [] }
+          ? {
+              foreignKeys: foreignKeys.get(node.id) ?? [],
+              engine: engineOf(graph, node),
+            }
           : {}),
         ...(overlay?.nodes[node.id] ? { overlay: overlay.nodes[node.id] } : {}),
       },
@@ -174,7 +183,9 @@ export const toFlow = (
       type: "design-edge",
       label: edge.label || undefined,
       animated: kind.animated,
-      style: kind.style,
+      style: optional.has(edge.id)
+        ? { ...kind.style, strokeDasharray: "5 4" }
+        : kind.style,
       markerEnd: marker,
       ...(cardinality.get(edge.id) === "one-to-one"
         ? { markerStart: marker }
@@ -188,6 +199,7 @@ export const toFlow = (
         ...(cardinality.has(edge.id)
           ? { cardinality: cardinality.get(edge.id) }
           : {}),
+        ...(optional.has(edge.id) ? { optional: true } : {}),
         ...(overlay ? { weight: overlay.edges[edge.id] ?? 0 } : {}),
       },
     };

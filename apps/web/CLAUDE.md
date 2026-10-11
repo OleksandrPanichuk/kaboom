@@ -181,7 +181,20 @@ because removing a column also removes the relations that use it and takes
 it out of every index, in one batch through `onApply`. A relation's
 inspector shows its columns, the cardinality they make and `onDelete`, and
 hides the kind, which a relation cannot change. *Copy SQL* in the top bar,
-shown once a design has a table, copies `toDDL`. Edge
+shown once a design has a table, copies `toDDL`. A table's *Database* field puts it in
+one of the design's databases or a new PostgreSQL, MySQL or SQLite one
+(`NEW_DATABASE` + engine, through `placementOps`), and the database's own
+inspector changes its engine within SQL. A column's *More* opens
+`ColumnDetails`: the type's parameters, a default, an identity or a stored
+expression, update-to-now and checks, offering only the table's engine's
+types; a type change drops what no longer fits (`retype`), and a refusal
+is shown without its path (`readableRefusal`). The index form offers the
+engine's methods, `lower()` per text column, `INCLUDE` on PostgreSQL and a
+partial filter. A relation's inspector adds and drops column pairs for a
+composite key, which it sends as a remove and an add (`withPairs`), and
+sets `ON UPDATE` and deferrable. The canvas writes each type as the
+table's engine does, marks ids that fill themselves in, dashes a relation
+whose key may be empty and reads its far end as `0..1`. Edge
 props carry the same metadata on `EdgePropsSchema`, so the edge inspector is
 drawn the same way.
 The *Technology* section picks a node's product from `technologiesFor(kind)`

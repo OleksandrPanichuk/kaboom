@@ -1,6 +1,12 @@
-import { COLUMN_TYPES, type DesignEdge, type DesignOp } from "@repo/design";
+import {
+  type DesignEdge,
+  type DesignOp,
+  type Engine,
+  engineTypes,
+  isSqlEngine,
+} from "@repo/design";
 import { cn } from "cn";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -17,17 +23,21 @@ import {
   columnNameProblem,
   type ColumnPatch,
   moveColumn,
+  readableRefusal,
   removeColumn,
+  retype,
   type TableNode,
   updateColumn,
   usesColumn,
 } from "@/features/properties/utils";
 
+import { ColumnDetails } from "./ColumnDetails";
 import { DraftInput } from "./DraftInput";
 import type { CommitResult } from "./PropFieldControl";
 
 interface TableColumnsEditorProps {
   table: TableNode;
+  engine: Engine;
   edges: readonly DesignEdge[];
   onApply: (ops: DesignOp[]) => CommitResult;
 }
@@ -38,13 +48,13 @@ const FLAGS = [
   { key: "nullable", label: "Null", title: "May be left empty" },
 ] as const;
 
-const TYPE_ITEMS = COLUMN_TYPES.map((type) => ({ value: type, label: type }));
-
 export function TableColumnsEditor({
   table,
+  engine,
   edges,
   onApply,
 }: TableColumnsEditorProps) {
+  const available = isSqlEngine(engine) ? engineTypes(engine) : [];
   const id = useId();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +63,9 @@ export function TableColumnsEditor({
   const apply = (ops: DesignOp[] | DesignOp | null) => {
     if (ops === null) return;
 
-    setError(onApply(Array.isArray(ops) ? ops : [ops]));
+    const refused = onApply(Array.isArray(ops) ? ops : [ops]);
+
+    setError(refused === null ? null : readableRefusal(refused));
   };
 
   const setColumnError = (columnId: string, message: string | null) =>
@@ -62,6 +74,9 @@ export function TableColumnsEditor({
 
       return message ? { ...rest, [columnId]: message } : rest;
     });
+
+  const typesFor = (current: (typeof available)[number]) =>
+    available.includes(current) ? available : [...available, current];
 
   const patch = (columnId: string, next: ColumnPatch) =>
     apply(updateColumn(table, columnId, next));
@@ -112,9 +127,12 @@ export function TableColumnsEditor({
                   </div>
                   <Select
                     value={column.type}
-                    items={TYPE_ITEMS}
+                    items={typesFor(column.type).map((type) => ({
+                      value: type,
+                      label: type,
+                    }))}
                     onValueChange={(type) => {
-                      if (type) patch(column.id, { type });
+                      if (type) patch(column.id, retype(column, type));
                     }}
                   >
                     <SelectTrigger
@@ -124,7 +142,7 @@ export function TableColumnsEditor({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {COLUMN_TYPES.map((type) => (
+                      {typesFor(column.type).map((type) => (
                         <SelectItem
                           key={type}
                           value={type}
@@ -200,6 +218,26 @@ export function TableColumnsEditor({
                     </Button>
                   </span>
                 </div>
+                <details className="group/more">
+                  <summary className="flex cursor-pointer list-none items-center gap-1 text-xs text-muted-foreground select-none hover:text-foreground [&::-webkit-details-marker]:hidden">
+                    <ChevronRight
+                      aria-hidden="true"
+                      className="size-3 transition-transform group-open/more:rotate-90"
+                    />
+                    More
+                    {summaryOf(column) ? (
+                      <span className="min-w-0 truncate font-mono">
+                        · {summaryOf(column)}
+                      </span>
+                    ) : null}
+                  </summary>
+                  <div className="pt-2">
+                    <ColumnDetails
+                      column={column}
+                      onPatch={(next) => patch(column.id, next)}
+                    />
+                  </div>
+                </details>
                 {errors[column.id] ? (
                   <FieldError id={`${nameId}-error`}>
                     {errors[column.id]}
@@ -223,3 +261,20 @@ export function TableColumnsEditor({
     </div>
   );
 }
+
+const summaryOf = (column: TableNode["props"]["columns"][number]): string =>
+  [
+    column.length !== undefined ? `(${column.length})` : "",
+    column.precision !== undefined
+      ? `(${column.precision}${column.scale !== undefined ? `, ${column.scale}` : ""})`
+      : "",
+    column.generated?.kind === "identity" ? "counts up" : "",
+    column.generated?.kind === "stored" ? "computed" : "",
+    column.default?.kind === "now" ? "= now" : "",
+    column.default?.kind === "uuid" ? "= uuid" : "",
+    column.default?.kind === "literal" ? `= ${column.default.value}` : "",
+    column.onUpdate === "now" ? "updates to now" : "",
+    column.checks ? "checked" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");

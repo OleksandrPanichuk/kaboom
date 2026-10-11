@@ -1,9 +1,13 @@
-import type {
-  Column,
-  DesignEdge,
-  DesignNode,
-  DesignOp,
-  TableIndex,
+import {
+  type Column,
+  type ColumnType,
+  type DesignEdge,
+  type DesignNode,
+  type DesignOp,
+  INTEGER_TYPES,
+  type TableIndex,
+  TIME_TYPES,
+  TIMESTAMP_TYPES,
 } from "@repo/design";
 
 export type TableNode = Extract<DesignNode, { kind: "table" }>;
@@ -68,6 +72,11 @@ export const addColumn = (table: TableNode): DesignOp => {
   });
 };
 
+const withoutUnset = <T extends object>(value: T): T =>
+  Object.fromEntries(
+    Object.entries(value).filter(([, item]) => item !== undefined),
+  ) as T;
+
 export const updateColumn = (
   table: TableNode,
   columnId: string,
@@ -77,11 +86,27 @@ export const updateColumn = (
     columns: table.props.columns.map((column) => {
       if (column.id !== columnId) return column;
 
-      const next = { ...column, ...patch };
+      const next = withoutUnset({ ...column, ...patch });
 
       return next.primaryKey ? { ...next, nullable: false } : next;
     }),
   });
+
+export const readableRefusal = (message: string): string => {
+  const detail = message.replace(/^Props of [^:]+: /, "");
+  const first = detail.split("; ")[0] ?? detail;
+
+  return first.replace(/^(?:columns|indexes)\.\d+(?:\.\w+)* /, "");
+};
+
+export const listOf = (text: string): string[] => [
+  ...new Set(
+    text
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean),
+  ),
+];
 
 export const moveColumn = (
   table: TableNode,
@@ -141,15 +166,19 @@ export const indexProblem = (
     : null;
 };
 
-export const addIndex = (
-  table: TableNode,
-  columns: readonly string[],
-  unique: boolean,
-): DesignOp =>
+export type IndexDraft = Omit<TableIndex, "id">;
+
+export const addIndex = (table: TableNode, draft: IndexDraft): DesignOp =>
   update(table, {
     indexes: [
       ...table.props.indexes,
-      { id: `idx-${shortId()}`, columns: [...columns], unique },
+      withoutUnset({
+        ...draft,
+        id: `idx-${shortId()}`,
+        method: draft.method === "btree" ? undefined : draft.method,
+        lower: draft.lower?.length ? draft.lower : undefined,
+        include: draft.include?.length ? draft.include : undefined,
+      }),
     ],
   });
 
@@ -157,3 +186,26 @@ export const removeIndex = (table: TableNode, indexId: string): DesignOp =>
   update(table, {
     indexes: table.props.indexes.filter((index) => index.id !== indexId),
   });
+
+export const retype = (column: Column, type: ColumnType): ColumnPatch => {
+  const keepsDefault =
+    column.default === undefined ||
+    column.default.kind === "expression" ||
+    (column.default.kind === "now" && TIME_TYPES.has(type)) ||
+    (column.default.kind === "uuid" && type === "uuid");
+
+  return {
+    type,
+    length: type === "varchar" || type === "char" ? column.length : undefined,
+    precision: type === "numeric" ? column.precision : undefined,
+    scale: type === "numeric" ? column.scale : undefined,
+    values: type === "enum" ? (column.values ?? ["value"]) : undefined,
+    default: keepsDefault ? column.default : undefined,
+    generated:
+      column.generated?.kind === "identity" && !INTEGER_TYPES.has(type)
+        ? undefined
+        : column.generated,
+    onUpdate: TIMESTAMP_TYPES.has(type) ? column.onUpdate : undefined,
+    checks: undefined,
+  };
+};

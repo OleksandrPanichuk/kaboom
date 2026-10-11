@@ -1,5 +1,6 @@
 import {
   catalogue,
+  DEFAULT_ENGINE,
   derivedProps,
   describeProps,
   type DesignEdge,
@@ -28,6 +29,7 @@ import type {
 } from "@/features/properties/typedefs";
 import { formatMonthly } from "@/features/properties/utils";
 
+import { DatabaseField } from "./DatabaseField";
 import { DerivedField } from "./DerivedField";
 import { DraftInput } from "./DraftInput";
 import { InspectorSection } from "./InspectorSection";
@@ -76,6 +78,10 @@ export function NodeInspector({
   const [notesSource, setNotesSource] = useState(node.notes);
   const definition = catalogue[node.kind];
   const placeable = definition.track !== "data-model";
+  const engine =
+    groups.find(
+      (group) => group.id === node.groupId && group.kind === "database",
+    )?.engine ?? DEFAULT_ENGINE;
   const Icon = NODE_KIND_ICONS[definition.icon] ?? FALLBACK_NODE_ICON;
   const fields = describeProps(definition.props).filter(
     (field) => field.meta.editor === undefined,
@@ -209,6 +215,13 @@ export function NodeInspector({
             </p>
           </div>
         ) : null}
+        {node.kind === "table" ? (
+          <DatabaseField
+            databases={groups.filter((group) => group.kind === "database")}
+            value={node.groupId}
+            onChange={onRegionChange}
+          />
+        ) : null}
         {placement.regions && placeable ? (
           <RegionField
             regions={groups.filter((group) => group.kind === "region")}
@@ -228,10 +241,19 @@ export function NodeInspector({
       {node.kind === "table" ? (
         <>
           <InspectorSection title="Columns">
-            <TableColumnsEditor table={node} edges={edges} onApply={onApply} />
+            <TableColumnsEditor
+              table={node}
+              engine={engine}
+              edges={edges}
+              onApply={onApply}
+            />
           </InspectorSection>
           <InspectorSection title="Indexes">
-            <TableIndexesEditor table={node} onApply={onApply} />
+            <TableIndexesEditor
+              table={node}
+              engine={engine}
+              onApply={onApply}
+            />
           </InspectorSection>
         </>
       ) : null}

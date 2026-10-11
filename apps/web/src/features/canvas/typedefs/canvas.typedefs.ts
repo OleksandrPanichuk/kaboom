@@ -1,4 +1,4 @@
-import type { DesignEdge, DesignNode, LintHit } from "@repo/design";
+import type { DesignEdge, DesignNode, Engine, LintHit } from "@repo/design";
 import type { Edge, Node } from "@xyflow/react";
 
 export interface CanvasConnection {
@@ -27,6 +27,7 @@ export type CanvasNodeData = Record<string, unknown> & {
   hits: LintHit[];
   overlay?: NodeOverlay;
   foreignKeys?: string[];
+  engine?: Engine;
 };
 
 export type CanvasNodeType = "design-node" | "table-node";
@@ -42,6 +43,7 @@ export type CanvasEdgeData = Record<string, unknown> & {
   reversed: boolean;
   weight?: number;
   cardinality?: RelationCardinality;
+  optional?: boolean;
 };
 
 export type CanvasEdge = Edge<CanvasEdgeData, "design-edge">;

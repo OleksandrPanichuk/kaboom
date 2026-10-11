@@ -1,5 +1,6 @@
 import {
   type DesignGroup,
+  ENGINE_LABELS,
   GROUP_KIND_LABELS,
   type GroupKind,
 } from "@repo/design";
@@ -166,7 +167,10 @@ export function GroupLayer({ groups, selectedId, onSelect }: GroupLayerProps) {
               className="nodrag nopan pointer-events-auto absolute top-2 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-semibold tracking-wide uppercase hover:bg-white/70 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
               <Icon aria-hidden="true" className="size-3.5 shrink-0" />
-              <span className="truncate">{group.label || kind}</span>
+              <span className="truncate">
+                {group.label || kind}
+                {group.engine ? ` · ${ENGINE_LABELS[group.engine]}` : ""}
+              </span>
             </button>
           </div>
         );
