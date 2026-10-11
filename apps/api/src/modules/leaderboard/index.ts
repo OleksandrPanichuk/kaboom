@@ -1,12 +1,12 @@
 export * from "./dto";
 export * from "./leaderboard.constants";
 export {
+  type CountedRule,
   LeaderboardEntity,
   type LeaderboardFilter,
   type LeaderboardProfileEntity,
   type LeaderboardView,
   type ListedStanding,
-  type OfficialRule,
   type UserStanding,
 } from "./leaderboard.entity";
 export * from "./leaderboard.model";

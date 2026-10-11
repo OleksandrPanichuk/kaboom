@@ -93,7 +93,7 @@ export abstract class SubmissionsRepository extends Repository {
     page: PageRequest,
   ): Promise<Page<SubmissionEntity>>;
 
-  public abstract bestOfficialScores(userId: string): Promise<BestScore[]>;
+  public abstract bestCountedScores(userId: string): Promise<BestScore[]>;
 
   public abstract listSolutions(
     problemId: string,

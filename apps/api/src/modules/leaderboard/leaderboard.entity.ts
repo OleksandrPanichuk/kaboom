@@ -33,10 +33,11 @@ export interface UserStanding {
   position: number | null;
 }
 
-export interface OfficialRule {
+export interface CountedRule {
   id: string;
   difficulty: string;
   track: string;
+  authorId: string | null;
 }
 
 export interface LeaderboardView {

@@ -13,6 +13,10 @@ export class LeaderboardService extends Service {
     return this.repository.refresh(userId, problemId);
   }
 
+  public refreshProblem(problemId: string): Promise<void> {
+    return this.repository.refreshProblem(problemId);
+  }
+
   public async rebuildIfStale(): Promise<boolean> {
     const fingerprint = await this.fingerprint();
 
@@ -25,7 +29,7 @@ export class LeaderboardService extends Service {
     const rules = {
       weights: DIFFICULTY_WEIGHT,
       solvedAt: MIN_SOLUTION_SCORE,
-      problems: await this.repository.officialRules(),
+      problems: await this.repository.countedRules(),
     };
 
     return createHash("sha256").update(JSON.stringify(rules)).digest("hex");

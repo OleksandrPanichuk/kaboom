@@ -1,7 +1,8 @@
-import { make, makeRepository } from "@/core/registry";
+import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import type { ProblemDifficulty } from "@/db";
 import { transaction } from "@/db/executor";
+import { LeaderboardService } from "@/modules/leaderboard";
 import { hashProblem, ProblemsRepository } from "@/modules/problems";
 import { DesignTester } from "@/platform/design-testing";
 
@@ -65,12 +66,13 @@ export class ApproveReviewUseCase extends UseCase<Options, Result> {
     const { problem: content } = check;
     const contentHash = hashProblem(content);
 
-    return transaction(async () => {
-      const draft = await this.drafts.findById(review.draftId);
+    const draft = await this.drafts.findById(review.draftId);
+    const updated = draft?.problemId ?? null;
 
-      if (draft?.problemId) {
+    const listing = await transaction(async () => {
+      if (updated) {
         await this.problems.addVersion({
-          problemId: draft.problemId,
+          problemId: updated,
           content,
           contentHash,
         });
@@ -105,5 +107,9 @@ export class ApproveReviewUseCase extends UseCase<Options, Result> {
 
       return (await this.reviews.findListing(reviewId))!;
     });
+
+    if (updated) await makeService(LeaderboardService).refreshProblem(updated);
+
+    return listing;
   }
 }

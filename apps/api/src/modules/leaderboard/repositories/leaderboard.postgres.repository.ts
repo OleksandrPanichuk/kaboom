@@ -6,10 +6,10 @@ import { DIFFICULTY_WEIGHT, MIN_SOLUTION_SCORE } from "@/modules/submissions";
 
 import { ALL_SCOPE } from "../leaderboard.constants";
 import type {
+  CountedRule,
   LeaderboardFilter,
   LeaderboardProfileEntity,
   ListedStanding,
-  OfficialRule,
   UserStanding,
 } from "../leaderboard.entity";
 import { LeaderboardRepository } from "../ports/leaderboard.repository";
@@ -41,6 +41,9 @@ const weighted = (
   else ${DIFFICULTY_WEIGHT.hard}
 end`;
 
+const counts = (problem: SQL, user: SQL): SQL =>
+  sql`${problem}.status = 'published' and ${problem}.author_id is distinct from ${user}`;
+
 const userLock = (userId: string): SQL =>
   sql`select pg_advisory_xact_lock(hashtext(${`leaderboard:${userId}`}))`;
 
@@ -71,7 +74,7 @@ export class PostgresLeaderboardRepository extends LeaderboardRepository {
         from submissions s
         join problems p on p.id = s.problem_id
         where s.counted
-          and p.source = 'official'
+          and ${counts(sql`p`, sql`s.user_id`)}
           and s.created_at >= ${since}
           ${track ? sql`and p.track = ${track}` : sql``}
         group by s.user_id, s.problem_id
@@ -152,7 +155,7 @@ export class PostgresLeaderboardRepository extends LeaderboardRepository {
         where s.user_id = ${userId}
           and s.problem_id = ${problemId}
           and s.counted
-          and p.source = 'official'
+          and ${counts(sql`p`, sql`s.user_id`)}
         order by s.score desc, s.created_at asc
         limit 1
       `);
@@ -179,7 +182,7 @@ export class PostgresLeaderboardRepository extends LeaderboardRepository {
           s.user_id, s.problem_id, s.score, s.created_at
         from submissions s
         join problems p on p.id = s.problem_id
-        where s.counted and p.source = 'official'
+        where s.counted and ${counts(sql`p`, sql`s.user_id`)}
         order by s.user_id, s.problem_id, s.score desc, s.created_at asc
       `);
       await this.db.execute(this.totalsInsert(sql`true`));
@@ -205,15 +208,30 @@ export class PostgresLeaderboardRepository extends LeaderboardRepository {
     return row?.fingerprint ?? null;
   }
 
-  public async officialRules(): Promise<OfficialRule[]> {
+  public async countedRules(): Promise<CountedRule[]> {
     const rows = (await this.db.execute(sql`
-      select id, difficulty, track
+      select id, difficulty, track, author_id as "authorId"
       from problems
-      where source = 'official'
+      where status = 'published'
       order by id
-    `)) as unknown as OfficialRule[];
+    `)) as unknown as CountedRule[];
 
-    return rows.map(({ id, difficulty, track }) => ({ id, difficulty, track }));
+    return rows.map(({ id, difficulty, track, authorId }) => ({
+      id,
+      difficulty,
+      track,
+      authorId,
+    }));
+  }
+
+  public async refreshProblem(problemId: string): Promise<void> {
+    const rows = (await this.db.execute(sql`
+      select user_id as "userId" from leaderboard_points where problem_id = ${problemId}
+      union
+      select user_id from submissions where problem_id = ${problemId} and counted
+    `)) as unknown as Array<{ userId: string }>;
+
+    for (const { userId } of rows) await this.refresh(userId, problemId);
   }
 
   public async findProfile(
@@ -244,7 +262,7 @@ export class PostgresLeaderboardRepository extends LeaderboardRepository {
         count(*) filter (where lp.best_score >= ${MIN_SOLUTION_SCORE})
       from leaderboard_points lp
       join problems p on p.id = lp.problem_id
-      where p.source = 'official' and ${users}
+      where ${counts(sql`p`, sql`lp.user_id`)} and ${users}
       group by lp.user_id, rollup (p.track)
     `;
   }

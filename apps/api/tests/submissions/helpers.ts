@@ -8,15 +8,14 @@ import { applyOps, type DesignBody } from "../designs/helpers";
 const shortener = OFFICIAL_PROBLEMS.find(
   (problem) => problem.slug === "url-shortener",
 )!;
-const PATH = "/api/problems/url-shortener";
 
 export interface Attempt {
   designId: string;
   problemVersion: number;
 }
 
-export const start = async (user: TestClient) =>
-  (await user.post<Attempt>(`${PATH}/start`)).body;
+export const start = async (user: TestClient, slug = "url-shortener") =>
+  (await user.post<Attempt>(`/api/problems/${slug}/start`)).body;
 
 export const buildReference = async (user: TestClient, attempt: Attempt) => {
   const design = await user.get<DesignBody>(`/api/designs/${attempt.designId}`);

@@ -6,7 +6,8 @@ import type { SubmissionsActions } from "../submissions.routes";
 export const getProgressRoute = ({ getProgress }: SubmissionsActions) =>
   defineRoute({
     response: ProgressModel,
-    summary: "The solver's points, rank and best score per official problem",
+    summary:
+      "The solver's points, rank and best score per published problem they did not write",
     auth: true,
 
     action: ({ user }) => getProgress.execute({ userId: user.id }),

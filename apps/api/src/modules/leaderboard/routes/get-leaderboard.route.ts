@@ -12,7 +12,7 @@ export const getLeaderboardRoute = ({ getLeaderboard }: LeaderboardActions) =>
     response: LeaderboardModel,
     summary: "Get the leaderboard, all time or this week, overall or by track",
     description:
-      "Ranks everyone whose profile is visible by points: each official problem's best counted score times its difficulty weight. This week counts only submissions of the last seven days. me is the caller's own standing, with a position only when they are listed.",
+      "Ranks everyone whose profile is visible by points: each published problem's best counted score times its difficulty weight, never on a problem the person wrote. This week counts only submissions of the last seven days. me is the caller's own standing, with a position only when they are listed.",
     auth: true,
 
     action: ({ query, user }) =>
