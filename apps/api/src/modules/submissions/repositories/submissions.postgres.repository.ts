@@ -1,6 +1,17 @@
 import type { DesignGraph } from "@repo/design";
 import type { DrillScore, ItemScore, TestReport } from "@repo/scoring";
-import { and, count, desc, eq, gte, isNotNull, ne, sql } from "drizzle-orm";
+import {
+  and,
+  count,
+  countDistinct,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  ne,
+  sql,
+} from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import { problemsSchema, type SubmissionRow, submissionsSchema } from "@/db";
@@ -144,6 +155,30 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
       ...row,
       problem: { slug, title },
     }));
+  }
+
+  public async countSolvers(
+    problemIds: readonly string[],
+    exceptUserId: string,
+  ): Promise<Map<string, number>> {
+    if (problemIds.length === 0) return new Map();
+
+    const rows = await this.db
+      .select({
+        problemId: submissionsSchema.problemId,
+        solvers: countDistinct(submissionsSchema.userId),
+      })
+      .from(submissionsSchema)
+      .where(
+        and(
+          inArray(submissionsSchema.problemId, [...problemIds]),
+          eq(submissionsSchema.allPassed, true),
+          ne(submissionsSchema.userId, exceptUserId),
+        ),
+      )
+      .groupBy(submissionsSchema.problemId);
+
+    return new Map(rows.map((row) => [row.problemId, Number(row.solvers)]));
   }
 
   public async list(

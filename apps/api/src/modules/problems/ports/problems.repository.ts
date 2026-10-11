@@ -45,6 +45,10 @@ export abstract class ProblemsRepository extends Repository {
 
   public abstract listPublishedContent(): Promise<ProblemWithContent[]>;
 
+  public abstract listPublishedByAuthor(
+    authorId: string,
+  ): Promise<ProblemEntity[]>;
+
   public abstract findPublishedBySlug(
     slug: string,
   ): Promise<ProblemWithContent | null>;

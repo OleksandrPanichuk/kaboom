@@ -95,6 +95,11 @@ export abstract class SubmissionsRepository extends Repository {
 
   public abstract bestCountedScores(userId: string): Promise<BestScore[]>;
 
+  public abstract countSolvers(
+    problemIds: readonly string[],
+    exceptUserId: string,
+  ): Promise<Map<string, number>>;
+
   public abstract listSolutions(
     problemId: string,
     exceptUserId: string,

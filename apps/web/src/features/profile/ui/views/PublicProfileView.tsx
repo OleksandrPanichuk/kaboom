@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { profileQuery } from "@/features/profile/api";
 import {
+  AuthoredProblems,
   ProfileHeader,
   ProfileStats,
   RecentSubmissions,
@@ -47,6 +48,13 @@ export function PublicProfileView({ handle }: PublicProfileViewProps) {
             <RecentSubmissions recent={data.recent} />
           </Panel>
         </div>
+        {data.problems.length > 0 ? (
+          <Panel
+            title={`${data.own ? "Problems you wrote" : "Problems they wrote"} · ${data.problems.length}`}
+          >
+            <AuthoredProblems problems={data.problems} />
+          </Panel>
+        ) : null}
       </div>
     </div>
   );
