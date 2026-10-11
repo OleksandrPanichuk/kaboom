@@ -313,3 +313,119 @@ describe("product search on MySQL", () => {
     expect(failing("product-search", unsized)).toEqual(["mysql-only"]);
   });
 });
+
+type Collection = Extract<DesignNode, { kind: "collection" }>;
+
+const editCollection = (
+  graph: DesignGraph,
+  collectionId: string,
+  change: (collection: Collection) => void,
+): DesignGraph => {
+  const copy = structuredClone(graph);
+
+  change(copy.nodes.find((node) => node.id === collectionId) as Collection);
+
+  return copy;
+};
+
+describe("a product catalogue with variants", () => {
+  const reference = problem("catalogue-variants").reference.graph;
+
+  test("catches variants kept as ids of documents elsewhere", () => {
+    const referenced = editCollection(reference, "products", (products) => {
+      const variants = products.props.fields.find(
+        (item) => item.name === "variants",
+      )!;
+
+      variants.of = "objectId";
+      delete variants.fields;
+    });
+
+    expect(failing("catalogue-variants", referenced)).toEqual(["product-page"]);
+  });
+
+  test("catches a product that keeps the ids of its reviews", () => {
+    const hoarding: DesignGraph = {
+      ...editCollection(reference, "products", (products) => {
+        products.props.fields.push({
+          id: "review_ids",
+          name: "review_ids",
+          type: "array",
+          of: "objectId",
+          required: false,
+        });
+      }),
+    };
+
+    hoarding.edges = [
+      ...hoarding.edges,
+      {
+        ...hoarding.edges[0]!,
+        id: "products-review_ids-ref",
+        from: "products",
+        to: "reviews",
+        reference: { fromField: ["review_ids"] },
+      },
+    ];
+
+    expect(failing("catalogue-variants", hoarding)).toEqual([
+      "product-page",
+      "browsing",
+      "reviews-scale",
+    ]);
+  });
+
+  test("catches indexes whose keys are not equality, then sort", () => {
+    const backwards = editCollection(reference, "reviews", (reviews) => {
+      reviews.props.indexes = [
+        {
+          id: "wrong",
+          keys: [
+            { path: ["posted_at"], direction: "desc" },
+            { path: ["product_id"], direction: "asc" },
+          ],
+          unique: false,
+        },
+      ];
+    });
+
+    expect(failing("catalogue-variants", backwards)).toEqual(["browsing"]);
+  });
+});
+
+describe("chat messages in MongoDB", () => {
+  const reference = problem("chat-messages").reference.graph;
+
+  test("catches a chat that embeds its messages", () => {
+    const embedded = editCollection(reference, "chats", (chats) => {
+      chats.props.fields.push({
+        id: "messages",
+        name: "messages",
+        type: "array",
+        of: "object",
+        required: false,
+        fields: [{ id: "body", name: "body", type: "string", required: false }],
+      });
+    });
+
+    expect(failing("chat-messages", embedded)).toEqual([
+      "history",
+      "presence",
+      "mentions",
+    ]);
+  });
+
+  test("catches typing signals nobody deletes, and mentions found by scanning", () => {
+    const lingering = editCollection(reference, "typing", (typing) => {
+      typing.props.indexes = [];
+    });
+    const scanned = editCollection(reference, "messages", (messages) => {
+      messages.props.indexes = messages.props.indexes.filter(
+        (index) => index.id !== "mentions_idx",
+      );
+    });
+
+    expect(failing("chat-messages", lingering)).toEqual(["presence"]);
+    expect(failing("chat-messages", scanned)).toEqual(["mentions"]);
+  });
+});

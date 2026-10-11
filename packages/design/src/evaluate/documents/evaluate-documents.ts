@@ -160,7 +160,7 @@ export const evaluateDocuments = (
     const label = `${nameOf(requirement.from)} references ${nameOf(requirement.to)}`;
     const expected =
       requirement.growth === "unbounded"
-        ? `a field on ${nameOf(requirement.from)} holding the ${nameOf(requirement.to)}'s _id, and no array of them on ${nameOf(requirement.to)}`
+        ? `a field on ${nameOf(requirement.from)} holding the _id of a ${nameOf(requirement.to)} document, and no array of them on ${nameOf(requirement.to)}`
         : "a reference between them";
     const from = collections.get(requirement.from);
     const to = collections.get(requirement.to);
@@ -198,12 +198,12 @@ export const evaluateDocuments = (
         requirement: "reference",
         label,
         expected,
-        actual: `${collectionName(to)}.${offender.name} grows with every ${collectionName(from)}`,
+        actual: `${collectionName(to)}.${offender.name} grows with every ${collectionName(from)} document`,
         passed: false,
         nodeIds: [to.id, from.id],
         edgeIds: parentToChild.map((item) => item.edge.id),
         finding: "unbounded-array",
-        message: `${collectionName(to)}.${offender.name} gains an entry for every ${collectionName(from)}, without bound, so the document grows until every read of it is slow and it hits 16 MB; let each ${collectionName(from)} reference its ${collectionName(to)} instead.`,
+        message: `${collectionName(to)}.${offender.name} gains an entry for every ${collectionName(from)} document, without bound, so the document grows until every read of it is slow and it hits 16 MB; let each ${collectionName(from)} document hold the _id of its ${collectionName(to)} document instead.`,
       });
       continue;
     }
@@ -224,7 +224,7 @@ export const evaluateDocuments = (
       nodeIds: [from.id, to.id],
       edgeIds: [...childToParent, ...parentToChild].map((item) => item.edge.id),
       finding: "missing-relationship",
-      message: `Nothing references ${collectionName(to)} from ${collectionName(from)}, so a ${collectionName(from)} cannot say which ${collectionName(to)} it belongs to.`,
+      message: `Nothing references ${collectionName(to)} from ${collectionName(from)}, so a ${collectionName(from)} document cannot say which ${collectionName(to)} document it belongs to.`,
     });
   }
 

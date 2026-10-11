@@ -850,6 +850,11 @@ expiring fields; the rules are in `evaluate/documents/README.md`. How far
 something grows is a fact of the problem, so nothing the solver types can
 make a design pass. `toMongo` writes a `$jsonSchema` validator per
 collection and its `createIndex` calls.
+*A product catalogue with variants* and *Chat messages in MongoDB*
+practise it: variants embedded and read with their product, reviews and
+messages that reference their parent instead of piling into it, indexes
+in the order equality, sort, range, a multikey index on mentions and a TTL
+on typing signals.
 
 What a table can answer lives in `data-model/tables.ts`: its primary key,
 whether a lookup's columns lead a key or an index (`indexedBy`), whether a
