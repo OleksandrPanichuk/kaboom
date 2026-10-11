@@ -8,6 +8,7 @@ import {
   TRACKS,
 } from "../catalogue";
 import { DocumentRequirementsSchema } from "../evaluate/documents/requirements";
+import { KeyValueRequirementsSchema } from "../evaluate/key-value/requirements";
 import { FINDING_KINDS } from "../evaluate/result";
 import { ReleaseSchema, SloSchema } from "../evaluate/scenario";
 import { SchemaRequirementsSchema } from "../evaluate/schema/requirements";
@@ -167,11 +168,19 @@ export const DocumentsDrillSchema = z.strictObject({
 });
 export type DocumentsDrill = z.output<typeof DocumentsDrillSchema>;
 
+export const KeyValueDrillSchema = z.strictObject({
+  kind: z.literal("key-value"),
+  ...drillBase,
+  requirements: KeyValueRequirementsSchema,
+});
+export type KeyValueDrill = z.output<typeof KeyValueDrillSchema>;
+
 export const DrillSchema = z.union([
   PipelineDrillSchema,
   NetworkDrillSchema,
   SchemaDrillSchema,
   DocumentsDrillSchema,
+  KeyValueDrillSchema,
   LoadDrillSchema,
 ]);
 export type Drill = z.output<typeof DrillSchema>;

@@ -60,6 +60,7 @@ export const capacityOf = (
     case "nat-gateway":
     case "table":
     case "collection":
+    case "dynamo-table":
       return shared(Number.POSITIVE_INFINITY);
     case "search-index":
       return scale(
@@ -175,6 +176,7 @@ export const baseLatencyOf = (node: DesignNode): number => {
     case "nat-gateway":
     case "table":
     case "collection":
+    case "dynamo-table":
       return 0;
     case "worker":
       return node.props.processingMs;

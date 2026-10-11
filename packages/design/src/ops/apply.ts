@@ -115,7 +115,7 @@ const assertNesting = (graph: DesignGraph, group: DesignGroup): void => {
 const FAMILY_KINDS: Readonly<Record<EngineFamily, readonly string[]>> = {
   sql: ["table"],
   document: ["collection"],
-  "key-value": [],
+  "key-value": ["dynamo-table"],
 };
 
 const FAMILY_HOLDS: Readonly<Record<EngineFamily, string>> = {
@@ -126,6 +126,7 @@ const FAMILY_HOLDS: Readonly<Record<EngineFamily, string>> = {
 
 const ENGINE_ONLY: Readonly<Record<string, EngineFamily>> = {
   collection: "document",
+  "dynamo-table": "key-value",
 };
 
 const assertPlacement = (graph: DesignGraph, node: DesignNode): void => {

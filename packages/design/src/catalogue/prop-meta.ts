@@ -20,6 +20,9 @@ export const PROP_EDITORS = [
   "indexes",
   "fields",
   "document-indexes",
+  "key-schema",
+  "dynamo-indexes",
+  "item-types",
 ] as const;
 
 export type PropEditor = (typeof PROP_EDITORS)[number];

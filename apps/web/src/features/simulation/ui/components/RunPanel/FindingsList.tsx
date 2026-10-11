@@ -42,6 +42,11 @@ const TITLES: Record<Finding["kind"], string> = {
   "unbounded-array": "Array that never stops growing",
   "missing-unique": "Not unique",
   "missing-ttl": "Never expires",
+  "missing-item": "Item type missing",
+  "needs-scan": "Needs a Scan",
+  "hot-partition": "Hot partition",
+  "item-too-large": "Item too large",
+  "projection-missing": "Not projected",
 };
 
 interface FindingsListProps {
