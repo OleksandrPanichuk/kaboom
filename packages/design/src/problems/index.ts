@@ -40,3 +40,9 @@ export {
   type RubricItem,
   RubricItemSchema,
 } from "./schema";
+export {
+  type PaletteSection,
+  type ReviewDimension,
+  TRACK_DEFINITIONS,
+  type TrackDefinition,
+} from "./tracks";

@@ -775,6 +775,11 @@ what the internet can reach. A drill names the evaluator it runs on:
 it. A rule drill has nothing to play on the canvas, so the interviewer's
 `run_drill` answers it from its outcome and stores no simulation run.
 
+What a track is lives in one place, `TRACK_DEFINITIONS`
+(`problems/tracks.ts`): its noun, the three dimensions its challenges are
+reviewed on, whether its load drills ask that writes reach a store, and its
+palette sections. The API's prompts and the web's palette read it; only the
+interviewer's and reviewer's prose stay in the API, keyed by track.
 The interviewer and both reviewers take the problem's track: each track has
 its own introduction, and a DevOps challenge is reviewed on design,
 delivery and operability. The palette shows a problem's own track, and a

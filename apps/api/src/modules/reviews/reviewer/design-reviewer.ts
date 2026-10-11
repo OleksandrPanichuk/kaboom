@@ -1,9 +1,10 @@
-import type {
-  DrillScore,
-  InterviewDimension,
-  ItemScore,
-  ProblemContent,
-  Track,
+import {
+  type DrillScore,
+  type ItemScore,
+  type ProblemContent,
+  type ReviewDimension,
+  type Track,
+  TRACK_DEFINITIONS,
 } from "@repo/design";
 import z from "zod";
 
@@ -15,13 +16,7 @@ import { REVIEW_PROMPT_VERSION } from "../reviews.constants";
 import { ReviewModelError } from "../reviews.errors";
 import { reviewTool, ToolConversation } from "./tool-conversation";
 
-export const DESIGN_DIMENSIONS = {
-  "system-design": ["design", "scaling", "reliability"],
-  devops: ["design", "delivery", "operability"],
-  "data-model": ["design", "integrity", "query-performance"],
-} as const satisfies Record<Track, readonly InterviewDimension[]>;
-
-type DesignDimension = (typeof DESIGN_DIMENSIONS)[Track][number];
+type DesignDimension = ReviewDimension;
 
 const DIMENSION_MEANINGS: Record<DesignDimension, string> = {
   design: "the components and the data flow fit the problem",
@@ -81,7 +76,7 @@ export const designReviewerPersona = (
 ): string => `You are a staff engineer reviewing ${SUBJECTS[track]} someone submitted for a practice problem. There was no conversation: you judge the design on the canvas, which the solver will read your review against.
 
 How you score
-- Score three things from 0 to 3: ${DESIGN_DIMENSIONS[track].map((dimension) => `${dimension} (${DIMENSION_MEANINGS[dimension]})`).join(", ")}. 0 is missing or wrong, 1 weak, 2 solid, 3 strong.
+- Score three things from 0 to 3: ${TRACK_DEFINITIONS[track].reviewDimensions.map((dimension) => `${dimension} (${DIMENSION_MEANINGS[dimension]})`).join(", ")}. 0 is missing or wrong, 1 weak, 2 solid, 3 strong.
 - The automated checks and drills are facts about this design. Do not contradict them, but explain what they miss: why a choice is sound or fragile, and what a strong engineer would question.
 - Name the nodes you mean by their labels.
 
@@ -134,7 +129,7 @@ export class DesignReviewer extends Service {
     request: DesignReviewRequest,
   ): Promise<WrittenDesignReview> {
     const { track } = request.content;
-    const dimensions = DESIGN_DIMENSIONS[track];
+    const dimensions = TRACK_DEFINITIONS[track].reviewDimensions;
     const schema = designReviewSchema(dimensions);
     const complete = (review: z.infer<typeof schema>) =>
       new Set(review.items.map((item) => item.dimension)).size ===

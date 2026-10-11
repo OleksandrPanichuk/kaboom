@@ -4,6 +4,7 @@ import type { EvaluationResult } from "../evaluate/result";
 import type { DesignGraph } from "../graph";
 import { runLints } from "../lints";
 import type { CheckRef, ProblemContent, RubricItem } from "../problems/schema";
+import { TRACK_DEFINITIONS } from "../problems/tracks";
 import {
   chaosBaseline,
   type ChaosCase,
@@ -121,7 +122,7 @@ export const drillRunner = (
 
     return share;
   };
-  const options = { keepsWrites: problem.track === "system-design" };
+  const options = { keepsWrites: TRACK_DEFINITIONS[problem.track].keepsWrites };
   let chaos: ChaosResult[] | null = null;
 
   const runner: DrillRunner = {
