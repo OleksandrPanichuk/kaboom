@@ -785,7 +785,9 @@ the author may withdraw it.
 A moderator (`Roles`), never the author, approves or rejects. Approving
 runs the check again, may set the difficulty (it decides the points),
 and in one transaction publishes the problem or adds a version to it, so
-attempts already started stay pinned to theirs. Rejecting needs feedback,
+attempts already started stay pinned to theirs; an update then has
+the leaderboard refresh everyone with points on that problem, since a
+new difficulty changes them at once. Rejecting needs feedback,
 which the author reads on the draft (`changes-requested`). The review row
 keeps its slug, title, track and difficulty as columns for the queue,
 since the JSON columns are written as encoded strings that SQL cannot
@@ -847,16 +849,17 @@ holds one as multipart, so a caller writes `put({ file })`.
 
 ## Leaderboard
 
-`leaderboard` ranks people by points: each official problem's best
+`leaderboard` ranks people by points: each published problem's best
 counted score times its difficulty weight, the same arithmetic as
-`/progress`. Everyone whose profile is visible is listed, by display
+`/progress`. Official and community problems count alike, except that
+nobody earns points on a problem they wrote. Everyone whose profile is visible is listed, by display
 name, handle and avatar. Tied points share a place (`rank()`), and `me`
 is the caller's own standing, with a position only when they are listed.
 The rank name shows only all time and across tracks, where it means what
 the ranks say.
 
 All time is precomputed. `leaderboard_points` keeps each user's best
-counted score per official problem, and `leaderboard_totals` each
+counted score per published problem, and `leaderboard_totals` each
 user's points and solved count per scope (`all` and every track),
 indexed by scope and points, so a page of the board is an indexed read
 rather than an aggregate over every submission. `submissions` declares
@@ -868,7 +871,7 @@ advisory lock, so it is idempotent and a lower score after a review is
 taken as readily as a higher one.
 
 What the totals depend on beyond submissions (the weights, the solved
-threshold, and each official problem's difficulty and track) is hashed
+threshold, and each published problem's difficulty, track and author) is hashed
 into `leaderboard_state`. `leaderboardModule.start` runs after the
 official problems sync, and rebuilds both tables from the submissions
 when the hash differs, so a new problem version that changes a

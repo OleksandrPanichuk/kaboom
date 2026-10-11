@@ -1,10 +1,10 @@
 import { Repository } from "@/core/repository";
 
 import type {
+  CountedRule,
   LeaderboardFilter,
   LeaderboardProfileEntity,
   ListedStanding,
-  OfficialRule,
   UserStanding,
 } from "../leaderboard.entity";
 
@@ -25,7 +25,9 @@ export abstract class LeaderboardRepository extends Repository {
 
   public abstract fingerprint(): Promise<string | null>;
 
-  public abstract officialRules(): Promise<OfficialRule[]>;
+  public abstract countedRules(): Promise<CountedRule[]>;
+
+  public abstract refreshProblem(problemId: string): Promise<void>;
 
   public abstract findProfile(
     userId: string,

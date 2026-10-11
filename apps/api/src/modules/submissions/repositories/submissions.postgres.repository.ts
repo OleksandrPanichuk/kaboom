@@ -167,7 +167,7 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
     return NEWEST_FIRST.page(rows.map(toEntity), page);
   }
 
-  public async bestOfficialScores(userId: string): Promise<BestScore[]> {
+  public async bestCountedScores(userId: string): Promise<BestScore[]> {
     const rows = await this.db
       .select({
         problemId: problemsSchema.id,
@@ -187,7 +187,8 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
       .where(
         and(
           eq(submissionsSchema.userId, userId),
-          eq(problemsSchema.source, "official"),
+          eq(problemsSchema.status, "published"),
+          sql`${problemsSchema.authorId} is distinct from ${userId}`,
         ),
       )
       .groupBy(problemsSchema.id)

@@ -35,7 +35,7 @@ export class GetProgressUseCase extends UseCase<Options, Result> {
 
   public async execute({ userId }: Options): Promise<Result> {
     const [scores, reveals] = await Promise.all([
-      this.submissions.bestOfficialScores(userId),
+      this.submissions.bestCountedScores(userId),
       this.reveals.listForUser(userId),
     ]);
     const revealedAt = new Map(

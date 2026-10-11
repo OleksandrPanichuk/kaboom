@@ -7,6 +7,8 @@ import { ProblemDraftsRepository } from "@/modules/authoring";
 import { ProblemsService } from "@/modules/problems";
 import { UsersService } from "@/modules/users";
 
+import { buildReference, start } from "../submissions/helpers";
+
 interface Issue {
   path: Array<string | number>;
   message: string;
@@ -282,5 +284,55 @@ describe("a community problem", () => {
       (await author.get<Review>(`/api/problem-reviews/${review!.id}`)).body
         .slug,
     ).toBe(draft.content.slug as string);
+  });
+});
+
+describe("points on a community problem", () => {
+  interface Board {
+    me: { points: number; solved: number };
+  }
+
+  const solve = async (user: TestUser, slug: string) => {
+    const attempt = await start(user, slug);
+    const revision = await buildReference(user, attempt);
+
+    return user.post<{ score: number }>(`/api/problems/${slug}/submissions`, {
+      revision,
+    });
+  };
+
+  const points = async (user: TestUser) =>
+    (await user.get<Board>("/api/leaderboard")).body.me.points;
+
+  test("count for solvers, never for the author, and follow the moderator's difficulty", async () => {
+    const author = await verified();
+    const moderator = await verified("moderator");
+    const solver = await verified();
+    const draft = await fork(author);
+    const slug = draft.content.slug as string;
+
+    await submit(author, draft.id);
+    await approve(moderator, (await pending(moderator))[0]!.id, "easy");
+
+    expect((await solve(solver, slug)).body.score).toBe(100);
+    expect((await solve(author, slug)).body.score).toBe(100);
+    expect(await points(solver)).toBe(100);
+    expect(await points(author)).toBe(0);
+
+    await save(author, draft.id, { ...draft.content, title: "Harder links" });
+    await submit(author, draft.id);
+    await approve(moderator, (await pending(moderator))[0]!.id, "hard");
+
+    expect(await points(solver)).toBe(300);
+    expect(
+      (
+        await solver.get<{ problems: Array<{ slug: string }> }>("/api/progress")
+      ).body.problems.map((problem) => problem.slug),
+    ).toContain(slug);
+    expect(
+      (
+        await author.get<{ problems: Array<{ slug: string }> }>("/api/progress")
+      ).body.problems.map((problem) => problem.slug),
+    ).not.toContain(slug);
   });
 });
