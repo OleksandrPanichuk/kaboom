@@ -11,6 +11,9 @@ export {
   type DesignBundle,
   flattenBundle,
   schemaReferences,
+  type SplitDesign,
+  type SplitSchema,
+  splitSchemas,
 } from "./bundle";
 export {
   chaosBaseline,

@@ -1,19 +1,22 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { designQuery, DesignView } from "@/features/designs";
+import { designQuery, DesignView, isBackPath } from "@/features/designs";
 import { ApiRequestError } from "@/lib/api";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface DesignSearch {
   draft?: string;
+  from?: string;
 }
 
 export const Route = createFileRoute("/_app/(workspace)/designs/$designId")({
-  validateSearch: (search: Record<string, unknown>): DesignSearch =>
-    typeof search.draft === "string" && UUID.test(search.draft)
+  validateSearch: (search: Record<string, unknown>): DesignSearch => ({
+    ...(typeof search.draft === "string" && UUID.test(search.draft)
       ? { draft: search.draft }
-      : {},
+      : {}),
+    ...(isBackPath(search.from) ? { from: search.from } : {}),
+  }),
   loader: async ({ context, params }) => {
     if (!UUID.test(params.designId)) throw notFound();
 
@@ -32,7 +35,13 @@ export const Route = createFileRoute("/_app/(workspace)/designs/$designId")({
 
 function DesignRoute() {
   const { designId } = Route.useParams();
-  const { draft } = Route.useSearch();
+  const { draft, from } = Route.useSearch();
 
-  return <DesignView designId={designId} draftId={draft ?? null} />;
+  return (
+    <DesignView
+      designId={designId}
+      draftId={draft ?? null}
+      from={from ?? null}
+    />
+  );
 }

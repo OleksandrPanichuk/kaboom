@@ -1,3 +1,6 @@
+import type { DesignGraph } from "@repo/design";
+import { splitSchemas } from "@repo/scoring";
+
 import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { transaction } from "@/db/executor";
@@ -23,6 +26,41 @@ export class StartProblemUseCase extends UseCase<Options, Result> {
 
   private readonly service = makeService(SubmissionsService);
 
+  private async createDesigns(
+    ownerId: string,
+    name: string,
+    baseline: DesignGraph,
+  ) {
+    const create = make(CreateDesignUseCase);
+    const { system, schemas } = splitSchemas(baseline);
+    const references = new Map<string, string>();
+
+    for (const schema of schemas) {
+      const holder = system.nodes.find((node) => node.id === schema.holder)!;
+      const created = await create.execute({
+        ownerId,
+        name: `${name}: ${holder.label}`,
+        kind: "schema",
+        baseline: schema.graph,
+      });
+
+      references.set(schema.holder, created.id);
+    }
+
+    return create.execute({
+      ownerId,
+      name,
+      baseline: {
+        ...system,
+        nodes: system.nodes.map((node) =>
+          references.has(node.id)
+            ? { ...node, schema: { designId: references.get(node.id)! } }
+            : node,
+        ),
+      },
+    });
+  }
+
   public async execute({ userId, slug }: Options): Promise<Result> {
     const { problem, version } = await this.problems.getPublished(slug);
     const existing = await this.attempts.find(userId, problem.id);
@@ -30,11 +68,11 @@ export class StartProblemUseCase extends UseCase<Options, Result> {
     if (existing) return this.service.view(existing, problem.currentVersion);
 
     const attempt = await transaction(async () => {
-      const design = await make(CreateDesignUseCase).execute({
-        ownerId: userId,
-        name: problem.title,
-        baseline: version.content.baseline,
-      });
+      const design = await this.createDesigns(
+        userId,
+        problem.title,
+        version.content.baseline,
+      );
 
       return this.attempts.insert({
         userId,

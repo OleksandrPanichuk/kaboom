@@ -1,6 +1,6 @@
 import type { DesignNode, NodePatch } from "@repo/design";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { ExternalLink, Plus } from "lucide-react";
 import { useId } from "react";
 
@@ -28,6 +28,7 @@ const NONE = "none";
 
 export function SchemaPicker({ node, onPatch }: SchemaPickerProps) {
   const id = useId();
+  const { pathname } = useLocation();
   const { data, isPending } = useQuery(schemaDesignsQuery);
   const create = useMutation(createDesignMutation);
   const schemas = data?.items ?? [];
@@ -75,6 +76,7 @@ export function SchemaPicker({ node, onPatch }: SchemaPickerProps) {
           <Link
             to="/designs/$designId"
             params={{ designId: current }}
+            search={{ from: pathname }}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-interactive-foreground hover:underline"
           >
             <ExternalLink aria-hidden="true" className="size-3.5" />
