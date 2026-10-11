@@ -1,3 +1,4 @@
+export * from "./AuthoredProblems";
 export * from "./AvatarField";
 export * from "./ProfileDetailsForm";
 export * from "./ProfileHeader";

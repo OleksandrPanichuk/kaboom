@@ -856,8 +856,11 @@ the account goes, since the row only cascades.
 
 `GET /profiles/:handle` composes the standing (`LeaderboardEntity`
 over the leaderboard's own standings), the skills (`SkillsService
-.summaryFor`) and recent counted submissions. `profiles` imports
-`leaderboard`, never the reverse: the leaderboard reads the `profiles`
+.summaryFor`), recent counted submissions, and the published problems the
+person wrote, each with how many others have passed all its tests
+(`ProblemsRepository.listPublishedByAuthor`,
+`SubmissionsRepository.countSolvers`). `profiles` imports
+`leaderboard`, `problems` and `submissions`, never the reverse: the leaderboard reads the `profiles`
 table in its own query, and `avatarUrl` from `profile.avatar.ts`, a
 file that imports nothing.
 

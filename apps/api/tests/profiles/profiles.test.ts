@@ -1,9 +1,15 @@
-import { createGuest, createUser, type TestUser } from "@tests/helpers";
+import {
+  createGuest,
+  createUser,
+  createVerifiedUser,
+  type TestUser,
+} from "@tests/helpers";
 import { beforeEach, describe, expect, test } from "bun:test";
 
 import { make } from "@/core/registry";
 import { ProblemsService } from "@/modules/problems";
 
+import { createModerator, publishFork } from "../authoring/helpers";
 import { buildReference, start } from "../submissions/helpers";
 
 interface MyProfile {
@@ -27,6 +33,7 @@ interface PublicProfile extends MyProfile {
   };
   skills: Array<{ skill: string; score: number | null; samples: number }>;
   recent: Array<{ problem: { slug: string; title: string }; score: number }>;
+  problems: Array<{ slug: string; title: string; solvers: number }>;
 }
 
 const PNG = new Uint8Array([
@@ -164,6 +171,39 @@ describe("a profile", () => {
       (await grace.get<{ entries: unknown[] }>("/api/leaderboard")).body
         .entries,
     ).toEqual([]);
+  });
+
+  test("lists the problems its owner published, with how many others solved each", async () => {
+    const author = await createVerifiedUser();
+    const moderator = await createModerator();
+    const solver = await createUser();
+    const first = await publishFork(author, moderator, "Short links");
+    const second = await publishFork(author, moderator, "Shorter links");
+    const solve = async (user: TestUser, slug: string) => {
+      const attempt = await start(user, slug);
+      const revision = await buildReference(user, attempt);
+
+      await user.post(`/api/problems/${slug}/submissions`, { revision });
+    };
+
+    await solve(solver, first);
+    await solve(author, first);
+    await update(author, { handle: "author" });
+
+    const { problems } = (await profileOf(solver, "author")).body;
+
+    expect(
+      problems
+        .map(({ slug, solvers }) => ({ slug, solvers }))
+        .sort((a, b) => b.solvers - a.solvers),
+    ).toEqual([
+      { slug: first, solvers: 1 },
+      { slug: second, solvers: 0 },
+    ]);
+    expect((await profileOf(author, "author")).body.problems).toHaveLength(2);
+    const { handle } = (await mine(solver)).body;
+
+    expect((await profileOf(author, handle)).body.problems).toEqual([]);
   });
 
   test("needs a session, except for an avatar image", async () => {

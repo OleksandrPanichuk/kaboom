@@ -1,6 +1,7 @@
+import type { Track } from "@repo/design";
 import type { InterviewDimension } from "@repo/scoring";
 
-import type { ProfileRow } from "@/db";
+import type { ProblemDifficulty, ProfileRow } from "@/db";
 
 import { avatarUrl } from "./profile.avatar";
 import type { MyProfileModel, PublicProfileModel } from "./profile.model";
@@ -26,12 +27,23 @@ export interface ProfileSubmission {
   at: Date;
 }
 
+export interface ProfileProblem {
+  slug: string;
+  title: string;
+  summary: string;
+  track: Track;
+  difficulty: ProblemDifficulty;
+  publishedAt: Date | null;
+  solvers: number;
+}
+
 export interface PublicProfileView {
   profile: ProfileEntity;
   own: boolean;
   standing: ProfileStanding;
   skills: ProfileSkill[];
   recent: ProfileSubmission[];
+  problems: ProfileProblem[];
 }
 
 export class ProfileEntity {
@@ -68,6 +80,10 @@ export class ProfileEntity {
         problem: submission.problem,
         score: submission.score,
         at: submission.at.toISOString(),
+      })),
+      problems: view.problems.map((problem) => ({
+        ...problem,
+        publishedAt: problem.publishedAt?.toISOString() ?? null,
       })),
     };
   }

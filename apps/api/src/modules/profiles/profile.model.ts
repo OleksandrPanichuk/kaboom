@@ -1,5 +1,8 @@
+import { TRACKS } from "@repo/design";
 import { INTERVIEW_DIMENSIONS } from "@repo/scoring";
 import { t } from "elysia";
+
+import { PROBLEM_DIFFICULTIES } from "@/db";
 
 export const MyProfileModel = t.Object({
   handle: t.String(),
@@ -44,6 +47,20 @@ export const PublicProfileModel = t.Object({
       score: t.Integer(),
       at: t.String({ format: "date-time" }),
     }),
+  ),
+  problems: t.Array(
+    t.Object({
+      slug: t.String(),
+      title: t.String(),
+      summary: t.String(),
+      track: t.UnionEnum(TRACKS),
+      difficulty: t.UnionEnum(PROBLEM_DIFFICULTIES),
+      publishedAt: t.Nullable(t.String({ format: "date-time" })),
+      solvers: t.Integer({
+        description: "People other than the author who passed every test",
+      }),
+    }),
+    { description: "Published problems this person wrote, newest first" },
   ),
 });
 export type PublicProfileModel = typeof PublicProfileModel.static;

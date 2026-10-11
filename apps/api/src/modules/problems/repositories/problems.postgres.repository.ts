@@ -1,5 +1,5 @@
 import { type ProblemContent, ProblemContentSchema } from "@repo/scoring";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import type { Page, PageRequest } from "@/core/pagination";
@@ -79,6 +79,23 @@ export class PostgresProblemsRepository extends ProblemsRepository {
       .limit(OLDEST_FIRST.limit(page));
 
     return OLDEST_FIRST.page(rows.map(toProblem), page);
+  }
+
+  public async listPublishedByAuthor(
+    authorId: string,
+  ): Promise<ProblemEntity[]> {
+    const rows = await this.db
+      .select()
+      .from(problemsSchema)
+      .where(
+        and(
+          eq(problemsSchema.authorId, authorId),
+          eq(problemsSchema.status, "published"),
+        ),
+      )
+      .orderBy(desc(problemsSchema.publishedAt), asc(problemsSchema.slug));
+
+    return rows.map(toProblem);
   }
 
   public async listPublishedContent(): Promise<ProblemWithContent[]> {
