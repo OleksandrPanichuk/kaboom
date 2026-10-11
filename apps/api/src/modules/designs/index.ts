@@ -2,6 +2,7 @@ export {
   DesignEntity,
   type DesignLayout,
   type DesignSummaryEntity,
+  type ResolvedSchema,
 } from "./design.entity";
 export { hashGraph } from "./design.hash";
 export {
@@ -23,6 +24,7 @@ export {
   DesignOpRejectedError,
   DesignRevisionConflictError,
   DesignRevisionNotFoundError,
+  DesignSchemaConflictError,
 } from "./designs.errors";
 export { designsModule } from "./designs.module";
 export { type DesignsActions, designsRoutes } from "./designs.routes";

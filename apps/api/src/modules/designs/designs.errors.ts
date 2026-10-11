@@ -35,3 +35,8 @@ export class DesignOpRejectedError extends ModuleError {
     super(message, { index, reason });
   }
 }
+
+export class DesignSchemaConflictError extends ModuleError {
+  public readonly status = HttpStatus.Conflict;
+  public readonly code = "DESIGN_SCHEMA_CONFLICT";
+}

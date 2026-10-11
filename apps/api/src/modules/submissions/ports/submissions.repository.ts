@@ -4,6 +4,7 @@ import type { DrillScore, ItemScore, TestReport } from "@repo/scoring";
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
 import type { ProblemDifficulty, SubmissionReviewStatus } from "@/db";
+import type { ResolvedSchema } from "@/modules/designs";
 
 import type { DesignReview, SubmissionEntity } from "../submission.entity";
 
@@ -22,6 +23,7 @@ export interface CreateSubmissionData {
   counted: boolean;
   allPassed: boolean;
   graph: DesignGraph;
+  schemas: ResolvedSchema[];
   items: ItemScore[];
   drills: DrillScore[];
   tests: TestReport;
@@ -31,6 +33,7 @@ export interface SharedSolution {
   score: number;
   problemVersion: number;
   graph: DesignGraph;
+  schemas: Record<string, DesignGraph>;
   createdAt: Date;
 }
 
@@ -54,6 +57,7 @@ export interface CompleteReviewData {
 export interface ReviewableSubmission {
   submission: SubmissionEntity;
   graph: DesignGraph | null;
+  schemas: Record<string, DesignGraph>;
 }
 
 export interface RecentSubmission {

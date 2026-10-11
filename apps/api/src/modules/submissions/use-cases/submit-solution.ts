@@ -7,6 +7,7 @@ import {
 
 import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
+import { DesignsService } from "@/modules/designs";
 import { DesignTester } from "@/platform/design-testing";
 
 import {
@@ -36,6 +37,8 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
 
   private readonly submissions = makeRepository(SubmissionsRepository);
 
+  private readonly designs = makeService(DesignsService);
+
   public async execute({ userId, slug, revision }: Options): Promise<Result> {
     const { attempt, version, design } = await this.service.attempt(
       userId,
@@ -49,9 +52,10 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       );
     }
 
+    const { bundle, schemas } = await this.designs.bundleOf(design);
     const { score, report } = await this.tester.test({
       problem: version.content,
-      graph: design.graph,
+      bundle,
       include: "all",
       seeds: SUBMIT_SEEDS,
     });
@@ -75,6 +79,7 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
       counted: lockedUntil === null,
       allPassed: passesEverything(report),
       graph: design.graph,
+      schemas,
       items: shown.items,
       drills: shown.drills,
       tests,

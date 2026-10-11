@@ -1,4 +1,4 @@
-import { publicScore } from "@repo/scoring";
+import { flattenBundle, publicScore } from "@repo/scoring";
 
 import { getEnv } from "@/configs";
 import { make, makeRepository, makeService } from "@/core/registry";
@@ -60,9 +60,10 @@ export class GenerateReviewUseCase extends UseCase<Options, Result> {
       interview.designId,
       interview.ownerId,
     );
+    const { bundle } = await this.designs.bundleOf(design);
     const { score } = await this.tester.test({
       problem: pinned.content,
-      graph: design.graph,
+      bundle,
       include: "all",
       seeds: 0,
     });
@@ -76,7 +77,7 @@ export class GenerateReviewUseCase extends UseCase<Options, Result> {
     const written = await this.reviewer.write({
       pinned,
       evidence,
-      design: describeDesign(design.graph, design.revision),
+      design: describeDesign(flattenBundle(bundle), design.revision),
       userId: interview.ownerId,
     });
 

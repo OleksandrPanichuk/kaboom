@@ -1,3 +1,5 @@
+import { flattenBundle } from "@repo/scoring";
+
 import { AppError } from "@/core/errors";
 import { make, makeRepository, makeService } from "@/core/registry";
 import { Service } from "@/core/service";
@@ -98,6 +100,7 @@ export class InterviewerRunner extends Service {
         interview.designId,
         interview.ownerId,
       );
+      const { bundle } = await this.designs.bundleOf(design);
       const tools = toolsFor(interview.phase);
       const calls: ToolCall[] = [];
       let text = "";
@@ -109,7 +112,7 @@ export class InterviewerRunner extends Service {
           stateBlock(
             interview,
             pinned,
-            design.graph,
+            flattenBundle(bundle),
             design.revision,
             new Date(),
           ),

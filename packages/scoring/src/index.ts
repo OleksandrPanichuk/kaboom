@@ -6,6 +6,13 @@ export {
   type JsonSchema,
 } from "./authoring";
 export {
+  bundleConflicts,
+  bundleOf,
+  type DesignBundle,
+  flattenBundle,
+  schemaReferences,
+} from "./bundle";
+export {
   chaosBaseline,
   type ChaosCase,
   chaosCases,

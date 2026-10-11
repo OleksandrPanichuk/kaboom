@@ -1,5 +1,5 @@
 import { OFFICIAL_PROBLEMS } from "@repo/problem-library";
-import { checkPublishable } from "@repo/scoring";
+import { bundleOf, checkPublishable } from "@repo/scoring";
 import { afterEach, describe, expect, test } from "bun:test";
 
 import {
@@ -23,7 +23,7 @@ const request = (copies = 1): DesignTestRequest => {
 
   return {
     problem: chat,
-    graph: {
+    bundle: bundleOf({
       ...graph,
       nodes: Array.from({ length: copies }, (_, copy) =>
         graph.nodes.map((node) => ({ ...node, id: suffix(node.id, copy) })),
@@ -36,7 +36,7 @@ const request = (copies = 1): DesignTestRequest => {
           to: suffix(edge.to, copy),
         })),
       ).flat(),
-    },
+    }),
     include: "all",
     seeds: 20,
   };
