@@ -1,4 +1,4 @@
-import { drillScenario, runDrill } from "@repo/design";
+import { drillScenario, runDrill, TRACK_DEFINITIONS } from "@repo/design";
 import z from "zod";
 
 import { make, makeService } from "@/core/registry";
@@ -31,7 +31,7 @@ export const runDrillTool = defineInterviewerTool({
       interview.ownerId,
     );
     const outcome = runDrill(drill, design.graph, 0, {
-      keepsWrites: pinned.content.track === "system-design",
+      keepsWrites: TRACK_DEFINITIONS[pinned.content.track].keepsWrites,
     });
 
     if (drill.kind !== "load") {
