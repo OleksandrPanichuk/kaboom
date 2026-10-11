@@ -13,9 +13,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/Tooltip";
+import { isWideKind } from "@/features/canvas/constants";
 import {
   CANVAS_ELEMENT_ID,
-  FALLBACK_NODE_ICON,
   NODE_HEIGHT,
   NODE_KIND_ICONS,
   NODE_KIND_MIME,
@@ -65,8 +65,7 @@ export function NodePalette({ tracks, onAdd }: NodePaletteProps) {
           y: rect.top + rect.height / 2,
         })
       : { x: 0, y: 0 };
-    const wide =
-      kind === "table" || kind === "collection" || kind === "dynamo-table";
+    const wide = isWideKind(kind);
     const size = {
       width: wide ? TABLE_WIDTH : NODE_WIDTH,
       height: wide ? TABLE_HEADER_HEIGHT + 2 * TABLE_ROW_HEIGHT : NODE_HEIGHT,
@@ -113,8 +112,7 @@ export function NodePalette({ tracks, onAdd }: NodePaletteProps) {
             <ul className="flex flex-col gap-1">
               {group.kinds.map((kind) => {
                 const definition = catalogue[kind];
-                const Icon =
-                  NODE_KIND_ICONS[definition.icon] ?? FALLBACK_NODE_ICON;
+                const Icon = NODE_KIND_ICONS[kind];
 
                 return (
                   <li key={kind}>

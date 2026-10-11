@@ -19,11 +19,7 @@ import { useId, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/Field";
 import { Textarea } from "@/components/ui/Textarea";
-import {
-  FALLBACK_NODE_ICON,
-  NODE_KIND_ICONS,
-  TechnologyMark,
-} from "@/features/canvas";
+import { NODE_KIND_ICONS, TechnologyMark } from "@/features/canvas";
 import type {
   PlacementFields,
   RegionTarget,
@@ -91,7 +87,7 @@ export function NodeInspector({
     groups.find(
       (group) => group.id === node.groupId && group.kind === "database",
     )?.engine ?? DEFAULT_ENGINE;
-  const Icon = NODE_KIND_ICONS[definition.icon] ?? FALLBACK_NODE_ICON;
+  const Icon = NODE_KIND_ICONS[node.kind];
   const fields = describeProps(definition.props).filter(
     (field) => field.meta.editor === undefined,
   );

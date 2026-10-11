@@ -305,6 +305,12 @@ export const dynamoTableKind = defineNodeKind({
   replicable: false,
   carriesTraffic: false,
   distribution: "by-share",
+  home: {
+    family: "key-value",
+    required: true,
+    engine: "dynamodb",
+    label: "Key-value",
+  },
   docs: {
     summary:
       "Items found by a partition key and sorted by an optional sort key, where one table often holds several kinds of item.",

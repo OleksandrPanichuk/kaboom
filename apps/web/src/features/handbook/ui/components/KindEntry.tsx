@@ -1,7 +1,7 @@
 import { catalogue, type NodeKind } from "@repo/design";
 import { Link } from "@tanstack/react-router";
 
-import { FALLBACK_NODE_ICON, NODE_KIND_ICONS } from "@/features/canvas";
+import { NODE_KIND_ICONS } from "@/features/canvas";
 import { articlesAbout } from "@/features/handbook/utils";
 
 interface KindEntryProps {
@@ -10,7 +10,7 @@ interface KindEntryProps {
 
 export function KindEntry({ kind }: KindEntryProps) {
   const definition = catalogue[kind];
-  const Icon = NODE_KIND_ICONS[definition.icon] ?? FALLBACK_NODE_ICON;
+  const Icon = NODE_KIND_ICONS[definition.kind];
   const articles = articlesAbout(kind);
 
   return (

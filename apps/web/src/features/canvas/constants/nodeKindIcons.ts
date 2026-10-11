@@ -1,3 +1,4 @@
+import type { NodeKind } from "@repo/design";
 import {
   Activity,
   Archive,
@@ -36,7 +37,7 @@ import {
   Zap,
 } from "lucide-react";
 
-export const NODE_KIND_ICONS: Readonly<Record<string, LucideIcon>> = {
+export const NODE_KIND_ICONS: Readonly<Record<NodeKind, LucideIcon>> = {
   client: MonitorSmartphone,
   cdn: Globe,
   "load-balancer": Split,

@@ -185,6 +185,12 @@ export const collectionKind = defineNodeKind({
   replicable: false,
   carriesTraffic: false,
   distribution: "by-share",
+  home: {
+    family: "document",
+    required: true,
+    engine: "mongodb",
+    label: "Documents",
+  },
   docs: {
     summary:
       "Documents of one kind in MongoDB, each a tree of fields that may embed objects and arrays of its own.",

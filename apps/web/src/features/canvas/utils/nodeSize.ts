@@ -1,5 +1,6 @@
 import type { DesignNode } from "@repo/design";
 
+import { isWideKind } from "@/features/canvas/constants";
 import {
   NODE_HEIGHT,
   NODE_WIDTH,
@@ -12,11 +13,7 @@ import { documentRows } from "./documentRows";
 import { dynamoRows } from "./dynamoRows";
 
 export const nodeWidth = (node: DesignNode): number =>
-  node.kind === "table" ||
-  node.kind === "collection" ||
-  node.kind === "dynamo-table"
-    ? TABLE_WIDTH
-    : NODE_WIDTH;
+  isWideKind(node.kind) ? TABLE_WIDTH : NODE_WIDTH;
 
 export const nodeHeight = (node: DesignNode): number => {
   if (node.kind === "table") {

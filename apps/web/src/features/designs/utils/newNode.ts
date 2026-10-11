@@ -5,7 +5,6 @@ import {
   type DesignGroup,
   type DesignNode,
   type DesignOp,
-  type Engine,
   type NodeKind,
 } from "@repo/design";
 
@@ -56,15 +55,10 @@ export const newNode = (graph: DesignGraph, kind: NodeKind): DesignNode => {
   return node;
 };
 
-const HOMES: Partial<Record<NodeKind, { engine: Engine; label: string }>> = {
-  collection: { engine: "mongodb", label: "Documents" },
-  "dynamo-table": { engine: "dynamodb", label: "Key-value" },
-};
-
 export const homeOps = (graph: DesignGraph, node: DesignNode): DesignOp[] => {
-  const home = HOMES[node.kind];
+  const home = catalogue[node.kind].home;
 
-  if (!home) return [{ op: "add-node", node }];
+  if (!home?.required) return [{ op: "add-node", node }];
 
   const existing = graph.groups.find(
     (group) => group.kind === "database" && group.engine === home.engine,

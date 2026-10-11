@@ -27,7 +27,9 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
       : "opacity-0 group-hover/node:opacity-100 group-focus-within/node:opacity-100 in-[.selected]:opacity-100",
   );
   const definition = isNodeKind(node.kind) ? catalogue[node.kind] : null;
-  const Icon = NODE_KIND_ICONS[definition?.icon ?? ""] ?? FALLBACK_NODE_ICON;
+  const Icon = definition
+    ? NODE_KIND_ICONS[definition.kind]
+    : FALLBACK_NODE_ICON;
   const kindLabel = definition?.label ?? node.kind;
   const product = node.technology
     ? findTechnology(node.technology.id, node.kind)

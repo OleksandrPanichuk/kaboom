@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { Markdown } from "@/components/Markdown";
 import { buttonVariants } from "@/components/ui/Button";
-import { FALLBACK_NODE_ICON, NODE_KIND_ICONS } from "@/features/canvas";
+import { NODE_KIND_ICONS } from "@/features/canvas";
 import { HandbookPage } from "@/features/handbook/ui/components";
 import { ALL_PROBLEMS, problemsQuery } from "@/features/problems";
 
@@ -54,8 +54,7 @@ export function ArticleView({ article }: ArticleViewProps) {
             <ul className="flex flex-col gap-1">
               {article.kinds.map((kind) => {
                 const definition = catalogue[kind];
-                const Icon =
-                  NODE_KIND_ICONS[definition.icon] ?? FALLBACK_NODE_ICON;
+                const Icon = NODE_KIND_ICONS[definition.kind];
 
                 return (
                   <li key={kind}>

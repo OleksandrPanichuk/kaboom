@@ -1,9 +1,9 @@
-import { catalogue } from "../catalogue";
+import { catalogue, type NodeKind } from "../catalogue";
 import { evaluateLoad } from "../evaluate/load";
 import { SYNCHRONOUS } from "../evaluate/load/node-model";
 import type { EvaluationResult } from "../evaluate/result";
 import type { Fault, LoadScenarioInput } from "../evaluate/scenario";
-import type { DesignGraph, DesignNode } from "../graph";
+import type { DesignGraph, DesignNode, NodeFor } from "../graph";
 import {
   type ChaosSettings,
   ChaosSettingsSchema,
@@ -94,21 +94,105 @@ interface Window {
   until: number;
 }
 
+type Lost = Omit<ChaosCase, "id" | "kind" | "targetId">;
+
+interface Losses {
+  down: (title: string) => Lost;
+  shrink: (title: string, factor: number) => Lost;
+  failing: (title: string, rate: number) => Lost;
+  lose: (count: number, unit: string) => Lost;
+  name: string;
+}
+
+type LostInstance<Node extends DesignNode> =
+  ((node: Node, losses: Losses, graph: DesignGraph) => Lost | null) | null;
+
+type LostInstances = {
+  readonly [Kind in NodeKind]: LostInstance<NodeFor<Kind>>;
+};
+
+const LOST_INSTANCES: LostInstances = {
+  client: null,
+  dns: null,
+  cdn: null,
+  "load-balancer": null,
+  monitoring: null,
+  "api-gateway": null,
+  "rate-limiter": null,
+  cache: null,
+  "connection-pooler": null,
+  queue: null,
+  scheduler: null,
+  "object-storage": null,
+  "search-index": null,
+  "external-api": null,
+  ingress: null,
+  "k8s-service": null,
+  hpa: null,
+  "config-map": null,
+  secret: null,
+  alert: null,
+  "pipeline-stage": null,
+  "artifact-registry": null,
+  "security-group": null,
+  "nat-gateway": null,
+  table: null,
+  collection: null,
+  "dynamo-table": null,
+  service: (node, { lose }) => lose(node.props.replicas, "replica"),
+  worker: (node, { lose }) => lose(node.props.replicas, "replica"),
+  "k8s-deployment": (node, { lose }, graph) =>
+    lose(podsAtStart(graph, node), "pod"),
+  "sql-database": (node, { down, name }, graph) =>
+    down(
+      graph.edges.some(
+        (edge) => edge.kind === "replication" && edge.from === node.id,
+      )
+        ? `${name} (the primary) fails`
+        : `${name} fails`,
+    ),
+  "nosql-database": (node, { failing, shrink, name }) =>
+    node.props.replicationFactor < 2
+      ? failing(
+          `${name} loses a node and the partitions on it`,
+          1 / node.props.partitions,
+        )
+      : node.props.partitions > 1
+        ? shrink(
+            `${name} loses a node`,
+            (node.props.partitions - 1) / node.props.partitions,
+          )
+        : null,
+  stream: (node, { failing, name }) =>
+    node.props.replicationFactor < 2
+      ? failing(
+          `${name} loses a broker and the partitions on it`,
+          1 / node.props.partitions,
+        )
+      : null,
+  coordination: (node, { down, name }) =>
+    node.props.members < 3 ? down(`${name} loses a member`) : null,
+};
+
 const lostInstance = (
   graph: DesignGraph,
   node: DesignNode,
   window: Window,
-): Omit<ChaosCase, "id" | "kind" | "targetId"> | null => {
+): Lost | null => {
+  const rule = LOST_INSTANCES[node.kind] as LostInstance<DesignNode>;
+
+  if (rule === null) return null;
+
   const name = nameOf(node);
-  const down = (title: string) => ({
+  const down = (title: string): Lost => ({
     title,
     faults: [{ kind: "node-down" as const, nodeId: node.id, ...window }],
   });
-  const shrink = (title: string, factor: number) => ({
+  const shrink = (title: string, factor: number): Lost => ({
     title,
     faults: [{ kind: "capacity" as const, nodeId: node.id, factor, ...window }],
   });
-  const failing = (title: string, rate: number) => ({
+  const failing = (title: string, rate: number): Lost => ({
     title,
     faults: [
       {
@@ -120,7 +204,7 @@ const lostInstance = (
       },
     ],
   });
-  const lose = (count: number, unit: string) =>
+  const lose = (count: number, unit: string): Lost =>
     count < 2
       ? down(`${name}'s only ${unit} fails`)
       : shrink(
@@ -128,44 +212,7 @@ const lostInstance = (
           (count - 1) / count,
         );
 
-  switch (node.kind) {
-    case "service":
-    case "worker":
-      return lose(node.props.replicas, "replica");
-    case "k8s-deployment":
-      return lose(podsAtStart(graph, node), "pod");
-    case "sql-database":
-      return down(
-        graph.edges.some(
-          (edge) => edge.kind === "replication" && edge.from === node.id,
-        )
-          ? `${name} (the primary) fails`
-          : `${name} fails`,
-      );
-    case "nosql-database":
-      return node.props.replicationFactor < 2
-        ? failing(
-            `${name} loses a node and the partitions on it`,
-            1 / node.props.partitions,
-          )
-        : node.props.partitions > 1
-          ? shrink(
-              `${name} loses a node`,
-              (node.props.partitions - 1) / node.props.partitions,
-            )
-          : null;
-    case "stream":
-      return node.props.replicationFactor < 2
-        ? failing(
-            `${name} loses a broker and the partitions on it`,
-            1 / node.props.partitions,
-          )
-        : null;
-    case "coordination":
-      return node.props.members < 3 ? down(`${name} loses a member`) : null;
-    default:
-      return null;
-  }
+  return rule(node, { down, shrink, failing, lose, name }, graph);
 };
 
 export const loadedNodes = (result: EvaluationResult): Set<string> =>

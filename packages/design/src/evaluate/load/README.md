@@ -86,6 +86,10 @@ request it receives.
 | `stream`                      | `capacityMsgPerSecond` accepted                                                                                 | see _Backlog_                                                          |
 | `connection-pooler`           | the lesser of `capacityRps` and what its server connections carry; see _Connections_                            | what it serves, by share                                               |
 
+The table is `LOAD_BEHAVIOURS` in `behaviours.ts`, one entry per kind. A
+capacity fault scales every finite capacity; an unbounded one stays
+unbounded.
+
 For a node with separate read and write capacities, `ρ = max(reads / read
 capacity, writes / write capacity)`; otherwise `ρ = λ / capacity`. Replica
 nodes report their primary's read utilisation.
