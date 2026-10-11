@@ -1,3 +1,4 @@
+import type { UserModel } from "@repo/api-client";
 import { Link } from "@tanstack/react-router";
 
 import { BrandMark } from "@/components/BrandMark";
@@ -16,13 +17,24 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/Sidebar";
-import { NAVIGATION, type NavItem } from "@/features/shell/constants";
+import { useCurrentUser } from "@/features/auth";
+import {
+  NAVIGATION,
+  type NavItem,
+  type StaffRole,
+} from "@/features/shell/constants";
 import { isNavItemActive, usePathname } from "@/features/shell/hooks";
 
 import { UserMenu } from "./UserMenu";
 
+const RANK = { user: 0, moderator: 1, admin: 2 } as const;
+
+const canSee = (role: UserModel["role"], minimum: StaffRole) =>
+  RANK[role] >= RANK[minimum];
+
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
+  const user = useCurrentUser();
 
   return (
     <Sidebar collapsible="icon">
@@ -44,22 +56,29 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {NAVIGATION.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => (
-                  <NavMenuItem
-                    key={item.label}
-                    item={item}
-                    onNavigate={() => setOpenMobile(false)}
-                  />
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {NAVIGATION.map((group) => ({
+          ...group,
+          items: group.items.filter(
+            (item) => !item.minimumRole || canSee(user.role, item.minimumRole),
+          ),
+        }))
+          .filter((group) => group.items.length > 0)
+          .map((group) => (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => (
+                    <NavMenuItem
+                      key={item.label}
+                      item={item}
+                      onNavigate={() => setOpenMobile(false)}
+                    />
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
       </SidebarContent>
 
       <SidebarFooter>

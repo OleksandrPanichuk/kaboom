@@ -173,9 +173,22 @@ describe("a community problem", () => {
     expect(approved.status).toBe(200);
     expect(approved.body.status).toBe("approved");
 
-    const published = await author.get<{ difficulty: string }>(
-      `/api/problems/${slug}`,
+    const published = await author.get<{
+      difficulty: string;
+      source: string;
+      author: { handle: string } | null;
+      forkedFrom: { slug: string } | null;
+    }>(`/api/problems/${slug}`);
+    const official = await author.get<{ author: unknown; forkedFrom: unknown }>(
+      "/api/problems/url-shortener",
     );
+
+    expect(published.body).toMatchObject({
+      source: "community",
+      forkedFrom: { slug: "url-shortener" },
+    });
+    expect(published.body.author?.handle).toBe(review!.author?.handle);
+    expect(official.body).toMatchObject({ author: null, forkedFrom: null });
     const after = (await author.get<Draft>(`/api/problem-drafts/${draft.id}`))
       .body;
 

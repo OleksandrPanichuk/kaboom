@@ -42,6 +42,9 @@ function ProblemRoute() {
           params: { interviewId },
         })
       }
+      onOpenDraft={(draftId) =>
+        void navigate({ to: "/authoring/$draftId", params: { draftId } })
+      }
     />
   );
 }

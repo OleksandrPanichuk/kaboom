@@ -10,3 +10,4 @@ export * from "./DesignWorkspace";
 export * from "./PanelPlaceholder";
 export * from "./RenameDesignDialog";
 export * from "./ReplayBar";
+export * from "./WorkspaceInspector";

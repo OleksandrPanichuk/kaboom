@@ -25,6 +25,12 @@ export interface ProblemEntity {
   publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  credit?: ProblemCredit;
+}
+
+export interface ProblemCredit {
+  author: { handle: string; displayName: string } | null;
+  forkedFrom: { slug: string; title: string } | null;
 }
 
 export interface ProblemVersionEntity {
@@ -53,6 +59,8 @@ export class ProblemEntity {
       tags: entity.tags,
       version: entity.currentVersion,
       publishedAt: entity.publishedAt?.toISOString() ?? null,
+      author: entity.credit?.author ?? null,
+      forkedFrom: entity.credit?.forkedFrom ?? null,
     };
   }
 

@@ -5,9 +5,11 @@ import { ArrowLeft, Play } from "lucide-react";
 
 import { Markdown } from "@/components/Markdown";
 import { Button, buttonVariants } from "@/components/ui/Button";
+import { ForkProblemButton } from "@/features/authoring";
 import { StartInterviewButton } from "@/features/interview";
 
 import { DifficultyBadge } from "./DifficultyBadge";
+import { ProblemCredit } from "./ProblemCredit";
 
 interface ProblemStartProps {
   problem: ProblemModel;
@@ -15,6 +17,7 @@ interface ProblemStartProps {
   error: string | null;
   onStart: () => void;
   onOpenInterview: (interviewId: string) => void;
+  onOpenDraft: (draftId: string) => void;
 }
 
 export function ProblemStart({
@@ -23,6 +26,7 @@ export function ProblemStart({
   error,
   onStart,
   onOpenInterview,
+  onOpenDraft,
 }: ProblemStartProps) {
   const hidden = problem.drills.filter(
     (drill) => drill.visibility === "hidden",
@@ -42,13 +46,16 @@ export function ProblemStart({
           Problems
         </Link>
         <div className="flex flex-col gap-3">
-          <DifficultyBadge difficulty={problem.difficulty} />
+          <div>
+            <DifficultyBadge difficulty={problem.difficulty} />
+          </div>
           <h1 className="text-3xl font-semibold tracking-[-0.04em] text-balance">
             {problem.title}
           </h1>
           <p className="leading-6 text-muted-foreground text-pretty">
             {problem.summary}
           </p>
+          <ProblemCredit problem={problem} />
         </div>
         <div className="rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] sm:p-6">
           <Markdown>{problem.statement}</Markdown>
@@ -78,6 +85,7 @@ export function ProblemStart({
                 onOpen={onOpenInterview}
               />
             ) : null}
+            <ForkProblemButton slug={problem.slug} onForked={onOpenDraft} />
           </div>
         </div>
         {error ? (

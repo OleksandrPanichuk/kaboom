@@ -37,6 +37,7 @@ import { pinnedVersion } from "@/features/problems/utils";
 interface ProblemViewProps {
   slug: string;
   onOpenInterview: (interviewId: string) => void;
+  onOpenDraft: (draftId: string) => void;
 }
 
 const labelOf = (graph: DesignGraph, nodeId: string) => {
@@ -45,7 +46,11 @@ const labelOf = (graph: DesignGraph, nodeId: string) => {
   return label === undefined || label === "" ? nodeId : label;
 };
 
-export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
+export function ProblemView({
+  slug,
+  onOpenInterview,
+  onOpenDraft,
+}: ProblemViewProps) {
   const { data: attempt } = useSuspenseQuery(attemptQuery(slug));
   const { data: problem } = useSuspenseQuery(
     problemQuery(slug, pinnedVersion(attempt)),
@@ -69,6 +74,7 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
         error={start.error ? errorMessage(start.error) : null}
         onStart={() => start.mutate({ slug })}
         onOpenInterview={onOpenInterview}
+        onOpenDraft={onOpenDraft}
       />
     );
   }
@@ -109,6 +115,7 @@ export function ProblemView({ slug, onOpenInterview }: ProblemViewProps) {
               revealing={hint.isPending}
               hintError={hint.error ? errorMessage(hint.error) : null}
               onRevealHint={(index) => hint.mutate({ slug, index })}
+              onOpenDraft={onOpenDraft}
             />
           ),
         },

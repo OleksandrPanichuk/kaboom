@@ -5,4 +5,5 @@ export * from "./DraftReviews";
 export * from "./DraftsList";
 export * from "./DraftStatusBadge";
 export * from "./EditorSection";
+export * from "./ForkProblemButton";
 export * from "./JsonField";

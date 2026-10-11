@@ -800,6 +800,10 @@ keeps its slug, title, track and difficulty as columns for the queue,
 since the JSON columns are written as encoded strings that SQL cannot
 look into.
 
+A problem's summary and detail carry its `author` (handle and display
+name, null for official problems or a hidden profile) and `forkedFrom`,
+which `ProblemsRepository.credits` reads in one query for a page.
+
 ## Other people's solutions
 
 A submission records `all_passed` when its report has passed tests and
