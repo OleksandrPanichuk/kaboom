@@ -1,3 +1,5 @@
+import type { PublishCheck } from "@repo/scoring";
+
 import {
   DesignTestsBusyError,
   DesignTestsTimedOutError,
@@ -5,6 +7,7 @@ import {
 } from "@/platform/design-testing/design-testing.errors";
 import {
   DesignTester,
+  type DesignTesterTask,
   type DesignTestRequest,
   type DesignTestResult,
 } from "@/platform/design-testing/ports";
@@ -42,6 +45,14 @@ export class WorkerDesignTester extends DesignTester {
   }
 
   public test(request: DesignTestRequest): Promise<DesignTestResult> {
+    return this.run({ task: "test", request }) as Promise<DesignTestResult>;
+  }
+
+  public check(content: unknown): Promise<PublishCheck> {
+    return this.run({ task: "check", content }) as Promise<PublishCheck>;
+  }
+
+  private run(task: DesignTesterTask): Promise<unknown> {
     if (this.closed) {
       return Promise.reject(
         new DesignTestsUnavailableError("The design tests have shut down"),
@@ -59,7 +70,7 @@ export class WorkerDesignTester extends DesignTester {
 
     return new Promise((resolve, reject) => {
       const pending: PendingTest = {
-        request,
+        task,
         resolve,
         reject,
         timer: null,
@@ -224,6 +235,6 @@ export class WorkerDesignTester extends DesignTester {
       this.pump();
     };
 
-    worker.postMessage(pending.request);
+    worker.postMessage(pending.task);
   }
 }

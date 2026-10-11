@@ -1,6 +1,7 @@
 import type { AppModule } from "@/core/module";
 import { accountsModule } from "@/modules/accounts";
 import { authModule } from "@/modules/auth";
+import { authoringModule } from "@/modules/authoring";
 import { designsModule } from "@/modules/designs";
 import { interviewsModule } from "@/modules/interviews";
 import { leaderboardModule } from "@/modules/leaderboard";
@@ -51,6 +52,7 @@ export const modules = [
   designsModule,
   simulationsModule,
   problemsModule,
+  authoringModule,
   submissionsModule,
   interviewsModule,
   skillsModule,

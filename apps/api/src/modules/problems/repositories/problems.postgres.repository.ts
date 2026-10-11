@@ -12,9 +12,11 @@ import { type DBExecutor, getExecutor, transaction } from "@/db/executor";
 import { Keyset } from "@/db/pagination";
 
 import {
+  type CommunityProblemData,
   type OfficialProblemSync,
   type ProblemFilter,
   ProblemsRepository,
+  type ProblemVersionData,
   type SyncOutcome,
 } from "../ports/problems.repository";
 import type {
@@ -141,6 +143,105 @@ export class PostgresProblemsRepository extends ProblemsRepository {
       .limit(1);
 
     return row ? toVersion(row) : null;
+  }
+
+  public async findBySlug(slug: string): Promise<ProblemEntity | null> {
+    const [row] = await this.db
+      .select()
+      .from(problemsSchema)
+      .where(eq(problemsSchema.slug, slug))
+      .limit(1);
+
+    return row ? toProblem(row) : null;
+  }
+
+  public async findById(id: string): Promise<ProblemWithContent | null> {
+    const [row] = await this.db
+      .select()
+      .from(problemsSchema)
+      .innerJoin(
+        problemVersionsSchema,
+        and(
+          eq(problemVersionsSchema.problemId, problemsSchema.id),
+          eq(problemVersionsSchema.version, problemsSchema.currentVersion),
+        ),
+      )
+      .where(eq(problemsSchema.id, id))
+      .limit(1);
+
+    return row
+      ? {
+          problem: toProblem(row.problems),
+          version: toVersion(row.problem_versions),
+        }
+      : null;
+  }
+
+  public publishCommunity({
+    authorId,
+    forkedFromId,
+    content,
+    contentHash,
+  }: CommunityProblemData): Promise<ProblemEntity> {
+    return transaction(async () => {
+      const [created] = await this.db
+        .insert(problemsSchema)
+        .values({
+          slug: content.slug,
+          source: "community",
+          authorId,
+          forkedFromId,
+          status: "published",
+          currentVersion: 1,
+          publishedAt: new Date(),
+          ...fields(content),
+        })
+        .returning();
+
+      await this.db.insert(problemVersionsSchema).values({
+        problemId: created!.id,
+        version: 1,
+        contentHash,
+        content,
+      });
+
+      return toProblem(created!);
+    });
+  }
+
+  public addVersion({
+    problemId,
+    content,
+    contentHash,
+  }: ProblemVersionData): Promise<ProblemEntity> {
+    return transaction(async () => {
+      const [existing] = await this.db
+        .select()
+        .from(problemsSchema)
+        .where(eq(problemsSchema.id, problemId))
+        .for("update")
+        .limit(1);
+      const version = existing!.currentVersion + 1;
+
+      await this.db.insert(problemVersionsSchema).values({
+        problemId,
+        version,
+        contentHash,
+        content,
+      });
+
+      const [updated] = await this.db
+        .update(problemsSchema)
+        .set({
+          currentVersion: version,
+          updatedAt: new Date(),
+          ...fields(content),
+        })
+        .where(eq(problemsSchema.id, problemId))
+        .returning();
+
+      return toProblem(updated!);
+    });
   }
 
   public syncOfficial({

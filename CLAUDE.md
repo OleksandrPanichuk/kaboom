@@ -763,6 +763,34 @@ case, at most `MAX_REFERENCE_WORK` (50,000). Seeds are already held by
 `VARIATION_BUDGET`, and a solver's own large design by the tester's
 timeout. Every official problem stays at a quarter and a fifth of these.
 
+## Community problems
+
+`authoring` lets anyone with a verified email write a problem. A
+`problem_drafts` row holds the author's working content, stored as it
+stands even when it does not parse; saving answers what does not parse
+yet, with paths. At most 20 drafts an author and 512 KB a draft. A draft
+starts blank (`starterProblem`) or as a fork of a published problem,
+copied under a new slug with `forked_from_id` remembered, and carried to
+the problem once it publishes.
+
+`problems` stays the published catalogue: every row has a current
+version, so nothing that reads it changed. Submitting runs the full
+publish check on the `DesignTester` pool (its `check` task, beside
+`test`), refuses with the issues in `details`, and stores the parsed
+content as a `problem_reviews` row, one pending per draft. A new problem
+needs an unused slug; an update keeps its slug and must differ from what
+is live. Editing after submitting changes the draft, not the review, and
+the author may withdraw it.
+
+A moderator (`Roles`), never the author, approves or rejects. Approving
+runs the check again, may set the difficulty (it decides the points),
+and in one transaction publishes the problem or adds a version to it, so
+attempts already started stay pinned to theirs. Rejecting needs feedback,
+which the author reads on the draft (`changes-requested`). The review row
+keeps its slug, title, track and difficulty as columns for the queue,
+since the JSON columns are written as encoded strings that SQL cannot
+look into.
+
 ## Other people's solutions
 
 A submission records `all_passed` when its report has passed tests and

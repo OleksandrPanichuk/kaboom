@@ -1,6 +1,15 @@
-import { drillRunner, runTests, scoreSubmission } from "@repo/scoring";
+import {
+  checkPublishable,
+  drillRunner,
+  runTests,
+  scoreSubmission,
+} from "@repo/scoring";
 
-import type { DesignTestRequest, DesignTestResult } from "./ports";
+import type {
+  DesignTesterTask,
+  DesignTestRequest,
+  DesignTestResult,
+} from "./ports";
 
 export const testDesign = ({
   problem,
@@ -15,3 +24,8 @@ export const testDesign = ({
     report: runTests(problem, graph, { include, seeds, runner }),
   };
 };
+
+export const runTask = (task: DesignTesterTask): unknown =>
+  task.task === "test"
+    ? testDesign(task.request)
+    : checkPublishable(task.content);
