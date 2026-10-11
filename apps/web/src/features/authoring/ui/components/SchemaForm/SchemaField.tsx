@@ -4,6 +4,7 @@ import {
   labelOf,
   listOf,
   shapeOf,
+  unitOf,
 } from "@/features/authoring/utils";
 
 import { ArrayField } from "./ArrayField";
@@ -19,6 +20,8 @@ export interface SchemaFieldProps {
   path: ReadonlyArray<string | number>;
   value: unknown;
   optional: boolean;
+  bare?: boolean;
+  cell?: boolean;
   onChange: (value: unknown) => void;
 }
 
@@ -28,6 +31,8 @@ export function SchemaField({
   path,
   value,
   optional,
+  bare = false,
+  cell = false,
   onChange,
 }: SchemaFieldProps) {
   const shape = shapeOf(schema);
@@ -49,6 +54,7 @@ export function SchemaField({
           description={description}
           path={path}
           value={shown}
+          bare={bare}
           onChange={onChange}
         />
       );
@@ -60,6 +66,7 @@ export function SchemaField({
           description={description}
           path={path}
           value={value}
+          bare={bare}
           onChange={onChange}
         />
       );
@@ -87,6 +94,7 @@ export function SchemaField({
           description={description}
           path={path}
           value={value}
+          bare={bare}
           onChange={onChange}
         />
       );
@@ -116,9 +124,14 @@ export function SchemaField({
       return (
         <SchemaField
           name={name}
-          schema={{ ...shape.inner, description: description ?? undefined }}
+          schema={{
+            ...shape.inner,
+            title: label,
+            description: description ?? undefined,
+          }}
           path={path}
           value={value ?? undefined}
+          cell={cell}
           optional
           onChange={(next) => onChange(next === undefined ? null : next)}
         />
@@ -142,7 +155,9 @@ export function SchemaField({
           path={path}
           value={value}
           fallback={schema.default}
+          unit={unitOf(name, schema)}
           optional={optional}
+          bare={cell}
           onChange={onChange}
         />
       );

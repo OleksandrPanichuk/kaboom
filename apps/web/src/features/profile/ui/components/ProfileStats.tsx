@@ -20,7 +20,7 @@ export function ProfileStats({ standing }: ProfileStatsProps) {
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="flex flex-col gap-1 rounded-2xl border border-black/[0.07] bg-white px-4 py-3"
+          className="flex flex-col gap-1 rounded-2xl border border-border bg-card px-4 py-3"
         >
           <dt className="text-xs text-muted-foreground">{stat.label}</dt>
           <dd className="truncate text-lg font-semibold tabular-nums">

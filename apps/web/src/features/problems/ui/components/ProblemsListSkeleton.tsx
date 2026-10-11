@@ -8,7 +8,7 @@ export function ProblemsListSkeleton() {
       {PLACEHOLDERS.map((key) => (
         <li
           key={key}
-          className="flex flex-col gap-3 rounded-2xl border border-black/[0.07] bg-white p-4 sm:p-5"
+          className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5"
         >
           <Skeleton className="h-4 w-1/2" />
           <Skeleton className="h-3.5 w-full" />

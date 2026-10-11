@@ -12,13 +12,13 @@ const edited = (at: string) =>
 
 export function DraftsList({ drafts }: DraftsListProps) {
   return (
-    <ul className="flex flex-col divide-y overflow-hidden rounded-2xl border border-black/[0.07] bg-white">
+    <ul className="flex flex-col divide-y overflow-hidden rounded-2xl border border-border bg-card">
       {drafts.map((draft) => (
         <li key={draft.id}>
           <Link
             to="/authoring/$draftId"
             params={{ draftId: draft.id }}
-            className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50"
+            className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/60"
           >
             <span className="flex min-w-0 flex-col gap-0.5">
               <span className="truncate font-medium">{draft.title}</span>

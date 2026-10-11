@@ -21,14 +21,14 @@ export function LeaderboardView({
   const { data } = useSuspenseQuery(leaderboardQuery(filter));
 
   return (
-    <div className="flex-1 bg-zinc-50/70 px-4 py-8 sm:px-8 sm:py-10">
+    <div className="flex-1 bg-background px-4 py-8 sm:px-8 sm:py-10">
       <div className="mx-auto flex max-w-3xl flex-col gap-6">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-semibold tracking-[-0.04em]">
             Leaderboard
           </h1>
           <p className="text-sm leading-6 text-muted-foreground sm:text-base text-pretty">
-            Points from the best counted score on each official problem,
+            Points from the best counted score on each published problem,
             weighted by difficulty. Everyone with a public profile appears.
           </p>
         </div>

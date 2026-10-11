@@ -37,7 +37,7 @@ export function ArticleView({ article }: ArticleViewProps) {
       }
     >
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_16rem]">
-        <article className="min-w-0 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] sm:p-6 [&_h2]:mt-2">
+        <article className="min-w-0 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6 [&_h2]:mt-2">
           <Markdown>{article.body}</Markdown>
         </article>
         <aside className="flex flex-col gap-6">
@@ -61,11 +61,11 @@ export function ArticleView({ article }: ArticleViewProps) {
                     <Link
                       to="/handbook"
                       hash={kind}
-                      className="flex items-center gap-2 rounded-lg px-1.5 py-1 text-sm hover:bg-zinc-100"
+                      className="flex items-center gap-2 rounded-lg px-1.5 py-1 text-sm hover:bg-muted"
                     >
                       <Icon
                         aria-hidden="true"
-                        className="size-4 shrink-0 text-indigo-700"
+                        className="size-4 shrink-0 text-interactive-foreground"
                       />
                       {definition.label}
                     </Link>
@@ -91,7 +91,7 @@ export function ArticleView({ article }: ArticleViewProps) {
                     <Link
                       to="/problems/$slug"
                       params={{ slug }}
-                      className="block rounded-lg px-1.5 py-1 text-sm font-medium text-indigo-700 hover:bg-zinc-100"
+                      className="block rounded-lg px-1.5 py-1 text-sm font-medium text-interactive-foreground hover:bg-muted"
                     >
                       {titleOf(slug)}
                     </Link>

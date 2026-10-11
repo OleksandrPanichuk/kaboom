@@ -15,7 +15,7 @@ interface TileProps {
 
 function Tile({ label, value, detail, tone }: TileProps) {
   return (
-    <li className="flex min-w-0 flex-col gap-1 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)]">
+    <li className="flex min-w-0 flex-col gap-1 rounded-2xl border border-border bg-card p-4 shadow-card">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className={cn("text-3xl font-semibold tracking-[-0.04em]", tone)}>
         {value}

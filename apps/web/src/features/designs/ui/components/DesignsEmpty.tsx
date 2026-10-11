@@ -16,11 +16,11 @@ interface DesignsEmptyProps {
 
 export function DesignsEmpty({ onCreate }: DesignsEmptyProps) {
   return (
-    <Empty className="rounded-2xl border border-dashed border-black/10 bg-white/60 py-14">
+    <Empty className="rounded-2xl border border-dashed border-border bg-card/60 py-14">
       <EmptyHeader>
         <EmptyMedia
           variant="icon"
-          className="size-11 rounded-2xl border border-indigo-200/60 bg-indigo-50 text-indigo-700"
+          className="size-11 rounded-2xl border border-interactive-border/60 bg-interactive-surface text-interactive-foreground"
         >
           <Network aria-hidden="true" />
         </EmptyMedia>

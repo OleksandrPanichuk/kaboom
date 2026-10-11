@@ -53,7 +53,7 @@ export function ScenarioForm({ draft, onChange }: ScenarioFormProps) {
         </Select>
       </Field>
 
-      <div className="flex flex-col gap-3 rounded-xl border border-black/[0.07] p-3">
+      <div className="flex flex-col gap-3 rounded-xl border border-border p-3">
         <Field
           orientation="horizontal"
           className="items-center justify-between"

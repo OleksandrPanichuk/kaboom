@@ -123,9 +123,9 @@ export function NodePalette({ tracks, onAdd }: NodePaletteProps) {
                         onDragStart={(event) => startDrag(event, kind)}
                         onClick={() => addInTheMiddle(kind)}
                         aria-label={`Add ${definition.label}`}
-                        className="flex w-full cursor-grab items-center gap-2.5 rounded-lg border border-transparent p-1.5 text-left text-sm transition-colors hover:border-black/10 hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none active:cursor-grabbing"
+                        className="flex w-full cursor-grab items-center gap-2.5 rounded-lg border border-transparent p-1.5 text-left text-sm transition-colors hover:border-border hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none active:cursor-grabbing"
                       >
-                        <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-indigo-200/60 bg-indigo-50 text-indigo-700">
+                        <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-interactive-border/60 bg-interactive-surface text-interactive-foreground">
                           <Icon aria-hidden="true" className="size-4" />
                         </span>
                         <span className="truncate font-medium">

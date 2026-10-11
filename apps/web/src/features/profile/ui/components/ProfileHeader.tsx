@@ -17,7 +17,7 @@ const joined = (at: string) =>
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
   return (
-    <section className="flex flex-col gap-5 rounded-2xl border border-black/[0.07] bg-white p-5 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] sm:flex-row sm:items-start sm:p-6">
+    <section className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-5 shadow-card sm:flex-row sm:items-start sm:p-6">
       <UserAvatar
         name={profile.displayName}
         url={profile.avatarUrl}
@@ -43,7 +43,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
           ) : null}
         </div>
         {profile.own && !profile.visible ? (
-          <p className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <p className="flex items-center gap-2 rounded-lg bg-warning-surface px-3 py-2 text-sm text-warning-foreground">
             <EyeOff aria-hidden="true" className="size-4 shrink-0" />
             Only you can see this profile, and you're off the leaderboard.
           </p>
@@ -61,7 +61,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
                   href={link}
                   target="_blank"
                   rel="noopener noreferrer nofollow ugc"
-                  className="flex min-w-0 items-center gap-1.5 text-sm text-indigo-700 hover:underline"
+                  className="flex min-w-0 items-center gap-1.5 text-sm text-interactive-foreground hover:underline"
                 >
                   <Link2 aria-hidden="true" className="size-3.5 shrink-0" />
                   <span className="truncate">{linkLabel(link)}</span>

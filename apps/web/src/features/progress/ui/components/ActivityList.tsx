@@ -21,11 +21,11 @@ export function ActivityList() {
         Recent activity
       </h2>
       {data.items.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-black/10 px-4 py-6 text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
           Reviewed interviews and submitted challenges show up here.
         </p>
       ) : (
-        <ul className="flex flex-col divide-y rounded-2xl border border-black/[0.07] bg-white">
+        <ul className="flex flex-col divide-y rounded-2xl border border-border bg-card">
           {data.items.map((item) => {
             const interview = item.kind === "interview";
             const pending = item.reviewStatus === "pending";
@@ -33,9 +33,9 @@ export function ActivityList() {
             return (
               <li
                 key={`${item.kind}-${item.id}`}
-                className="relative flex min-w-0 items-center gap-3 px-4 py-3 hover:bg-zinc-50 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50"
+                className="relative flex min-w-0 items-center gap-3 px-4 py-3 hover:bg-muted/60 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50"
               >
-                <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-black/[0.07] bg-zinc-50 text-zinc-600">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-muted/60 text-muted-foreground">
                   {interview ? (
                     <MessagesSquare aria-hidden="true" className="size-4" />
                   ) : (

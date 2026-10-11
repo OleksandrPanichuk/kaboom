@@ -37,7 +37,7 @@ export function DraftReviews({ reviews }: DraftReviewsProps) {
             </span>
           </p>
           {review.feedback ? (
-            <p className="rounded-lg bg-zinc-50 px-3 py-2 whitespace-pre-line text-pretty">
+            <p className="rounded-lg bg-muted/60 px-3 py-2 whitespace-pre-line text-pretty">
               {review.feedback}
             </p>
           ) : null}

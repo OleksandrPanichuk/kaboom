@@ -24,7 +24,7 @@ import {
 } from "@/features/canvas/utils";
 
 const HANDLE =
-  "!size-2.5 !rounded-full !border-2 !border-white !bg-emerald-500 shadow-sm transition-opacity";
+  "!size-2.5 !rounded-full !border-2 !border-white !bg-success shadow-sm transition-opacity";
 
 const SIDES = ["left", "right"] as const;
 
@@ -59,7 +59,7 @@ function CollectionNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
   return (
     <BaseNode
       style={{ width: TABLE_WIDTH }}
-      className="group/node overflow-visible rounded-xl border-black/10 bg-white shadow-[0_8px_24px_-18px_rgba(24,24,27,0.5)] hover:ring-0 in-[.selected]:border-emerald-400 in-[.selected]:shadow-[0_0_0_3px_rgba(16,185,129,0.18)]"
+      className="group/node overflow-visible rounded-xl border-border bg-card shadow-card hover:ring-0 in-[.selected]:border-success in-[.selected]:shadow-[0_0_0_3px_rgba(16,185,129,0.18)]"
     >
       {hits.length > 0 ? (
         <span
@@ -68,19 +68,21 @@ function CollectionNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
           title={hits.map((hit) => hit.message).join("\n")}
           className={cn(
             "absolute -top-2 -right-2 z-10 grid size-5 place-items-center rounded-full border-2 border-white shadow-sm",
-            warns ? "bg-amber-500 text-white" : "bg-zinc-400 text-white",
+            warns
+              ? "bg-warning text-background"
+              : "bg-muted-foreground text-background",
           )}
         >
           <BadgeIcon aria-hidden="true" className="size-3" />
         </span>
       ) : null}
       <div
-        className="flex items-center gap-2 rounded-t-xl border-b border-black/[0.07] bg-emerald-50/70 px-3"
+        className="flex items-center gap-2 rounded-t-xl border-b border-border bg-success-surface/70 px-3"
         style={{ height: TABLE_HEADER_HEIGHT }}
       >
         <FileJson
           aria-hidden="true"
-          className="size-4 shrink-0 text-emerald-700"
+          className="size-4 shrink-0 text-success-foreground"
         />
         <span className="truncate font-mono text-sm font-semibold tracking-[-0.01em]">
           {node.label || node.id}
@@ -88,7 +90,7 @@ function CollectionNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
       </div>
       <ul>
         <li
-          className="relative flex items-center gap-1.5 border-b border-black/[0.05] px-3 text-xs"
+          className="relative flex items-center gap-1.5 border-b border-border px-3 text-xs"
           style={{ height: TABLE_ROW_HEIGHT }}
         >
           {SIDES.map((side) => (
@@ -102,7 +104,7 @@ function CollectionNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
           ))}
           <KeyRound
             aria-label="Document id"
-            className="size-3 shrink-0 text-amber-600"
+            className="size-3 shrink-0 text-warning"
           />
           <span className="font-mono font-semibold">_id</span>
           <span className="ml-auto font-mono text-[11px] text-muted-foreground">
@@ -115,7 +117,7 @@ function CollectionNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
           return (
             <li
               key={id}
-              className="relative flex items-center gap-1.5 px-3 text-xs not-last:border-b not-last:border-black/[0.05]"
+              className="relative flex items-center gap-1.5 px-3 text-xs not-last:border-b not-last:border-border"
               style={{
                 height: TABLE_ROW_HEIGHT,
                 paddingLeft: 12 + row.depth * 14,
@@ -139,7 +141,7 @@ function CollectionNodeCardComponent({ id, data }: NodeProps<CanvasNode>) {
                 {referencing.has(id) ? (
                   <Link2
                     aria-label="References another collection"
-                    className="size-3 text-emerald-600"
+                    className="size-3 text-success"
                   />
                 ) : null}
               </span>

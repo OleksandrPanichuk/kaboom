@@ -1,13 +1,17 @@
+import { cn } from "cn";
 import { Plus, X } from "lucide-react";
+import { useId } from "react";
 
 import { Button } from "@/components/ui/Button";
 import {
   defaultOf,
   type FieldShape,
+  type JsonSchema,
   labelOf,
   shapeOf,
 } from "@/features/authoring/utils";
 
+import { GroupHeading } from "./GroupHeading";
 import { SchemaField } from "./SchemaField";
 
 interface ObjectFieldProps {
@@ -22,11 +26,38 @@ interface ObjectFieldProps {
 }
 
 const COMPLEX = new Set(["object", "array", "union", "tuple"]);
+const SCALAR = new Set(["string", "number", "enum", "boolean", "nullable"]);
 
 const record = (value: unknown): Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
+
+const compact = (schema: JsonSchema) => {
+  const shape = shapeOf(schema);
+
+  return (
+    shape.kind === "object" &&
+    Object.keys(shape.properties).length <= 3 &&
+    Object.values(shape.properties).every((field) => {
+      const inner = shapeOf(field);
+
+      return SCALAR.has(inner.kind) && !(inner.kind === "string" && inner.long);
+    })
+  );
+};
+
+const spanOf = (schema: JsonSchema) => {
+  const field = shapeOf(schema);
+
+  if (field.kind === "object") {
+    return compact(schema) ? "@xl:col-span-2" : "col-span-full";
+  }
+
+  if (COMPLEX.has(field.kind)) return "col-span-full";
+
+  return field.kind === "string" && field.long ? "col-span-full" : undefined;
+};
 
 export function ObjectField({
   shape,
@@ -38,6 +69,7 @@ export function ObjectField({
   hide,
   bare = false,
 }: ObjectFieldProps) {
+  const headingId = useId();
   const current = record(value);
   const set = (key: string, next: unknown) => {
     const copy = { ...current };
@@ -51,24 +83,30 @@ export function ObjectField({
     ([key, schema]) =>
       key !== hide && (!("const" in schema) || schema.const === true),
   );
+  const nestedCompact = compact({ type: "object", ...shape });
   const body = (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div
+      className={cn(
+        "grid gap-x-4 gap-y-4",
+        nestedCompact && !bare
+          ? "@sm:grid-cols-2"
+          : "@xl:grid-cols-2 @3xl:grid-cols-3",
+      )}
+    >
       {entries.map(([key, schema]) => {
         const optional = !shape.required.includes(key) || "default" in schema;
-        const field = shapeOf(schema);
-        const kind = field.kind;
-        const wide =
-          COMPLEX.has(kind) || (field.kind === "string" && field.long);
+        const kind = shapeOf(schema).kind;
         const removable =
           optional && COMPLEX.has(kind) && !("default" in schema);
 
         if (removable && current[key] === undefined) {
           return (
-            <div key={key} className="sm:col-span-2">
+            <div key={key} className="col-span-full">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="sm"
+                className="-ml-2 text-interactive-foreground"
                 onClick={() => set(key, defaultOf(schema))}
               >
                 <Plus aria-hidden="true" />
@@ -79,10 +117,7 @@ export function ObjectField({
         }
 
         return (
-          <div
-            key={key}
-            className={wide ? "relative sm:col-span-2" : undefined}
-          >
+          <div key={key} className={cn("relative min-w-0", spanOf(schema))}>
             <SchemaField
               name={key}
               schema={schema}
@@ -112,14 +147,17 @@ export function ObjectField({
   if (bare) return body;
 
   return (
-    <fieldset className="flex flex-col gap-3 rounded-xl border border-black/[0.07] p-3 sm:p-4">
-      <legend className="px-1 text-sm font-medium">{label}</legend>
-      {description ? (
-        <p className="-mt-1 text-sm text-muted-foreground text-pretty">
-          {description}
-        </p>
-      ) : null}
+    <div
+      role="group"
+      aria-labelledby={headingId}
+      data-path={path.join(".")}
+      className={cn(
+        "flex flex-col gap-3",
+        !nestedCompact && "border-t border-border pt-4",
+      )}
+    >
+      <GroupHeading id={headingId} label={label} description={description} />
       {body}
-    </fieldset>
+    </div>
   );
 }

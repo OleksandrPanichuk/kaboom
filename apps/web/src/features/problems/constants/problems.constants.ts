@@ -5,7 +5,7 @@ export const DIFFICULTY_LABELS = {
 } as const;
 
 export const DIFFICULTY_TONES = {
-  easy: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  medium: "border-amber-200 bg-amber-50 text-amber-800",
-  hard: "border-red-200 bg-red-50 text-red-800",
+  easy: "border-success-border bg-success-surface text-success-foreground",
+  medium: "border-warning-border bg-warning-surface text-warning-foreground",
+  hard: "border-danger-border bg-danger-surface text-danger-foreground",
 } as const;

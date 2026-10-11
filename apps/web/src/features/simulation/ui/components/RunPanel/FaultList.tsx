@@ -153,7 +153,7 @@ function FaultRow({
         : "Node";
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-black/[0.07] p-3">
+    <div className="flex flex-col gap-3 rounded-xl border border-border p-3">
       <div className="flex items-start gap-2">
         <Field className="min-w-0 flex-1">
           <FieldLabel htmlFor={`${id}-kind`} className="text-xs">
@@ -226,7 +226,7 @@ function FaultRow({
           </SelectContent>
         </Select>
         {missing ? (
-          <p className="text-xs text-amber-700">
+          <p className="text-xs text-warning-foreground">
             That {noun.toLowerCase()} is no longer in the design, so this fault
             is skipped.
           </p>

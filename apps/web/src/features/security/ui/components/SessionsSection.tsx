@@ -34,7 +34,7 @@ export function SessionsSection() {
       description="Sign out of a device you no longer use or do not recognise."
       icon={MonitorSmartphone}
     >
-      <ul className="flex flex-col divide-y overflow-hidden rounded-xl border bg-zinc-50/60">
+      <ul className="flex flex-col divide-y overflow-hidden rounded-xl border bg-muted/60">
         {sessions.map((session) => (
           <li
             key={session.id}

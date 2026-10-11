@@ -13,7 +13,7 @@ export function UserAvatar({ className }: UserAvatarProps) {
 
   return (
     <Avatar className={cn("rounded-lg after:rounded-lg", className)}>
-      <AvatarFallback className="rounded-lg bg-indigo-50 text-xs font-semibold text-indigo-700">
+      <AvatarFallback className="rounded-lg bg-interactive-surface text-xs font-semibold text-interactive-foreground">
         {initials(user.name)}
       </AvatarFallback>
     </Avatar>

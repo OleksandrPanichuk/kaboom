@@ -26,7 +26,7 @@ export function SecuritySettingsView({
   );
 
   return (
-    <div className="settings-surface flex-1 bg-zinc-50/70 px-4 py-8 sm:px-8 sm:py-10">
+    <div className="settings-surface flex-1 bg-background px-4 py-8 sm:px-8 sm:py-10">
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <SettingsPageHeader
           icon={ShieldCheck}

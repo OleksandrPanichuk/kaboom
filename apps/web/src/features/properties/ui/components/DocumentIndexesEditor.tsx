@@ -110,7 +110,7 @@ export function DocumentIndexesEditor({
           {indexes.map((index) => (
             <li
               key={index.id}
-              className="flex min-w-0 items-center gap-2 rounded-lg border border-black/[0.07] bg-white py-1 pr-1 pl-2.5"
+              className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card py-1 pr-1 pl-2.5"
             >
               <span className="flex min-w-0 flex-col">
                 <span className="truncate font-mono text-xs">
@@ -159,7 +159,7 @@ export function DocumentIndexesEditor({
         </ul>
       )}
 
-      <div className="flex flex-col gap-2.5 rounded-xl border border-dashed border-black/10 p-2.5">
+      <div className="flex flex-col gap-2.5 rounded-xl border border-dashed border-border p-2.5">
         <p className="text-xs font-medium">New index</p>
         {keys.length > 0 ? (
           <ol className="flex flex-col gap-1">

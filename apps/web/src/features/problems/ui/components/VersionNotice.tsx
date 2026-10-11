@@ -46,7 +46,7 @@ export function VersionNotice({
       <Button
         variant="outline"
         size="sm"
-        className="self-start bg-white"
+        className="self-start bg-card"
         disabled={pending}
         onClick={() => setAsking(true)}
       >

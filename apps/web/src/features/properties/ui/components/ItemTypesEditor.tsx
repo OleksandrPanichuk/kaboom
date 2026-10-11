@@ -72,7 +72,7 @@ export function ItemTypesEditor({ table, onApply }: ItemTypesEditorProps) {
         <section
           key={item.id}
           aria-label={`Item type ${item.name}`}
-          className="flex min-w-0 flex-col gap-2 rounded-xl border border-black/[0.07] bg-white p-2"
+          className="flex min-w-0 flex-col gap-2 rounded-xl border border-border bg-card p-2"
         >
           <div className="flex min-w-0 items-center gap-1.5">
             <div className="min-w-0 flex-1">

@@ -3,7 +3,7 @@ import { MousePointerClick } from "lucide-react";
 export function InspectorEmpty() {
   return (
     <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-      <span className="grid size-9 place-items-center rounded-xl bg-zinc-100 text-zinc-600">
+      <span className="grid size-9 place-items-center rounded-xl bg-muted text-muted-foreground">
         <MousePointerClick aria-hidden="true" className="size-4" />
       </span>
       <p className="text-sm font-medium">Nothing selected</p>

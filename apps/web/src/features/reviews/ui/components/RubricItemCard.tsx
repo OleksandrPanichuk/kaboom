@@ -10,7 +10,7 @@ interface RubricItemCardProps {
 
 export function RubricItemCard({ item }: RubricItemCardProps) {
   return (
-    <li className="flex flex-col gap-2 rounded-2xl border border-black/[0.07] bg-white p-4">
+    <li className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
           <p className="font-medium text-pretty">{item.title}</p>
@@ -20,12 +20,12 @@ export function RubricItemCard({ item }: RubricItemCardProps) {
         </div>
         <ScoreDots score={item.score} />
       </div>
-      <p className="text-sm leading-6 text-zinc-700 text-pretty">
+      <p className="text-sm leading-6 text-subtle-foreground text-pretty">
         {item.rationale}
       </p>
       {item.citations.length > 0 ? (
         <details className="group">
-          <summary className="flex w-fit cursor-pointer list-none items-center gap-1 rounded text-sm font-medium text-indigo-700 outline-none select-none focus-visible:ring-2 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
+          <summary className="flex w-fit cursor-pointer list-none items-center gap-1 rounded text-sm font-medium text-interactive-foreground outline-none select-none focus-visible:ring-2 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
             <ChevronRight
               aria-hidden="true"
               className="size-3.5 transition-transform group-open:rotate-90"
@@ -36,12 +36,12 @@ export function RubricItemCard({ item }: RubricItemCardProps) {
             {item.citations.map((citation) => (
               <li
                 key={citation.label}
-                className="flex min-w-0 gap-2 border-l-2 border-zinc-200 pl-3 text-sm leading-5"
+                className="flex min-w-0 gap-2 border-l-2 border-border pl-3 text-sm leading-5"
               >
                 <span className="w-12 shrink-0 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                   {citationKind(citation.kind)}
                 </span>
-                <span className="min-w-0 break-words text-zinc-700">
+                <span className="min-w-0 break-words text-subtle-foreground">
                   {citation.text}
                 </span>
               </li>

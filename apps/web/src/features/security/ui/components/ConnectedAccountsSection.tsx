@@ -47,7 +47,7 @@ export function ConnectedAccountsSection({
       {linkError ? (
         <FieldError>{oauthErrorMessage(linkError)}</FieldError>
       ) : null}
-      <ul className="flex flex-col divide-y overflow-hidden rounded-xl border bg-zinc-50/60">
+      <ul className="flex flex-col divide-y overflow-hidden rounded-xl border bg-muted/60">
         {PROVIDERS.map(({ provider, type, label, icon }) => {
           const Icon = icon;
           const account = accounts.find((candidate) => candidate.type === type);

@@ -18,7 +18,7 @@ export function TrackFilter({ value, onChange }: TrackFilterProps) {
     <div
       role="group"
       aria-label="Track"
-      className="flex w-fit max-w-full flex-wrap gap-1 rounded-xl border border-black/[0.07] bg-white p-1"
+      className="flex w-fit max-w-full flex-wrap gap-1 rounded-xl border border-border bg-card p-1"
     >
       {OPTIONS.map((option) => (
         <Button
@@ -29,7 +29,7 @@ export function TrackFilter({ value, onChange }: TrackFilterProps) {
           className={cn(
             "rounded-lg text-muted-foreground",
             value === option.value &&
-              "bg-zinc-900 text-white hover:bg-zinc-900 hover:text-white",
+              "bg-foreground text-background hover:bg-foreground hover:text-background",
           )}
           onClick={() => onChange(option.value)}
         >

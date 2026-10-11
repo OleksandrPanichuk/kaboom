@@ -15,7 +15,7 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   if (author === "system") {
     return (
-      <li className="self-center rounded-lg bg-amber-50 px-3 py-2 text-center text-xs leading-5 text-amber-900 text-pretty">
+      <li className="self-center rounded-lg bg-warning-surface px-3 py-2 text-center text-xs leading-5 text-warning-foreground text-pretty">
         {body}
       </li>
     );
@@ -35,8 +35,8 @@ export function MessageBubble({
         className={cn(
           "rounded-2xl px-3 py-2 text-sm leading-6 whitespace-pre-wrap text-pretty",
           author === "user"
-            ? "rounded-br-md bg-indigo-600 text-white"
-            : "rounded-bl-md bg-zinc-100 text-foreground",
+            ? "rounded-br-md bg-interactive text-background"
+            : "rounded-bl-md bg-muted text-foreground",
         )}
       >
         {body}

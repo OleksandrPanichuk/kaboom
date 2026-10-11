@@ -74,8 +74,8 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
           className={cn(
             "shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
             test.variation.passed === test.variation.total
-              ? "bg-zinc-100 text-zinc-600"
-              : "bg-amber-50 text-amber-800",
+              ? "bg-muted text-muted-foreground"
+              : "bg-warning-surface text-warning-foreground",
           )}
           title="Runs that passed with traffic, faults and capacity varied"
         >
@@ -87,8 +87,8 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
           className={cn(
             "shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium",
             change === "fixed"
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-red-50 text-red-700",
+              ? "bg-success-surface text-success-foreground"
+              : "bg-danger-surface text-danger-foreground",
           )}
         >
           {change === "fixed" ? "Fixed" : "New failure"}
@@ -105,7 +105,7 @@ export function TestRow({ test, change, labelOf, onReplay }: TestRowProps) {
       {expandable ? (
         <button
           type="button"
-          className="flex min-w-0 items-center gap-2.5 rounded-lg px-2 py-2 text-left outline-none hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex min-w-0 items-center gap-2.5 rounded-lg px-2 py-2 text-left outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50"
           aria-expanded={open}
           aria-controls={id}
           onClick={() => setOpen((value) => !value)}

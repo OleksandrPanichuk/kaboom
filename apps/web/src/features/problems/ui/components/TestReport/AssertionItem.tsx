@@ -27,12 +27,12 @@ export function AssertionItem({
       {assertion.passed ? (
         <Check
           aria-label="Held"
-          className="mt-0.5 size-3.5 shrink-0 text-emerald-600"
+          className="mt-0.5 size-3.5 shrink-0 text-success"
         />
       ) : (
         <X
           aria-label="Broken"
-          className="mt-0.5 size-3.5 shrink-0 text-red-600"
+          className="mt-0.5 size-3.5 shrink-0 text-destructive"
         />
       )}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -42,7 +42,7 @@ export function AssertionItem({
             <span
               className={cn(
                 "font-medium",
-                assertion.passed ? "text-foreground" : "text-red-700",
+                assertion.passed ? "text-foreground" : "text-danger-foreground",
               )}
             >
               {assertion.actual}

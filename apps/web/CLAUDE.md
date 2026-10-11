@@ -348,14 +348,22 @@ from the draft's linked designs. Its forms write top-level fields, and tags
 are a multi-select (`TagsField`) suggesting the tags published problems
 use. Drills, rubric, hints, interview and chaos are `SchemaSection`s: a
 `SchemaForm` drawn from `authoringSchema(section)`, the JSON Schema of the
-validator itself, so a new drill or check kind needs no UI code. A union
-becomes a kind select that keeps the shared fields, an enum list toggle
-chips, an optional group an *Add* button, and a field marked `ref`
-(`drill`, `table`, `collection`, `item`) a select over what the draft
-holds (`draftRefs`). New values start from `default`s and `examples`;
-an issue shows under the field whose path it names. *Edit as JSON*
-stays, for whoever prefers it. An issue's path picks its section (`sectionOf`), which the
-issues list jumps to. *Edit in the designer* opens the linked design at
+validator itself, so a new drill or check kind needs no UI code. A list of
+objects is a column of collapsible rows, each summarised in one line
+(`summaryOf`: its kind, title, id, a weight beside it, and up to four
+facts); a list of up to four plain fields is a table edited in place. A
+union becomes a kind picker that keeps the shared fields, a short enum
+or tri-state boolean a segmented control, a long enum list the chosen
+chips and an *Add* picker, an optional group an *Add* button, and a
+field marked `ref` (`drill`, `table`, `collection`, `item`) a select over
+what the draft holds (`draftRefs`). Numbers carry their unit (`unitOf`):
+seconds are typed as `m:ss`, a share from 0 to 1 as a percentage, and
+`ms`, `×` or `pts` sit inside the input. Help text opens from the label.
+New values start from `default`s and `examples`; an issue shows under the
+field whose path it names. The editor is a full-width page with the
+sections down the left, each with its state, and the issues in a strip
+above them: following one opens the rows on its path and focuses the
+field. *Edit as JSON* stays, for whoever prefers it. *Edit in the designer* opens the linked design at
 `/designs/$designId?draft=…`, whose back link returns to the draft.
 `ForkProblemButton` starts a draft from a published problem, on its start
 screen and in its Task tab.
@@ -404,6 +412,23 @@ Every screen works from 320px wide, and the page never scrolls sideways.
 - Page padding is smaller on phones: `px-4 py-6 sm:p-10`, cards `p-4 sm:p-6`.
 - Check a layout change at 375px and 320px in the browser before calling it
   done.
+
+## Colour and theme
+
+Colours come from the theme's tokens in `styles/globals.css`, never from
+Tailwind's palette: `bg-card`, `text-muted-foreground`, `border-border`,
+and for meaning `interactive` (links, focus, selection), `success`,
+`warning` and `danger`, each with `-surface`, `-border` and `-foreground`
+shades. `primary` is the Ember brand colour, kept for the action that
+matters on a screen. `shadow-card` is the one card shadow, and
+`font-mono` (Geist Mono) is for what a machine typed: ids, slugs, paths.
+Every token has a dark value under `.dark`; `ThemeSync` (in the root
+route) sets the class from the user menu's choice, light, dark or the
+system's, and `index.html` sets it before the first paint. React Flow
+reads its colours from `--xy-*` variables mapped to the same tokens.
+`styles/tokens.test.ts` fails on a palette class outside
+`components/ui`; violet, sky and teal stay allowed for categories on the
+canvas.
 
 ## Naming
 

@@ -19,7 +19,7 @@ interface RunPayload {
 }
 
 const Card = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
-  <li className="flex gap-2 self-center rounded-xl border border-black/[0.06] bg-zinc-50 px-3 py-2 text-xs leading-5 text-muted-foreground">
+  <li className="flex gap-2 self-center rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs leading-5 text-muted-foreground">
     <span className="mt-0.5 shrink-0">{icon}</span>
     <div className="min-w-0 text-pretty">{children}</div>
   </li>
@@ -62,14 +62,11 @@ export function TimelineCard({ event }: TimelineCardProps) {
       <Card
         icon={
           requestedBy === "interviewer" ? (
-            <Flame aria-hidden="true" className="size-3.5 text-orange-600" />
+            <Flame aria-hidden="true" className="size-3.5 text-warning" />
           ) : clean ? (
-            <CircleCheck
-              aria-hidden="true"
-              className="size-3.5 text-emerald-600"
-            />
+            <CircleCheck aria-hidden="true" className="size-3.5 text-success" />
           ) : (
-            <CircleX aria-hidden="true" className="size-3.5 text-red-600" />
+            <CircleX aria-hidden="true" className="size-3.5 text-destructive" />
           )
         }
       >

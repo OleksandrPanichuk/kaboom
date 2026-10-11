@@ -32,7 +32,7 @@ export function TestsPanel({
   if (!outcome) {
     return (
       <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-        <span className="grid size-9 place-items-center rounded-xl bg-indigo-50 text-indigo-700">
+        <span className="grid size-9 place-items-center rounded-xl bg-interactive-surface text-interactive-foreground">
           <FlaskConical aria-hidden="true" className="size-4" />
         </span>
         <p className="text-sm font-medium">No results yet</p>
@@ -60,7 +60,7 @@ export function TestsPanel({
         </p>
       ) : null}
       {tested !== revision ? (
-        <p className="border-b bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-900">
+        <p className="border-b bg-warning-surface px-4 py-3 text-sm leading-5 text-warning-foreground">
           These results are for revision {tested}. The design has changed since.
         </p>
       ) : null}

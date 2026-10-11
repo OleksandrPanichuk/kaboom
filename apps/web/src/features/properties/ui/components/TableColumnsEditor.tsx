@@ -98,7 +98,7 @@ export function TableColumnsEditor({
             return (
               <li
                 key={column.id}
-                className="flex flex-col gap-2 rounded-xl border border-black/[0.07] bg-white p-2.5"
+                className="flex flex-col gap-2 rounded-xl border border-border bg-card p-2.5"
               >
                 <div className="flex min-w-0 gap-2">
                   <div className="min-w-0 flex-1">

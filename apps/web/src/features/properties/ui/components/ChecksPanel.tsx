@@ -24,7 +24,7 @@ export function ChecksPanel({ hits, onShow }: ChecksPanelProps) {
   if (ordered.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-        <span className="grid size-9 place-items-center rounded-xl bg-emerald-50 text-emerald-700">
+        <span className="grid size-9 place-items-center rounded-xl bg-success-surface text-success-foreground">
           <CircleCheck aria-hidden="true" className="size-4" />
         </span>
         <p className="text-sm font-medium">No problems found</p>

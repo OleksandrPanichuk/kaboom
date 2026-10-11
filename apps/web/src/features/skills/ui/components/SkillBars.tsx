@@ -12,11 +12,7 @@ interface SkillBarsProps {
 }
 
 const barTone = (score: number) =>
-  score >= 80
-    ? "bg-emerald-500"
-    : score >= 50
-      ? "bg-indigo-500"
-      : "bg-amber-500";
+  score >= 80 ? "bg-success" : score >= 50 ? "bg-interactive" : "bg-warning";
 
 export function SkillBars({ skills }: SkillBarsProps) {
   return (
@@ -37,7 +33,7 @@ export function SkillBars({ skills }: SkillBarsProps) {
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={skill.score ?? undefined}
-            className="h-1.5 overflow-hidden rounded-full bg-zinc-100"
+            className="h-1.5 overflow-hidden rounded-full bg-muted"
           >
             {skill.score !== null ? (
               <div

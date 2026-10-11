@@ -15,7 +15,7 @@ export function DraftsView({ onOpen }: DraftsViewProps) {
   const create = useMutation(createDraftMutation);
 
   return (
-    <div className="flex-1 bg-zinc-50/70 px-4 py-8 sm:px-8 sm:py-10">
+    <div className="flex-1 bg-background px-4 py-8 sm:px-8 sm:py-10">
       <div className="mx-auto flex max-w-3xl flex-col gap-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-1">
@@ -43,8 +43,8 @@ export function DraftsView({ onOpen }: DraftsViewProps) {
           </p>
         ) : null}
         {drafts.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-black/10 px-6 py-12 text-center">
-            <span className="grid size-10 place-items-center rounded-xl bg-indigo-50 text-indigo-700">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-6 py-12 text-center">
+            <span className="grid size-10 place-items-center rounded-xl bg-interactive-surface text-interactive-foreground">
               <PencilLine aria-hidden="true" className="size-5" />
             </span>
             <p className="max-w-sm text-sm text-muted-foreground text-pretty">

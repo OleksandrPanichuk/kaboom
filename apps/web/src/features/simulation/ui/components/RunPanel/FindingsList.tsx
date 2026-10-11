@@ -63,10 +63,10 @@ export function FindingsList({
 }: FindingsListProps) {
   if (findings.length === 0) {
     return (
-      <div className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-sm">
+      <div className="flex items-start gap-2.5 rounded-xl border border-success-border bg-success-surface/60 p-3 text-sm">
         <CircleCheck
           aria-hidden="true"
-          className="mt-0.5 size-4 shrink-0 text-emerald-600"
+          className="mt-0.5 size-4 shrink-0 text-success"
         />
         <p className="leading-5">
           The design holds up for the whole run: nothing saturates, fails or
@@ -85,7 +85,7 @@ export function FindingsList({
             "flex gap-2.5 rounded-xl border p-3 text-sm",
             finding.kind === "slo-breach" || finding.kind === "errors"
               ? "border-destructive/20 bg-destructive/[0.03]"
-              : "border-amber-200 bg-amber-50/70",
+              : "border-warning-border bg-warning-surface/70",
           )}
         >
           <TriangleAlert
@@ -94,7 +94,7 @@ export function FindingsList({
               "mt-0.5 size-4 shrink-0",
               finding.kind === "slo-breach" || finding.kind === "errors"
                 ? "text-destructive"
-                : "text-amber-600",
+                : "text-warning",
             )}
           />
           <div className="flex min-w-0 flex-1 flex-col gap-1">

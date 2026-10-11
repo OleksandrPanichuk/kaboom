@@ -23,14 +23,14 @@ export function SettingsSection({
   return (
     <section
       className={cn(
-        "grid gap-5 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] sm:p-6 md:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] md:gap-8",
+        "grid gap-5 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6 md:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] md:gap-8",
         tone === "danger" && "border-destructive/20 bg-destructive/[0.025]",
       )}
     >
       <div className="flex items-start gap-3 md:flex-col">
         <span
           className={cn(
-            "grid size-9 shrink-0 place-items-center rounded-xl bg-zinc-100 text-zinc-700",
+            "grid size-9 shrink-0 place-items-center rounded-xl bg-muted text-subtle-foreground",
             tone === "danger" && "bg-destructive/10 text-destructive",
           )}
         >

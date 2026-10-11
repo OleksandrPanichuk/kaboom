@@ -10,11 +10,8 @@ export const DRAFT_SECTIONS = [
   { id: "drills", label: "Drills", keys: ["drills"] },
   { id: "rubric", label: "Rubric", keys: ["rubric"] },
   { id: "hints", label: "Hints", keys: ["hints"] },
-  {
-    id: "advanced",
-    label: "Interview and chaos",
-    keys: ["interview", "chaos"],
-  },
+  { id: "interview", label: "Interview", keys: ["interview"] },
+  { id: "chaos", label: "Chaos", keys: ["chaos"] },
 ] as const;
 
 export type DraftSectionId = (typeof DRAFT_SECTIONS)[number]["id"];
@@ -27,10 +24,12 @@ export const DRAFT_STATUS_LABELS = {
 } as const;
 
 export const DRAFT_STATUS_TONES = {
-  draft: "border-zinc-200 bg-zinc-50 text-zinc-700",
-  "in-review": "border-indigo-200 bg-indigo-50 text-indigo-700",
-  "changes-requested": "border-amber-200 bg-amber-50 text-amber-800",
-  published: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  draft: "border-border bg-muted/60 text-subtle-foreground",
+  "in-review":
+    "border-interactive-border bg-interactive-surface text-interactive-foreground",
+  "changes-requested":
+    "border-warning-border bg-warning-surface text-warning-foreground",
+  published: "border-success-border bg-success-surface text-success-foreground",
 } as const;
 
 export const TRACK_OPTIONS = [

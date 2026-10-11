@@ -63,7 +63,7 @@ export function ScoreBreakdown({
       </p>
       <DesignReviewNote submission={submission} />
       {!submission.counted ? (
-        <p className="-mt-3 text-sm text-amber-800">
+        <p className="-mt-3 text-sm text-warning-foreground">
           Not counted toward points: you looked at other solutions within the
           seven days before.
         </p>
@@ -79,12 +79,12 @@ export function ScoreBreakdown({
             {item.passed ? (
               <CircleCheck
                 aria-label="Earned"
-                className="mt-0.5 size-4 shrink-0 text-emerald-600"
+                className="mt-0.5 size-4 shrink-0 text-success"
               />
             ) : (
               <CircleX
                 aria-label="Missed"
-                className="mt-0.5 size-4 shrink-0 text-red-600"
+                className="mt-0.5 size-4 shrink-0 text-destructive"
               />
             )}
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -105,11 +105,11 @@ export function ScoreBreakdown({
         ))}
       </ul>
       {submission.review ? (
-        <div className="flex flex-col gap-3 rounded-xl border border-black/[0.07] bg-zinc-50/60 p-3">
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/60 p-3">
           <h4 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
             Design review
           </h4>
-          <p className="text-sm leading-6 text-zinc-700 text-pretty">
+          <p className="text-sm leading-6 text-subtle-foreground text-pretty">
             {submission.review.summary}
           </p>
           <ul className="flex flex-col gap-2.5">
@@ -126,7 +126,7 @@ export function ScoreBreakdown({
             ))}
           </ul>
           {submission.review.improvements.length > 0 ? (
-            <ul className="flex list-disc flex-col gap-1 pl-5 text-sm leading-5 text-zinc-700 marker:text-zinc-300">
+            <ul className="flex list-disc flex-col gap-1 pl-5 text-sm leading-5 text-subtle-foreground marker:text-muted-foreground">
               {submission.review.improvements.map((improvement) => (
                 <li key={improvement} className="text-pretty">
                   {improvement}
@@ -168,7 +168,7 @@ function DesignReviewNote({ submission }: ScoreBreakdownProps) {
       >
         <LoaderCircle
           aria-hidden="true"
-          className="size-3.5 animate-spin text-indigo-600"
+          className="size-3.5 animate-spin text-interactive"
         />
         Reviewing the design. The score may move by up to 30 points.
       </p>

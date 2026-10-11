@@ -36,7 +36,7 @@ export function ClientSummary({ graph, step, slo }: ClientSummaryProps) {
         return (
           <li
             key={client.id}
-            className="flex flex-col gap-1.5 rounded-xl border border-black/[0.07] p-3"
+            className="flex flex-col gap-1.5 rounded-xl border border-border p-3"
           >
             <p className="truncate text-sm font-medium">
               {client.label || client.id}

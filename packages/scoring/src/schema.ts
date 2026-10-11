@@ -84,7 +84,7 @@ export const DrillFaultSchema = z.discriminatedUnion("kind", [
       kind: z.literal("latency"),
       select: NodeSelectorSchema,
       ...window,
-      addMs: z.number().min(0).max(600_000),
+      addMs: z.number().min(0).max(600_000).meta({ title: "Added latency" }),
     })
     .meta({
       title: "Added latency",
@@ -270,10 +270,22 @@ export const PipelineDrillSchema = z
   .strictObject({
     kind: z.literal("pipeline"),
     ...drillBase,
-    changedShare: z.number().min(0).max(1).default(1),
+    changedShare: z.number().min(0).max(1).default(1).meta({
+      title: "Changes merged",
+      description: "The share of changes the pipeline runs on, 0 to 1",
+    }),
     expect: z.strictObject({
-      maxLeadTimeMinutes: z.number().positive().optional(),
-      minGreenRate: z.number().min(0).max(1).optional(),
+      maxLeadTimeMinutes: z
+        .number()
+        .positive()
+        .optional()
+        .meta({ title: "Longest lead time" }),
+      minGreenRate: z
+        .number()
+        .min(0)
+        .max(1)
+        .optional()
+        .meta({ title: "Least green runs" }),
       forbid: Forbid,
     }),
   })

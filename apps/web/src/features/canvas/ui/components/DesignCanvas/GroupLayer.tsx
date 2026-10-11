@@ -47,9 +47,10 @@ const ICONS: Record<GroupKind, LucideIcon> = {
 };
 
 const TONES: Partial<Record<GroupKind, string>> = {
-  vpc: "border-zinc-300 bg-zinc-100/40 text-zinc-700",
+  vpc: "border-input bg-muted/40 text-subtle-foreground",
   "public-subnet": "border-sky-300 bg-sky-50/60 text-sky-800",
-  "private-subnet": "border-emerald-300 bg-emerald-50/60 text-emerald-800",
+  "private-subnet":
+    "border-success-border bg-success-surface/60 text-success-foreground",
   database: "border-violet-300 bg-violet-50/50 text-violet-800",
 };
 
@@ -170,7 +171,7 @@ export function GroupLayer({
               aria-pressed={selectedId === group.id}
               aria-label={`${kind} ${group.label}`}
               onClick={() => onSelect(group.id)}
-              className="nodrag nopan pointer-events-auto absolute top-2 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-semibold tracking-wide uppercase hover:bg-white/70 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+              className="nodrag nopan pointer-events-auto absolute top-2 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-semibold tracking-wide uppercase hover:bg-card/70 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
               <Icon aria-hidden="true" className="size-3.5 shrink-0" />
               <span className="truncate">

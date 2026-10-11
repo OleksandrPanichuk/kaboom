@@ -21,7 +21,7 @@ export function DifficultyFilter({ value, onChange }: DifficultyFilterProps) {
     <div
       role="group"
       aria-label="Difficulty"
-      className="flex w-fit gap-1 rounded-xl border border-black/[0.07] bg-white p-1"
+      className="flex w-fit gap-1 rounded-xl border border-border bg-card p-1"
     >
       {OPTIONS.map((option) => (
         <Button
@@ -32,7 +32,7 @@ export function DifficultyFilter({ value, onChange }: DifficultyFilterProps) {
           className={cn(
             "rounded-lg text-muted-foreground",
             value === option.value &&
-              "bg-zinc-900 text-white hover:bg-zinc-900 hover:text-white",
+              "bg-foreground text-background hover:bg-foreground hover:text-background",
           )}
           onClick={() => onChange(option.value)}
         >

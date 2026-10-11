@@ -16,18 +16,18 @@ export function ProblemsTable() {
         Challenges
       </h2>
       {progress.problems.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-black/10 px-4 py-6 text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
           Nothing submitted yet.{" "}
           <Link
             to="/problems"
-            className="font-medium text-indigo-700 hover:underline"
+            className="font-medium text-interactive-foreground hover:underline"
           >
             Pick a problem
           </Link>{" "}
           to start.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-black/[0.07] bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-border bg-card">
           <table className="w-full text-left text-sm">
             <thead className="text-xs text-muted-foreground">
               <tr>
@@ -49,12 +49,12 @@ export function ProblemsTable() {
                     <Link
                       to="/problems/$slug"
                       params={{ slug: problem.slug }}
-                      className="font-medium hover:text-indigo-700 hover:underline"
+                      className="font-medium hover:text-interactive-foreground hover:underline"
                     >
                       {problem.title}
                     </Link>
                     {problem.lockedUntil ? (
-                      <span className="ml-2 rounded-md bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900">
+                      <span className="ml-2 rounded-md bg-warning-surface px-1.5 py-0.5 text-xs font-medium text-warning-foreground">
                         Locked
                       </span>
                     ) : null}

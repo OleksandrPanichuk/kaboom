@@ -18,7 +18,7 @@ describe("draft content", () => {
     expect(sectionOf(["slug"])).toBe("details");
     expect(sectionOf(["drills", 2, "requirements"])).toBe("drills");
     expect(sectionOf(["reference", "graph"])).toBe("reference");
-    expect(sectionOf(["chaos"])).toBe("advanced");
+    expect(sectionOf(["chaos"])).toBe("chaos");
     expect(sectionOf([])).toBe("details");
   });
 

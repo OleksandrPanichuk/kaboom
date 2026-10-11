@@ -24,7 +24,7 @@ export function NextUpCard({ onOpenInterview }: NextUpCardProps) {
   return (
     <section
       aria-labelledby="next-title"
-      className="flex flex-col gap-4 rounded-2xl border border-indigo-200/70 bg-gradient-to-b from-indigo-50/80 to-white p-4 shadow-[0_12px_36px_-28px_rgba(49,46,129,0.5)] sm:p-5"
+      className="flex flex-col gap-4 rounded-2xl border border-interactive-border bg-card p-4 shadow-card sm:p-5"
     >
       {data.next.length > 1 ? (
         <Tabs value={next.track} onValueChange={setTrack}>
@@ -38,11 +38,11 @@ export function NextUpCard({ onOpenInterview }: NextUpCardProps) {
         </Tabs>
       ) : null}
       <div className="flex items-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-indigo-200/60 bg-white text-indigo-700">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-interactive-border/60 bg-card text-interactive-foreground">
           <Compass aria-hidden="true" className="size-4" />
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="text-xs font-medium tracking-wide text-indigo-700 uppercase">
+          <p className="text-xs font-medium tracking-wide text-interactive-foreground uppercase">
             Next up
           </p>
           <h2
@@ -51,7 +51,7 @@ export function NextUpCard({ onOpenInterview }: NextUpCardProps) {
           >
             {next.title}
           </h2>
-          <p className="text-sm leading-6 text-zinc-700 text-pretty">
+          <p className="text-sm leading-6 text-subtle-foreground text-pretty">
             {next.reason}
           </p>
         </div>

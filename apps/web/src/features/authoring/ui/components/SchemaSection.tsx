@@ -1,12 +1,13 @@
 import { authoringSchema, type AuthoringSection } from "@repo/scoring";
 import { Braces, ListTree, Plus, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { defaultOf } from "@/features/authoring/utils";
 
+import { EditorSection } from "./EditorSection";
 import { JsonField } from "./JsonField";
-import { SchemaForm } from "./SchemaForm";
+import { SchemaForm, type SchemaFormReveal } from "./SchemaForm";
 
 interface Issue {
   path: Array<string | number>;
@@ -14,71 +15,91 @@ interface Issue {
 }
 
 interface SchemaSectionProps {
+  id: string;
+  title: string;
+  description: string;
   section: AuthoringSection;
   noun: string;
   value: unknown;
   refs: Readonly<Record<string, readonly string[]>>;
   issues: readonly Issue[];
+  issueCount: number;
+  reveal: SchemaFormReveal | null;
   optional?: boolean;
+  extra?: ReactNode;
   onChange: (value: unknown) => void;
 }
 
 export function SchemaSection({
+  id,
+  title,
+  description,
   section,
   noun,
   value,
   refs,
   issues,
+  issueCount,
+  reveal,
   optional = false,
+  extra,
   onChange,
 }: SchemaSectionProps) {
   const schema = useMemo(() => authoringSchema(section), [section]);
   const [raw, setRaw] = useState(false);
-
-  if (optional && value === undefined) {
-    return (
-      <Button
-        type="button"
-        variant="outline"
-        className="self-start"
-        onClick={() => onChange(defaultOf(schema))}
-      >
-        <Plus aria-hidden="true" />
-        Add {noun}
-      </Button>
-    );
-  }
+  const absent = optional && value === undefined;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap justify-end gap-1">
+    <EditorSection
+      id={id}
+      title={title}
+      description={description}
+      issues={issueCount}
+      actions={
+        absent ? null : (
+          <>
+            {extra}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-pressed={raw}
+              className="text-interactive-foreground"
+              onClick={() => setRaw((current) => !current)}
+            >
+              {raw ? (
+                <ListTree aria-hidden="true" />
+              ) : (
+                <Braces aria-hidden="true" />
+              )}
+              {raw ? "Edit as a form" : "Edit as JSON"}
+            </Button>
+            {optional ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onChange(undefined)}
+              >
+                <Trash2 aria-hidden="true" />
+                Remove
+              </Button>
+            ) : null}
+          </>
+        )
+      }
+    >
+      {absent ? (
         <Button
           type="button"
-          variant="ghost"
-          size="sm"
-          aria-pressed={raw}
-          onClick={() => setRaw((current) => !current)}
+          variant="outline"
+          className="self-start"
+          onClick={() => onChange(defaultOf(schema))}
         >
-          {raw ? (
-            <ListTree aria-hidden="true" />
-          ) : (
-            <Braces aria-hidden="true" />
-          )}
-          {raw ? "Edit as a form" : "Edit as JSON"}
+          <Plus aria-hidden="true" />
+          Add {noun}
         </Button>
-        {optional ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onChange(undefined)}
-          >
-            <Trash2 aria-hidden="true" />
-            Remove {noun}
-          </Button>
-        ) : null}
-      </div>
-      {raw ? (
+      ) : raw ? (
         <JsonField
           label={noun}
           description="The same content as the form, as the API stores it."
@@ -94,9 +115,10 @@ export function SchemaSection({
           path={[section]}
           refs={refs}
           issues={issues}
+          reveal={reveal}
           onChange={onChange}
         />
       )}
-    </div>
+    </EditorSection>
   );
 }

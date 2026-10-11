@@ -34,7 +34,7 @@ export function ProblemsView({ filter, onFilterChange }: ProblemsViewProps) {
         />
       </div>
       {problems.items.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-black/10 px-4 py-10 text-center text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
           No problems match these filters yet.
         </p>
       ) : (

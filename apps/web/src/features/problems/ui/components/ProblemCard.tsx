@@ -18,7 +18,7 @@ interface ProblemCardProps {
 
 export function ProblemCard({ problem, progress }: ProblemCardProps) {
   return (
-    <li className="relative flex min-w-0 flex-col gap-3 rounded-2xl border border-black/[0.07] bg-white p-4 shadow-[0_12px_36px_-28px_rgba(24,24,27,0.45)] transition-colors hover:border-indigo-200 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50 sm:p-5">
+    <li className="relative flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-card transition-colors hover:border-interactive-border has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50 sm:p-5">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
           <p className="text-xs font-medium text-muted-foreground">
@@ -45,14 +45,14 @@ export function ProblemCard({ problem, progress }: ProblemCardProps) {
           {problem.tags.map((tag) => (
             <li
               key={tag}
-              className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-700"
+              className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-subtle-foreground"
             >
               {tag}
             </li>
           ))}
         </ul>
         {progress?.lockedUntil ? (
-          <p className="shrink-0 text-sm text-amber-800">
+          <p className="shrink-0 text-sm text-warning-foreground">
             Counts again {formatSubmittedAt(progress.lockedUntil)}
           </p>
         ) : progress && progress.submissions > 0 ? (

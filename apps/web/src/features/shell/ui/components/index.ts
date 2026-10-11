@@ -1,6 +1,7 @@
 export * from "./AccountMenuContent";
 export * from "./AppSidebar";
 export * from "./ShellHeader";
+export * from "./ThemeSync";
 export * from "./UserAvatar";
 export * from "./UserMenu";
 export * from "./WorkspaceCompact";

@@ -61,13 +61,13 @@ export function TagsField({ value, onChange }: TagsFieldProps) {
           {value.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center gap-1 rounded-full bg-indigo-50 py-0.5 pr-1 pl-2 text-xs font-medium text-indigo-800"
+              className="inline-flex items-center gap-1 rounded-full bg-interactive-surface py-0.5 pr-1 pl-2 text-xs font-medium text-interactive-foreground"
             >
               {tag}
               <button
                 type="button"
                 aria-label={`Remove ${tag}`}
-                className="grid size-4 place-items-center rounded-full hover:bg-indigo-100"
+                className="grid size-4 place-items-center rounded-full hover:bg-interactive-surface"
                 onClick={() => onChange(value.filter((item) => item !== tag))}
               >
                 <X aria-hidden="true" className="size-3" />
@@ -112,7 +112,7 @@ export function TagsField({ value, onChange }: TagsFieldProps) {
               <li key={tag} role="option" aria-selected={false}>
                 <button
                   type="button"
-                  className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+                  className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
                   onMouseDown={(event) => {
                     event.preventDefault();
                     add(tag);
