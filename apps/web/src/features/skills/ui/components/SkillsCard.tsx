@@ -7,7 +7,9 @@ import { SkillBars } from "./SkillBars";
 
 export function SkillsCard() {
   const { data } = useSuspenseQuery(skillsQuery);
-  const reviewed = data.skills.some((skill) => skill.score !== null);
+  const scored = data.skills.filter((skill) => skill.score !== null);
+  const unscored = data.skills.filter((skill) => skill.score === null);
+  const reviewed = scored.length > 0;
 
   return (
     <section
@@ -29,7 +31,13 @@ export function SkillsCard() {
           </p>
         </div>
       </div>
-      <SkillBars skills={data.skills} />
+      {reviewed ? <SkillBars skills={scored} /> : null}
+      {unscored.length > 0 && reviewed ? (
+        <p className="text-xs text-muted-foreground text-pretty">
+          Not scored yet:{" "}
+          {unscored.map((skill) => skill.label.toLowerCase()).join(", ")}.
+        </p>
+      ) : null}
     </section>
   );
 }

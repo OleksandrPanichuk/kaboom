@@ -6,4 +6,5 @@ export * from "./markColor";
 export * from "./mergeFlowNodes";
 export * from "./nodeSize";
 export * from "./paletteTracks";
+export * from "./searchPalette";
 export * from "./toFlow";

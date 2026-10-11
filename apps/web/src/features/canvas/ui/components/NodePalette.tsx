@@ -5,8 +5,10 @@ import {
   TRACK_LABELS,
 } from "@repo/design";
 import { useReactFlow } from "@xyflow/react";
-import type { DragEvent } from "react";
+import { Search } from "lucide-react";
+import { type DragEvent, useState } from "react";
 
+import { Input } from "@/components/ui/Input";
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +28,7 @@ import {
   TABLE_ROW_HEIGHT,
   TABLE_WIDTH,
 } from "@/features/canvas/constants";
-import { findFreeSpot } from "@/features/canvas/utils";
+import { findFreeSpot, searchPalette } from "@/features/canvas/utils";
 import { useWorkspacePanels } from "@/features/shell";
 
 interface NodePaletteProps {
@@ -55,6 +57,8 @@ const paletteFor = (tracks: readonly Track[] | undefined): PaletteGroup[] => {
 export function NodePalette({ tracks, onAdd }: NodePaletteProps) {
   const flow = useReactFlow();
   const { closePanels } = useWorkspacePanels();
+  const [query, setQuery] = useState("");
+  const groups = searchPalette(paletteFor(tracks), query);
 
   const addInTheMiddle = (kind: NodeKind) => {
     const canvas = document.getElementById(CANVAS_ELEMENT_ID);
@@ -91,14 +95,35 @@ export function NodePalette({ tracks, onAdd }: NodePaletteProps) {
 
   return (
     <TooltipProvider delay={500}>
-      <div className="flex flex-col gap-5 p-3">
-        <p className="px-1 text-xs leading-5 text-muted-foreground">
-          Drag a node onto the canvas, or click it to place it in the middle.
-        </p>
-        {paletteFor(tracks).map((group, index, shown) => (
+      <div className="flex flex-col gap-4 p-3">
+        <div className="flex flex-col gap-2">
+          <div className="relative">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              type="search"
+              aria-label="Find a node"
+              placeholder="Find a node"
+              value={query}
+              className="bg-card pl-8"
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
+          <p className="px-1 text-xs leading-5 text-muted-foreground">
+            Drag a node onto the canvas, or click it to place it in the middle.
+          </p>
+        </div>
+        {groups.length === 0 ? (
+          <p className="px-1 text-sm text-muted-foreground">
+            No node matches “{query.trim()}”.
+          </p>
+        ) : null}
+        {groups.map((group, index, shown) => (
           <section
             key={`${group.track}:${group.label}`}
-            className="flex flex-col gap-1"
+            className="flex flex-col gap-0.5"
           >
             {(tracks === undefined || tracks.length > 1) &&
             shown[index - 1]?.track !== group.track ? (
@@ -106,10 +131,10 @@ export function NodePalette({ tracks, onAdd }: NodePaletteProps) {
                 {TRACK_LABELS[group.track]}
               </h2>
             ) : null}
-            <h3 className="px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            <h3 className="px-1 pb-0.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
               {group.label}
             </h3>
-            <ul className="flex flex-col gap-1">
+            <ul className="flex flex-col">
               {group.kinds.map((kind) => {
                 const definition = catalogue[kind];
                 const Icon = NODE_KIND_ICONS[kind];
@@ -123,10 +148,10 @@ export function NodePalette({ tracks, onAdd }: NodePaletteProps) {
                         onDragStart={(event) => startDrag(event, kind)}
                         onClick={() => addInTheMiddle(kind)}
                         aria-label={`Add ${definition.label}`}
-                        className="flex w-full cursor-grab items-center gap-2.5 rounded-lg border border-transparent p-1.5 text-left text-sm transition-colors hover:border-border hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none active:cursor-grabbing"
+                        className="flex w-full cursor-grab items-center gap-2.5 rounded-lg border border-transparent px-1.5 py-1 text-left text-sm transition-colors hover:border-border hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none active:cursor-grabbing"
                       >
-                        <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-interactive-border/60 bg-interactive-surface text-interactive-foreground">
-                          <Icon aria-hidden="true" className="size-4" />
+                        <span className="grid size-7 shrink-0 place-items-center rounded-md border border-interactive-border/60 bg-interactive-surface text-interactive-foreground">
+                          <Icon aria-hidden="true" className="size-3.5" />
                         </span>
                         <span className="truncate font-medium">
                           {definition.label}
