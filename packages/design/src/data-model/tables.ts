@@ -69,26 +69,6 @@ export const relationsOf = (graph: DesignGraph): ResolvedRelation[] => {
   });
 };
 
-export const keyOrders = (table: TableNode): string[][] => {
-  const key = primaryKeyOf(table).map((column) => column.id);
-
-  return [
-    ...(key.length > 0 ? [key] : []),
-    ...table.props.columns
-      .filter((column) => column.unique)
-      .map((column) => [column.id]),
-    ...table.props.indexes.map((index) => index.columns),
-  ];
-};
-
-export const leadsWith = (order: string[], columnIds: string[]): boolean =>
-  columnIds.length > 0 &&
-  columnIds.length <= order.length &&
-  columnIds.every((id) => order.slice(0, columnIds.length).includes(id));
-
-export const indexedBy = (table: TableNode, columnIds: string[]): boolean =>
-  keyOrders(table).some((order) => leadsWith(order, columnIds));
-
 export const uniqueOver = (table: TableNode, columnIds: string[]): boolean => {
   const wanted = new Set(columnIds);
   const covers = (order: string[]) =>
@@ -99,7 +79,10 @@ export const uniqueOver = (table: TableNode, columnIds: string[]): boolean => {
     table.props.columns.some(
       (column) => column.unique && wanted.has(column.id),
     ) ||
-    table.props.indexes.some((index) => index.unique && covers(index.columns))
+    table.props.indexes.some(
+      (index) =>
+        index.unique && index.where === undefined && covers(index.columns),
+    )
   );
 };
 
@@ -124,7 +107,10 @@ export const isKeyExactly = (
       table.props.columns.some(
         (column) => column.unique && column.id === columnIds[0],
       )) ||
-    table.props.indexes.some((index) => index.unique && same(index.columns))
+    table.props.indexes.some(
+      (index) =>
+        index.unique && index.where === undefined && same(index.columns),
+    )
   );
 };
 

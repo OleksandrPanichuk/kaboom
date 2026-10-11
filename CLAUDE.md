@@ -817,6 +817,21 @@ against the hash its revision stored, so a bump would break the history of
 every design. `graph/stored.test.ts` pins that what was stored before parses
 to exactly the same graph. Keep it that way.
 
+An index may name a `method` (`btree` by default, `hash`, `gin`, `gist`,
+`brin`, `fulltext`), columns indexed as `lower(...)` or descending, `include`
+columns and a partial `where` filter; a foreign key may add `onUpdate` and
+`deferrable`, which a patch removes with `null` so undo restores an absent
+rule. `data-model/indexes.ts` decides whether a table serves a lookup
+(`servesLookup`): equality, case-insensitive equality through `lower`, a
+range after the equality columns in a btree, `contains` and text search
+through GIN or `FULLTEXT`, an order after the lookup, and a partial index
+only for its own filter. The lints, the evaluator and the problems all ask
+it. `toDDL` writes each database in its engine's dialect: PostgreSQL enums
+as `CREATE TYPE`, identities as `GENERATED … AS IDENTITY`,
+`AUTO_INCREMENT` or SQLite's `INTEGER PRIMARY KEY AUTOINCREMENT`, defaults,
+checks, MySQL's `ON UPDATE CURRENT_TIMESTAMP`, and SQLite's foreign keys
+inside `CREATE TABLE`, since it cannot add them afterwards.
+
 What a table can answer lives in `data-model/tables.ts`: its primary key,
 whether a lookup's columns lead a key or an index (`indexedBy`), whether a
 set of columns is unique (`uniqueOver`), and every relation resolved to its

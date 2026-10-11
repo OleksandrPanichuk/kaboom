@@ -43,7 +43,15 @@ otherwise it is many-to-one.
 
 The table has a column of that name. When the requirement says so, it has
 that type, is unique on its own (as `uniqueOver` decides) or is not, and is
-nullable or is not.
+nullable or is not. Beyond those:
+
+- `maxLength`: a `varchar` or `char` whose length is at most that. A
+  `text` column, or one without a length, holds any amount and fails.
+- `defaultsTo`: a default of `now` or of a new `uuid`.
+- `generatesItself`: an identity, or a default of a new uuid, so an insert
+  never has to supply it.
+- `values`: an `enum` with exactly those values, or a text column whose
+  `checks.in` holds exactly those.
 
 ## Queries
 
@@ -59,6 +67,25 @@ lead the primary key, a unique column or an index. A step from a parent to
 its children looks the child up by its foreign key; a step to a parent, or
 to the other side of a junction, looks a row up by its key, which is always
 indexed.
+
+A query may also carry a `match` on a column of `from`, beside or instead
+of `by`, and a `where` filter on the last table:
+
+- `case-insensitive`: served by an index on `lower(column)`, and by
+  nothing else; a plain index does not answer `lower(email) = ?`.
+- `range`: a btree whose next column, after the equality columns, is the
+  range column. A hash index never serves a range.
+- `contains`: a GIN index on the column (a `jsonb` document or an array).
+- `text-search`: a GIN index, or MySQL's `FULLTEXT`.
+- `where` (`=`, `!=`, `is-null`, `is-not-null`): a partial index serves the
+  query only when its filter is the same one, and no other query. Without
+  a partial index, an `=` or `is-null` filter may lead an ordinary btree as
+  an equality column; a filter that is the whole lookup and is `!=` or
+  `is-not-null` needs a partial index.
+
+Every lookup reads the primary key and unique columns as btree indexes. A
+partial unique index never makes a column unique for a foreign key or a
+cardinality, since it guarantees uniqueness only inside its filter.
 
 `orderBy` names columns of the last table. It is checked only when the
 last lookup reads many rows of one table, a lookup on `from` alone or a

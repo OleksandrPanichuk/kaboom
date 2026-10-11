@@ -317,7 +317,7 @@ describe("queries", () => {
     expect(evaluate(unordered, query).checks.at(-1)).toMatchObject({
       passed: false,
       finding: "unindexed-query",
-      actual: "posts has no index on (author_id, created_at)",
+      actual: "posts has no index for (author_id) ordered by created_at",
     });
   });
 
@@ -422,5 +422,72 @@ describe("findings", () => {
       "keyless-table",
       "fk-type-mismatch",
     ]);
+  });
+});
+
+describe("production columns and queries", () => {
+  const accounts = (
+    columns: Parameters<typeof table>[1],
+    indexes: Parameters<typeof table>[2] = [],
+  ) => graphOf([table("accounts", columns, indexes)], []);
+
+  test("a bounded length, a default, a self-generated id and allowed values", () => {
+    const graph = accounts([
+      {
+        ...column("id", "bigint", { primaryKey: true }),
+        generated: { kind: "identity", always: true },
+      },
+      { ...column("email", "varchar"), length: 254 },
+      { ...column("created_at", "timestamptz"), default: { kind: "now" } },
+      { ...column("status", "enum"), values: ["active", "closed"] },
+      column("note", "text"),
+    ]);
+    const result = evaluate(graph, {
+      columns: [
+        { table: "accounts", name: "id", generatesItself: true },
+        { table: "accounts", name: "email", maxLength: 254 },
+        { table: "accounts", name: "created_at", defaultsTo: "now" },
+        { table: "accounts", name: "status", values: ["closed", "active"] },
+        { table: "accounts", name: "note", maxLength: 500 },
+      ],
+    });
+
+    expect(verdicts(result)).toEqual([
+      ["accounts.id", true, null],
+      ["accounts.email", true, null],
+      ["accounts.created_at", true, null],
+      ["accounts.status", true, null],
+      ["accounts.note", false, "column-mismatch"],
+    ]);
+    expect(result.checks[4]?.message).toBe(
+      "accounts.note has no length, so any amount of text fits.",
+    );
+  });
+
+  test("a case-insensitive lookup is served only by an index on lower()", () => {
+    const query = {
+      queries: [
+        {
+          id: "sign-in",
+          title: "Sign in by email, whatever its case",
+          from: "accounts",
+          match: { column: "email", kind: "case-insensitive" },
+        },
+      ],
+    };
+    const plain = accounts([
+      column("id", "bigint", { primaryKey: true }),
+      column("email", "text", { unique: true }),
+    ]);
+    const lowered = accounts(
+      [column("id", "bigint", { primaryKey: true }), column("email", "text")],
+      [{ ...index("lower_email", ["email"], true), lower: ["email"] }],
+    );
+
+    expect(evaluate(plain, query).checks[0]).toMatchObject({
+      passed: false,
+      actual: "accounts has no index for (lower(email))",
+    });
+    expect(evaluate(lowered, query).checks[0]?.passed).toBe(true);
   });
 });

@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { COLUMN_TYPES } from "../../catalogue";
+import { COLUMN_TYPES, FILTER_OPERATORS } from "../../catalogue";
 
 const TableRef = z.string().min(1).max(64);
 const ColumnRef = z
@@ -36,17 +36,48 @@ export const ColumnRequirementSchema = z.strictObject({
   type: z.enum(COLUMN_TYPES).optional(),
   unique: z.boolean().optional(),
   nullable: z.boolean().optional(),
+  maxLength: z.number().int().min(1).max(10_485_760).optional(),
+  defaultsTo: z.enum(["now", "uuid"]).optional(),
+  generatesItself: z.literal(true).optional(),
+  values: z.array(z.string().min(1).max(63)).min(1).max(64).optional(),
 });
 export type ColumnRequirement = z.output<typeof ColumnRequirementSchema>;
 
-export const QueryRequirementSchema = z.strictObject({
-  id: z.string().min(1).max(64),
-  title: z.string().min(1).max(160),
-  from: TableRef,
-  by: z.array(ColumnRef).min(1).max(4),
-  to: TableRef.optional(),
-  orderBy: z.array(ColumnRef).max(3).default([]),
-});
+export const QUERY_MATCHES = [
+  "case-insensitive",
+  "range",
+  "contains",
+  "text-search",
+] as const;
+
+export type QueryMatch = (typeof QUERY_MATCHES)[number];
+
+export const QueryRequirementSchema = z
+  .strictObject({
+    id: z.string().min(1).max(64),
+    title: z.string().min(1).max(160),
+    from: TableRef,
+    by: z.array(ColumnRef).max(4).default([]),
+    match: z
+      .strictObject({ column: ColumnRef, kind: z.enum(QUERY_MATCHES) })
+      .optional(),
+    to: TableRef.optional(),
+    where: z
+      .strictObject({
+        column: ColumnRef,
+        op: z.enum(FILTER_OPERATORS),
+        value: z.string().min(1).max(255).optional(),
+      })
+      .optional(),
+    orderBy: z.array(ColumnRef).max(3).default([]),
+  })
+  .refine(
+    (query) =>
+      query.by.length > 0 ||
+      query.match !== undefined ||
+      query.where !== undefined,
+    "A query looks rows up by a column, a match or a filter",
+  );
 export type QueryRequirement = z.output<typeof QueryRequirementSchema>;
 
 export const SchemaRequirementsSchema = z.strictObject({

@@ -2,7 +2,8 @@ import { describe, expect, test } from "bun:test";
 
 import { type DesignGraph, emptyGraph } from "../graph";
 import { column, index, references, table } from "./fixtures";
-import { indexedBy, isOneToOne, relationsOf, uniqueOver } from "./tables";
+import { indexedBy } from "./indexes";
+import { isOneToOne, relationsOf, uniqueOver } from "./tables";
 
 const tags = table(
   "post_tags",

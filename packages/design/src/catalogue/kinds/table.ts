@@ -2,7 +2,7 @@ import z from "zod";
 
 import { defineNodeKind } from "../define-node-kind";
 import { prop } from "../prop-meta";
-import { ColumnSchema, IndexSchema } from "./columns";
+import { ColumnSchema, IndexSchema, TEXT_TYPES } from "./columns";
 
 export const MAX_COLUMNS = 64;
 export const MAX_INDEXES = 32;
@@ -99,6 +99,78 @@ export const tableKind = defineNodeKind({
             path: ["indexes", position, "columns"],
             message: "names a column twice",
           });
+        }
+
+        const flag = (path: string, message: string) =>
+          context.addIssue({
+            code: "custom",
+            path: ["indexes", position, path],
+            message,
+          });
+        const byId = new Map(columns.map((column) => [column.id, column]));
+        const method = tableIndex.method ?? "btree";
+
+        for (const columnId of [
+          ...(tableIndex.lower ?? []),
+          ...(tableIndex.descending ?? []),
+        ]) {
+          if (!tableIndex.columns.includes(columnId)) {
+            flag("columns", `marks ${columnId}, which it does not index`);
+          }
+        }
+
+        for (const columnId of tableIndex.lower ?? []) {
+          const column = byId.get(columnId);
+
+          if (column && !TEXT_TYPES.has(column.type)) {
+            flag("lower", `lowers ${column.name}, which is not text`);
+          }
+        }
+
+        for (const columnId of tableIndex.include ?? []) {
+          if (!byId.has(columnId)) {
+            flag("include", `includes no column ${columnId}`);
+          } else if (tableIndex.columns.includes(columnId)) {
+            flag("include", `includes ${columnId}, which it already indexes`);
+          }
+        }
+
+        const { where } = tableIndex;
+
+        if (where) {
+          if (!byId.has(where.column)) {
+            flag("where", `filters on no column ${where.column}`);
+          }
+
+          const needsValue = where.op === "=" || where.op === "!=";
+
+          if (needsValue !== (where.value !== undefined)) {
+            flag(
+              "where",
+              needsValue
+                ? "compares to no value"
+                : "compares to a value it cannot use",
+            );
+          }
+        }
+
+        if (tableIndex.unique && method !== "btree" && method !== "hash") {
+          flag("unique", `is a ${method} index, which cannot be unique`);
+        }
+
+        if (
+          method !== "btree" &&
+          (tableIndex.descending !== undefined ||
+            tableIndex.include !== undefined)
+        ) {
+          flag(
+            "method",
+            `orders or includes columns, which only a btree index does`,
+          );
+        }
+
+        if (method === "hash" && tableIndex.columns.length > 1) {
+          flag("method", "hashes several columns, which a hash index cannot");
         }
       }
     }),
