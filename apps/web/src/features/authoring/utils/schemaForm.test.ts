@@ -82,6 +82,8 @@ describe("a schema form", () => {
   });
 
   test("turns keys into labels", () => {
+    expect(humanize("sql-database")).toBe("SQL database");
+    expect(humanize("slo-breach")).toBe("SLO breach");
     expect(humanize("durationSeconds")).toBe("Duration seconds");
     expect(humanize("key-value")).toBe("Key value");
   });

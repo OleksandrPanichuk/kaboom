@@ -10,11 +10,8 @@ export const DRAFT_SECTIONS = [
   { id: "drills", label: "Drills", keys: ["drills"] },
   { id: "rubric", label: "Rubric", keys: ["rubric"] },
   { id: "hints", label: "Hints", keys: ["hints"] },
-  {
-    id: "advanced",
-    label: "Interview and chaos",
-    keys: ["interview", "chaos"],
-  },
+  { id: "interview", label: "Interview", keys: ["interview"] },
+  { id: "chaos", label: "Chaos", keys: ["chaos"] },
 ] as const;
 
 export type DraftSectionId = (typeof DRAFT_SECTIONS)[number]["id"];

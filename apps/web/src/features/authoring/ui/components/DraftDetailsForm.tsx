@@ -1,14 +1,8 @@
 import { useId } from "react";
 
+import { SegmentedControl } from "@/components/SegmentedControl";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import {
   DIFFICULTY_OPTIONS,
@@ -24,49 +18,6 @@ interface DraftDetailsFormProps {
   onChange: (key: string, value: unknown) => void;
 }
 
-interface Option {
-  value: string;
-  label: string;
-}
-
-function Choice({
-  id,
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  options: readonly Option[];
-  onChange: (value: string) => void;
-}) {
-  return (
-    <Field>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <Select
-        value={value}
-        onValueChange={(next) => {
-          if (typeof next === "string") onChange(next);
-        }}
-        items={[...options]}
-      >
-        <SelectTrigger id={id} className="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </Field>
-  );
-}
-
 export function DraftDetailsForm({
   content,
   locked,
@@ -78,9 +29,11 @@ export function DraftDetailsForm({
     : [];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <Field className="sm:col-span-2">
-        <FieldLabel htmlFor={`${id}-title`}>Title</FieldLabel>
+    <div className="grid gap-x-6 gap-y-5 lg:grid-cols-2">
+      <Field data-path="title" className="gap-1.5">
+        <FieldLabel htmlFor={`${id}-title`} className="text-subtle-foreground">
+          Title
+        </FieldLabel>
         <Input
           id={`${id}-title`}
           value={textOf(content, "title")}
@@ -88,42 +41,69 @@ export function DraftDetailsForm({
           onChange={(event) => onChange("title", event.target.value)}
         />
       </Field>
-      <Field className="sm:col-span-2">
-        <FieldLabel htmlFor={`${id}-slug`}>Slug</FieldLabel>
-        <Input
-          id={`${id}-slug`}
-          value={textOf(content, "slug")}
-          disabled={locked.slug}
-          spellCheck={false}
-          onChange={(event) =>
-            onChange("slug", event.target.value.toLowerCase())
-          }
-        />
+      <Field data-path="slug" className="gap-1.5">
+        <FieldLabel htmlFor={`${id}-slug`} className="text-subtle-foreground">
+          Address
+        </FieldLabel>
+        <div className="flex min-w-0 items-center rounded-lg border border-input focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 has-disabled:opacity-60">
+          <span className="shrink-0 pl-2.5 font-mono text-sm text-muted-foreground">
+            /problems/
+          </span>
+          <Input
+            id={`${id}-slug`}
+            value={textOf(content, "slug")}
+            disabled={locked.slug}
+            spellCheck={false}
+            className="border-0 pl-0.5 font-mono focus-visible:ring-0 disabled:bg-transparent"
+            onChange={(event) =>
+              onChange("slug", event.target.value.toLowerCase())
+            }
+          />
+        </div>
         <FieldDescription>
           {locked.slug
             ? "A published problem keeps its address."
-            : "Its address, /problems/…; lowercase words joined by hyphens."}
+            : "Lowercase words joined by hyphens."}
         </FieldDescription>
       </Field>
-      <Choice
-        id={`${id}-track`}
-        label="Track"
-        value={textOf(content, "track")}
-        options={TRACK_OPTIONS}
-        onChange={(value) => onChange("track", value)}
-      />
-      <Choice
-        id={`${id}-difficulty`}
-        label="Difficulty"
-        value={textOf(content, "difficulty")}
-        options={DIFFICULTY_OPTIONS}
-        onChange={(value) => onChange("difficulty", value)}
-      />
-      <div className="sm:col-span-2">
+      <Field data-path="track" className="gap-1.5">
+        <span className="text-sm font-medium text-subtle-foreground">
+          Track
+        </span>
+        <div>
+          <SegmentedControl
+            name={`${id}-track`}
+            label="Track"
+            value={textOf(content, "track")}
+            options={TRACK_OPTIONS}
+            onChange={(value) => onChange("track", value)}
+          />
+        </div>
+      </Field>
+      <Field data-path="difficulty" className="gap-1.5">
+        <span className="text-sm font-medium text-subtle-foreground">
+          Difficulty
+        </span>
+        <div>
+          <SegmentedControl
+            name={`${id}-difficulty`}
+            label="Difficulty"
+            value={textOf(content, "difficulty")}
+            options={DIFFICULTY_OPTIONS}
+            onChange={(value) => onChange("difficulty", value)}
+          />
+        </div>
+      </Field>
+      <div data-path="tags" className="lg:col-span-2">
         <TagsField value={tags} onChange={(next) => onChange("tags", next)} />
       </div>
-      <Field className="sm:col-span-2">
-        <FieldLabel htmlFor={`${id}-summary`}>Summary</FieldLabel>
+      <Field data-path="summary" className="gap-1.5 lg:col-span-2">
+        <FieldLabel
+          htmlFor={`${id}-summary`}
+          className="text-subtle-foreground"
+        >
+          Summary
+        </FieldLabel>
         <Textarea
           id={`${id}-summary`}
           value={textOf(content, "summary")}
