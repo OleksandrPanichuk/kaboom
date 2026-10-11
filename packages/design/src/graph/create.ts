@@ -4,6 +4,7 @@ import {
   EdgePropsSchema,
   type Engine,
   type NodeKind,
+  type Reference,
   type Relation,
 } from "../catalogue";
 import {
@@ -49,6 +50,7 @@ export interface CreateEdgeOptions {
   kind: EdgeKind;
   label?: string;
   relation?: Relation;
+  reference?: Reference;
 }
 
 export const createEdge = ({
@@ -58,6 +60,7 @@ export const createEdge = ({
   kind,
   label = "",
   relation,
+  reference,
 }: CreateEdgeOptions): DesignEdge => ({
   id,
   from,
@@ -66,6 +69,7 @@ export const createEdge = ({
   label,
   props: EdgePropsSchema.parse({}),
   ...(relation ? { relation } : {}),
+  ...(reference ? { reference } : {}),
 });
 
 export interface CreateGroupOptions {

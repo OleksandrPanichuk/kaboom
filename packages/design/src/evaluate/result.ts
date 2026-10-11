@@ -84,6 +84,12 @@ export const FINDING_KINDS = [
   "fk-type-mismatch",
   "set-null-not-nullable",
   "engine-unsupported",
+  "missing-collection",
+  "missing-field",
+  "not-embedded",
+  "unbounded-array",
+  "missing-unique",
+  "missing-ttl",
 ] as const;
 
 export type FindingKind = (typeof FINDING_KINDS)[number];
@@ -129,7 +135,14 @@ export interface ConnectionCheck {
 }
 
 export interface RequirementCheck {
-  requirement: "relationship" | "column" | "query";
+  requirement:
+    | "relationship"
+    | "column"
+    | "query"
+    | "embedded"
+    | "reference"
+    | "unique"
+    | "ttl";
   label: string;
   expected: string;
   actual: string;

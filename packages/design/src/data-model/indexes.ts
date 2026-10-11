@@ -83,8 +83,7 @@ const prefixLength = (index: IndexLike, lookup: Lookup): number | null => {
   }
 
   const fits = (column: string) =>
-    required.has(column) &&
-    lowered.has(column) === index.lower.has(column);
+    required.has(column) && lowered.has(column) === index.lower.has(column);
 
   for (let length = 0; length <= index.columns.length; length += 1) {
     const prefix = index.columns.slice(0, length);

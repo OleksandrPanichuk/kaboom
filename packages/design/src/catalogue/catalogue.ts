@@ -7,6 +7,7 @@ import {
   cacheKind,
   cdnKind,
   clientKind,
+  collectionKind,
   configMapKind,
   coordinationKind,
   dnsKind,
@@ -66,6 +67,7 @@ export const catalogue = {
   [securityGroupKind.kind]: securityGroupKind,
   [natGatewayKind.kind]: natGatewayKind,
   [tableKind.kind]: tableKind,
+  [collectionKind.kind]: collectionKind,
 } as const;
 
 export type Catalogue = typeof catalogue;

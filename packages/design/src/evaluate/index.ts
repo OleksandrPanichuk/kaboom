@@ -1,3 +1,4 @@
+export * from "./documents";
 export { evaluate, type ScenarioInput } from "./evaluate";
 export { evaluateLoad } from "./load";
 export { evaluateNetwork } from "./network";

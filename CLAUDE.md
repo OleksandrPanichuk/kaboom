@@ -836,6 +836,21 @@ must stay possible, so the `cross-database-relation` lint names it rather
 than `applyOps` refusing it, and `toDDL` writes only the keys inside each
 database.
 
+A **collection** holds MongoDB documents and lives only in a `mongodb`
+database. Its `fields` are a tree: scalars, an `object` with fields of its
+own, and an `array` that says what it holds (`of`), objects included, at
+most four levels deep. Its `indexes` have keys with a direction (or
+`text`), `unique`, `sparse`, a TTL and a partial filter. A **reference** is
+an edge from a field holding an `objectId`, or an array of them, to another
+collection's `_id`, carried in an optional `reference: { fromField }`
+exactly as a relation carries its columns. A `documents` drill checks what
+must be embedded, what must be referenced because it grows without bound,
+queries by the ESR rule (equality, then sort, then range), and unique and
+expiring fields; the rules are in `evaluate/documents/README.md`. How far
+something grows is a fact of the problem, so nothing the solver types can
+make a design pass. `toMongo` writes a `$jsonSchema` validator per
+collection and its `createIndex` calls.
+
 What a table can answer lives in `data-model/tables.ts`: its primary key,
 whether a lookup's columns lead a key or an index (`indexedBy`), whether a
 set of columns is unique (`uniqueOver`), and every relation resolved to its

@@ -167,4 +167,11 @@ export const EDGE_KIND_STYLES: Readonly<Record<EdgeKind, EdgeKindStyle>> = {
     style: { stroke: "var(--color-violet-600)", strokeWidth: 1.5 },
     animated: false,
   },
+  reference: {
+    description:
+      "A field holding the _id of a document in the target collection; it carries no request load.",
+    label: "Reference",
+    style: { stroke: "var(--color-emerald-600)", strokeWidth: 1.5 },
+    animated: false,
+  },
 };
