@@ -16,6 +16,16 @@ export class EmailNotVerifiedError extends ModuleError {
   public readonly code = "EMAIL_NOT_VERIFIED";
 }
 
+export class RoleRequiredError extends ModuleError {
+  public readonly status = HttpStatus.Forbidden;
+  public readonly code = "ROLE_REQUIRED";
+}
+
+export class OwnRoleChangeError extends ModuleError {
+  public readonly status = HttpStatus.Conflict;
+  public readonly code = "OWN_ROLE_CHANGE";
+}
+
 export class AccountDeletionNotConfirmedError extends ModuleError {
   public readonly status = HttpStatus.BadRequest;
   public readonly code = "ACCOUNT_DELETION_NOT_CONFIRMED";

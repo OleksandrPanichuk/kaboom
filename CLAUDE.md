@@ -774,6 +774,17 @@ and the web loads them as soon as the tab opens. Before that, `POST
 for seven days the user's submissions there are scored but not counted,
 while points earned before stay.
 
+## Roles
+
+Every account has a `role`: `user`, `moderator` or `admin`, ranked in
+that order, so `requireRole("moderator")` lets an admin through too. It
+is a route guard (`users.roles.ts`) that reads the role through
+`UsersService`, whose cache `setRole` clears, so a change applies at
+once. Moderators review community problems; admins also change roles
+(`PUT /users/:id/role`, `GET /users/staff`), and never their own, so the
+platform always keeps one. The first admin comes from the command line:
+`bun run user:role <email> admin`.
+
 ## Profiles
 
 `profiles` owns the public face of an account: a `handle`, a

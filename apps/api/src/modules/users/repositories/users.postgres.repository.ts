@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";
-import { usersSchema } from "@/db";
+import { type UserRole, usersSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
 import { Keyset } from "@/db/pagination";
 
@@ -111,6 +111,26 @@ export class PostgresUsersRepository extends UsersRepository {
         emailVerifiedAt: verifiedAt,
       })
       .where(eq(usersSchema.id, id));
+  }
+
+  public async setRole(id: string, role: UserRole): Promise<UserEntity> {
+    const [row] = await this.db
+      .update(usersSchema)
+      .set({ role })
+      .where(eq(usersSchema.id, id))
+      .returning();
+
+    if (!row) throw new UserNotFoundError(`User ${id} not found`);
+
+    return row;
+  }
+
+  public listByRoles(roles: readonly UserRole[]): Promise<UserEntity[]> {
+    return this.db
+      .select()
+      .from(usersSchema)
+      .where(inArray(usersSchema.role, [...roles]))
+      .orderBy(asc(usersSchema.createdAt));
   }
 
   public async deleteById(id: string): Promise<void> {

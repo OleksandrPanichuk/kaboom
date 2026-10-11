@@ -6,6 +6,8 @@ import { PostgresUsersRepository } from "./repositories";
 import {
   DeleteAccountUseCase,
   GetCurrentUserUseCase,
+  ListStaffUseCase,
+  SetUserRoleUseCase,
   UpdateProfileUseCase,
 } from "./use-cases";
 import { usersPlugin } from "./users.plugin";
@@ -25,5 +27,7 @@ export const usersModule = defineModule({
       getCurrentUser: makeUseCase(GetCurrentUserUseCase),
       deleteAccount: makeUseCase(DeleteAccountUseCase),
       updateProfile: makeUseCase(UpdateProfileUseCase),
+      listStaff: makeUseCase(ListStaffUseCase),
+      setUserRole: makeUseCase(SetUserRoleUseCase),
     }),
 });

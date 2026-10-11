@@ -1,5 +1,6 @@
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
+import type { UserRole } from "@/db";
 
 import type { UserEntity } from "../user.entity";
 
@@ -19,6 +20,10 @@ export abstract class UsersRepository extends Repository {
   public abstract findById(id: string): Promise<UserEntity | null>;
   public abstract getById(id: string): Promise<UserEntity>;
   public abstract findByEmail(email: string): Promise<UserEntity | null>;
+  public abstract setRole(id: string, role: UserRole): Promise<UserEntity>;
+  public abstract listByRoles(
+    roles: readonly UserRole[],
+  ): Promise<UserEntity[]>;
   public abstract markEmailVerified(
     id: string,
     verifiedAt: Date,
