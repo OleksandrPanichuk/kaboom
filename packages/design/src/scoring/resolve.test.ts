@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 
 import { graph, node } from "../evaluate/load/fixtures";
+import { LoadDrillSchema } from "../problems/schema";
 import { drillScenario } from "./resolve";
-import { LoadDrillSchema } from "./schema";
 
 describe("drillScenario", () => {
   test("a partition of nodes in no group cuts them off one by one", () => {

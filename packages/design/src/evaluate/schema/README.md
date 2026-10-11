@@ -110,9 +110,10 @@ ignored, so a problem does not ask for it there.
 | `set-null-not-nullable` | a foreign key that cannot be null is set to null on delete                                                                          |
 | `engine-unsupported`    | a type, default, index kind or rule the table's engine does not have (the lint of the same name)                                    |
 
-The last four come from the lints of the same names and do not depend on
-the requirements; a drill fails on them only when its `expect.forbid`
-names them.
+The last four are not the evaluator's: the schema drill (`scoring/drills.ts`)
+adds them from the lints of the same names, so the evaluator depends on no
+lint. They do not depend on the requirements, and a drill fails on them only
+when its `expect.forbid` names them.
 
 ## The drill
 

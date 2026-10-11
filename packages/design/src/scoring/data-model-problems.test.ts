@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 
 import type { DesignGraph, DesignNode } from "../graph";
-import { OFFICIAL_PROBLEMS } from "./library";
-import { column, index, references, table } from "./library/build";
+import { OFFICIAL_PROBLEMS } from "../problems/library";
+import { column, index, references, table } from "../problems/library/build";
 import { scoreSubmission } from "./score";
 
 const problem = (slug: string) =>

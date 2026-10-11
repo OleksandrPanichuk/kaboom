@@ -1,7 +1,7 @@
 import { DEFAULT_MAX_CONNECTIONS } from "../catalogue";
 import { findTechnology } from "../catalogue/technologies";
 import type { DesignGraph, DesignNode } from "../graph";
-import { perMillion, PRICES } from "./prices";
+import { perMillion, PRICES } from "../pricing";
 
 export interface NodeLoad {
   reads: number;

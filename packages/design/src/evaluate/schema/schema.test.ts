@@ -402,7 +402,7 @@ describe("queries", () => {
 });
 
 describe("findings", () => {
-  test("carry every failed requirement and the structural lints", () => {
+  test("carry every failed requirement, and leave structural lints to the drill", () => {
     const graph = graphOf(
       [users(), table("posts", [column("author_id", "integer")])],
       [],
@@ -417,11 +417,7 @@ describe("findings", () => {
       columns: [{ table: "posts", name: "title" }],
     }).findings.map((finding) => finding.kind);
 
-    expect(kinds).toEqual([
-      "missing-column",
-      "keyless-table",
-      "fk-type-mismatch",
-    ]);
+    expect(kinds).toEqual(["missing-column"]);
   });
 });
 

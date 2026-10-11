@@ -559,9 +559,19 @@ hint penalty, so the model can move a score but never decide it. A failed
 review leaves the deterministic score in place and marks the submission
 `failed`.
 
+## The design package's layers
+
+`@repo/design` is layered by folder, and `src/layers.test.ts` pins which
+folder may import which: `pricing` at the bottom, then `catalogue`,
+`graph`, `data-model`, the evaluators, lints and ops, then `problems`
+(the problem schema, hints and the official library) and `scoring`
+(drills, rubric checks, chaos, variation, `runTests` and the publish
+check) at the top. A folder never imports one above it, so the package can
+later split along these lines. A new folder gets a row in that test.
+
 ## Tests on a problem
 
-`runTests(problem, graph, { include })` in `packages/design/src/testing`
+`runTests(problem, graph, { include })` in `packages/design/src/scoring`
 turns a problem's drills and rubric checks into a report, grouped in the
 suites `functional`, `load`, `faults`, `chaos` and `constraints`. Each test carries
 assertions, each with what it measured, what it expected, what it got, the
@@ -579,7 +589,7 @@ A public load test carries the scenario it ran, its faults resolved to
 node ids; the browser evaluates it again to replay it, rather than the
 server sending every step.
 
-The `chaos` suite is drawn from the design itself (`testing/chaos.ts`), so
+The `chaos` suite is drawn from the design itself (`scoring/chaos.ts`), so
 it cannot be learned by heart: a design with more parts gets more faults.
 Each case is one failure the model says a design can survive, in the SPOF
 lint's own terms, drawn only from the nodes the baseline drill loads, so a
@@ -619,14 +629,14 @@ replicas, instances, partitions or shards, a SQL instance by the capacity
 it is sized for (an instance class twice as large costs twice as much), a per-request service (gateway,
 CDN, queue, object store) by the traffic it carries, and a product from the
 technology catalogue by its own `monthlyUsd`. The prices sit in
-`cost/prices.ts`, one place to change. The editor shows the total in the
+`pricing/prices.ts`, one place to change. The editor shows the total in the
 top bar and each node's share in the inspector, at the clients' steady
 traffic from a one-step simulation. A `within-budget` rubric item prices
 the design at the traffic of a named drill, and only once that drill
 passes, since a design that does not work costs nothing worth comparing.
 
 A load test also runs on varied inputs, so a design sized to the letter
-of the spec shows it. `vary(graph, scenario, seed)` (`testing/variation.ts`)
+of the spec shows it. `vary(graph, scenario, seed)` (`scoring/variation.ts`)
 is deterministic per seed: traffic moves by up to 5 % a minute with one
 short burst, a fault starts up to 30 s off and lasts a quarter more or
 less, and each node's capacity moves by 5 % and its latency by up to 15 %;

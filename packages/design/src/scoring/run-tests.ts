@@ -7,8 +7,8 @@ import {
   type ProblemContent,
   type RubricItem,
 } from "../problems/schema";
-import { type DrillRunner, drillRunner, judgeCheck } from "../problems/score";
 import { type Assertion, assertion } from "./assertion";
+import { type DrillRunner, drillRunner, judgeCheck } from "./score";
 import { HOLDS_SHARE, statusOf, type Variation } from "./variation";
 
 export const TEST_SUITES = [
