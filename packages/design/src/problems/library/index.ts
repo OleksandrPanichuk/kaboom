@@ -3,17 +3,20 @@ import { blogTags } from "./blog-tags";
 import { cardPayments } from "./card-payments";
 import { chat } from "./chat";
 import { fareSearch } from "./fare-search";
+import { jobQueue } from "./job-queue";
 import { latencyRegression } from "./latency-regression";
 import { monorepoPipeline } from "./monorepo-pipeline";
 import { newsFeed } from "./news-feed";
 import { notifications } from "./notifications";
 import { photoUploads } from "./photo-uploads";
 import { productCatalogue } from "./product-catalogue";
+import { productSearch } from "./product-search";
 import { rateLimitedApi } from "./rate-limited-api";
 import { roomBooking } from "./room-booking";
 import { schemaMigration } from "./schema-migration";
 import { secretRotation } from "./secret-rotation";
 import { shopOrders } from "./shop-orders";
+import { signupAudit } from "./signup-audit";
 import { threeTierVpc } from "./three-tier-vpc";
 import { urlShortener } from "./url-shortener";
 import { zeroDowntimeRollout } from "./zero-downtime-rollout";
@@ -37,4 +40,7 @@ export const OFFICIAL_PROBLEMS: ProblemContent[] = [
   blogTags,
   shopOrders,
   roomBooking,
+  signupAudit,
+  jobQueue,
+  productSearch,
 ].map((problem) => ProblemContentSchema.parse(problem));

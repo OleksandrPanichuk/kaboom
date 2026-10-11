@@ -862,7 +862,12 @@ only a key, and `data-model-problems.test.ts` pins the wrong designs each is
 meant to catch: a tag kept on the post, a junction table that allows a pair
 twice, money that rounds, an index that leads with the wrong column, a
 tenant with two billing profiles. They ship as challenges, without an
-interview.
+interview. *Sign-up and an audit log* and *A job queue in a table*
+(PostgreSQL) and *Product search on MySQL* practise the production
+details: identities and defaults of now, a bounded email found in any case
+through `lower()`, statuses limited to their values, a partial index that
+skips finished jobs, GIN on `jsonb`, `FULLTEXT`, exact money and what
+MySQL lacks. Their baselines put the tables in a database of their engine.
 Challenges on this track are reviewed on design, integrity and query
 performance.
 

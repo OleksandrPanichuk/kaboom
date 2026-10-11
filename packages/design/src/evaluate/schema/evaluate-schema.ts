@@ -48,6 +48,7 @@ const STRUCTURAL_LINTS = [
   ["no-primary-key", "keyless-table"],
   ["fk-type-mismatch", "fk-type-mismatch"],
   ["set-null-not-nullable", "set-null-not-nullable"],
+  ["engine-unsupported", "engine-unsupported"],
 ] as const satisfies ReadonlyArray<readonly [keyof typeof lints, FindingKind]>;
 
 const fkName = (relation: ResolvedRelation): string =>
@@ -93,15 +94,20 @@ const describeLookup = (table: TableNode, lookup: Lookup): string => {
   return `(${parts.join(", ")})${where}${order}`.replace("()", "the rows");
 };
 
-const describeColumn = (requirement: ColumnRequirement): string =>
-  [
-    requirement.type ?? "any type",
+const describeColumn = (requirement: ColumnRequirement): string => {
+  const parts = [
+    ...(requirement.type !== undefined ? [requirement.type] : []),
     ...(requirement.unique === true ? ["unique"] : []),
     ...(requirement.unique === false ? ["not unique"] : []),
     ...(requirement.nullable === true ? ["nullable"] : []),
     ...(requirement.nullable === false ? ["not null"] : []),
     ...(requirement.maxLength !== undefined
       ? [`at most ${requirement.maxLength} characters`]
+      : []),
+    ...(requirement.precision !== undefined
+      ? [
+          `${requirement.precision} digits${requirement.scale !== undefined ? `, ${requirement.scale} after the point` : ""}`,
+        ]
       : []),
     ...(requirement.defaultsTo !== undefined
       ? [
@@ -112,7 +118,10 @@ const describeColumn = (requirement: ColumnRequirement): string =>
     ...(requirement.values !== undefined
       ? [`one of ${requirement.values.join(", ")}`]
       : []),
-  ].join(", ");
+  ];
+
+  return parts.length > 0 ? parts.join(", ") : "any type";
+};
 
 export const evaluateSchema = (
   graph: DesignGraph,
@@ -457,6 +466,13 @@ export const evaluateSchema = (
             column.length === undefined
               ? "has no length, so any amount of text fits"
               : `holds up to ${column.length} characters, more than ${requirement.maxLength}`,
+          ]
+        : []),
+      ...((requirement.precision !== undefined &&
+        column.precision !== requirement.precision) ||
+      (requirement.scale !== undefined && column.scale !== requirement.scale)
+        ? [
+            `keeps ${column.precision ?? "any number of"} digits with ${column.scale ?? "any"} after the point, not ${requirement.precision ?? "any"} with ${requirement.scale ?? "any"}`,
           ]
         : []),
       ...(requirement.defaultsTo !== undefined &&

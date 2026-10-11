@@ -3,8 +3,10 @@ import type {
   ColumnType,
   EdgeKind,
   EdgeProps,
+  Engine,
   NodeKind,
   OnDeleteAction,
+  TableIndex,
 } from "../../catalogue";
 import {
   createEdge,
@@ -44,6 +46,12 @@ export const graph = (
   edges: DesignEdge[] = [],
   groups: DesignGroup[] = [],
 ): DesignGraph => ({ ...emptyGraph(), nodes, edges, groups });
+
+export const database = (
+  id: string,
+  label: string,
+  engine: Engine,
+): DesignGroup => createGroup({ id, kind: "database", label, engine });
 
 export const region = (id: string, label: string): DesignGroup =>
   createGroup({ id, kind: "region", label });
@@ -92,7 +100,7 @@ export const index = (
 export const table = (
   tableId: string,
   columns: Column[],
-  indexes: Array<ReturnType<typeof index>> = [],
+  indexes: TableIndex[] = [],
 ): DesignNode => node(tableId, "table", tableId, { columns, indexes });
 
 export const references = (

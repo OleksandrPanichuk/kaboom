@@ -77,11 +77,11 @@ of `by`, and a `where` filter on the last table:
   range column. A hash index never serves a range.
 - `contains`: a GIN index on the column (a `jsonb` document or an array).
 - `text-search`: a GIN index, or MySQL's `FULLTEXT`.
-- `where` (`=`, `!=`, `is-null`, `is-not-null`): a partial index serves the
-  query only when its filter is the same one, and no other query. Without
-  a partial index, an `=` or `is-null` filter may lead an ordinary btree as
-  an equality column; a filter that is the whole lookup and is `!=` or
-  `is-not-null` needs a partial index.
+- `where` (`=`, `!=`, `is-null`, `is-not-null`): the index must serve the
+  filter itself, or walking it reads the rows the filter drops. A partial
+  index with the same filter serves it, and serves no other query. Without
+  one, an `=` or `is-null` filter must sit among the equality columns of a
+  btree; `!=` and `is-not-null` need a partial index.
 
 Every lookup reads the primary key and unique columns as btree indexes. A
 partial unique index never makes a column unique for a foreign key or a
@@ -108,8 +108,9 @@ ignored, so a problem does not ask for it there.
 | `keyless-table`         | a table has no primary key (the `no-primary-key` lint)                                                                              |
 | `fk-type-mismatch`      | a foreign key and the column it references differ in type                                                                           |
 | `set-null-not-nullable` | a foreign key that cannot be null is set to null on delete                                                                          |
+| `engine-unsupported`    | a type, default, index kind or rule the table's engine does not have (the lint of the same name)                                    |
 
-The last three come from the lints of the same names and do not depend on
+The last four come from the lints of the same names and do not depend on
 the requirements; a drill fails on them only when its `expect.forbid`
 names them.
 

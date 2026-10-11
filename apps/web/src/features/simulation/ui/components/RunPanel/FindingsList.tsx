@@ -35,6 +35,7 @@ const TITLES: Record<Finding["kind"], string> = {
   "keyless-table": "No primary key",
   "fk-type-mismatch": "Foreign key of another type",
   "set-null-not-nullable": "Set null on a required column",
+  "engine-unsupported": "Not in this engine",
 };
 
 interface FindingsListProps {
