@@ -37,6 +37,8 @@ export const ColumnRequirementSchema = z.strictObject({
   unique: z.boolean().optional(),
   nullable: z.boolean().optional(),
   maxLength: z.number().int().min(1).max(10_485_760).optional(),
+  precision: z.number().int().min(1).max(1_000).optional(),
+  scale: z.number().int().min(0).max(1_000).optional(),
   defaultsTo: z.enum(["now", "uuid"]).optional(),
   generatesItself: z.literal(true).optional(),
   values: z.array(z.string().min(1).max(63)).min(1).max(64).optional(),

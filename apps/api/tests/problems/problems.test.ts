@@ -44,7 +44,7 @@ describe("problems", () => {
     const listed = await user.get<{
       items: Summary[];
       nextCursor: string | null;
-    }>(PATH);
+    }>(`${PATH}?limit=100`);
 
     expect(listed.status).toBe(200);
     expect(listed.body.items.map((item) => item.slug)).toEqual(

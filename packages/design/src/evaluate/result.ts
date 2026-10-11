@@ -83,6 +83,7 @@ export const FINDING_KINDS = [
   "keyless-table",
   "fk-type-mismatch",
   "set-null-not-nullable",
+  "engine-unsupported",
 ] as const;
 
 export type FindingKind = (typeof FINDING_KINDS)[number];

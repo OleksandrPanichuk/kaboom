@@ -1,4 +1,4 @@
-import type { IndexFilter, IndexMethod } from "../catalogue";
+import { type IndexFilter, type IndexMethod, TEXT_TYPES } from "../catalogue";
 import { primaryKeyOf, type TableNode } from "./tables";
 
 export type MatchKind = "contains" | "text-search";
@@ -49,39 +49,41 @@ const usable = (index: IndexLike, lookup: Lookup): boolean =>
   index.where === undefined ||
   (lookup.where !== undefined && sameFilter(index.where, lookup.where));
 
-const servesMatch = (index: IndexLike, lookup: Lookup): boolean => {
+const servesMatch = (
+  table: TableNode,
+  index: IndexLike,
+  lookup: Lookup,
+): boolean => {
   const { match } = lookup;
 
   if (!match || !index.columns.includes(match.column)) return false;
 
-  return match.kind === "contains"
-    ? index.method === "gin"
-    : index.method === "gin" || index.method === "fulltext";
+  const column = table.props.columns.find((item) => item.id === match.column);
+
+  if (match.kind === "contains") {
+    return index.method === "gin" && column?.type === "jsonb";
+  }
+
+  return (
+    (index.method === "gin" || index.method === "fulltext") &&
+    column !== undefined &&
+    TEXT_TYPES.has(column.type)
+  );
 };
 
 const prefixLength = (index: IndexLike, lookup: Lookup): number | null => {
   const lowered = new Set(lookup.lower ?? []);
   const required = new Set([...lookup.equal, ...lowered]);
-  const optional = new Set<string>();
   const filter = lookup.where;
 
   if (filter && index.where === undefined) {
-    const equality = filter.op === "=" || filter.op === "is-null";
+    if (filter.op !== "=" && filter.op !== "is-null") return null;
 
-    if (required.size > 0) {
-      if (equality) optional.add(filter.column);
-    } else if (equality) {
-      required.add(filter.column);
-    } else if (
-      (lookup.order ?? []).length === 0 &&
-      lookup.range === undefined
-    ) {
-      return null;
-    }
+    required.add(filter.column);
   }
 
   const fits = (column: string) =>
-    (required.has(column) || optional.has(column)) &&
+    required.has(column) &&
     lowered.has(column) === index.lower.has(column);
 
   for (let length = 0; length <= index.columns.length; length += 1) {
@@ -131,7 +133,7 @@ const servesHash = (index: IndexLike, lookup: Lookup): boolean => {
 export const servesLookup = (table: TableNode, lookup: Lookup): boolean =>
   indexesOf(table).some((index) => {
     if (!usable(index, lookup)) return false;
-    if (lookup.match) return servesMatch(index, lookup);
+    if (lookup.match) return servesMatch(table, index, lookup);
 
     const asked =
       lookup.equal.length +

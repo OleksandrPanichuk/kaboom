@@ -173,3 +173,143 @@ describe("meeting rooms for many companies", () => {
     ]);
   });
 });
+
+describe("sign-up and an audit log", () => {
+  const reference = problem("signup-audit").reference.graph;
+  const column = (graph: DesignGraph, tableId: string, name: string) =>
+    (
+      graph.nodes.find((node) => node.id === tableId) as Table
+    ).props.columns.find((item) => item.name === name)!;
+
+  test("catches an email of any length, and a lookup that minds the case", () => {
+    const unbounded = edit(reference, "accounts", (accounts) => {
+      const email = accounts.props.columns.find(
+        (item) => item.name === "email",
+      )!;
+
+      delete email.length;
+      email.type = "text";
+    });
+    const exact = edit(reference, "accounts", (accounts) => {
+      accounts.props.indexes = [
+        { id: "email_idx", columns: ["email"], unique: true },
+      ];
+    });
+
+    expect(failing("signup-audit", unbounded)).toEqual(["sign-up"]);
+    expect(failing("signup-audit", exact)).toEqual(["sign-up"]);
+  });
+
+  test("catches ids and dates the application has to send", () => {
+    const manual = edit(reference, "audit_events", (events) => {
+      delete events.props.columns[0]!.generated;
+      delete events.props.columns.at(-1)!.default;
+    });
+
+    expect(failing("signup-audit", manual)).toEqual(["audit"]);
+    expect(column(reference, "accounts", "id").generated).toEqual({
+      kind: "identity",
+      always: true,
+    });
+  });
+
+  test("catches a status that takes any word", () => {
+    const loose = edit(reference, "accounts", (accounts) => {
+      const status = accounts.props.columns.find(
+        (item) => item.name === "status",
+      )!;
+
+      status.type = "text";
+      delete status.values;
+      delete status.default;
+    });
+
+    expect(failing("signup-audit", loose)).toEqual(["statuses"]);
+  });
+});
+
+describe("a job queue in a table", () => {
+  const reference = problem("job-queue").reference.graph;
+
+  test("catches a poll index that holds every finished job", () => {
+    const unfiltered = edit(reference, "jobs", (jobs) => {
+      jobs.props.indexes = jobs.props.indexes.map((index) =>
+        index.id === "pending_idx"
+          ? { id: index.id, columns: index.columns, unique: false }
+          : index,
+      );
+    });
+    const leadingStatus = edit(reference, "jobs", (jobs) => {
+      jobs.props.indexes = jobs.props.indexes.map((index) =>
+        index.id === "pending_idx"
+          ? {
+              id: index.id,
+              columns: ["status", "queue", "run_at"],
+              unique: false,
+            }
+          : index,
+      );
+    });
+
+    expect(failing("job-queue", unfiltered)).toEqual(["next-job"]);
+    expect(failing("job-queue", leadingStatus)).toEqual([]);
+  });
+
+  test("catches payloads kept as json, or searched without a GIN index", () => {
+    const json = edit(reference, "jobs", (jobs) => {
+      jobs.props.columns.find((item) => item.name === "payload")!.type = "json";
+    });
+    const unindexed = edit(reference, "jobs", (jobs) => {
+      jobs.props.indexes = jobs.props.indexes.filter(
+        (index) => index.method !== "gin",
+      );
+    });
+
+    expect(failing("job-queue", json)).toEqual(["payload-search"]);
+    expect(failing("job-queue", unindexed)).toEqual(["payload-search"]);
+  });
+});
+
+describe("product search on MySQL", () => {
+  const reference = problem("product-search").reference.graph;
+
+  test("catches a price that rounds", () => {
+    const floating = edit(reference, "products", (products) => {
+      const price = products.props.columns.find(
+        (item) => item.name === "price",
+      )!;
+
+      price.type = "double";
+      delete price.precision;
+      delete price.scale;
+    });
+
+    expect(failing("product-search", floating)).toEqual(["browse"]);
+  });
+
+  test("catches a search box without a full-text index", () => {
+    const plain = edit(reference, "products", (products) => {
+      products.props.indexes = products.props.indexes.map((index) =>
+        index.method === "fulltext"
+          ? { id: index.id, columns: index.columns, unique: false }
+          : index,
+      );
+    });
+
+    expect(failing("product-search", plain)).toEqual(["search"]);
+  });
+
+  test("catches PostgreSQL habits MySQL does not have", () => {
+    const jsonb = edit(reference, "products", (products) => {
+      products.props.columns.find((item) => item.name === "attributes")!.type =
+        "jsonb";
+    });
+    const unsized = edit(reference, "categories", (categories) => {
+      delete categories.props.columns.find((item) => item.name === "name")!
+        .length;
+    });
+
+    expect(failing("product-search", jsonb)).toEqual(["mysql-only"]);
+    expect(failing("product-search", unsized)).toEqual(["mysql-only"]);
+  });
+});
