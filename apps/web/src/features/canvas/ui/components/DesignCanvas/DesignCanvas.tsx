@@ -48,6 +48,7 @@ import type {
   CanvasNode,
   CanvasOverlay,
   DesignLayout,
+  SchemaNames,
 } from "@/features/canvas/typedefs";
 import { type Flow, mergeFlowNodes, toFlow } from "@/features/canvas/utils";
 import { useResolvedTheme } from "@/features/shell";
@@ -94,6 +95,7 @@ interface DesignCanvasProps {
   layout: DesignLayout;
   hits: LintHit[];
   overlay: CanvasOverlay | null;
+  schemaNames?: SchemaNames | null;
   focus: CanvasFocus | null;
   onAddNode: (kind: NodeKind, position: { x: number; y: number }) => void;
   onMoveNodes: (positions: DesignLayout) => void;
@@ -112,6 +114,7 @@ export function DesignCanvas({
   layout,
   hits,
   overlay,
+  schemaNames = null,
   focus,
   onAddNode,
   onMoveNodes,
@@ -127,8 +130,8 @@ export function DesignCanvas({
   const { screenToFlowPosition, fitView } = useReactFlow();
   const colorMode = useResolvedTheme();
   const flow = useMemo(
-    () => toFlow(graph, layout, hits, overlay),
-    [graph, layout, hits, overlay],
+    () => toFlow(graph, layout, hits, overlay, schemaNames),
+    [graph, layout, hits, overlay, schemaNames],
   );
 
   const [fitOnOpen] = useState(flow.nodes.length > 0);

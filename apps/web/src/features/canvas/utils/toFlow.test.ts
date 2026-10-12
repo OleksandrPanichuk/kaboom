@@ -9,6 +9,36 @@ const graphWith = (ids: string[]) => ({
 });
 
 describe("toFlow", () => {
+  test("names the schema a database holds, or that it is gone, once the names are known", () => {
+    const graph = {
+      ...emptyGraph(),
+      nodes: [
+        {
+          ...createNode("sql-database", { id: "orders" }),
+          schema: { designId: "s1" },
+        },
+        {
+          ...createNode("sql-database", { id: "users" }),
+          schema: { designId: "s2" },
+        },
+        createNode("service", { id: "api" }),
+      ],
+    };
+    const schemaOf = (names: Record<string, string> | null) =>
+      toFlow(graph, {}, [], null, names).nodes.map((node) => node.data.schema);
+
+    expect(schemaOf(null)).toEqual([
+      { designId: "s1" },
+      { designId: "s2" },
+      undefined,
+    ]);
+    expect(schemaOf({ s1: "Orders" })).toEqual([
+      { designId: "s1", name: "Orders" },
+      { designId: "s2", name: null },
+      undefined,
+    ]);
+  });
+
   test("keeps the saved position of a node", () => {
     const { nodes } = toFlow(graphWith(["api"]), { api: { x: 40, y: 80 } });
 

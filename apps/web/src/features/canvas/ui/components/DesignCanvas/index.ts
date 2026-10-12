@@ -4,5 +4,6 @@ export * from "./CollectionNodeCard";
 export * from "./DesignCanvas";
 export * from "./DynamoTableNodeCard";
 export * from "./GroupLayer";
+export * from "./SchemaLink";
 export * from "./TableNodeCard";
 export * from "./TechnologyMark";

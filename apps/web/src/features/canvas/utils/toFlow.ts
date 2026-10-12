@@ -21,6 +21,7 @@ import type {
   CanvasOverlay,
   DesignLayout,
   RelationCardinality,
+  SchemaNames,
 } from "@/features/canvas/typedefs";
 
 import { columnHandle } from "./columnHandles";
@@ -72,6 +73,7 @@ export const toFlow = (
   layout: DesignLayout,
   hits: LintHit[] = NO_HITS,
   overlay: CanvasOverlay | null = null,
+  schemaNames: SchemaNames | null = null,
 ): Flow => {
   const placements = gridPlacements(graph, layout);
   const hitsByNode = new Map<string, LintHit[]>();
@@ -137,6 +139,16 @@ export const toFlow = (
           ? {
               foreignKeys: foreignKeys.get(node.id) ?? [],
               engine: engineOf(graph, node),
+            }
+          : {}),
+        ...(node.schema
+          ? {
+              schema: {
+                designId: node.schema.designId,
+                ...(schemaNames
+                  ? { name: schemaNames[node.schema.designId] ?? null }
+                  : {}),
+              },
             }
           : {}),
         ...(overlay?.nodes[node.id] ? { overlay: overlay.nodes[node.id] } : {}),

@@ -8,7 +8,7 @@ import {
   type Track,
 } from "@repo/design";
 import { vary } from "@repo/scoring";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { cn } from "cn";
 import {
   ListChecks,
@@ -29,7 +29,7 @@ import {
   NodePalette,
   paletteTracks,
 } from "@/features/canvas";
-import { designQuery } from "@/features/designs/api";
+import { designQuery, schemaDesignsQuery } from "@/features/designs/api";
 import {
   type DesignTransport,
   useDesignEditor,
@@ -135,6 +135,20 @@ export function DesignWorkspace({
     resync: editor.resync,
   };
   const hits = useMemo(() => runLints(editor.graph), [editor.graph]);
+  const references = editor.graph.nodes.some((node) => node.schema);
+  const { data: schemaDesigns } = useQuery({
+    ...schemaDesignsQuery,
+    enabled: references,
+  });
+  const schemaNames = useMemo(
+    () =>
+      schemaDesigns
+        ? Object.fromEntries(
+            schemaDesigns.items.map((design) => [design.id, design.name]),
+          )
+        : null,
+    [schemaDesigns],
+  );
   const [draft, setDraft] = useState<ScenarioDraft>(DEFAULT_SCENARIO);
   const [stepIndex, setStepIndex] = useState(0);
   const [savedNote, setSavedNote] = useState<string | null>(null);
@@ -433,6 +447,7 @@ export function DesignWorkspace({
           layout={editor.layout}
           hits={hits}
           overlay={overlay}
+          schemaNames={schemaNames}
           focus={focus}
           onAddNode={editor.addNode}
           onMoveNodes={editor.moveNodes}
