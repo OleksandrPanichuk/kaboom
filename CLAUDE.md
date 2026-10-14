@@ -902,6 +902,45 @@ test pins that the kept totals equal a rebuild.
 submissions (`submissions_created_at_idx`), a set that stays small, and
 `?track=` reads that track's scope.
 
+## Billing
+
+`billing` sells Pro, monthly or for life; Free has no price and nothing at
+the provider. The provider is the system of record for money, and Postgres
+holds a copy for reads and history. `BillingProvider` is the port, with
+`StripeBillingProvider` (`adapters/billing/stripe/`) when
+`STRIPE_SECRET_KEY` is set, `UnavailableBillingProvider` without it, so
+the app still boots and billing answers `503 BILLING_UNAVAILABLE`, and
+`MemoryBillingProvider` under `NODE_ENV=test`. A Stripe key needs
+`STRIPE_WEBHOOK_SECRET` beside it. The Stripe API version is pinned in
+`stripe.constants.ts` to the one the SDK major ships with, so an upgrade
+is a deliberate change of both.
+
+Nothing outside the adapter is named after Stripe. Every row copied from
+a provider carries `provider` (only `stripe` today) and its ids as
+`provider_<object>_id`, unique together with `provider`: a payment is
+what Stripe calls a PaymentIntent, an attempt is a charge, a transaction
+a balance transaction. Statuses are the module's own vocabulary, which the
+adapter maps onto, so a second provider is a second adapter, not a
+migration.
+
+The prices are found by their lookup keys (`BILLING_PRICE_PRO_MONTHLY`,
+`BILLING_PRICE_PRO_LIFETIME`) when the module starts, and copied into
+`billing_prices`, the way the official problems are synced. A missing
+price, or one of the wrong type (monthly must recur, lifetime must not),
+fails the boot rather than the first checkout. A lookup key moved to a new
+price leaves the old row inactive.
+
+The tables: `billing_customers` (with the billing address),
+`subscriptions` and their append-only `subscription_changes`, `purchases`
+for lifetime, `invoices`, `payments` and their `payment_attempts`,
+`refunds`, `disputes`, `billing_tax_ids`, and `billing_events`, the
+webhook inbox, unique on the provider's event id. They link to each other
+by provider id rather than by foreign key, because webhooks arrive in any
+order and a payment may be seen before its invoice. Their `user_id` is set
+to null when an account is deleted, since invoices must outlive the
+account. Money is a `bigint` in the currency's smallest unit beside a
+lowercase currency code.
+
 ## DevOps track
 
 A problem belongs to one track, `system-design` or `devops` (`TRACKS` in

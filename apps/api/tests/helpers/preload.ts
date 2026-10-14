@@ -5,6 +5,7 @@ import { afterAll, afterEach, beforeAll } from "bun:test";
 import { getTableName, is, Table } from "drizzle-orm";
 import { migrate } from "drizzle-orm/bun-sql/migrator";
 
+import type { MemoryBillingProvider } from "@/adapters/billing/memory.billing-provider";
 import type { MemoryCaptchaVerifier } from "@/adapters/captcha/memory.captcha-verifier";
 import type { MemoryErrorReporter } from "@/adapters/error-reporting/memory.error-reporter";
 import type { MemoryUsageLedger } from "@/adapters/llm/memory.usage-ledger";
@@ -19,6 +20,7 @@ import { make } from "@/core/registry";
 import { createDatabase, getDatabase } from "@/db";
 import * as schema from "@/db/schema";
 import { closeInfrastructure } from "@/infrastructure";
+import { BillingProvider } from "@/modules/billing";
 import { TurnScheduler } from "@/modules/interviews";
 import { Mailer } from "@/modules/notifications/ports";
 import { CaptchaVerifier } from "@/platform/captcha";
@@ -102,6 +104,7 @@ afterEach(async () => {
   if (model instanceof ScriptedLanguageModel) model.reset();
 
   (make(UsageLedger) as MemoryUsageLedger).clear();
+  (make(BillingProvider) as MemoryBillingProvider).clear();
 });
 
 afterAll(async () => {
