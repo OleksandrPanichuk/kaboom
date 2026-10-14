@@ -4,13 +4,13 @@ import { ChevronRight } from "lucide-react";
 import { ScoreDots } from "@/components/ScoreDots";
 import { citationKind, skillLabel } from "@/features/reviews/utils";
 
-interface RubricItemCardProps {
+interface RubricItemRowProps {
   item: ReviewModel["items"][number];
 }
 
-export function RubricItemCard({ item }: RubricItemCardProps) {
+export function RubricItemRow({ item }: RubricItemRowProps) {
   return (
-    <li className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4">
+    <li className="flex flex-col gap-2 px-4 py-4 sm:px-5">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
           <p className="font-medium text-pretty">{item.title}</p>

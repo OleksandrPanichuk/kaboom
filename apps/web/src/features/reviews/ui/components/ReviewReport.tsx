@@ -4,7 +4,7 @@ import { CircleCheck, CircleX, Sparkles, Target } from "lucide-react";
 
 import { DrillResults, scoreTone } from "@/features/problems";
 
-import { RubricItemCard } from "./RubricItemCard";
+import { RubricItemRow } from "./RubricItemRow";
 
 interface ReviewReportProps {
   review: ReviewModel;
@@ -60,9 +60,9 @@ export function ReviewReport({ review }: ReviewReportProps) {
         <h2 id="rubric" className="text-lg font-semibold tracking-[-0.02em]">
           Rubric
         </h2>
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card">
           {review.items.map((item) => (
-            <RubricItemCard key={item.key} item={item} />
+            <RubricItemRow key={item.key} item={item} />
           ))}
         </ul>
       </section>
