@@ -76,9 +76,9 @@ describe("billing settings in the environment", () => {
     const env = loadEnv(base);
 
     expect(env.STRIPE_SECRET_KEY).toBeUndefined();
-    expect(env.STRIPE_TAX_ENABLED).toBe(false);
-    expect(env.STRIPE_PRICE_PRO_MONTHLY).toBe("pro_monthly");
-    expect(env.STRIPE_PRICE_PRO_LIFETIME).toBe("pro_lifetime");
+    expect(env.BILLING_TAX_ENABLED).toBe(false);
+    expect(env.BILLING_PRICE_PRO_MONTHLY).toBe("pro_monthly");
+    expect(env.BILLING_PRICE_PRO_LIFETIME).toBe("pro_lifetime");
   });
 
   test("require the webhook secret once a key is set", () => {

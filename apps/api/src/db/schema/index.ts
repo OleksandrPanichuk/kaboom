@@ -1,5 +1,6 @@
 export * from "./accounts.schema";
 export * from "./billing_customers.schema";
+export * from "./billing_events.schema";
 export * from "./billing_prices.schema";
 export * from "./billing_tax_ids.schema";
 export * from "./design_revisions.schema";
@@ -29,7 +30,6 @@ export * from "./reviews.schema";
 export * from "./simulation_runs.schema";
 export * from "./skill_scores.schema";
 export * from "./solution_reveals.schema";
-export * from "./stripe_events.schema";
 export * from "./submissions.schema";
 export * from "./subscription_changes.schema";
 export * from "./subscriptions.schema";

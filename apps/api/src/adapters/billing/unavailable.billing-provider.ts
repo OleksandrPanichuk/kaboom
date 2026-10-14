@@ -5,6 +5,8 @@ import {
 } from "@/modules/billing/ports/billing-provider";
 
 export class UnavailableBillingProvider extends BillingProvider {
+  public readonly name = "stripe" as const;
+
   public findPrices(): Promise<ProviderPrice[]> {
     return Promise.reject(
       new BillingUnavailableError(

@@ -1,5 +1,10 @@
 import { Port } from "@/core/port";
-import type { PriceInterval, PriceType, TaxBehavior } from "@/db";
+import type {
+  BillingProviderName,
+  PriceInterval,
+  PriceType,
+  TaxBehavior,
+} from "@/db";
 
 export interface ProviderPrice {
   id: string;
@@ -14,6 +19,8 @@ export interface ProviderPrice {
 }
 
 export abstract class BillingProvider extends Port {
+  public abstract readonly name: BillingProviderName;
+
   public abstract findPrices(
     lookupKeys: readonly string[],
   ): Promise<ProviderPrice[]>;

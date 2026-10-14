@@ -10,6 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { BILLING_PROVIDERS } from "./billing_events.schema";
 import { usersSchema } from "./users.schema";
 
 export const SUBSCRIPTION_STATUSES = [
@@ -31,9 +32,10 @@ export const subscriptionsSchema = pgTable(
     userId: uuid("user_id").references(() => usersSchema.id, {
       onDelete: "set null",
     }),
-    stripeSubscriptionId: text("stripe_subscription_id").notNull().unique(),
-    stripeCustomerId: text("stripe_customer_id").notNull(),
-    stripePriceId: text("stripe_price_id").notNull(),
+    provider: text("provider", { enum: BILLING_PROVIDERS }).notNull(),
+    providerSubscriptionId: text("provider_subscription_id").notNull(),
+    providerCustomerId: text("provider_customer_id").notNull(),
+    providerPriceId: text("provider_price_id").notNull(),
     status: text("status", { enum: SUBSCRIPTION_STATUSES }).notNull(),
     quantity: integer("quantity").notNull().default(1),
     currentPeriodStart: timestamp("current_period_start", {
@@ -47,13 +49,11 @@ export const subscriptionsSchema = pgTable(
     endedAt: timestamp("ended_at", { withTimezone: true }),
     trialStart: timestamp("trial_start", { withTimezone: true }),
     trialEnd: timestamp("trial_end", { withTimezone: true }),
-    latestStripeInvoiceId: text("latest_stripe_invoice_id"),
-    stripeCreatedAt: timestamp("stripe_created_at", {
+    latestProviderInvoiceId: text("latest_provider_invoice_id"),
+    providerCreatedAt: timestamp("provider_created_at", {
       withTimezone: true,
     }).notNull(),
-    stripeSyncedAt: timestamp("stripe_synced_at", {
-      withTimezone: true,
-    }).notNull(),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -62,8 +62,12 @@ export const subscriptionsSchema = pgTable(
       .defaultNow(),
   },
   (table) => [
+    uniqueIndex("subscriptions_provider_provider_subscription_id_idx").on(
+      table.provider,
+      table.providerSubscriptionId,
+    ),
     uniqueIndex("subscriptions_one_live_per_customer_idx")
-      .on(table.stripeCustomerId)
+      .on(table.provider, table.providerCustomerId)
       .where(sql`${table.status} not in ('canceled', 'incomplete_expired')`),
     index("subscriptions_user_id_idx").on(table.userId),
   ],

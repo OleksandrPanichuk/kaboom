@@ -22,17 +22,22 @@ export class BillingCatalogService extends Service {
 
       if (!price) {
         throw new BillingPriceMisconfiguredError(
-          `No active Stripe price has the lookup key "${offer.lookupKey}"`,
+          `No active ${this.provider.name} price has the lookup key "${offer.lookupKey}"`,
         );
       }
 
       if (price.type !== offer.type) {
         throw new BillingPriceMisconfiguredError(
-          `The Stripe price "${offer.lookupKey}" must be ${offer.type}, not ${price.type}`,
+          `The ${this.provider.name} price "${offer.lookupKey}" must be ${offer.type}, not ${price.type}`,
         );
       }
 
-      return { ...price, lookupKey: offer.lookupKey, planKey: offer.planKey };
+      return {
+        ...price,
+        provider: this.provider.name,
+        lookupKey: offer.lookupKey,
+        planKey: offer.planKey,
+      };
     });
 
     await this.prices.sync(synced, new Date());

@@ -18,6 +18,8 @@ export interface StripeBillingProviderOptions {
 }
 
 export class StripeBillingProvider extends BillingProvider {
+  public readonly name = "stripe" as const;
+
   private readonly stripe: Stripe;
 
   constructor({ secretKey, appName }: StripeBillingProviderOptions) {

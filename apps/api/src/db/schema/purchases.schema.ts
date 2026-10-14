@@ -9,6 +9,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { BILLING_PROVIDERS } from "./billing_events.schema";
 import { usersSchema } from "./users.schema";
 
 export const PURCHASE_STATUSES = [
@@ -28,10 +29,11 @@ export const purchasesSchema = pgTable(
     userId: uuid("user_id").references(() => usersSchema.id, {
       onDelete: "set null",
     }),
-    stripeCustomerId: text("stripe_customer_id").notNull(),
-    stripePriceId: text("stripe_price_id").notNull(),
-    stripeInvoiceId: text("stripe_invoice_id").notNull().unique(),
-    stripePaymentIntentId: text("stripe_payment_intent_id"),
+    provider: text("provider", { enum: BILLING_PROVIDERS }).notNull(),
+    providerCustomerId: text("provider_customer_id").notNull(),
+    providerPriceId: text("provider_price_id").notNull(),
+    providerInvoiceId: text("provider_invoice_id").notNull(),
+    providerPaymentId: text("provider_payment_id"),
     status: text("status", { enum: PURCHASE_STATUSES })
       .notNull()
       .default("pending"),
@@ -50,8 +52,12 @@ export const purchasesSchema = pgTable(
       .defaultNow(),
   },
   (table) => [
+    uniqueIndex("purchases_provider_provider_invoice_id_idx").on(
+      table.provider,
+      table.providerInvoiceId,
+    ),
     uniqueIndex("purchases_one_live_per_customer_idx")
-      .on(table.stripeCustomerId)
+      .on(table.provider, table.providerCustomerId)
       .where(sql`${table.status} in ('pending', 'paid', 'partially_refunded')`),
     index("purchases_user_id_idx").on(table.userId),
   ],

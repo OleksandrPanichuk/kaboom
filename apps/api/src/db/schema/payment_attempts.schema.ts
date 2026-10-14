@@ -4,8 +4,11 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+
+import { BILLING_PROVIDERS } from "./billing_events.schema";
 
 export const PAYMENT_ATTEMPT_STATUSES = [
   "pending",
@@ -18,9 +21,10 @@ export const paymentAttemptsSchema = pgTable(
   "payment_attempts",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    stripeChargeId: text("stripe_charge_id").notNull().unique(),
-    stripePaymentIntentId: text("stripe_payment_intent_id"),
-    stripeCustomerId: text("stripe_customer_id"),
+    provider: text("provider", { enum: BILLING_PROVIDERS }).notNull(),
+    providerAttemptId: text("provider_attempt_id").notNull(),
+    providerPaymentId: text("provider_payment_id"),
+    providerCustomerId: text("provider_customer_id"),
     status: text("status", { enum: PAYMENT_ATTEMPT_STATUSES }).notNull(),
     amount: bigint("amount", { mode: "number" }).notNull(),
     amountRefunded: bigint("amount_refunded", { mode: "number" })
@@ -31,15 +35,13 @@ export const paymentAttemptsSchema = pgTable(
     riskLevel: text("risk_level"),
     failureCode: text("failure_code"),
     failureMessage: text("failure_message"),
-    stripeBalanceTransactionId: text("stripe_balance_transaction_id"),
+    providerTransactionId: text("provider_transaction_id"),
     fee: bigint("fee", { mode: "number" }),
     net: bigint("net", { mode: "number" }),
-    stripeCreatedAt: timestamp("stripe_created_at", {
+    providerCreatedAt: timestamp("provider_created_at", {
       withTimezone: true,
     }).notNull(),
-    stripeSyncedAt: timestamp("stripe_synced_at", {
-      withTimezone: true,
-    }).notNull(),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -48,9 +50,14 @@ export const paymentAttemptsSchema = pgTable(
       .defaultNow(),
   },
   (table) => [
-    index("payment_attempts_payment_intent_idx").on(
-      table.stripePaymentIntentId,
-      table.stripeCreatedAt,
+    uniqueIndex("payment_attempts_provider_provider_attempt_id_idx").on(
+      table.provider,
+      table.providerAttemptId,
+    ),
+    index("payment_attempts_payment_idx").on(
+      table.provider,
+      table.providerPaymentId,
+      table.providerCreatedAt,
     ),
   ],
 );

@@ -8,6 +8,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { billingEventsSchema } from "./billing_events.schema";
 import {
   SUBSCRIPTION_STATUSES,
   subscriptionsSchema,
@@ -28,7 +29,11 @@ export const SUBSCRIPTION_CHANGE_KINDS = [
 ] as const;
 export type SubscriptionChangeKind = (typeof SUBSCRIPTION_CHANGE_KINDS)[number];
 
-export const SUBSCRIPTION_CHANGE_ACTORS = ["user", "system", "stripe"] as const;
+export const SUBSCRIPTION_CHANGE_ACTORS = [
+  "user",
+  "system",
+  "provider",
+] as const;
 export type SubscriptionChangeActor =
   (typeof SUBSCRIPTION_CHANGE_ACTORS)[number];
 
@@ -42,15 +47,18 @@ export const subscriptionChangesSchema = pgTable(
     kind: text("kind", { enum: SUBSCRIPTION_CHANGE_KINDS }).notNull(),
     fromStatus: text("from_status", { enum: SUBSCRIPTION_STATUSES }),
     toStatus: text("to_status", { enum: SUBSCRIPTION_STATUSES }),
-    fromStripePriceId: text("from_stripe_price_id"),
-    toStripePriceId: text("to_stripe_price_id"),
+    fromProviderPriceId: text("from_provider_price_id"),
+    toProviderPriceId: text("to_provider_price_id"),
     fromQuantity: integer("from_quantity"),
     toQuantity: integer("to_quantity"),
     actor: text("actor", { enum: SUBSCRIPTION_CHANGE_ACTORS }).notNull(),
     actorUserId: uuid("actor_user_id").references(() => usersSchema.id, {
       onDelete: "set null",
     }),
-    stripeEventId: text("stripe_event_id"),
+    billingEventId: uuid("billing_event_id").references(
+      () => billingEventsSchema.id,
+      { onDelete: "set null" },
+    ),
     effectiveAt: timestamp("effective_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -59,7 +67,7 @@ export const subscriptionChangesSchema = pgTable(
   (table) => [
     uniqueIndex("subscription_changes_event_kind_idx").on(
       table.subscriptionId,
-      table.stripeEventId,
+      table.billingEventId,
       table.kind,
     ),
     index("subscription_changes_subscription_effective_at_idx").on(

@@ -23,8 +23,9 @@ export class PostgresBillingPricesRepository extends BillingPricesRepository {
           .set({ lookupKey: null, active: false, updatedAt: at })
           .where(
             and(
+              eq(billingPricesSchema.provider, price.provider),
               eq(billingPricesSchema.lookupKey, price.lookupKey),
-              ne(billingPricesSchema.stripePriceId, price.id),
+              ne(billingPricesSchema.providerPriceId, price.id),
             ),
           );
 
@@ -38,15 +39,22 @@ export class PostgresBillingPricesRepository extends BillingPricesRepository {
           currency: price.currency,
           taxBehavior: price.taxBehavior,
           active: price.active,
-          stripeSyncedAt: at,
+          syncedAt: at,
           updatedAt: at,
         };
 
         await this.db
           .insert(billingPricesSchema)
-          .values({ stripePriceId: price.id, ...values })
+          .values({
+            provider: price.provider,
+            providerPriceId: price.id,
+            ...values,
+          })
           .onConflictDoUpdate({
-            target: billingPricesSchema.stripePriceId,
+            target: [
+              billingPricesSchema.provider,
+              billingPricesSchema.providerPriceId,
+            ],
             set: values,
           });
       }

@@ -4,9 +4,11 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { BILLING_PROVIDERS } from "./billing_events.schema";
 import { usersSchema } from "./users.schema";
 
 export const INVOICE_STATUSES = [
@@ -25,9 +27,10 @@ export const invoicesSchema = pgTable(
     userId: uuid("user_id").references(() => usersSchema.id, {
       onDelete: "set null",
     }),
-    stripeInvoiceId: text("stripe_invoice_id").notNull().unique(),
-    stripeCustomerId: text("stripe_customer_id").notNull(),
-    stripeSubscriptionId: text("stripe_subscription_id"),
+    provider: text("provider", { enum: BILLING_PROVIDERS }).notNull(),
+    providerInvoiceId: text("provider_invoice_id").notNull(),
+    providerCustomerId: text("provider_customer_id").notNull(),
+    providerSubscriptionId: text("provider_subscription_id"),
     number: text("number"),
     status: text("status", { enum: INVOICE_STATUSES }).notNull(),
     billingReason: text("billing_reason"),
@@ -48,17 +51,15 @@ export const invoicesSchema = pgTable(
     addressPostalCode: text("address_postal_code"),
     addressCountry: text("address_country"),
     hostedInvoiceUrl: text("hosted_invoice_url"),
-    invoicePdf: text("invoice_pdf"),
+    invoicePdfUrl: text("invoice_pdf_url"),
     dueDate: timestamp("due_date", { withTimezone: true }),
     finalizedAt: timestamp("finalized_at", { withTimezone: true }),
     paidAt: timestamp("paid_at", { withTimezone: true }),
     voidedAt: timestamp("voided_at", { withTimezone: true }),
-    stripeCreatedAt: timestamp("stripe_created_at", {
+    providerCreatedAt: timestamp("provider_created_at", {
       withTimezone: true,
     }).notNull(),
-    stripeSyncedAt: timestamp("stripe_synced_at", {
-      withTimezone: true,
-    }).notNull(),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -67,12 +68,19 @@ export const invoicesSchema = pgTable(
       .defaultNow(),
   },
   (table) => [
+    uniqueIndex("invoices_provider_provider_invoice_id_idx").on(
+      table.provider,
+      table.providerInvoiceId,
+    ),
     index("invoices_user_created_idx").on(
       table.userId,
-      table.stripeCreatedAt,
+      table.providerCreatedAt,
       table.id,
     ),
-    index("invoices_stripe_subscription_id_idx").on(table.stripeSubscriptionId),
+    index("invoices_subscription_idx").on(
+      table.provider,
+      table.providerSubscriptionId,
+    ),
   ],
 );
 

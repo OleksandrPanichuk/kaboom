@@ -18,12 +18,12 @@ export const billingModule = defineModule({
   register: ({ env }) => {
     const offers: PriceOffer[] = [
       {
-        lookupKey: env.STRIPE_PRICE_PRO_MONTHLY,
+        lookupKey: env.BILLING_PRICE_PRO_MONTHLY,
         planKey: "pro",
         type: "recurring",
       },
       {
-        lookupKey: env.STRIPE_PRICE_PRO_LIFETIME,
+        lookupKey: env.BILLING_PRICE_PRO_LIFETIME,
         planKey: "pro",
         type: "one_time",
       },

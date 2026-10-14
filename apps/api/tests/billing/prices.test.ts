@@ -20,12 +20,12 @@ import {
 const env = getEnv();
 const OFFERS: PriceOffer[] = [
   {
-    lookupKey: env.STRIPE_PRICE_PRO_MONTHLY,
+    lookupKey: env.BILLING_PRICE_PRO_MONTHLY,
     planKey: "pro",
     type: "recurring",
   },
   {
-    lookupKey: env.STRIPE_PRICE_PRO_LIFETIME,
+    lookupKey: env.BILLING_PRICE_PRO_LIFETIME,
     planKey: "pro",
     type: "one_time",
   },
@@ -98,7 +98,7 @@ describe("the prices on offer", () => {
     const [old] = await getDatabase()
       .select()
       .from(billingPricesSchema)
-      .where(eq(billingPricesSchema.stripePriceId, MONTHLY!.id));
+      .where(eq(billingPricesSchema.providerPriceId, MONTHLY!.id));
 
     expect(old).toMatchObject({ lookupKey: null, active: false });
   });
@@ -117,7 +117,7 @@ describe("the prices on offer", () => {
 
     expect(await failure()).toMatchObject({
       message:
-        'The Stripe price "pro_lifetime" must be one_time, not recurring',
+        'The stripe price "pro_lifetime" must be one_time, not recurring',
     });
   });
 });

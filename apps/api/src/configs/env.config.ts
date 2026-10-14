@@ -151,9 +151,12 @@ export const EnvSchema = z.object({
     emptyAsUnset,
     z.string().min(1).optional(),
   ),
-  STRIPE_TAX_ENABLED: z.preprocess(emptyAsUnset, z.stringbool().default(false)),
-  STRIPE_PRICE_PRO_MONTHLY: z.string().trim().min(1).default("pro_monthly"),
-  STRIPE_PRICE_PRO_LIFETIME: z.string().trim().min(1).default("pro_lifetime"),
+  BILLING_TAX_ENABLED: z.preprocess(
+    emptyAsUnset,
+    z.stringbool().default(false),
+  ),
+  BILLING_PRICE_PRO_MONTHLY: z.string().trim().min(1).default("pro_monthly"),
+  BILLING_PRICE_PRO_LIFETIME: z.string().trim().min(1).default("pro_lifetime"),
 
   DESIGN_TEST_WORKERS: z.coerce.number().int().min(1).max(32).default(2),
   DESIGN_TEST_TIMEOUT_MS: z.coerce

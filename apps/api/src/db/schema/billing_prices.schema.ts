@@ -5,8 +5,11 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+
+import { BILLING_PROVIDERS } from "./billing_events.schema";
 
 export const PLAN_KEYS = ["pro"] as const;
 export type PlanKey = (typeof PLAN_KEYS)[number];
@@ -20,29 +23,41 @@ export type PriceInterval = (typeof PRICE_INTERVALS)[number];
 export const TAX_BEHAVIORS = ["inclusive", "exclusive", "unspecified"] as const;
 export type TaxBehavior = (typeof TAX_BEHAVIORS)[number];
 
-export const billingPricesSchema = pgTable("billing_prices", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  stripePriceId: text("stripe_price_id").notNull().unique(),
-  lookupKey: text("lookup_key").unique(),
-  planKey: text("plan_key", { enum: PLAN_KEYS }).notNull(),
-  type: text("type", { enum: PRICE_TYPES }).notNull(),
-  interval: text("interval", { enum: PRICE_INTERVALS }),
-  intervalCount: integer("interval_count"),
-  unitAmount: bigint("unit_amount", { mode: "number" }).notNull(),
-  currency: text("currency").notNull(),
-  taxBehavior: text("tax_behavior", { enum: TAX_BEHAVIORS })
-    .notNull()
-    .default("unspecified"),
-  active: boolean("active").notNull(),
-  stripeSyncedAt: timestamp("stripe_synced_at", {
-    withTimezone: true,
-  }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const billingPricesSchema = pgTable(
+  "billing_prices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    provider: text("provider", { enum: BILLING_PROVIDERS }).notNull(),
+    providerPriceId: text("provider_price_id").notNull(),
+    lookupKey: text("lookup_key"),
+    planKey: text("plan_key", { enum: PLAN_KEYS }).notNull(),
+    type: text("type", { enum: PRICE_TYPES }).notNull(),
+    interval: text("interval", { enum: PRICE_INTERVALS }),
+    intervalCount: integer("interval_count"),
+    unitAmount: bigint("unit_amount", { mode: "number" }).notNull(),
+    currency: text("currency").notNull(),
+    taxBehavior: text("tax_behavior", { enum: TAX_BEHAVIORS })
+      .notNull()
+      .default("unspecified"),
+    active: boolean("active").notNull(),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("billing_prices_provider_provider_price_id_idx").on(
+      table.provider,
+      table.providerPriceId,
+    ),
+    uniqueIndex("billing_prices_provider_lookup_key_idx").on(
+      table.provider,
+      table.lookupKey,
+    ),
+  ],
+);
 
 export type BillingPriceRow = typeof billingPricesSchema.$inferSelect;

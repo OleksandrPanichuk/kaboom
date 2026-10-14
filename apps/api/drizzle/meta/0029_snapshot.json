@@ -1,5 +1,5 @@
 {
-  "id": "f4f30d07-5788-4b3f-a27c-695a4d7b7cf5",
+  "id": "95bfd06e-18b2-4256-883a-6def6bbdd6e0",
   "prevId": "90e5b20a-9e50-4231-b1a9-202bf8d0843f",
   "version": "7",
   "dialect": "postgresql",
@@ -147,8 +147,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_customer_id": {
-          "name": "stripe_customer_id",
+        "provider": {
+          "name": "provider",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_customer_id": {
+          "name": "provider_customer_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -201,8 +207,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "default_payment_method_id": {
-          "name": "default_payment_method_id",
+        "provider_payment_method_id": {
+          "name": "provider_payment_method_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -239,8 +245,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_synced_at": {
-          "name": "stripe_synced_at",
+        "synced_at": {
+          "name": "synced_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -260,7 +266,50 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "billing_customers_provider_provider_customer_id_idx": {
+          "name": "billing_customers_provider_provider_customer_id_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_customer_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "billing_customers_provider_user_idx": {
+          "name": "billing_customers_provider_user_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "billing_customers_user_id_users_id_fk": {
           "name": "billing_customers_user_id_users_id_fk",
@@ -277,22 +326,166 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "billing_customers_user_id_unique": {
-          "name": "billing_customers_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.billing_events": {
+      "name": "billing_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
-        "billing_customers_stripe_customer_id_unique": {
-          "name": "billing_customers_stripe_customer_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripe_customer_id"
-          ]
+        "provider": {
+          "name": "provider",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_event_id": {
+          "name": "provider_event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_object_id": {
+          "name": "provider_object_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "live": {
+          "name": "live",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "last_error": {
+          "name": "last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "provider_created_at": {
+          "name": "provider_created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
+      "indexes": {
+        "billing_events_provider_provider_event_id_idx": {
+          "name": "billing_events_provider_provider_event_id_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "billing_events_status_received_at_idx": {
+          "name": "billing_events_status_received_at_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "received_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "billing_events_provider_object_idx": {
+          "name": "billing_events_provider_object_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_object_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -308,8 +501,14 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "stripe_price_id": {
-          "name": "stripe_price_id",
+        "provider": {
+          "name": "provider",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_price_id": {
+          "name": "provider_price_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -369,8 +568,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_synced_at": {
-          "name": "stripe_synced_at",
+        "synced_at": {
+          "name": "synced_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -390,25 +589,53 @@
           "default": "now()"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "billing_prices_stripe_price_id_unique": {
-          "name": "billing_prices_stripe_price_id_unique",
-          "nullsNotDistinct": false,
+      "indexes": {
+        "billing_prices_provider_provider_price_id_idx": {
+          "name": "billing_prices_provider_provider_price_id_idx",
           "columns": [
-            "stripe_price_id"
-          ]
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_price_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
-        "billing_prices_lookup_key_unique": {
-          "name": "billing_prices_lookup_key_unique",
-          "nullsNotDistinct": false,
+        "billing_prices_provider_lookup_key_idx": {
+          "name": "billing_prices_provider_lookup_key_idx",
           "columns": [
-            "lookup_key"
-          ]
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lookup_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -430,14 +657,20 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_tax_id": {
-          "name": "stripe_tax_id",
+        "provider": {
+          "name": "provider",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_customer_id": {
-          "name": "stripe_customer_id",
+        "provider_tax_id": {
+          "name": "provider_tax_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_customer_id": {
+          "name": "provider_customer_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -460,8 +693,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_synced_at": {
-          "name": "stripe_synced_at",
+        "synced_at": {
+          "name": "synced_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -482,11 +715,38 @@
         }
       },
       "indexes": {
+        "billing_tax_ids_provider_provider_tax_id_idx": {
+          "name": "billing_tax_ids_provider_provider_tax_id_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_tax_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "billing_tax_ids_customer_idx": {
           "name": "billing_tax_ids_customer_idx",
           "columns": [
             {
-              "expression": "stripe_customer_id",
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_customer_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -514,15 +774,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "billing_tax_ids_stripe_tax_id_unique": {
-          "name": "billing_tax_ids_stripe_tax_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripe_tax_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -776,20 +1028,26 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_dispute_id": {
-          "name": "stripe_dispute_id",
+        "provider": {
+          "name": "provider",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_charge_id": {
-          "name": "stripe_charge_id",
+        "provider_dispute_id": {
+          "name": "provider_dispute_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_payment_intent_id": {
-          "name": "stripe_payment_intent_id",
+        "provider_attempt_id": {
+          "name": "provider_attempt_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_payment_id": {
+          "name": "provider_payment_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -830,14 +1088,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_created_at": {
-          "name": "stripe_created_at",
+        "provider_created_at": {
+          "name": "provider_created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_synced_at": {
-          "name": "stripe_synced_at",
+        "synced_at": {
+          "name": "synced_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -858,11 +1116,38 @@
         }
       },
       "indexes": {
-        "disputes_charge_idx": {
-          "name": "disputes_charge_idx",
+        "disputes_provider_provider_dispute_id_idx": {
+          "name": "disputes_provider_provider_dispute_id_idx",
           "columns": [
             {
-              "expression": "stripe_charge_id",
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_dispute_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "disputes_attempt_idx": {
+          "name": "disputes_attempt_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_attempt_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -890,15 +1175,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "disputes_stripe_dispute_id_unique": {
-          "name": "disputes_stripe_dispute_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripe_dispute_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1459,20 +1736,26 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_invoice_id": {
-          "name": "stripe_invoice_id",
+        "provider": {
+          "name": "provider",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_customer_id": {
-          "name": "stripe_customer_id",
+        "provider_invoice_id": {
+          "name": "provider_invoice_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_subscription_id": {
-          "name": "stripe_subscription_id",
+        "provider_customer_id": {
+          "name": "provider_customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_subscription_id": {
+          "name": "provider_subscription_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1598,8 +1881,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "invoice_pdf": {
-          "name": "invoice_pdf",
+        "invoice_pdf_url": {
+          "name": "invoice_pdf_url",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1628,14 +1911,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_created_at": {
-          "name": "stripe_created_at",
+        "provider_created_at": {
+          "name": "provider_created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_synced_at": {
-          "name": "stripe_synced_at",
+        "synced_at": {
+          "name": "synced_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -1656,6 +1939,27 @@
         }
       },
       "indexes": {
+        "invoices_provider_provider_invoice_id_idx": {
+          "name": "invoices_provider_provider_invoice_id_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_invoice_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "invoices_user_created_idx": {
           "name": "invoices_user_created_idx",
           "columns": [
@@ -1666,7 +1970,7 @@
               "nulls": "last"
             },
             {
-              "expression": "stripe_created_at",
+              "expression": "provider_created_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1683,11 +1987,17 @@
           "method": "btree",
           "with": {}
         },
-        "invoices_stripe_subscription_id_idx": {
-          "name": "invoices_stripe_subscription_id_idx",
+        "invoices_subscription_idx": {
+          "name": "invoices_subscription_idx",
           "columns": [
             {
-              "expression": "stripe_subscription_id",
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_subscription_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1715,15 +2025,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "invoices_stripe_invoice_id_unique": {
-          "name": "invoices_stripe_invoice_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripe_invoice_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2014,20 +2316,26 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "stripe_charge_id": {
-          "name": "stripe_charge_id",
+        "provider": {
+          "name": "provider",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_payment_intent_id": {
-          "name": "stripe_payment_intent_id",
+        "provider_attempt_id": {
+          "name": "provider_attempt_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_payment_id": {
+          "name": "provider_payment_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_customer_id": {
-          "name": "stripe_customer_id",
+        "provider_customer_id": {
+          "name": "provider_customer_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -2081,8 +2389,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_balance_transaction_id": {
-          "name": "stripe_balance_transaction_id",
+        "provider_transaction_id": {
+          "name": "provider_transaction_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -2099,14 +2407,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_created_at": {
-          "name": "stripe_created_at",
+        "provider_created_at": {
+          "name": "provider_created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_synced_at": {
-          "name": "stripe_synced_at",
+        "synced_at": {
+          "name": "synced_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -2127,17 +2435,44 @@
         }
       },
       "indexes": {
-        "payment_attempts_payment_intent_idx": {
-          "name": "payment_attempts_payment_intent_idx",
+        "payment_attempts_provider_provider_attempt_id_idx": {
+          "name": "payment_attempts_provider_provider_attempt_id_idx",
           "columns": [
             {
-              "expression": "stripe_payment_intent_id",
+              "expression": "provider",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "stripe_created_at",
+              "expression": "provider_attempt_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "payment_attempts_payment_idx": {
+          "name": "payment_attempts_payment_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_payment_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_created_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2151,15 +2486,7 @@
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "payment_attempts_stripe_charge_id_unique": {
-          "name": "payment_attempts_stripe_charge_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripe_charge_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2181,20 +2508,26 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_payment_intent_id": {
-          "name": "stripe_payment_intent_id",
+        "provider": {
+          "name": "provider",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_customer_id": {
-          "name": "stripe_customer_id",
+        "provider_payment_id": {
+          "name": "provider_payment_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_customer_id": {
+          "name": "provider_customer_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_invoice_id": {
-          "name": "stripe_invoice_id",
+        "provider_invoice_id": {
+          "name": "provider_invoice_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -2266,14 +2599,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_created_at": {
-          "name": "stripe_created_at",
+        "provider_created_at": {
+          "name": "provider_created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_synced_at": {
-          "name": "stripe_synced_at",
+        "synced_at": {
+          "name": "synced_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -2294,6 +2627,27 @@
         }
       },
       "indexes": {
+        "payments_provider_provider_payment_id_idx": {
+          "name": "payments_provider_provider_payment_id_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_payment_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "payments_user_created_idx": {
           "name": "payments_user_created_idx",
           "columns": [
@@ -2304,7 +2658,7 @@
               "nulls": "last"
             },
             {
-              "expression": "stripe_created_at",
+              "expression": "provider_created_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2321,11 +2675,17 @@
           "method": "btree",
           "with": {}
         },
-        "payments_stripe_invoice_id_idx": {
-          "name": "payments_stripe_invoice_id_idx",
+        "payments_invoice_idx": {
+          "name": "payments_invoice_idx",
           "columns": [
             {
-              "expression": "stripe_invoice_id",
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_invoice_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2353,15 +2713,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "payments_stripe_payment_intent_id_unique": {
-          "name": "payments_stripe_payment_intent_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripe_payment_intent_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -3212,26 +3564,32 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_customer_id": {
-          "name": "stripe_customer_id",
+        "provider": {
+          "name": "provider",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_price_id": {
-          "name": "stripe_price_id",
+        "provider_customer_id": {
+          "name": "provider_customer_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_invoice_id": {
-          "name": "stripe_invoice_id",
+        "provider_price_id": {
+          "name": "provider_price_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_payment_intent_id": {
-          "name": "stripe_payment_intent_id",
+        "provider_invoice_id": {
+          "name": "provider_invoice_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_payment_id": {
+          "name": "provider_payment_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -3290,11 +3648,38 @@
         }
       },
       "indexes": {
+        "purchases_provider_provider_invoice_id_idx": {
+          "name": "purchases_provider_provider_invoice_id_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_invoice_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "purchases_one_live_per_customer_idx": {
           "name": "purchases_one_live_per_customer_idx",
           "columns": [
             {
-              "expression": "stripe_customer_id",
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_customer_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3338,15 +3723,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "purchases_stripe_invoice_id_unique": {
-          "name": "purchases_stripe_invoice_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripe_invoice_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -3368,32 +3745,38 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_refund_id": {
-          "name": "stripe_refund_id",
+        "provider": {
+          "name": "provider",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_charge_id": {
-          "name": "stripe_charge_id",
+        "provider_refund_id": {
+          "name": "provider_refund_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_attempt_id": {
+          "name": "provider_attempt_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_payment_intent_id": {
-          "name": "stripe_payment_intent_id",
+        "provider_payment_id": {
+          "name": "provider_payment_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_invoice_id": {
-          "name": "stripe_invoice_id",
+        "provider_invoice_id": {
+          "name": "provider_invoice_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_credit_note_id": {
-          "name": "stripe_credit_note_id",
+        "provider_credit_note_id": {
+          "name": "provider_credit_note_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -3428,14 +3811,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_created_at": {
-          "name": "stripe_created_at",
+        "provider_created_at": {
+          "name": "provider_created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_synced_at": {
-          "name": "stripe_synced_at",
+        "synced_at": {
+          "name": "synced_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -3456,11 +3839,38 @@
         }
       },
       "indexes": {
-        "refunds_payment_intent_idx": {
-          "name": "refunds_payment_intent_idx",
+        "refunds_provider_provider_refund_id_idx": {
+          "name": "refunds_provider_provider_refund_id_idx",
           "columns": [
             {
-              "expression": "stripe_payment_intent_id",
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_refund_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "refunds_payment_idx": {
+          "name": "refunds_payment_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_payment_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3481,7 +3891,7 @@
               "nulls": "last"
             },
             {
-              "expression": "stripe_created_at",
+              "expression": "provider_created_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3509,15 +3919,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "refunds_stripe_refund_id_unique": {
-          "name": "refunds_stripe_refund_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripe_refund_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -4072,131 +4474,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.stripe_events": {
-      "name": "stripe_events",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "object_id": {
-          "name": "object_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "livemode": {
-          "name": "livemode",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "api_version": {
-          "name": "api_version",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "payload": {
-          "name": "payload",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "attempts": {
-          "name": "attempts",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "last_error": {
-          "name": "last_error",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stripe_created_at": {
-          "name": "stripe_created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "received_at": {
-          "name": "received_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "processed_at": {
-          "name": "processed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "stripe_events_status_received_at_idx": {
-          "name": "stripe_events_status_received_at_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "received_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "stripe_events_object_id_idx": {
-          "name": "stripe_events_object_id_idx",
-          "columns": [
-            {
-              "expression": "object_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.submissions": {
       "name": "submissions",
       "schema": "",
@@ -4541,14 +4818,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "from_stripe_price_id": {
-          "name": "from_stripe_price_id",
+        "from_provider_price_id": {
+          "name": "from_provider_price_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "to_stripe_price_id": {
-          "name": "to_stripe_price_id",
+        "to_provider_price_id": {
+          "name": "to_provider_price_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -4577,9 +4854,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_event_id": {
-          "name": "stripe_event_id",
-          "type": "text",
+        "billing_event_id": {
+          "name": "billing_event_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -4608,7 +4885,7 @@
               "nulls": "last"
             },
             {
-              "expression": "stripe_event_id",
+              "expression": "billing_event_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -4679,6 +4956,19 @@
           ],
           "onDelete": "set null",
           "onUpdate": "no action"
+        },
+        "subscription_changes_billing_event_id_billing_events_id_fk": {
+          "name": "subscription_changes_billing_event_id_billing_events_id_fk",
+          "tableFrom": "subscription_changes",
+          "tableTo": "billing_events",
+          "columnsFrom": [
+            "billing_event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -4704,20 +4994,26 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_subscription_id": {
-          "name": "stripe_subscription_id",
+        "provider": {
+          "name": "provider",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_customer_id": {
-          "name": "stripe_customer_id",
+        "provider_subscription_id": {
+          "name": "provider_subscription_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_price_id": {
-          "name": "stripe_price_id",
+        "provider_customer_id": {
+          "name": "provider_customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_price_id": {
+          "name": "provider_price_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -4790,20 +5086,20 @@
           "primaryKey": false,
           "notNull": false
         },
-        "latest_stripe_invoice_id": {
-          "name": "latest_stripe_invoice_id",
+        "latest_provider_invoice_id": {
+          "name": "latest_provider_invoice_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_created_at": {
-          "name": "stripe_created_at",
+        "provider_created_at": {
+          "name": "provider_created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_synced_at": {
-          "name": "stripe_synced_at",
+        "synced_at": {
+          "name": "synced_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -4824,11 +5120,38 @@
         }
       },
       "indexes": {
+        "subscriptions_provider_provider_subscription_id_idx": {
+          "name": "subscriptions_provider_provider_subscription_id_idx",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_subscription_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "subscriptions_one_live_per_customer_idx": {
           "name": "subscriptions_one_live_per_customer_idx",
           "columns": [
             {
-              "expression": "stripe_customer_id",
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_customer_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -4872,15 +5195,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "subscriptions_stripe_subscription_id_unique": {
-          "name": "subscriptions_stripe_subscription_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripe_subscription_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

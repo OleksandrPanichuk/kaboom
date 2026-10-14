@@ -4,9 +4,11 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { BILLING_PROVIDERS } from "./billing_events.schema";
 import { usersSchema } from "./users.schema";
 
 export const PAYMENT_STATUSES = [
@@ -27,9 +29,10 @@ export const paymentsSchema = pgTable(
     userId: uuid("user_id").references(() => usersSchema.id, {
       onDelete: "set null",
     }),
-    stripePaymentIntentId: text("stripe_payment_intent_id").notNull().unique(),
-    stripeCustomerId: text("stripe_customer_id"),
-    stripeInvoiceId: text("stripe_invoice_id"),
+    provider: text("provider", { enum: BILLING_PROVIDERS }).notNull(),
+    providerPaymentId: text("provider_payment_id").notNull(),
+    providerCustomerId: text("provider_customer_id"),
+    providerInvoiceId: text("provider_invoice_id"),
     status: text("status", { enum: PAYMENT_STATUSES }).notNull(),
     amount: bigint("amount", { mode: "number" }).notNull(),
     amountReceived: bigint("amount_received", { mode: "number" })
@@ -43,12 +46,10 @@ export const paymentsSchema = pgTable(
     declineCode: text("decline_code"),
     failureMessage: text("failure_message"),
     succeededAt: timestamp("succeeded_at", { withTimezone: true }),
-    stripeCreatedAt: timestamp("stripe_created_at", {
+    providerCreatedAt: timestamp("provider_created_at", {
       withTimezone: true,
     }).notNull(),
-    stripeSyncedAt: timestamp("stripe_synced_at", {
-      withTimezone: true,
-    }).notNull(),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -57,12 +58,16 @@ export const paymentsSchema = pgTable(
       .defaultNow(),
   },
   (table) => [
+    uniqueIndex("payments_provider_provider_payment_id_idx").on(
+      table.provider,
+      table.providerPaymentId,
+    ),
     index("payments_user_created_idx").on(
       table.userId,
-      table.stripeCreatedAt,
+      table.providerCreatedAt,
       table.id,
     ),
-    index("payments_stripe_invoice_id_idx").on(table.stripeInvoiceId),
+    index("payments_invoice_idx").on(table.provider, table.providerInvoiceId),
   ],
 );
 

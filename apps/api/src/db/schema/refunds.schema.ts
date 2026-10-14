@@ -4,9 +4,11 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { BILLING_PROVIDERS } from "./billing_events.schema";
 import { usersSchema } from "./users.schema";
 
 export const REFUND_STATUSES = [
@@ -25,22 +27,21 @@ export const refundsSchema = pgTable(
     userId: uuid("user_id").references(() => usersSchema.id, {
       onDelete: "set null",
     }),
-    stripeRefundId: text("stripe_refund_id").notNull().unique(),
-    stripeChargeId: text("stripe_charge_id"),
-    stripePaymentIntentId: text("stripe_payment_intent_id"),
-    stripeInvoiceId: text("stripe_invoice_id"),
-    stripeCreditNoteId: text("stripe_credit_note_id"),
+    provider: text("provider", { enum: BILLING_PROVIDERS }).notNull(),
+    providerRefundId: text("provider_refund_id").notNull(),
+    providerAttemptId: text("provider_attempt_id"),
+    providerPaymentId: text("provider_payment_id"),
+    providerInvoiceId: text("provider_invoice_id"),
+    providerCreditNoteId: text("provider_credit_note_id"),
     status: text("status", { enum: REFUND_STATUSES }).notNull(),
     amount: bigint("amount", { mode: "number" }).notNull(),
     currency: text("currency").notNull(),
     reason: text("reason"),
     failureReason: text("failure_reason"),
-    stripeCreatedAt: timestamp("stripe_created_at", {
+    providerCreatedAt: timestamp("provider_created_at", {
       withTimezone: true,
     }).notNull(),
-    stripeSyncedAt: timestamp("stripe_synced_at", {
-      withTimezone: true,
-    }).notNull(),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -49,8 +50,12 @@ export const refundsSchema = pgTable(
       .defaultNow(),
   },
   (table) => [
-    index("refunds_payment_intent_idx").on(table.stripePaymentIntentId),
-    index("refunds_user_created_idx").on(table.userId, table.stripeCreatedAt),
+    uniqueIndex("refunds_provider_provider_refund_id_idx").on(
+      table.provider,
+      table.providerRefundId,
+    ),
+    index("refunds_payment_idx").on(table.provider, table.providerPaymentId),
+    index("refunds_user_created_idx").on(table.userId, table.providerCreatedAt),
   ],
 );
 

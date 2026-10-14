@@ -1,10 +1,11 @@
 import { Repository } from "@/core/repository";
-import type { PlanKey } from "@/db";
+import type { BillingProviderName, PlanKey } from "@/db";
 
 import type { BillingPriceEntity } from "../billing-price.entity";
 import type { ProviderPrice } from "./billing-provider";
 
 export interface SyncPriceData extends ProviderPrice {
+  provider: BillingProviderName;
   lookupKey: string;
   planKey: PlanKey;
 }

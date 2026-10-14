@@ -11,7 +11,7 @@ export const listPricesRoute = ({ listPrices }: BillingActions) =>
     response: t.Array(BillingPriceModel),
     summary: "List the prices on offer",
     description:
-      "The prices Pro is sold at, monthly and lifetime, as synced from Stripe when the app starts. Free has no price.",
+      "The prices Pro is sold at, monthly and lifetime, as synced from the billing provider when the app starts. Free has no price.",
 
     action: () => listPrices.execute(),
     postAction: ({ output }) => output.map(BillingPriceEntity.normalize),

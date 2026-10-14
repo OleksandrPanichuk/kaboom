@@ -29,6 +29,8 @@ export const MEMORY_PRICES: readonly ProviderPrice[] = [
 ];
 
 export class MemoryBillingProvider extends BillingProvider {
+  public readonly name = "stripe" as const;
+
   private prices: ProviderPrice[] = [...MEMORY_PRICES];
 
   public findPrices(lookupKeys: readonly string[]): Promise<ProviderPrice[]> {
