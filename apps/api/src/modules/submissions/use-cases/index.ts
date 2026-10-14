@@ -23,6 +23,11 @@ export {
   type RunProblemUseCaseOptions,
 } from "./run-problem";
 export {
+  type AttemptSplit,
+  SplitAttemptSchemasUseCase,
+  type SplitAttemptSchemasUseCaseOptions,
+} from "./split-attempt-schemas";
+export {
   StartProblemUseCase,
   type StartProblemUseCaseOptions,
 } from "./start-problem";

@@ -19,7 +19,7 @@ import { DesignRevisionsRepository, DesignsRepository } from "../ports";
 export interface ApplyDesignOpsUseCaseOptions {
   ownerId: string;
   id: string;
-  author: Exclude<DesignRevisionAuthor, "system">;
+  author: DesignRevisionAuthor;
   baseRevision: number;
   ops: DesignOp[];
 }

@@ -1191,6 +1191,18 @@ The canvas names a database's schema on its card, linking to it, and
 says when the schema is gone. Still to come: migrating existing combined
 designs, which is `splitSchemas` applied to them.
 
+Attempts started before the split are moved over by `bun run
+attempts:split-schemas` in `apps/api`, which only reports what it would
+do until it is given `--apply`. `SplitAttemptSchemasUseCase` takes each
+attempt's design through the same `splitSchemas` as starting one, in a
+transaction per attempt: it creates the schema designs with the tables'
+positions, then commits one revision by `system` that removes the tables
+and their databases and names the schemas on their nodes, so the history
+still replays. An attempt with nothing to move, including one already
+split, is skipped, so running it twice changes nothing. Submissions keep
+their frozen graphs, and interviews, drafts and sandbox designs are left
+as they are.
+
 ## Technologies
 
 A node may name the product it runs on: `technology: { id, props }`, from
