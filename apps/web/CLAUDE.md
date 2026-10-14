@@ -382,7 +382,13 @@ creates either kind and marks schemas. A SQL or NoSQL database's
 inspector gets a *Schema* section (`SchemaPicker`, passed to
 `NodeInspector` as `schemaField` so properties stay presentational): it
 lists the user's schemas, opens the chosen one, and creates a new one
-named after the node.
+named after the node. On the canvas, a database that names a schema shows
+it under the card (`SchemaLink`), a link carrying `?from=` so the
+designer leads back. `DesignWorkspace` loads the schema names only when
+a node references one and passes them to `DesignCanvas` as
+`schemaNames`; `toFlow` puts `{ designId, name }` in the node's data,
+with `name: null` for a schema the user no longer has, and no name while
+the list is loading.
 
 `features/simulation` runs `evaluateLoad` in the browser while the Run tab
 is open, on a deferred graph so typing stays smooth, and turns a step into

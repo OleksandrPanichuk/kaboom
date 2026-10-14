@@ -28,7 +28,15 @@ export type CanvasNodeData = Record<string, unknown> & {
   overlay?: NodeOverlay;
   foreignKeys?: string[];
   engine?: Engine;
+  schema?: CanvasSchema;
 };
+
+export interface CanvasSchema {
+  designId: string;
+  name?: string | null;
+}
+
+export type SchemaNames = Record<string, string>;
 
 export type CanvasNodeType =
   "design-node" | "table-node" | "collection-node" | "dynamo-table-node";

@@ -1187,8 +1187,9 @@ graph, because the interviewer sees only what reaches its own design.
 The designer takes `?from=` (a problem or a design), and the schema
 picker passes it, so a schema opened from an attempt leads back to it.
 
-Still to come: the canvas naming a database's schema, and migrating
-existing combined designs, which is `splitSchemas` applied to them.
+The canvas names a database's schema on its card, linking to it, and
+says when the schema is gone. Still to come: migrating existing combined
+designs, which is `splitSchemas` applied to them.
 
 ## Technologies
 

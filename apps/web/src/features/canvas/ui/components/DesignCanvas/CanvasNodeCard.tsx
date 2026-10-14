@@ -12,6 +12,7 @@ import {
 } from "@/features/canvas/constants";
 import type { CanvasNode } from "@/features/canvas/typedefs";
 
+import { SchemaLink } from "./SchemaLink";
 import { TechnologyMark } from "./TechnologyMark";
 
 const HANDLE =
@@ -37,7 +38,7 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
   const { hits } = data;
   const warns = hits.some((hit) => hit.severity === "warning");
   const BadgeIcon = warns ? TriangleAlert : Info;
-  const { overlay } = data;
+  const { overlay, schema } = data;
 
   return (
     <BaseNode
@@ -80,6 +81,7 @@ function CanvasNodeCardComponent({ data }: NodeProps<CanvasNode>) {
           </span>
         </div>
       </div>
+      {schema ? <SchemaLink schema={schema} /> : null}
       {overlay ? (
         <p
           className={cn(
