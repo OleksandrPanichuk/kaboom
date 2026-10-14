@@ -923,14 +923,22 @@ a balance transaction. Statuses are the module's own vocabulary, which the
 adapter maps onto, so a second provider is a second adapter, not a
 migration.
 
-The prices are found by their lookup keys (`BILLING_PRICE_PRO_MONTHLY`,
-`BILLING_PRICE_PRO_LIFETIME`) when the module starts, and copied into
-`billing_prices`, the way the official problems are synced. A missing
-price, or one of the wrong type (monthly must recur, lifetime must not),
-fails the boot rather than the first checkout. A lookup key moved to a new
-price leaves the old row inactive.
+What is on sale lives in `billing_offers`, one row per offer (`pro_monthly`,
+`pro_lifetime`, seeded by the migration that made the table): its plan, its
+type and interval, the lookup key of the provider price it sells at, whether
+it is active, and its position. When the module starts, every active offer
+is matched to the provider's active price under its lookup key and copied
+into `billing_prices` with the offer's id, the way the official problems are
+synced. A missing price, or one that bills differently from its offer (a
+one-time price for a monthly offer, a year for a month), fails the boot
+rather than the first checkout. A lookup key moved to a new price leaves the
+old row inactive. `GET /billing/offers` lists the active offers that have a
+price, in order. Changing what is sold is a row, not a deploy: tests seed
+the offers they need (`tests/billing/helpers.ts`), since the preload
+truncates the seeded rows with every other table.
 
-The tables: `billing_customers` (with the billing address),
+The tables: `billing_offers`, `billing_prices`, `billing_customers` (with
+the billing address),
 `subscriptions` and their append-only `subscription_changes`, `purchases`
 for lifetime, `invoices`, `payments` and their `payment_attempts`,
 `refunds`, `disputes`, `billing_tax_ids`, and `billing_events`, the

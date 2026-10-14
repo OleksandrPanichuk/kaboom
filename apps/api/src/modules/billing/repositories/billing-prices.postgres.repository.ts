@@ -1,9 +1,8 @@
-import { and, asc, eq, isNotNull, ne } from "drizzle-orm";
+import { and, eq, ne, or } from "drizzle-orm";
 
 import { billingPricesSchema } from "@/db";
 import { type DBExecutor, getExecutor, transaction } from "@/db/executor";
 
-import type { BillingPriceEntity } from "../billing-price.entity";
 import { BillingPricesRepository, type SyncPriceData } from "../ports";
 
 export class PostgresBillingPricesRepository extends BillingPricesRepository {
@@ -18,20 +17,27 @@ export class PostgresBillingPricesRepository extends BillingPricesRepository {
   public sync(prices: readonly SyncPriceData[], at: Date): Promise<void> {
     return transaction(async () => {
       for (const price of prices) {
+        const replaced = price.lookupKey
+          ? or(
+              eq(billingPricesSchema.offerId, price.offerId),
+              eq(billingPricesSchema.lookupKey, price.lookupKey),
+            )
+          : eq(billingPricesSchema.offerId, price.offerId);
+
         await this.db
           .update(billingPricesSchema)
           .set({ lookupKey: null, active: false, updatedAt: at })
           .where(
             and(
               eq(billingPricesSchema.provider, price.provider),
-              eq(billingPricesSchema.lookupKey, price.lookupKey),
+              replaced,
               ne(billingPricesSchema.providerPriceId, price.id),
             ),
           );
 
         const values = {
+          offerId: price.offerId,
           lookupKey: price.lookupKey,
-          planKey: price.planKey,
           type: price.type,
           interval: price.interval,
           intervalCount: price.intervalCount,
@@ -59,25 +65,5 @@ export class PostgresBillingPricesRepository extends BillingPricesRepository {
           });
       }
     });
-  }
-
-  public async listOffered(): Promise<BillingPriceEntity[]> {
-    const rows = await this.db
-      .select()
-      .from(billingPricesSchema)
-      .where(
-        and(
-          eq(billingPricesSchema.active, true),
-          isNotNull(billingPricesSchema.lookupKey),
-        ),
-      )
-      .orderBy(
-        asc(billingPricesSchema.unitAmount),
-        asc(billingPricesSchema.id),
-      );
-
-    return rows.filter(
-      (row): row is BillingPriceEntity => row.lookupKey !== null,
-    );
   }
 }

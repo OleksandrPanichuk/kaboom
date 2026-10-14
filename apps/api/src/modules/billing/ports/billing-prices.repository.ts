@@ -1,13 +1,11 @@
 import { Repository } from "@/core/repository";
-import type { BillingProviderName, PlanKey } from "@/db";
+import type { BillingProviderName } from "@/db";
 
-import type { BillingPriceEntity } from "../billing-price.entity";
 import type { ProviderPrice } from "./billing-provider";
 
 export interface SyncPriceData extends ProviderPrice {
   provider: BillingProviderName;
-  lookupKey: string;
-  planKey: PlanKey;
+  offerId: string;
 }
 
 export abstract class BillingPricesRepository extends Repository {
@@ -15,6 +13,4 @@ export abstract class BillingPricesRepository extends Repository {
     prices: readonly SyncPriceData[],
     at: Date,
   ): Promise<void>;
-
-  public abstract listOffered(): Promise<BillingPriceEntity[]>;
 }

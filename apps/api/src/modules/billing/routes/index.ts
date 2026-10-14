@@ -1,3 +1,3 @@
-export * from "./list-prices.route";
+export * from "./list-offers.route";
 export * from "./receive-webhook.route";
 export * from "./webhook-params";

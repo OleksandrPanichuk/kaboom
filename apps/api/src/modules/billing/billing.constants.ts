@@ -1,11 +1,3 @@
-import type { PlanKey, PriceType } from "@/db";
-
-export interface PriceOffer {
-  lookupKey: string;
-  planKey: PlanKey;
-  type: PriceType;
-}
-
 export const BILLING_QUEUE = "billing";
 
 export enum BillingQueueJobs {

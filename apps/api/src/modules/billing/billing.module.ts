@@ -6,38 +6,27 @@ import { defineModule } from "@/core/module";
 import { bind, makeService, makeUseCase } from "@/core/registry";
 import { registerJob } from "@/platform/jobs";
 
-import type { PriceOffer } from "./billing.constants";
 import { billingRoutes } from "./billing.routes";
 import { BillingCatalogService } from "./billing-catalog.service";
 import { ProcessBillingEventJob } from "./jobs";
 import {
   BillingEventsRepository,
+  BillingOffersRepository,
   BillingPricesRepository,
   BillingProvider,
 } from "./ports";
 import {
   PostgresBillingEventsRepository,
+  PostgresBillingOffersRepository,
   PostgresBillingPricesRepository,
 } from "./repositories";
-import { ListPricesUseCase, ReceiveWebhookUseCase } from "./use-cases";
+import { ListOffersUseCase, ReceiveWebhookUseCase } from "./use-cases";
 
 export const billingModule = defineModule({
   name: "billing",
 
   register: ({ env }) => {
-    const offers: PriceOffer[] = [
-      {
-        lookupKey: env.BILLING_PRICE_PRO_MONTHLY,
-        planKey: "pro",
-        type: "recurring",
-      },
-      {
-        lookupKey: env.BILLING_PRICE_PRO_LIFETIME,
-        planKey: "pro",
-        type: "one_time",
-      },
-    ];
-
+    bind(BillingOffersRepository, () => new PostgresBillingOffersRepository());
     bind(BillingPricesRepository, () => new PostgresBillingPricesRepository());
     bind(BillingEventsRepository, () => new PostgresBillingEventsRepository());
     registerJob(ProcessBillingEventJob);
@@ -47,7 +36,7 @@ export const billingModule = defineModule({
 
       bind(BillingProvider, () => provider);
 
-      return { offers, configured: true };
+      return { configured: true };
     }
 
     const provider =
@@ -61,18 +50,18 @@ export const billingModule = defineModule({
 
     bind(BillingProvider, () => provider);
 
-    return { offers, configured: env.STRIPE_SECRET_KEY !== undefined };
+    return { configured: provider instanceof StripeBillingProvider };
   },
 
   start: async ({ state }) => {
     if (!state.configured) return;
 
-    await makeService(BillingCatalogService).syncPrices(state.offers);
+    await makeService(BillingCatalogService).syncPrices();
   },
 
   routes: () =>
     billingRoutes({
-      listPrices: makeUseCase(ListPricesUseCase),
+      listOffers: makeUseCase(ListOffersUseCase),
       receiveWebhook: makeUseCase(ReceiveWebhookUseCase),
     }),
 });

@@ -2,15 +2,15 @@ import { Elysia } from "elysia";
 
 import type { Executable } from "@/core/use-case";
 
-import { listPricesRoute, receiveWebhookRoute } from "./routes";
-import type { ListPricesUseCase, ReceiveWebhookUseCase } from "./use-cases";
+import { listOffersRoute, receiveWebhookRoute } from "./routes";
+import type { ListOffersUseCase, ReceiveWebhookUseCase } from "./use-cases";
 
 export interface BillingActions {
-  listPrices: Executable<ListPricesUseCase>;
+  listOffers: Executable<ListOffersUseCase>;
   receiveWebhook: Executable<ReceiveWebhookUseCase>;
 }
 
 export const billingRoutes = (actions: BillingActions) =>
   new Elysia({ name: "billing", prefix: "/billing" })
-    .get("/prices", ...listPricesRoute(actions))
+    .get("/offers", ...listOffersRoute(actions))
     .post("/webhooks/:provider", ...receiveWebhookRoute(actions));
