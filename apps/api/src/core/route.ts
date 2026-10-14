@@ -96,6 +96,7 @@ interface RouteBaseFields<
   params?: Params;
   query?: Query;
   auth?: Auth;
+  parse?: "text";
   verifiedEmail?: boolean;
   rateLimit?:
     | RouteRateLimitOptions<Body, Params, Query, Auth>
@@ -143,6 +144,7 @@ type RouteHook<
 > = {
   response: Response;
   detail: RouteDetail;
+  parse?: "text";
   cache?: RouteCacheHook;
   rateLimit?: RouteRateLimitHook[];
   verifiedEmail?: true;
@@ -211,6 +213,7 @@ export function defineRoute(
     params,
     query,
     auth,
+    parse,
     verifiedEmail,
     cache,
     rateLimit,
@@ -245,6 +248,7 @@ export function defineRoute(
     ...(params ? { params } : {}),
     ...(query ? { query } : {}),
     ...(auth ? { auth: true as const } : {}),
+    ...(parse ? { parse } : {}),
     ...(verifiedEmail ? { verifiedEmail: true as const } : {}),
     ...(cache
       ? {

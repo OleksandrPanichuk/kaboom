@@ -1,7 +1,12 @@
 import type Stripe from "stripe";
 
 import { PRICE_INTERVALS, PRICE_TYPES, TAX_BEHAVIORS } from "@/db";
-import type { ProviderPrice } from "@/modules/billing/ports/billing-provider";
+import type {
+  ProviderEvent,
+  ProviderPrice,
+} from "@/modules/billing/ports/billing-provider";
+
+import { STRIPE_EVENT_TOPICS } from "./stripe.constants";
 
 const known = <T extends string>(
   values: readonly T[],
@@ -40,5 +45,21 @@ export const toProviderPrice = (price: Stripe.Price): ProviderPrice => {
       "tax behaviour",
     ),
     active: price.active,
+  };
+};
+
+const SECOND = 1_000;
+
+export const toProviderEvent = (event: Stripe.Event): ProviderEvent => {
+  const object = event.data.object as { id?: unknown };
+
+  return {
+    id: event.id,
+    type: event.type,
+    topic: STRIPE_EVENT_TOPICS[event.type] ?? null,
+    objectId: typeof object.id === "string" ? object.id : null,
+    live: event.livemode,
+    createdAt: new Date(event.created * SECOND),
+    payload: event,
   };
 };

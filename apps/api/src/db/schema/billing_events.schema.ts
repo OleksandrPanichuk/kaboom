@@ -13,6 +13,17 @@ import {
 export const BILLING_PROVIDERS = ["stripe"] as const;
 export type BillingProviderName = (typeof BILLING_PROVIDERS)[number];
 
+export const BILLING_EVENT_TOPICS = [
+  "customer",
+  "subscription",
+  "invoice",
+  "payment",
+  "refund",
+  "dispute",
+  "tax_id",
+] as const;
+export type BillingEventTopic = (typeof BILLING_EVENT_TOPICS)[number];
+
 export const BILLING_EVENT_STATUSES = [
   "pending",
   "processed",
@@ -28,6 +39,7 @@ export const billingEventsSchema = pgTable(
     provider: text("provider", { enum: BILLING_PROVIDERS }).notNull(),
     providerEventId: text("provider_event_id").notNull(),
     type: text("type").notNull(),
+    topic: text("topic", { enum: BILLING_EVENT_TOPICS }),
     providerObjectId: text("provider_object_id"),
     live: boolean("live").notNull(),
     payload: jsonb("payload").$type<unknown>().notNull(),

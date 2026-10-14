@@ -941,6 +941,21 @@ to null when an account is deleted, since invoices must outlive the
 account. Money is a `bigint` in the currency's smallest unit beside a
 lowercase currency code.
 
+Webhooks arrive at `POST /billing/webhooks/:provider`, a route declared
+with `parse: "text"` so its body is the raw text the signature was made
+over; `defineRoute` takes that option for this case. The provider checks
+the signature (`parseWebhook`, under its own `signatureHeader`) and sorts
+the event into one of the module's topics (customer, subscription,
+invoice, payment, refund, dispute, tax id), or none. The event is stored
+once in `billing_events`, unique on the provider's event id, and
+`ProcessBillingEventJob` is queued with that id as its job id, so a
+redelivery acknowledges again and queues nothing new while the first
+is still pending. `BillingEventsService.process` claims the event, hands
+it to the handler registered for its topic (`registerBillingEventHandler`),
+and marks it `processed`, or `ignored` when no handler takes the topic.
+A failed attempt keeps its error in `last_error`, and the last one marks
+the event `failed`; a later delivery of the same event processes it again.
+
 ## DevOps track
 
 A problem belongs to one track, `system-design` or `devops` (`TRACKS` in

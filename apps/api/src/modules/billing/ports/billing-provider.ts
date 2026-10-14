@@ -1,5 +1,6 @@
 import { Port } from "@/core/port";
 import type {
+  BillingEventTopic,
   BillingProviderName,
   PriceInterval,
   PriceType,
@@ -18,8 +19,25 @@ export interface ProviderPrice {
   active: boolean;
 }
 
+export interface ProviderEvent {
+  id: string;
+  type: string;
+  topic: BillingEventTopic | null;
+  objectId: string | null;
+  live: boolean;
+  createdAt: Date;
+  payload: unknown;
+}
+
 export abstract class BillingProvider extends Port {
   public abstract readonly name: BillingProviderName;
+
+  public abstract readonly signatureHeader: string;
+
+  public abstract parseWebhook(
+    payload: string,
+    signature: string | null,
+  ): Promise<ProviderEvent>;
 
   public abstract findPrices(
     lookupKeys: readonly string[],

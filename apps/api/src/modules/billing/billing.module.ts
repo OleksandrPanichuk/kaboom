@@ -4,13 +4,22 @@ import { UnavailableBillingProvider } from "@/adapters/billing/unavailable.billi
 import { NodeEnv } from "@/configs";
 import { defineModule } from "@/core/module";
 import { bind, makeService, makeUseCase } from "@/core/registry";
+import { registerJob } from "@/platform/jobs";
 
 import type { PriceOffer } from "./billing.constants";
 import { billingRoutes } from "./billing.routes";
 import { BillingCatalogService } from "./billing-catalog.service";
-import { BillingPricesRepository, BillingProvider } from "./ports";
-import { PostgresBillingPricesRepository } from "./repositories";
-import { ListPricesUseCase } from "./use-cases";
+import { ProcessBillingEventJob } from "./jobs";
+import {
+  BillingEventsRepository,
+  BillingPricesRepository,
+  BillingProvider,
+} from "./ports";
+import {
+  PostgresBillingEventsRepository,
+  PostgresBillingPricesRepository,
+} from "./repositories";
+import { ListPricesUseCase, ReceiveWebhookUseCase } from "./use-cases";
 
 export const billingModule = defineModule({
   name: "billing",
@@ -30,6 +39,8 @@ export const billingModule = defineModule({
     ];
 
     bind(BillingPricesRepository, () => new PostgresBillingPricesRepository());
+    bind(BillingEventsRepository, () => new PostgresBillingEventsRepository());
+    registerJob(ProcessBillingEventJob);
 
     if (env.NODE_ENV === NodeEnv.Test) {
       const provider = new MemoryBillingProvider();
@@ -39,12 +50,14 @@ export const billingModule = defineModule({
       return { offers, configured: true };
     }
 
-    const provider = env.STRIPE_SECRET_KEY
-      ? new StripeBillingProvider({
-          secretKey: env.STRIPE_SECRET_KEY,
-          appName: env.APP_NAME,
-        })
-      : new UnavailableBillingProvider();
+    const provider =
+      env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET
+        ? new StripeBillingProvider({
+            secretKey: env.STRIPE_SECRET_KEY,
+            webhookSecret: env.STRIPE_WEBHOOK_SECRET,
+            appName: env.APP_NAME,
+          })
+        : new UnavailableBillingProvider();
 
     bind(BillingProvider, () => provider);
 
@@ -60,5 +73,6 @@ export const billingModule = defineModule({
   routes: () =>
     billingRoutes({
       listPrices: makeUseCase(ListPricesUseCase),
+      receiveWebhook: makeUseCase(ReceiveWebhookUseCase),
     }),
 });
