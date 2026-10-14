@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { cn } from "cn";
-import { Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { LineChart, Minus, TrendingDown, TrendingUp } from "lucide-react";
 
 import { skillHistoryQuery } from "@/features/progress/api";
 import { skillTrends } from "@/features/progress/utils";
@@ -42,11 +42,18 @@ export function SkillTrends() {
         </p>
       </div>
       {trends.length === 0 ? (
-        <p className={cn(CARD, "text-sm text-muted-foreground")}>
-          Finish an interview or submit a challenge to start the record.
-        </p>
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border bg-card/60 px-4 py-10 text-center">
+          <LineChart
+            aria-hidden="true"
+            className="size-5 text-muted-foreground"
+          />
+          <p className="max-w-sm text-sm text-muted-foreground text-pretty">
+            Each reviewed interview or challenge adds a point to every skill it
+            scored. Finish one to start the record.
+          </p>
+        </div>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {trends.map((trend) => {
             const label = labels.get(trend.skill) ?? trend.skill;
             const Icon =
@@ -61,7 +68,7 @@ export function SkillTrends() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-col">
                     <p className="text-sm font-medium">{label}</p>
-                    <p className="text-3xl font-semibold tracking-[-0.04em]">
+                    <p className="text-2xl font-semibold tracking-[-0.03em] tabular-nums">
                       {today.get(trend.skill) ?? trend.current}
                     </p>
                   </div>
@@ -97,9 +104,9 @@ export function SkillTrends() {
           <summary className="w-fit cursor-pointer rounded font-medium text-interactive-foreground outline-none select-none focus-visible:ring-2 focus-visible:ring-ring/50">
             Show as a table
           </summary>
-          <div className="mt-2 overflow-x-auto rounded-xl border border-border bg-card">
+          <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-card shadow-card">
             <table className="w-full text-left text-sm">
-              <thead className="text-xs text-muted-foreground">
+              <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2 font-medium">Skill</th>
                   <th className="px-3 py-2 font-medium">Review</th>
@@ -107,10 +114,10 @@ export function SkillTrends() {
                   <th className="px-3 py-2 text-right font-medium">Average</th>
                 </tr>
               </thead>
-              <tbody className="tabular-nums">
+              <tbody className="divide-y divide-border tabular-nums">
                 {trends.flatMap((trend) =>
                   trend.points.map((point, index) => (
-                    <tr key={`${trend.skill}-${index}`} className="border-t">
+                    <tr key={`${trend.skill}-${index}`}>
                       <td className="px-3 py-2">
                         {labels.get(trend.skill) ?? trend.skill}
                       </td>

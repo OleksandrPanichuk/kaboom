@@ -1,23 +1,26 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { cn } from "cn";
 
-import { progressQuery, scoreTone } from "@/features/problems";
+import { progressQuery, scoreTone, SOLVED_SCORE } from "@/features/problems";
 import { activityQuery } from "@/features/progress/api";
 
-const SOLVED_SCORE = 80;
-
-interface TileProps {
+interface StatProps {
   label: string;
   value: string;
   detail: string;
   tone?: string;
 }
 
-function Tile({ label, value, detail, tone }: TileProps) {
+function Stat({ label, value, detail, tone }: StatProps) {
   return (
-    <li className="flex min-w-0 flex-col gap-1 rounded-2xl border border-border bg-card p-4 shadow-card">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className={cn("text-3xl font-semibold tracking-[-0.04em]", tone)}>
+    <li className="flex min-w-0 flex-col gap-0.5 bg-card px-4 py-3.5 sm:px-5">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p
+        className={cn(
+          "text-2xl font-semibold tracking-[-0.03em] tabular-nums",
+          tone,
+        )}
+      >
         {value}
       </p>
       <p className="text-xs text-muted-foreground text-pretty">{detail}</p>
@@ -34,20 +37,28 @@ export function ProgressSummary() {
   ).length;
 
   return (
-    <ul aria-label="Totals" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <Tile
+    <ul
+      aria-label="Totals"
+      className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border shadow-card lg:grid-cols-4"
+    >
+      <Stat
         label="Points"
         value={progress.points.toLocaleString("en")}
         detail={`Rank ${progress.rank.name}`}
       />
-      <Tile
+      <Stat
+        label="Challenges solved"
+        value={String(solved)}
+        detail={`Scored ${SOLVED_SCORE} or more, of ${progress.problems.length} attempted`}
+      />
+      <Stat
         label="Interviews reviewed"
         value={String(interviewsReviewed)}
         detail={
           interviewsReviewed === 0 ? "None yet" : "Every one you finished"
         }
       />
-      <Tile
+      <Stat
         label="Average interview score"
         value={
           averageInterviewScore === null ? "–" : String(averageInterviewScore)
@@ -58,11 +69,6 @@ export function ProgressSummary() {
             ? "text-muted-foreground"
             : scoreTone(averageInterviewScore)
         }
-      />
-      <Tile
-        label="Challenges solved"
-        value={String(solved)}
-        detail={`Scored ${SOLVED_SCORE} or more, of ${progress.problems.length} attempted`}
       />
     </ul>
   );

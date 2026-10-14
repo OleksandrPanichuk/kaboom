@@ -88,7 +88,7 @@ export function SkillSparkline({ label, points }: SkillSparklineProps) {
         </svg>
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute size-2.5 -translate-1/2 rounded-full bg-interactive ring-2 ring-white"
+          className="pointer-events-none absolute size-2.5 -translate-1/2 rounded-full bg-interactive ring-2 ring-card"
           style={{
             left: `${(x(shown) / WIDTH) * 100}%`,
             top: `${(y(focus.value) / HEIGHT) * 100}%`,
