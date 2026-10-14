@@ -1,35 +1,41 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { cn } from "cn";
 import { MessagesSquare } from "lucide-react";
 
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/Empty";
 import { interviewsQuery } from "@/features/interview/api";
-import { StartInterviewButton } from "@/features/interview/ui/components";
-import { phaseLabel } from "@/features/interview/utils";
+import {
+  InterviewRow,
+  StartInterviewButton,
+} from "@/features/interview/ui/components";
 
 interface InterviewsViewProps {
   onOpen: (interviewId: string) => void;
 }
 
-const STATUS: Record<string, string> = {
-  active: "In progress",
-  reviewing: "Review pending",
-  reviewed: "Reviewed",
-  review_failed: "Review failed",
-  expired: "Expired",
-};
-
-const REVIEWED = new Set(["reviewing", "reviewed", "review_failed"]);
-
 export function InterviewsView({ onOpen }: InterviewsViewProps) {
   const { data } = useSuspenseQuery(interviewsQuery);
+  const start = (
+    <StartInterviewButton
+      slug="url-shortener"
+      label="Start: URL shortener"
+      variant="default"
+      onOpen={onOpen}
+    />
+  );
 
   return (
-    <div className="flex-1 bg-background px-4 py-8 sm:px-8 sm:py-10">
-      <div className="mx-auto flex max-w-5xl flex-col gap-6">
+    <div className="flex-1 bg-background px-4 py-6 sm:px-8 sm:py-10">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex min-w-0 flex-col gap-1">
-            <h1 className="text-3xl font-semibold tracking-[-0.04em]">
+            <h1 className="text-3xl font-semibold tracking-[-0.03em]">
               Interviews
             </h1>
             <p className="text-sm leading-6 text-muted-foreground sm:text-base text-pretty">
@@ -37,64 +43,29 @@ export function InterviewsView({ onOpen }: InterviewsViewProps) {
               with drills.
             </p>
           </div>
-          <StartInterviewButton
-            slug="url-shortener"
-            label="Start: URL shortener"
-            variant="default"
-            onOpen={onOpen}
-          />
+          {data.items.length > 0 ? start : null}
         </div>
         {data.items.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border px-6 py-12 text-center">
-            <MessagesSquare
-              aria-hidden="true"
-              className="size-6 text-muted-foreground"
-            />
-            <p className="font-medium">No interviews yet</p>
-            <p className="max-w-sm text-sm leading-5 text-muted-foreground text-pretty">
-              An interview takes about forty minutes: requirements, a design, a
-              deep dive with drills, and a wrap-up.
-            </p>
-          </div>
-        ) : (
-          <ul className="grid gap-3 md:grid-cols-2">
-            {data.items.map((interview) => (
-              <li
-                key={interview.id}
-                className="relative flex min-w-0 flex-col gap-1 rounded-2xl border border-border bg-card p-4 shadow-card hover:border-interactive-border has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring/50"
+          <Empty className="rounded-2xl border border-dashed border-border bg-card/60 py-14">
+            <EmptyHeader>
+              <EmptyMedia
+                variant="icon"
+                className="size-11 rounded-2xl border border-interactive-border/60 bg-interactive-surface text-interactive-foreground"
               >
-                <Link
-                  to={
-                    REVIEWED.has(interview.status)
-                      ? "/interviews/$interviewId/review"
-                      : "/interviews/$interviewId"
-                  }
-                  params={{ interviewId: interview.id }}
-                  className="font-semibold tracking-[-0.02em] outline-none after:absolute after:inset-0 after:rounded-2xl"
-                >
-                  {interview.problem.title}
-                </Link>
-                <p className="flex flex-wrap gap-x-2 text-sm text-muted-foreground">
-                  <span
-                    className={cn(
-                      interview.status === "active" &&
-                        "font-medium text-interactive-foreground",
-                    )}
-                  >
-                    {STATUS[interview.status] ?? interview.status}
-                  </span>
-                  {interview.status === "active" ? (
-                    <span>· {phaseLabel(interview.phase)}</span>
-                  ) : null}
-                  <span>
-                    ·{" "}
-                    {new Date(interview.startedAt).toLocaleDateString("en", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </p>
-              </li>
+                <MessagesSquare aria-hidden="true" />
+              </EmptyMedia>
+              <EmptyTitle>No interviews yet</EmptyTitle>
+              <EmptyDescription>
+                An interview takes about forty minutes: requirements, a design,
+                a deep dive with drills, and a wrap-up.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>{start}</EmptyContent>
+          </Empty>
+        ) : (
+          <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+            {data.items.map((interview) => (
+              <InterviewRow key={interview.id} interview={interview} />
             ))}
           </ul>
         )}
