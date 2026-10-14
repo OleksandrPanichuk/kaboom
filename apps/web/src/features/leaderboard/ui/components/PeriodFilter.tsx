@@ -1,6 +1,4 @@
-import { cn } from "cn";
-
-import { Button } from "@/components/ui/Button";
+import { SegmentedControl } from "@/components/SegmentedControl";
 import type { LeaderboardPeriod } from "@/features/leaderboard/typedefs";
 
 interface PeriodFilterProps {
@@ -15,27 +13,14 @@ const OPTIONS: Array<{ value: LeaderboardPeriod; label: string }> = [
 
 export function PeriodFilter({ value, onChange }: PeriodFilterProps) {
   return (
-    <div
-      role="group"
-      aria-label="Period"
-      className="flex w-fit gap-1 rounded-xl border border-border bg-card p-1"
-    >
-      {OPTIONS.map((option) => (
-        <Button
-          key={option.value}
-          variant="ghost"
-          size="sm"
-          aria-pressed={value === option.value}
-          className={cn(
-            "rounded-lg text-muted-foreground",
-            value === option.value &&
-              "bg-foreground text-background hover:bg-foreground hover:text-background",
-          )}
-          onClick={() => onChange(option.value)}
-        >
-          {option.label}
-        </Button>
-      ))}
-    </div>
+    <SegmentedControl
+      name="period"
+      label="Period"
+      value={value}
+      options={OPTIONS}
+      onChange={(next) =>
+        onChange(OPTIONS.find((option) => option.value === next)!.value)
+      }
+    />
   );
 }
