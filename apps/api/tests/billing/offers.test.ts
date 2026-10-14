@@ -5,22 +5,22 @@ import { eq } from "drizzle-orm";
 import {
   MEMORY_PRICES,
   type MemoryBillingProvider,
-} from "@/adapters/billing/memory.billing-provider";
+} from "@/adapters/billing-provider/memory.billing-provider";
 import { make, makeService } from "@/core/registry";
 import { billingOffersSchema, billingPricesSchema, getDatabase } from "@/db";
 import {
-  BillingCatalogService,
   type BillingOfferModel,
+  BillingOffersService,
   BillingPriceMisconfiguredError,
-  BillingProvider,
-} from "@/modules/billing";
+} from "@/modules/billing-offers";
+import { BillingProvider } from "@/modules/billing-provider";
 
 import { seedOffers } from "./helpers";
 
 const [MONTHLY, LIFETIME] = MEMORY_PRICES;
 
 const provider = () => make(BillingProvider) as MemoryBillingProvider;
-const sync = () => makeService(BillingCatalogService).syncPrices();
+const sync = () => makeService(BillingOffersService).syncPrices();
 const failure = () =>
   sync().then(
     () => null,

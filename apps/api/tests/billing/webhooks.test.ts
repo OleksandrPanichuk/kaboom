@@ -5,13 +5,13 @@ import {
   MEMORY_SIGNATURE_HEADER,
   type MemoryWebhook,
   signMemoryWebhook,
-} from "@/adapters/billing/memory.billing-provider";
+} from "@/adapters/billing-provider/memory.billing-provider";
 import { billingEventsSchema, getDatabase } from "@/db";
 import {
   type BillingEventEntity,
   type BillingEventHandler,
   registerBillingEventHandler,
-} from "@/modules/billing";
+} from "@/modules/billing-events";
 
 const ORIGIN = "http://localhost:3000";
 
