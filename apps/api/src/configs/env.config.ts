@@ -146,6 +146,15 @@ export const EnvSchema = z.object({
     .max(100_000_000)
     .default(500_000),
 
+  STRIPE_SECRET_KEY: z.preprocess(emptyAsUnset, z.string().min(1).optional()),
+  STRIPE_WEBHOOK_SECRET: z.preprocess(
+    emptyAsUnset,
+    z.string().min(1).optional(),
+  ),
+  STRIPE_TAX_ENABLED: z.preprocess(emptyAsUnset, z.stringbool().default(false)),
+  STRIPE_PRICE_PRO_MONTHLY: z.string().trim().min(1).default("pro_monthly"),
+  STRIPE_PRICE_PRO_LIFETIME: z.string().trim().min(1).default("pro_lifetime"),
+
   DESIGN_TEST_WORKERS: z.coerce.number().int().min(1).max(32).default(2),
   DESIGN_TEST_TIMEOUT_MS: z.coerce
     .number()
@@ -188,6 +197,20 @@ const requireOutsideTest =
     }
   };
 
+const requireWebhookSecretWithKey = (
+  env: ParsedEnv,
+  ctx: z.RefinementCtx,
+): void => {
+  if (env.STRIPE_SECRET_KEY === undefined) return;
+  if (env.STRIPE_WEBHOOK_SECRET !== undefined) return;
+
+  ctx.addIssue({
+    code: "custom",
+    path: ["STRIPE_WEBHOOK_SECRET"],
+    message: "Required when STRIPE_SECRET_KEY is set",
+  });
+};
+
 type ParsedEnvWithDefaults = ParsedEnv & { MAIL_FROM_NAME: string };
 
 export const withDerivedDefaults = (env: ParsedEnv): ParsedEnvWithDefaults => ({
@@ -195,7 +218,7 @@ export const withDerivedDefaults = (env: ParsedEnv): ParsedEnvWithDefaults => ({
   MAIL_FROM_NAME: env.MAIL_FROM_NAME ?? env.APP_NAME,
 });
 
-const CheckedEnvSchema = EnvSchema.superRefine(
+export const CheckedEnvSchema = EnvSchema.superRefine(
   requireOutsideTest(
     "SESSIONS_REDIS_URL",
     "SMTP_URL",
@@ -205,7 +228,9 @@ const CheckedEnvSchema = EnvSchema.superRefine(
     "STORAGE_S3_ACCESS_KEY_ID",
     "STORAGE_S3_SECRET_ACCESS_KEY",
   ),
-).transform(withDerivedDefaults);
+)
+  .superRefine(requireWebhookSecretWithKey)
+  .transform(withDerivedDefaults);
 
 export type Env = z.output<typeof CheckedEnvSchema>;
 

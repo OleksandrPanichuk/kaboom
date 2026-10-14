@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { EnvSchema, loadEnv, NodeEnv } from "./env.config";
+import { CheckedEnvSchema, EnvSchema, loadEnv, NodeEnv } from "./env.config";
 
 const base = {
   NODE_ENV: NodeEnv.Test,
@@ -68,5 +68,36 @@ describe("metrics settings in the environment", () => {
 
     expect(env.CLOUDWATCH_METRICS_NAMESPACE).toBeUndefined();
     expect(env.CLOUDWATCH_METRICS_FLUSH_SECONDS).toBe(60);
+  });
+});
+
+describe("billing settings in the environment", () => {
+  test("default to no key, no tax and the two lookup keys", () => {
+    const env = loadEnv(base);
+
+    expect(env.STRIPE_SECRET_KEY).toBeUndefined();
+    expect(env.STRIPE_TAX_ENABLED).toBe(false);
+    expect(env.STRIPE_PRICE_PRO_MONTHLY).toBe("pro_monthly");
+    expect(env.STRIPE_PRICE_PRO_LIFETIME).toBe("pro_lifetime");
+  });
+
+  test("require the webhook secret once a key is set", () => {
+    const issues = (source: Record<string, string>) =>
+      CheckedEnvSchema.safeParse({ ...base, ...source }).error?.issues.map(
+        (issue) => issue.path.join("."),
+      ) ?? [];
+
+    expect(issues({ STRIPE_SECRET_KEY: "sk_test_1" })).toEqual([
+      "STRIPE_WEBHOOK_SECRET",
+    ]);
+    expect(
+      issues({
+        STRIPE_SECRET_KEY: "sk_test_1",
+        STRIPE_WEBHOOK_SECRET: "whsec_1",
+      }),
+    ).toEqual([]);
+    expect(
+      issues({ STRIPE_SECRET_KEY: " ", STRIPE_WEBHOOK_SECRET: "" }),
+    ).toEqual([]);
   });
 });
