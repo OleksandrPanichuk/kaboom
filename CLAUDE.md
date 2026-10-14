@@ -1188,7 +1188,8 @@ The designer takes `?from=` (a problem or a design), and the schema
 picker passes it, so a schema opened from an attempt leads back to it.
 
 The canvas names a database's schema on its card, linking to it, and
-says when the schema is gone.
+says when the schema is gone. Still to come: migrating existing combined
+designs, which is `splitSchemas` applied to them.
 
 Attempts started before the split are moved over by `bun run
 attempts:split-schemas` in `apps/api`, which only reports what it would
