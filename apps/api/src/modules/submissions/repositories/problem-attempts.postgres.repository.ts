@@ -1,4 +1,4 @@
-import { and, eq, lt, sql } from "drizzle-orm";
+import { and, asc, eq, lt, sql } from "drizzle-orm";
 
 import { problemAttemptsSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
@@ -34,6 +34,16 @@ export class PostgresProblemAttemptsRepository extends ProblemAttemptsRepository
       .limit(1);
 
     return row ?? null;
+  }
+
+  public listAll(): Promise<AttemptEntity[]> {
+    return this.db
+      .select()
+      .from(problemAttemptsSchema)
+      .orderBy(
+        asc(problemAttemptsSchema.createdAt),
+        asc(problemAttemptsSchema.id),
+      );
   }
 
   public async insert(data: CreateAttemptData): Promise<AttemptEntity> {

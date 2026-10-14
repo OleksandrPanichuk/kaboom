@@ -15,6 +15,8 @@ export abstract class ProblemAttemptsRepository extends Repository {
     problemId: string,
   ): Promise<AttemptEntity | null>;
 
+  public abstract listAll(): Promise<AttemptEntity[]>;
+
   public abstract insert(data: CreateAttemptData): Promise<AttemptEntity>;
 
   public abstract moveToVersion(

@@ -17,6 +17,7 @@
     "check-types": "tsc --noEmit",
     "llm:smoke": "bun scripts/llm-smoke.ts",
     "user:role": "bun scripts/set-role.ts",
+    "attempts:split-schemas": "bun scripts/split-attempt-schemas.ts",
     "eval": "bun test ./evals/interviewer.eval.ts --timeout 180000"
   },
   "dependencies": {
