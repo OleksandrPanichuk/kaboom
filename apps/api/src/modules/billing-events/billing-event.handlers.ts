@@ -13,10 +13,15 @@ export const registerBillingEventHandler = (
   topic: BillingEventTopic,
   handler: Token<BillingEventHandler>,
 ): (() => void) => {
+  const previous = handlers.get(topic);
+
   handlers.set(topic, handler);
 
   return () => {
-    if (handlers.get(topic) === handler) handlers.delete(topic);
+    if (handlers.get(topic) !== handler) return;
+
+    if (previous) handlers.set(topic, previous);
+    else handlers.delete(topic);
   };
 };
 

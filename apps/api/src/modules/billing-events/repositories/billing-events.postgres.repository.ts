@@ -30,6 +30,7 @@ export class PostgresBillingEventsRepository extends BillingEventsRepository {
         type: data.type,
         topic: data.topic,
         providerObjectId: data.objectId,
+        providerCustomerId: data.customerId,
         live: data.live,
         payload: data.payload,
         providerCreatedAt: data.createdAt,

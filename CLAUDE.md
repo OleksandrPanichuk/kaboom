@@ -919,6 +919,10 @@ concern gets a new module rather than a folder in an existing one:
 - `billing-events` owns the webhook inbox, `POST /billing/webhooks/:provider`,
   `ProcessBillingEventJob` and the handler registry. A module that reacts to
   a topic registers its handler there and is never imported by it.
+- `billing-customers` handles the `customer` topic, keeps `billing_customers`
+  and owns the per-customer lock every later handler takes.
+- `subscriptions` handles the `subscription` topic, keeps `subscriptions`
+  and appends to `subscription_changes`.
 
 `BillingProvider` is bound to
 `StripeBillingProvider` (`adapters/billing-provider/stripe/`) when
@@ -978,6 +982,30 @@ it to the handler registered for its topic (`registerBillingEventHandler`),
 and marks it `processed`, or `ignored` when no handler takes the topic.
 A failed attempt keeps its error in `last_error`, and the last one marks
 the event `failed`; a later delivery of the same event processes it again.
+
+A handler never trusts the event's copy of the object. It re-fetches the
+object from the provider and writes what the provider has now, so events
+that arrive late or out of order cannot move a row backwards. The adapter
+finds the customer an event is about (`provider_customer_id` on
+`billing_events`), and every handler works inside
+`BillingCustomersService.locked`, a transaction holding an advisory lock on
+that customer, so two events for one customer never interleave. A customer
+is linked to a user through the `user_id` in its provider metadata, only
+when that user exists and no other customer of the provider is linked to
+them, and a link once made is kept when the metadata loses it. A customer
+the provider no longer has is marked `deleted_at`.
+
+A subscription is synced the same way, after its customer
+(`BillingCustomersService.ensure`), and takes the customer's user.
+`subscriptionChanges` diffs the stored row against the fetched one into
+`subscription_changes` (created, plan or quantity changed, status changed,
+paused, resumed, cancel scheduled or unscheduled, canceled, renewed), which
+is unique per subscription, event and kind, so a redelivered event adds
+nothing. A late event finds nothing to diff, so a change is credited to the
+first event processed after it. A customer has at most one live
+subscription: before writing a live one, the others still live are synced
+first, and if the provider still has two the event fails with
+`SUBSCRIPTION_CONFLICT` and is retried.
 
 ## DevOps track
 

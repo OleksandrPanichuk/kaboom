@@ -1,0 +1,2 @@
+ALTER TABLE "billing_events" ADD COLUMN "provider_customer_id" text;--> statement-breakpoint
+CREATE INDEX "billing_events_provider_customer_idx" ON "billing_events" USING btree ("provider","provider_customer_id");

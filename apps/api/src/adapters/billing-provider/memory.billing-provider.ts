@@ -6,8 +6,10 @@ import { BILLING_EVENT_TOPICS } from "@/db";
 import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-provider.errors";
 import {
   BillingProvider,
+  type ProviderCustomer,
   type ProviderEvent,
   type ProviderPrice,
+  type ProviderSubscription,
 } from "@/modules/billing-provider/ports/billing-provider";
 
 export const MEMORY_SIGNATURE_HEADER = "x-memory-signature";
@@ -20,6 +22,7 @@ export const MemoryWebhookSchema = z.object({
   type: z.string().min(1),
   topic: z.enum(BILLING_EVENT_TOPICS).nullable().default(null),
   objectId: z.string().nullable().default(null),
+  customerId: z.string().nullable().default(null),
   live: z.boolean().default(false),
   createdAt: z.iso.datetime().default(() => new Date().toISOString()),
 });
@@ -104,8 +107,34 @@ export class MemoryBillingProvider extends BillingProvider {
     this.prices = [...prices];
   }
 
+  private readonly customers = new Map<string, ProviderCustomer>();
+
+  private readonly subscriptions = new Map<string, ProviderSubscription>();
+
+  public findCustomer(id: string): Promise<ProviderCustomer | null> {
+    return Promise.resolve(this.customers.get(id) ?? null);
+  }
+
+  public findSubscription(id: string): Promise<ProviderSubscription | null> {
+    return Promise.resolve(this.subscriptions.get(id) ?? null);
+  }
+
+  public setCustomer(customer: ProviderCustomer): void {
+    this.customers.set(customer.id, customer);
+  }
+
+  public deleteCustomer(id: string): void {
+    this.customers.delete(id);
+  }
+
+  public setSubscription(subscription: ProviderSubscription): void {
+    this.subscriptions.set(subscription.id, subscription);
+  }
+
   public clear(): void {
     this.prices = [...MEMORY_PRICES];
+    this.customers.clear();
+    this.subscriptions.clear();
   }
 
   private json(payload: string): unknown {

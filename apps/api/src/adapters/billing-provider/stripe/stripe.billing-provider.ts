@@ -3,8 +3,10 @@ import Stripe from "stripe";
 import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-provider.errors";
 import {
   BillingProvider,
+  type ProviderCustomer,
   type ProviderEvent,
   type ProviderPrice,
+  type ProviderSubscription,
 } from "@/modules/billing-provider/ports/billing-provider";
 
 import {
@@ -13,7 +15,16 @@ import {
   STRIPE_MAX_NETWORK_RETRIES,
   STRIPE_SIGNATURE_HEADER,
 } from "./stripe.constants";
-import { toProviderEvent, toProviderPrice } from "./stripe.helpers";
+import {
+  toProviderCustomer,
+  toProviderEvent,
+  toProviderPrice,
+  toProviderSubscription,
+} from "./stripe.helpers";
+
+const missing = (error: unknown): boolean =>
+  error instanceof Stripe.errors.StripeInvalidRequestError &&
+  error.code === "resource_missing";
 
 export interface StripeBillingProviderOptions {
   secretKey: string;
@@ -68,6 +79,34 @@ export class StripeBillingProvider extends BillingProvider {
     }
 
     return prices;
+  }
+
+  public async findCustomer(id: string): Promise<ProviderCustomer | null> {
+    try {
+      const customer = await this.stripe.customers.retrieve(id, {
+        expand: ["invoice_settings.default_payment_method"],
+      });
+
+      return customer.deleted ? null : toProviderCustomer(customer);
+    } catch (error) {
+      if (missing(error)) return null;
+
+      throw error;
+    }
+  }
+
+  public async findSubscription(
+    id: string,
+  ): Promise<ProviderSubscription | null> {
+    try {
+      return toProviderSubscription(
+        await this.stripe.subscriptions.retrieve(id),
+      );
+    } catch (error) {
+      if (missing(error)) return null;
+
+      throw error;
+    }
   }
 
   public async parseWebhook(

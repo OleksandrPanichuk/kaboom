@@ -1,8 +1,10 @@
 import { BillingUnavailableError } from "@/modules/billing-provider/billing-provider.errors";
 import {
   BillingProvider,
+  type ProviderCustomer,
   type ProviderEvent,
   type ProviderPrice,
+  type ProviderSubscription,
 } from "@/modules/billing-provider/ports/billing-provider";
 
 const unavailable = () =>
@@ -22,6 +24,14 @@ export class UnavailableBillingProvider extends BillingProvider {
   }
 
   public findPrices(): Promise<ProviderPrice[]> {
+    return Promise.reject(unavailable());
+  }
+
+  public findCustomer(): Promise<ProviderCustomer | null> {
+    return Promise.reject(unavailable());
+  }
+
+  public findSubscription(): Promise<ProviderSubscription | null> {
     return Promise.reject(unavailable());
   }
 }

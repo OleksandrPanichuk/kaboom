@@ -8,6 +8,8 @@ export const STRIPE_LOOKUP_KEYS_PER_REQUEST = 10;
 
 export const STRIPE_SIGNATURE_HEADER = "stripe-signature";
 
+export const STRIPE_USER_ID_METADATA_KEY = "user_id";
+
 export const STRIPE_EVENT_TOPICS: Readonly<Record<string, BillingEventTopic>> =
   {
     "customer.updated": "customer",
