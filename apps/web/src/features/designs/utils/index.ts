@@ -8,3 +8,4 @@ export * from "./orientRelation";
 export * from "./regionOps";
 export * from "./removalOps";
 export * from "./suggestEdgeKind";
+export * from "./validateDesignsSearch";

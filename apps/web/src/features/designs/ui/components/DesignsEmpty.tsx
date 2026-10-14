@@ -1,4 +1,4 @@
-import { Network, Plus } from "lucide-react";
+import { Database, Network, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import {
@@ -9,12 +9,33 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/Empty";
+import type { DesignKind } from "@/features/designs/typedefs";
 
 interface DesignsEmptyProps {
+  kind: DesignKind;
   onCreate: () => void;
 }
 
-export function DesignsEmpty({ onCreate }: DesignsEmptyProps) {
+const COPY = {
+  system: {
+    icon: Network,
+    title: "No designs yet",
+    description:
+      "Sketch a system on the canvas, then see how it holds up under load.",
+    action: "Create your first design",
+  },
+  schema: {
+    icon: Database,
+    title: "No schemas yet",
+    description:
+      "A schema holds databases and their tables. A database in any of your systems can name it.",
+    action: "Create a schema",
+  },
+} as const;
+
+export function DesignsEmpty({ kind, onCreate }: DesignsEmptyProps) {
+  const copy = COPY[kind];
+
   return (
     <Empty className="rounded-2xl border border-dashed border-border bg-card/60 py-14">
       <EmptyHeader>
@@ -22,17 +43,15 @@ export function DesignsEmpty({ onCreate }: DesignsEmptyProps) {
           variant="icon"
           className="size-11 rounded-2xl border border-interactive-border/60 bg-interactive-surface text-interactive-foreground"
         >
-          <Network aria-hidden="true" />
+          <copy.icon aria-hidden="true" />
         </EmptyMedia>
-        <EmptyTitle>No designs yet</EmptyTitle>
-        <EmptyDescription>
-          Sketch a system on the canvas, then see how it holds up under load.
-        </EmptyDescription>
+        <EmptyTitle>{copy.title}</EmptyTitle>
+        <EmptyDescription>{copy.description}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <Button onClick={onCreate}>
           <Plus aria-hidden="true" />
-          Create your first design
+          {copy.action}
         </Button>
       </EmptyContent>
     </Empty>

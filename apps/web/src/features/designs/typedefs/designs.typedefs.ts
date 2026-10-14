@@ -8,3 +8,9 @@ export interface ReplayRequest {
   seed?: number;
   varyFaults?: boolean;
 }
+
+export type DesignKind = "system" | "schema";
+
+export interface DesignsSearch {
+  kind?: DesignKind;
+}

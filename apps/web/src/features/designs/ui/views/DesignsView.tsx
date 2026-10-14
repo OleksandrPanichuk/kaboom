@@ -3,29 +3,46 @@ import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { Database, Plus } from "lucide-react";
 import { useState } from "react";
 
+import { SegmentedControl } from "@/components/SegmentedControl";
 import { Button } from "@/components/ui/Button";
 import { designsQuery } from "@/features/designs/api";
+import type { DesignKind } from "@/features/designs/typedefs";
 import {
   CreateDesignDialog,
-  DesignCard,
+  DesignRow,
   DesignsEmpty,
   DesignsPage,
 } from "@/features/designs/ui/components";
 
 interface DesignsViewProps {
+  kind: DesignKind | null;
+  onKindChange: (kind: DesignKind | null) => void;
   onCreated: (design: DesignModel) => void;
 }
 
-export function DesignsView({ onCreated }: DesignsViewProps) {
+const ALL = "all";
+
+const KIND_OPTIONS = [
+  { value: ALL, label: "All" },
+  { value: "system", label: "Systems" },
+  { value: "schema", label: "Schemas" },
+] as const;
+
+export function DesignsView({
+  kind,
+  onKindChange,
+  onCreated,
+}: DesignsViewProps) {
   const { data, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useSuspenseInfiniteQuery(designsQuery);
-  const [creating, setCreating] = useState<"system" | "schema" | null>(null);
+    useSuspenseInfiniteQuery(designsQuery(kind));
+  const [creating, setCreating] = useState<DesignKind | null>(null);
   const designs = data.pages.flatMap((page) => page.items);
+  const filtered = kind !== null;
 
   return (
     <DesignsPage
       action={
-        designs.length > 0 ? (
+        designs.length > 0 || filtered ? (
           <div className="flex shrink-0 flex-wrap gap-2">
             <Button variant="outline" onClick={() => setCreating("schema")}>
               <Database aria-hidden="true" />
@@ -39,12 +56,26 @@ export function DesignsView({ onCreated }: DesignsViewProps) {
         ) : null
       }
     >
+      {designs.length > 0 || filtered ? (
+        <SegmentedControl
+          name="kind"
+          label="Kind"
+          value={kind ?? ALL}
+          options={KIND_OPTIONS}
+          onChange={(next) =>
+            onKindChange(next === "system" || next === "schema" ? next : null)
+          }
+        />
+      ) : null}
       {designs.length === 0 ? (
-        <DesignsEmpty onCreate={() => setCreating("system")} />
+        <DesignsEmpty
+          kind={kind ?? "system"}
+          onCreate={() => setCreating(kind ?? "system")}
+        />
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card">
           {designs.map((design) => (
-            <DesignCard key={design.id} design={design} />
+            <DesignRow key={design.id} design={design} />
           ))}
         </ul>
       )}

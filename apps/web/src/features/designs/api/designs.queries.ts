@@ -1,20 +1,25 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
+import type { DesignKind } from "@/features/designs/typedefs";
 import { api, unwrap } from "@/lib/api";
 
 export const designsListKey = ["designs", "list"] as const;
 
-export const designsQuery = infiniteQueryOptions({
-  queryKey: designsListKey,
-  queryFn: async ({ pageParam }) =>
-    unwrap(
-      await api.api.designs.get({
-        query: pageParam === null ? {} : { cursor: pageParam },
-      }),
-    ),
-  initialPageParam: null as string | null,
-  getNextPageParam: (page) => page.nextCursor,
-});
+export const designsQuery = (kind: DesignKind | null) =>
+  infiniteQueryOptions({
+    queryKey: [...designsListKey, "page", kind ?? "all"],
+    queryFn: async ({ pageParam }) =>
+      unwrap(
+        await api.api.designs.get({
+          query: {
+            ...(kind ? { kind } : {}),
+            ...(pageParam === null ? {} : { cursor: pageParam }),
+          },
+        }),
+      ),
+    initialPageParam: null as string | null,
+    getNextPageParam: (page) => page.nextCursor,
+  });
 
 export const schemaDesignsQuery = queryOptions({
   queryKey: [...designsListKey, "schema"],

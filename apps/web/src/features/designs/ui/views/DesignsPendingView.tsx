@@ -1,5 +1,5 @@
 import {
-  DesignsGridSkeleton,
+  DesignsListSkeleton,
   DesignsPage,
 } from "@/features/designs/ui/components";
 
@@ -9,7 +9,7 @@ export function DesignsPendingView() {
       <p role="status" className="sr-only">
         Loading your designs…
       </p>
-      <DesignsGridSkeleton />
+      <DesignsListSkeleton />
     </DesignsPage>
   );
 }
