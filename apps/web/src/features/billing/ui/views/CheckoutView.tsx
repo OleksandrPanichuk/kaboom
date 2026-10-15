@@ -3,7 +3,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
-import { ArrowLeft, CreditCard } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { buttonVariants } from "@/components/ui/Button";
@@ -140,7 +140,13 @@ function Payment({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
+    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
+      <div className="flex flex-col gap-0.5">
+        <h2 className="font-semibold">Payment</h2>
+        <p className="text-sm text-muted-foreground">
+          Pay by card. It is saved for renewals, and you can change it any time.
+        </p>
+      </div>
       <Elements
         key={start.data.clientSecret}
         stripe={provider}
@@ -173,7 +179,7 @@ export function CheckoutView({
 
   return (
     <div className="flex-1 bg-background px-4 py-6 sm:px-8 sm:py-10">
-      <div className="mx-auto flex max-w-4xl flex-col gap-6">
+      <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <Link
           to="/pricing"
           className="flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -181,21 +187,18 @@ export function CheckoutView({
           <ArrowLeft aria-hidden="true" className="size-4" />
           Plans
         </Link>
-        <div className="flex items-start gap-4">
-          <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-interactive-border/60 bg-interactive-surface text-interactive-foreground shadow-sm">
-            <CreditCard aria-hidden="true" className="size-5" />
-          </span>
-          <div className="flex min-w-0 flex-col gap-1">
-            <h1 className="text-3xl font-semibold tracking-[-0.03em] text-balance">
-              {offer ? `Get ${describeOffer(offer).name}` : "Checkout"}
-            </h1>
-            <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-              Pay by card. Pro starts as soon as the payment goes through.
-            </p>
-          </div>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-semibold tracking-[-0.03em] text-balance">
+            Checkout
+          </h1>
+          <p className="text-sm leading-6 text-muted-foreground sm:text-base">
+            {offer
+              ? `${offer.type === "recurring" ? "Pro, billed monthly" : "Pro for life, paid once"}. It starts as soon as the payment goes through.`
+              : "Pro starts as soon as the payment goes through."}
+          </p>
         </div>
         {offer ? (
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
             <Payment offer={offer} returnUrl={returnUrl} onPaid={onPaid} />
             <OrderSummary offer={offer} />
           </div>

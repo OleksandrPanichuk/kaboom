@@ -2,80 +2,89 @@ import type { BillingOfferModel } from "@repo/api-client";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Sparkles } from "lucide-react";
-import type { ReactNode } from "react";
+import { ArrowRight } from "lucide-react";
+import { type ReactNode, useState } from "react";
 
+import { SegmentedControl } from "@/components/SegmentedControl";
 import { Button, buttonVariants } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   type BillingAccount,
   billingAccountQuery,
   offersQuery,
 } from "@/features/billing/api";
 import { FREE_FEATURES, PRO_FEATURES } from "@/features/billing/constants";
-import { PlanCard } from "@/features/billing/ui/components";
+import {
+  CurrentPlanStrip,
+  PlanCard,
+  PlanComparison,
+  PlanQuestions,
+} from "@/features/billing/ui/components";
 import { describeOffer } from "@/features/billing/utils";
 
-const checkoutLink = (
+type Interval = "monthly" | "lifetime";
+
+const INTERVALS = [
+  { value: "monthly", label: "Monthly" },
+  { value: "lifetime", label: "Lifetime" },
+] as const;
+
+const checkout = (
   offer: BillingOfferModel,
   label: string,
-  primary: boolean,
+  variant: "default" | "outline" = "default",
 ) => (
   <Link
     to="/pricing/checkout"
     search={{ offer: offer.key }}
-    className={cn(
-      buttonVariants({ variant: primary ? "default" : "outline", size: "lg" }),
-      "w-full",
-    )}
+    className={cn(buttonVariants({ variant, size: "lg" }), "w-full")}
   >
     {label}
+    <ArrowRight aria-hidden="true" data-icon="inline-end" />
   </Link>
 );
 
-const current = (label: string): ReactNode => (
+const settled = (label: string): ReactNode => (
   <Button variant="secondary" size="lg" className="w-full" disabled>
     {label}
   </Button>
 );
 
-const monthlyAction = (
+const proAction = (
   offer: BillingOfferModel,
   account: BillingAccount,
 ): ReactNode => {
-  if (account.source === "lifetime") return current("Included in your plan");
-  if (account.source === "subscription") {
-    return (
-      <Link
-        to="/settings/billing"
-        className={cn(
-          buttonVariants({ variant: "outline", size: "lg" }),
-          "w-full",
-        )}
-      >
-        Manage subscription
-      </Link>
-    );
-  }
-  if (account.subscription?.status === "incomplete") {
-    return checkoutLink(offer, "Finish paying", true);
+  if (account.source === "lifetime") return settled("You have Pro for life");
+
+  if (offer.type === "recurring") {
+    if (account.source === "subscription") {
+      return (
+        <Link
+          to="/settings/billing"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "lg" }),
+            "w-full",
+          )}
+        >
+          Manage subscription
+        </Link>
+      );
+    }
+
+    return account.subscription?.status === "incomplete"
+      ? checkout(offer, "Finish paying")
+      : checkout(offer, "Get Pro monthly");
   }
 
-  return checkoutLink(offer, "Subscribe", true);
-};
-
-const lifetimeAction = (
-  offer: BillingOfferModel,
-  account: BillingAccount,
-): ReactNode => {
-  if (account.source === "lifetime") return current("Yours for life");
   if (account.lifetime?.status === "pending") {
-    return checkoutLink(offer, "Finish paying", false);
+    return checkout(offer, "Finish paying");
   }
 
-  return checkoutLink(
+  return checkout(
     offer,
-    account.source === "subscription" ? "Switch to lifetime" : "Buy for life",
-    false,
+    account.source === "subscription"
+      ? "Switch to lifetime"
+      : "Get Pro for life",
   );
 };
 
@@ -84,80 +93,87 @@ export function PricingView() {
   const offers = useQuery(offersQuery);
   const monthly = offers.data?.find((offer) => offer.type === "recurring");
   const lifetime = offers.data?.find((offer) => offer.type === "one_time");
+  const [interval, setChosenInterval] = useState<Interval>(
+    account.source === "lifetime" ? "lifetime" : "monthly",
+  );
+  const offer =
+    interval === "lifetime" ? (lifetime ?? monthly) : (monthly ?? lifetime);
+  const months =
+    monthly && lifetime && monthly.unitAmount > 0
+      ? Math.round(lifetime.unitAmount / monthly.unitAmount)
+      : null;
 
   return (
     <div className="flex-1 bg-background px-4 py-6 sm:px-8 sm:py-10">
       <div className="mx-auto flex max-w-5xl flex-col gap-8">
-        <div className="flex flex-col gap-2">
-          <p className="flex items-center gap-1.5 text-xs font-semibold tracking-[0.12em] text-interactive-foreground uppercase">
-            <Sparkles aria-hidden="true" className="size-3.5" />
-            Plans
-          </p>
-          <h1 className="text-3xl font-semibold tracking-[-0.03em] text-balance sm:text-4xl">
-            Practise more with Pro
-          </h1>
-          <p className="max-w-2xl text-sm leading-6 text-muted-foreground text-pretty sm:text-base">
-            Pay monthly and cancel whenever you like, or pay once and keep Pro
-            for good. Switching from monthly to lifetime ends the subscription
-            the moment lifetime is paid.
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-semibold tracking-[-0.03em]">Plans</h1>
+          <p className="text-sm leading-6 text-muted-foreground text-pretty sm:text-base">
+            Start free. Upgrade when you want more interview time, monthly or
+            once for good.
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <CurrentPlanStrip account={account} />
+
+        <div className="grid gap-4 md:grid-cols-2 md:items-stretch">
           <PlanCard
             title="Free"
+            tagline="Everything you need to start practising."
             price="$0"
             cadence="for ever"
-            description="Everything you need to start practising."
+            note="No card needed."
             features={FREE_FEATURES}
-            action={
-              account.plan === "free"
-                ? current("Your plan")
-                : current("Included in Pro")
-            }
+            action={settled(
+              account.plan === "free" ? "Your current plan" : "Included in Pro",
+            )}
           />
-          {monthly ? (
+          {offers.isPending ? (
+            <Skeleton className="min-h-96 rounded-2xl" />
+          ) : offer ? (
             <PlanCard
               title="Pro"
-              highlighted={account.source !== "lifetime"}
-              badge={account.source === "subscription" ? "Current" : undefined}
-              price={describeOffer(monthly).price}
-              cadence={describeOffer(monthly).cadence}
-              description="Billed monthly. Cancel any time and keep Pro until the period ends."
+              tagline="More practice, and the platform keeps growing."
+              badge={account.plan === "pro" ? "Your plan" : "Recommended"}
+              highlighted
+              control={
+                monthly && lifetime ? (
+                  <SegmentedControl
+                    name="interval"
+                    label="Billing"
+                    value={interval}
+                    options={INTERVALS}
+                    onChange={(next) =>
+                      setChosenInterval(
+                        next === "lifetime" ? "lifetime" : "monthly",
+                      )
+                    }
+                  />
+                ) : undefined
+              }
+              price={describeOffer(offer).price}
+              cadence={describeOffer(offer).cadence}
+              note={
+                offer.type === "recurring"
+                  ? "Billed monthly. Cancel any time."
+                  : months
+                    ? `One payment, about ${months} months of monthly. No renewals.`
+                    : "One payment. No renewals."
+              }
               features={PRO_FEATURES}
-              action={monthlyAction(monthly, account)}
+              action={proAction(offer, account)}
             />
-          ) : null}
-          {lifetime ? (
-            <PlanCard
-              title="Pro for life"
-              highlighted={account.source === "lifetime"}
-              badge={account.source === "lifetime" ? "Current" : "Pay once"}
-              price={describeOffer(lifetime).price}
-              cadence={describeOffer(lifetime).cadence}
-              description="One payment, no renewals. Pro stays yours."
-              features={PRO_FEATURES}
-              action={lifetimeAction(lifetime, account)}
-            />
-          ) : null}
+          ) : (
+            <div className="grid place-items-center rounded-2xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
+              {offers.isError
+                ? "Prices could not be loaded. Refresh the page to try again."
+                : "Pro is not on sale yet. Check back soon."}
+            </div>
+          )}
         </div>
 
-        {offers.isSuccess && !monthly && !lifetime ? (
-          <p
-            role="status"
-            className="rounded-xl border border-dashed bg-card/60 px-4 py-6 text-center text-sm text-muted-foreground"
-          >
-            Pro is not on sale yet. Check back soon.
-          </p>
-        ) : null}
-        {offers.isError ? (
-          <p
-            role="alert"
-            className="rounded-xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning-foreground"
-          >
-            Prices could not be loaded. Refresh the page to try again.
-          </p>
-        ) : null}
+        <PlanComparison />
+        <PlanQuestions />
       </div>
     </div>
   );

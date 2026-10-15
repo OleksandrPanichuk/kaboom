@@ -1,10 +1,17 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CreditCard, Plus } from "lucide-react";
+import { CreditCard, Ellipsis, Plus, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { SettingsSection } from "@/components/SettingsSection";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
 import { FieldError } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
 import {
@@ -14,19 +21,12 @@ import {
 } from "@/features/billing/api";
 import {
   billingErrorMessage,
+  describeCard,
   loadPaymentProvider,
 } from "@/features/billing/utils";
 
 import { AddCardDialog } from "./AddCardDialog";
-
-const brandName = (brand: string | null): string =>
-  brand
-    ? brand.replace(
-        /(^|_)(\w)/g,
-        (_match, space: string, letter: string) =>
-          `${space ? " " : ""}${letter.toUpperCase()}`,
-      )
-    : "Card";
+import { CardMark } from "./CardMark";
 
 const expiry = (month: number | null, year: number | null): string | null =>
   month && year
@@ -52,15 +52,18 @@ export function CardsSection() {
         {cards.isPending ? (
           <Skeleton className="h-16 w-full rounded-xl" />
         ) : cards.data && cards.data.length > 0 ? (
-          <ul className="flex flex-col divide-y overflow-hidden rounded-xl border bg-muted/60">
+          <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border">
             {cards.data.map((card) => (
               <li
                 key={card.id}
-                className="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:px-4"
+                className="flex items-center gap-3 bg-card p-3 sm:px-4"
               >
-                <div className="flex min-w-0 flex-col">
+                <CardMark brand={card.brand} />
+                <div className="flex min-w-0 flex-1 flex-col">
                   <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                    {brandName(card.brand)} ending {card.last4 ?? "····"}
+                    <span className="truncate">
+                      {describeCard(card.brand, card.last4)}
+                    </span>
                     {card.isDefault ? (
                       <Badge variant="secondary">Default</Badge>
                     ) : null}
@@ -71,40 +74,59 @@ export function CardsSection() {
                     </span>
                   ) : null}
                 </div>
-                <div className="flex shrink-0 gap-1">
-                  {card.isDefault ? null : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={busy}
-                      onClick={() => makeDefault.mutate({ cardId: card.id })}
-                    >
-                      Make default
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={busy}
-                    onClick={() => remove.mutate({ cardId: card.id })}
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="shrink-0 text-muted-foreground"
+                        disabled={busy}
+                        aria-label={`Actions for ${describeCard(card.brand, card.last4)}`}
+                      />
+                    }
                   >
-                    Remove
-                  </Button>
-                </div>
+                    <Ellipsis aria-hidden="true" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-44">
+                    {card.isDefault ? null : (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            makeDefault.mutate({ cardId: card.id })
+                          }
+                        >
+                          <Star aria-hidden="true" />
+                          Make default
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => remove.mutate({ cardId: card.id })}
+                    >
+                      <Trash2 aria-hidden="true" />
+                      Remove card
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="rounded-xl border border-dashed px-4 py-5 text-sm text-muted-foreground">
+          <div className="flex items-center gap-3 rounded-xl border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
+            <CardMark brand={null} />
             {cards.isError
               ? "Your cards could not be loaded."
-              : "No card saved. One is saved when you subscribe, or add one here."}
-          </p>
+              : "No card saved yet. One is saved when you subscribe."}
+          </div>
         )}
         {error ? <FieldError>{billingErrorMessage(error)}</FieldError> : null}
         <div>
           <Button
             variant="outline"
+            size="sm"
             disabled={!canAdd}
             onClick={() => setAdding(true)}
           >
