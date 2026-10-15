@@ -21,6 +21,7 @@ const router = createRouter({
   defaultErrorComponent: RouteError,
   defaultNotFoundComponent: NotFound,
   defaultPendingComponent: RoutePending,
+  scrollRestoration: true,
 });
 
 declare module "@tanstack/react-router" {

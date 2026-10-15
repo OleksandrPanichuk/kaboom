@@ -44,7 +44,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               size="lg"
               tooltip="Kaboom"
-              render={<Link to="/" onClick={() => setOpenMobile(false)} />}
+              render={<Link to="/home" onClick={() => setOpenMobile(false)} />}
             >
               <BrandMark />
               <span className="truncate text-base font-semibold tracking-[-0.02em]">

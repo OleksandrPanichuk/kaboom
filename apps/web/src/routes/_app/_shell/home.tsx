@@ -5,7 +5,7 @@ import { progressQuery } from "@/features/problems";
 import { activityQuery } from "@/features/progress";
 import { skillsQuery } from "@/features/skills";
 
-export const Route = createFileRoute("/_app/_shell/")({
+export const Route = createFileRoute("/_app/_shell/home")({
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(progressQuery),

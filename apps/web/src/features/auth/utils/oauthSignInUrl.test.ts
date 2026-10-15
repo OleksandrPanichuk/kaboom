@@ -15,13 +15,13 @@ describe("oauthSignInUrl", () => {
 
   test("returns home when there is nowhere else to go", () => {
     expect(returnTo(oauthSignInUrl("google", undefined))).toBe(
-      "/sign-in?redirect=%2F",
+      "/sign-in?redirect=%2Fhome",
     );
   });
 
   test("never carries an outside redirect through the provider", () => {
     expect(returnTo(oauthSignInUrl("google", "https://evil.example"))).toBe(
-      "/sign-in?redirect=%2F",
+      "/sign-in?redirect=%2Fhome",
     );
   });
 });

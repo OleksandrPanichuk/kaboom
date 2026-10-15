@@ -35,7 +35,7 @@ export function TokenOutcome({
         <p className="text-center text-sm text-destructive">
           {errorMessage(error)}
         </p>
-        <Link to="/" className={cn(buttonVariants({ variant: "outline" }))}>
+        <Link to="/home" className={cn(buttonVariants({ variant: "outline" }))}>
           Go to Kaboom
         </Link>
       </div>
@@ -48,7 +48,7 @@ export function TokenOutcome({
         <p className="rounded-lg border bg-muted/40 p-4 text-center text-sm">
           {successText}
         </p>
-        <Link to="/" className={cn(buttonVariants())}>
+        <Link to="/home" className={cn(buttonVariants())}>
           {continueLabel}
         </Link>
       </div>
