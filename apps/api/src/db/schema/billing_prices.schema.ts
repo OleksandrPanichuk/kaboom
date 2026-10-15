@@ -1,6 +1,7 @@
 import {
   bigint,
   boolean,
+  index,
   integer,
   pgTable,
   text,
@@ -10,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { BILLING_PROVIDERS } from "./billing_events.schema";
+import { billingOffersSchema } from "./billing_offers.schema";
 
 export const PLAN_KEYS = ["pro"] as const;
 export type PlanKey = (typeof PLAN_KEYS)[number];
@@ -29,8 +31,10 @@ export const billingPricesSchema = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     provider: text("provider", { enum: BILLING_PROVIDERS }).notNull(),
     providerPriceId: text("provider_price_id").notNull(),
+    offerId: uuid("offer_id").references(() => billingOffersSchema.id, {
+      onDelete: "set null",
+    }),
     lookupKey: text("lookup_key"),
-    planKey: text("plan_key", { enum: PLAN_KEYS }).notNull(),
     type: text("type", { enum: PRICE_TYPES }).notNull(),
     interval: text("interval", { enum: PRICE_INTERVALS }),
     intervalCount: integer("interval_count"),
@@ -49,6 +53,7 @@ export const billingPricesSchema = pgTable(
       .defaultNow(),
   },
   (table) => [
+    index("billing_prices_offer_idx").on(table.provider, table.offerId),
     uniqueIndex("billing_prices_provider_provider_price_id_idx").on(
       table.provider,
       table.providerPriceId,

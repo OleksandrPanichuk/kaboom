@@ -6,7 +6,7 @@ export * from "./billing-catalog.service";
 export * from "./billing-event.entity";
 export * from "./billing-event.handlers";
 export * from "./billing-events.service";
-export * from "./billing-price.entity";
+export * from "./billing-offer.entity";
 export * from "./jobs";
 export * from "./ports";
 export * from "./use-cases";

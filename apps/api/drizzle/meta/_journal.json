@@ -218,6 +218,13 @@
       "when": 1792007601793,
       "tag": "0030_billing_event_topics",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1792008229171,
+      "tag": "0031_billing_offers",
+      "breakpoints": true
     }
   ]
 }

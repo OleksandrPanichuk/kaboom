@@ -6,54 +6,44 @@ import {
   MEMORY_PRICES,
   type MemoryBillingProvider,
 } from "@/adapters/billing/memory.billing-provider";
-import { getEnv } from "@/configs";
 import { make, makeService } from "@/core/registry";
-import { billingPricesSchema, getDatabase } from "@/db";
+import { billingOffersSchema, billingPricesSchema, getDatabase } from "@/db";
 import {
   BillingCatalogService,
+  type BillingOfferModel,
   BillingPriceMisconfiguredError,
-  type BillingPriceModel,
   BillingProvider,
-  type PriceOffer,
 } from "@/modules/billing";
 
-const env = getEnv();
-const OFFERS: PriceOffer[] = [
-  {
-    lookupKey: env.BILLING_PRICE_PRO_MONTHLY,
-    planKey: "pro",
-    type: "recurring",
-  },
-  {
-    lookupKey: env.BILLING_PRICE_PRO_LIFETIME,
-    planKey: "pro",
-    type: "one_time",
-  },
-];
+import { seedOffers } from "./helpers";
+
 const [MONTHLY, LIFETIME] = MEMORY_PRICES;
 
 const provider = () => make(BillingProvider) as MemoryBillingProvider;
-const sync = () => makeService(BillingCatalogService).syncPrices(OFFERS);
+const sync = () => makeService(BillingCatalogService).syncPrices();
 const failure = () =>
   sync().then(
     () => null,
     (error: unknown) => error,
   );
 const listed = async () =>
-  (await createClient().get<BillingPriceModel[]>("/api/billing/prices")).body;
+  (await createClient().get<BillingOfferModel[]>("/api/billing/offers")).body;
 
-beforeEach(sync);
+beforeEach(async () => {
+  await seedOffers();
+  await sync();
+});
 
-describe("the prices on offer", () => {
-  test("lists monthly and lifetime Pro to anyone, cheapest first", async () => {
-    const response = await createClient().get<BillingPriceModel[]>(
-      "/api/billing/prices",
+describe("what is on sale", () => {
+  test("lists each active offer with its price, in the offers' order", async () => {
+    const response = await createClient().get<BillingOfferModel[]>(
+      "/api/billing/offers",
     );
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual([
       {
-        lookupKey: "pro_monthly",
+        key: "pro_monthly",
         planKey: "pro",
         type: "recurring",
         interval: "month",
@@ -63,7 +53,7 @@ describe("the prices on offer", () => {
         taxBehavior: "inclusive",
       },
       {
-        lookupKey: "pro_lifetime",
+        key: "pro_lifetime",
         planKey: "pro",
         type: "one_time",
         interval: null,
@@ -75,7 +65,7 @@ describe("the prices on offer", () => {
     ]);
   });
 
-  test("syncing again keeps one row per price", async () => {
+  test("syncing again keeps one price per offer", async () => {
     await sync();
 
     expect(await getDatabase().select().from(billingPricesSchema)).toHaveLength(
@@ -90,7 +80,7 @@ describe("the prices on offer", () => {
     ]);
     await sync();
 
-    expect((await listed()).map((price) => price.unitAmount)).toEqual([
+    expect((await listed()).map((offer) => offer.unitAmount)).toEqual([
       1_500,
       LIFETIME!.unitAmount,
     ]);
@@ -103,13 +93,36 @@ describe("the prices on offer", () => {
     expect(old).toMatchObject({ lookupKey: null, active: false });
   });
 
-  test("refuses to start without a price for every offer", async () => {
+  test("leaves out an offer that is no longer active, and does not need its price", async () => {
+    await getDatabase()
+      .update(billingOffersSchema)
+      .set({ active: false })
+      .where(eq(billingOffersSchema.key, "pro_lifetime"));
+    provider().setPrices([MONTHLY!]);
+    await sync();
+
+    expect((await listed()).map((offer) => offer.key)).toEqual(["pro_monthly"]);
+  });
+
+  test("sells an offer at its new place in the order", async () => {
+    await getDatabase()
+      .update(billingOffersSchema)
+      .set({ position: 0 })
+      .where(eq(billingOffersSchema.key, "pro_lifetime"));
+
+    expect((await listed()).map((offer) => offer.key)).toEqual([
+      "pro_lifetime",
+      "pro_monthly",
+    ]);
+  });
+
+  test("refuses to start without a price for an active offer", async () => {
     provider().setPrices([MONTHLY!]);
 
     expect(await failure()).toBeInstanceOf(BillingPriceMisconfiguredError);
   });
 
-  test("refuses a lifetime price that recurs", async () => {
+  test("refuses a price that bills differently from its offer", async () => {
     provider().setPrices([
       MONTHLY!,
       { ...MONTHLY!, id: "price_memory_wrong", lookupKey: "pro_lifetime" },
@@ -117,7 +130,14 @@ describe("the prices on offer", () => {
 
     expect(await failure()).toMatchObject({
       message:
-        'The stripe price "pro_lifetime" must be one_time, not recurring',
+        'The stripe price "pro_lifetime" for pro_lifetime must be one_time, not recurring',
+    });
+
+    provider().setPrices([{ ...MONTHLY!, interval: "year" }, LIFETIME!]);
+
+    expect(await failure()).toMatchObject({
+      message:
+        'The stripe price "pro_monthly" for pro_monthly must bill every 1 month, not every 1 year',
     });
   });
 });

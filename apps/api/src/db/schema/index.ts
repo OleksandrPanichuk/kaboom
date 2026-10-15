@@ -1,6 +1,7 @@
 export * from "./accounts.schema";
 export * from "./billing_customers.schema";
 export * from "./billing_events.schema";
+export * from "./billing_offers.schema";
 export * from "./billing_prices.schema";
 export * from "./billing_tax_ids.schema";
 export * from "./design_revisions.schema";

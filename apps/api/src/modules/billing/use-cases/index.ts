@@ -1,2 +1,2 @@
-export * from "./list-prices";
+export * from "./list-offers";
 export * from "./receive-webhook";

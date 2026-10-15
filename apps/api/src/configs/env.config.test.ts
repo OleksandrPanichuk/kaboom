@@ -72,13 +72,11 @@ describe("metrics settings in the environment", () => {
 });
 
 describe("billing settings in the environment", () => {
-  test("default to no key, no tax and the two lookup keys", () => {
+  test("default to no key and no tax", () => {
     const env = loadEnv(base);
 
     expect(env.STRIPE_SECRET_KEY).toBeUndefined();
     expect(env.BILLING_TAX_ENABLED).toBe(false);
-    expect(env.BILLING_PRICE_PRO_MONTHLY).toBe("pro_monthly");
-    expect(env.BILLING_PRICE_PRO_LIFETIME).toBe("pro_lifetime");
   });
 
   test("require the webhook secret once a key is set", () => {
