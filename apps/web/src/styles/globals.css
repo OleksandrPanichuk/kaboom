@@ -277,3 +277,21 @@
     opacity: 0.25;
   }
 }
+
+@keyframes kb-stage {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+    filter: blur(6px);
+  }
+}
+
+@keyframes kb-draw {
+  from {
+    stroke-dashoffset: 1000;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}

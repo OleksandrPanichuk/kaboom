@@ -45,7 +45,10 @@ export function StepsSection() {
             <dt className="order-2 text-sm leading-6 text-muted-foreground">
               {fact.label}
             </dt>
-            <dd className="order-1 bg-gradient-to-br from-foreground to-foreground/50 bg-clip-text text-5xl font-semibold tracking-[-0.05em] text-transparent">
+            <dd
+              data-count={/^\d+$/.test(fact.value) ? fact.value : undefined}
+              className="order-1 bg-gradient-to-br from-foreground to-foreground/50 bg-clip-text text-5xl font-semibold tracking-[-0.05em] text-transparent tabular-nums"
+            >
               {fact.value}
             </dd>
           </div>

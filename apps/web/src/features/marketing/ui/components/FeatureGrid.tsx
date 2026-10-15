@@ -185,6 +185,7 @@ export function FeatureGrid() {
             <article
               key={tile.title}
               data-reveal
+              data-tilt
               className={cn(
                 "group relative flex flex-col gap-5 overflow-hidden rounded-3xl border border-border/80 bg-card/50 p-6 transition-colors hover:border-primary/40",
                 tile.className,

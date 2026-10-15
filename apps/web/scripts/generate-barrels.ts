@@ -7,10 +7,12 @@ const ROOT = resolve(import.meta.dir, "..");
 const FEATURES = join(ROOT, "src", "features");
 const MODULE_EXTENSIONS = [".ts", ".tsx"];
 const TEST_FILE = /\.(test|spec)\.tsx?$/;
+const LAZY_FILE = /\.lazy\.tsx?$/;
 
 const isModule = (name: string): boolean =>
   MODULE_EXTENSIONS.includes(extname(name)) &&
   !TEST_FILE.test(name) &&
+  !LAZY_FILE.test(name) &&
   !name.endsWith(".d.ts") &&
   basename(name, extname(name)) !== "index";
 
