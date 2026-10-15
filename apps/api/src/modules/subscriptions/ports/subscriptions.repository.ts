@@ -18,6 +18,7 @@ export interface RecordSubscriptionChangesData {
   subscriptionId: string;
   changes: readonly SubscriptionChangeDraft[];
   actor: SubscriptionChangeActor;
+  actorUserId: string | null;
   billingEventId: string | null;
 }
 

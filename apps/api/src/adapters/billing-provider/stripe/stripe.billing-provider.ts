@@ -4,6 +4,8 @@ import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-p
 import {
   BillingProvider,
   type CreateProviderCustomerData,
+  type CreateProviderSubscriptionData,
+  type ProviderCheckout,
   type ProviderCustomer,
   type ProviderDispute,
   type ProviderEvent,
@@ -37,6 +39,7 @@ import {
   toProviderRefund,
   toProviderSubscription,
   toProviderTaxId,
+  toSubscriptionCheckout,
 } from "./stripe.helpers";
 
 const missing = (error: unknown): boolean =>
@@ -47,6 +50,7 @@ export interface StripeBillingProviderOptions {
   secretKey: string;
   webhookSecret: string;
   appName: string;
+  taxEnabled: boolean;
 }
 
 export class StripeBillingProvider extends BillingProvider {
@@ -54,19 +58,27 @@ export class StripeBillingProvider extends BillingProvider {
 
   public readonly available = true;
 
+  public get collectsTax(): boolean {
+    return this.taxEnabled;
+  }
+
   public readonly signatureHeader = STRIPE_SIGNATURE_HEADER;
 
   private readonly stripe: Stripe;
 
   private readonly webhookSecret: string;
 
+  private readonly taxEnabled: boolean;
+
   constructor({
     secretKey,
     webhookSecret,
     appName,
+    taxEnabled,
   }: StripeBillingProviderOptions) {
     super();
     this.webhookSecret = webhookSecret;
+    this.taxEnabled = taxEnabled;
     this.stripe = new Stripe(secretKey, {
       apiVersion: STRIPE_API_VERSION,
       maxNetworkRetries: STRIPE_MAX_NETWORK_RETRIES,
@@ -169,6 +181,54 @@ export class StripeBillingProvider extends BillingProvider {
 
       throw error;
     }
+  }
+
+  public async createSubscription({
+    customerId,
+    priceId,
+  }: CreateProviderSubscriptionData): Promise<
+    ProviderCheckout<ProviderSubscription>
+  > {
+    const subscription = await this.stripe.subscriptions.create({
+      customer: customerId,
+      items: [{ price: priceId }],
+      payment_behavior: "default_incomplete",
+      payment_settings: { save_default_payment_method: "on_subscription" },
+      automatic_tax: { enabled: this.taxEnabled },
+      expand: ["latest_invoice.confirmation_secret"],
+    });
+
+    return toSubscriptionCheckout(subscription);
+  }
+
+  public async subscriptionCheckout(
+    id: string,
+  ): Promise<ProviderCheckout<ProviderSubscription>> {
+    return toSubscriptionCheckout(
+      await this.stripe.subscriptions.retrieve(id, {
+        expand: ["latest_invoice.confirmation_secret"],
+      }),
+    );
+  }
+
+  public async scheduleCancellation(
+    id: string,
+    cancelAtPeriodEnd: boolean,
+  ): Promise<ProviderSubscription> {
+    return toProviderSubscription(
+      await this.stripe.subscriptions.update(id, {
+        cancel_at_period_end: cancelAtPeriodEnd,
+      }),
+    );
+  }
+
+  public async cancelSubscription(id: string): Promise<ProviderSubscription> {
+    return toProviderSubscription(
+      await this.stripe.subscriptions.cancel(id, {
+        invoice_now: false,
+        prorate: false,
+      }),
+    );
   }
 
   public async findInvoice(id: string): Promise<ProviderInvoice | null> {

@@ -1,6 +1,7 @@
 import { t } from "elysia";
 
-import { PURCHASE_STATUSES, SUBSCRIPTION_STATUSES } from "@/db";
+import { PURCHASE_STATUSES } from "@/db";
+import { SubscriptionModel } from "@/modules/subscriptions";
 
 export const BillingAddressModel = t.Object({
   line1: t.Nullable(t.String()),
@@ -19,15 +20,7 @@ export const BillingAccountModel = t.Object({
       description: "What gives Pro: lifetime wins when you have both",
     }),
   ),
-  subscription: t.Nullable(
-    t.Object({
-      status: t.UnionEnum(SUBSCRIPTION_STATUSES),
-      currentPeriodEnd: t.Nullable(t.Date()),
-      cancelAtPeriodEnd: t.Boolean(),
-      cancelAt: t.Nullable(t.Date()),
-      trialEnd: t.Nullable(t.Date()),
-    }),
-  ),
+  subscription: t.Nullable(SubscriptionModel),
   lifetime: t.Nullable(
     t.Object({
       status: t.UnionEnum(PURCHASE_STATUSES),

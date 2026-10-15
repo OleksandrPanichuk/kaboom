@@ -9,6 +9,7 @@ import { billingOffersModule } from "@/modules/billing-offers";
 import { billingProviderModule } from "@/modules/billing-provider";
 import { billingReconciliationModule } from "@/modules/billing-reconciliation";
 import { billingTaxIdsModule } from "@/modules/billing-tax-ids";
+import { checkoutModule } from "@/modules/checkout";
 import { designsModule } from "@/modules/designs";
 import { disputesModule } from "@/modules/disputes";
 import { interviewsModule } from "@/modules/interviews";
@@ -86,5 +87,6 @@ export const modules = [
   billingTaxIdsModule,
   billingReconciliationModule,
   billingAccountModule,
+  checkoutModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

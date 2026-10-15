@@ -936,6 +936,9 @@ concern gets a new module rather than a folder in an existing one:
 - `billing-account` owns no table: `GET /billing/me` composes the plan
   (`planOf`), the current subscription and lifetime purchase, and the
   customer's address and card.
+- `checkout` owns no table either: it starts purchases
+  (`POST /billing/checkout/subscription`), and depends on `subscriptions`
+  and `purchases` so that neither depends on the other.
 
 `BillingProvider` is bound to
 `StripeBillingProvider` (`adapters/billing-provider/stripe/`) when
@@ -1080,6 +1083,21 @@ lifetime wins when both hold. Nothing is gated on it yet.
 `GET /billing/invoices`, `/billing/payments` and
 `/billing/subscription/changes` page through the user's own history, each
 from the module that owns the table.
+
+Subscribing creates the subscription at the provider with its first
+payment pending (`default_incomplete`) and answers the client secret of
+that invoice's payment, which the web confirms with the provider's payment
+form; the webhooks then make it active. Under the customer's lock, asking
+again while it waits answers the same payment, and a pending subscription
+to another price is cancelled first. It is refused with
+`BILLING_ALREADY_PRO` when `planOf` already says Pro, and with
+`BILLING_ADDRESS_REQUIRED` when the provider collects tax
+(`BILLING_TAX_ENABLED`, `collectsTax`) and the customer has no country.
+`POST /billing/subscription/cancel` schedules the end of the period
+(one never paid for ends at once) and `/resume` takes that back. A change
+made through the API is recorded in `subscription_changes` with the user
+as its actor, from what the provider answered, so the webhook that
+follows finds nothing new.
 
 ## DevOps track
 

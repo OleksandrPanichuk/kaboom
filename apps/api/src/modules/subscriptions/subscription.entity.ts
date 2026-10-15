@@ -1,8 +1,23 @@
 import type { SubscriptionChangeRow, SubscriptionRow } from "@/db";
 
-import type { SubscriptionChangeModel } from "./subscriptions.model";
+import type {
+  SubscriptionChangeModel,
+  SubscriptionModel,
+} from "./subscriptions.model";
 
 export interface SubscriptionEntity extends SubscriptionRow {}
+
+export class SubscriptionEntity {
+  public static normalize(subscription: SubscriptionEntity): SubscriptionModel {
+    return {
+      status: subscription.status,
+      currentPeriodEnd: subscription.currentPeriodEnd,
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      cancelAt: subscription.cancelAt,
+      trialEnd: subscription.trialEnd,
+    };
+  }
+}
 
 export interface SubscriptionChangeEntity extends SubscriptionChangeRow {}
 

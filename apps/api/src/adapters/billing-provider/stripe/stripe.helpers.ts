@@ -14,6 +14,7 @@ import {
 import type {
   ProviderAddress,
   ProviderCard,
+  ProviderCheckout,
   ProviderCustomer,
   ProviderDispute,
   ProviderEvent,
@@ -390,4 +391,18 @@ export const toProviderTaxId = (
   type: taxId.type,
   value: taxId.value,
   verificationStatus: taxId.verification?.status ?? null,
+});
+
+const confirmationSecretOf = (
+  invoice: string | Stripe.Invoice | null,
+): string | null =>
+  typeof invoice === "object" && invoice !== null
+    ? (invoice.confirmation_secret?.client_secret ?? null)
+    : null;
+
+export const toSubscriptionCheckout = (
+  subscription: Stripe.Subscription,
+): ProviderCheckout<ProviderSubscription> => ({
+  object: toProviderSubscription(subscription),
+  clientSecret: confirmationSecretOf(subscription.latest_invoice),
 });

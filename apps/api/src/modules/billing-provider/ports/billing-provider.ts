@@ -189,10 +189,22 @@ export interface CreateProviderCustomerData {
   name: string;
 }
 
+export interface CreateProviderSubscriptionData {
+  customerId: string;
+  priceId: string;
+}
+
+export interface ProviderCheckout<T> {
+  object: T;
+  clientSecret: string | null;
+}
+
 export abstract class BillingProvider extends Port {
   public abstract readonly name: BillingProviderName;
 
   public abstract readonly available: boolean;
+
+  public abstract readonly collectsTax: boolean;
 
   public abstract readonly signatureHeader: string;
 
@@ -218,6 +230,21 @@ export abstract class BillingProvider extends Port {
   public abstract findSubscription(
     id: string,
   ): Promise<ProviderSubscription | null>;
+
+  public abstract createSubscription(
+    data: CreateProviderSubscriptionData,
+  ): Promise<ProviderCheckout<ProviderSubscription>>;
+
+  public abstract subscriptionCheckout(
+    id: string,
+  ): Promise<ProviderCheckout<ProviderSubscription>>;
+
+  public abstract scheduleCancellation(
+    id: string,
+    cancelAtPeriodEnd: boolean,
+  ): Promise<ProviderSubscription>;
+
+  public abstract cancelSubscription(id: string): Promise<ProviderSubscription>;
 
   public abstract findInvoice(id: string): Promise<ProviderInvoice | null>;
 
