@@ -7,6 +7,11 @@ const MESSAGES: Record<string, string> = {
   BILLING_ADDRESS_REQUIRED: "Add your billing address first.",
   BILLING_DETAILS_REJECTED:
     "The payment provider did not accept those details.",
+  BILLING_CARD_IN_USE:
+    "Your subscription renews on this card. Make another card the default first.",
+  BILLING_CARD_NOT_FOUND: "That card is no longer saved.",
+  BILLING_TAX_ID_NOT_FOUND: "That tax id is already gone.",
+  SUBSCRIPTION_NOT_FOUND: "You have no subscription to change.",
   RATE_LIMITED: "Too many attempts. Wait a few minutes and try again.",
 };
 

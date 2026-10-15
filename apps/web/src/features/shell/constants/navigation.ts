@@ -3,6 +3,7 @@ import {
   BookOpen,
   ChartNoAxesColumn,
   ClipboardCheck,
+  CreditCard,
   House,
   type LucideIcon,
   MessagesSquare,
@@ -70,4 +71,5 @@ export const ACCOUNT_LINKS: NavLinkItem[] = [
   { label: "Plans", icon: Sparkles, to: "/pricing" },
   { label: "Profile", icon: UserRound, to: "/settings/profile" },
   { label: "Security", icon: ShieldCheck, to: "/settings/security" },
+  { label: "Billing", icon: CreditCard, to: "/settings/billing" },
 ];
