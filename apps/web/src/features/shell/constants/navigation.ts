@@ -10,6 +10,7 @@ import {
   PencilLine,
   Puzzle,
   ShieldCheck,
+  Sparkles,
   Trophy,
   UserRound,
 } from "lucide-react";
@@ -66,6 +67,7 @@ export const NAVIGATION: NavGroup[] = [
 ];
 
 export const ACCOUNT_LINKS: NavLinkItem[] = [
+  { label: "Plans", icon: Sparkles, to: "/pricing" },
   { label: "Profile", icon: UserRound, to: "/settings/profile" },
   { label: "Security", icon: ShieldCheck, to: "/settings/security" },
 ];
