@@ -57,6 +57,30 @@ export const SendEmailPayloadSchema = z.discriminatedUnion("kind", [
     to: RecipientSchema,
     reviewUrl: z.url(),
   }),
+  z.object({
+    kind: z.literal(EmailKind.ProStarted),
+    to: RecipientSchema,
+    lifetime: z.boolean(),
+    billingUrl: z.url(),
+  }),
+  z.object({
+    kind: z.literal(EmailKind.PaymentFailed),
+    to: RecipientSchema,
+    billingUrl: z.url(),
+  }),
+  z.object({
+    kind: z.literal(EmailKind.SubscriptionEnded),
+    to: RecipientSchema,
+    endedAt: z.iso.datetime(),
+    billingUrl: z.url(),
+  }),
+  z.object({
+    kind: z.literal(EmailKind.PurchaseRefunded),
+    to: RecipientSchema,
+    amount: z.number().int().nonnegative(),
+    currency: z.string().length(3),
+    billingUrl: z.url(),
+  }),
 ]);
 
 export type EmailClient = z.infer<typeof ClientSchema>;

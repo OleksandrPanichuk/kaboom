@@ -51,5 +51,5 @@ export abstract class SubscriptionsRepository extends Repository {
 
   public abstract recordChanges(
     data: RecordSubscriptionChangesData,
-  ): Promise<void>;
+  ): Promise<SubscriptionChangeEntity[]>;
 }

@@ -5,6 +5,7 @@ import { authoringModule } from "@/modules/authoring";
 import { billingAccountModule } from "@/modules/billing-account";
 import { billingCustomersModule } from "@/modules/billing-customers";
 import { billingEventsModule } from "@/modules/billing-events";
+import { billingNotificationsModule } from "@/modules/billing-notifications";
 import { billingOffersModule } from "@/modules/billing-offers";
 import { billingProviderModule } from "@/modules/billing-provider";
 import { billingReconciliationModule } from "@/modules/billing-reconciliation";
@@ -78,6 +79,7 @@ export const modules = [
   billingProviderModule,
   billingOffersModule,
   billingEventsModule,
+  billingNotificationsModule,
   billingCustomersModule,
   subscriptionsModule,
   invoicesModule,

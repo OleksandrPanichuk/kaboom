@@ -178,10 +178,10 @@ export class PostgresSubscriptionsRepository extends SubscriptionsRepository {
     actor,
     actorUserId,
     billingEventId,
-  }: RecordSubscriptionChangesData): Promise<void> {
-    if (changes.length === 0) return;
+  }: RecordSubscriptionChangesData): Promise<SubscriptionChangeEntity[]> {
+    if (changes.length === 0) return [];
 
-    await this.db
+    return this.db
       .insert(subscriptionChangesSchema)
       .values(
         changes.map((change) => ({
@@ -192,6 +192,7 @@ export class PostgresSubscriptionsRepository extends SubscriptionsRepository {
           billingEventId,
         })),
       )
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning();
   }
 }

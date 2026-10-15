@@ -40,6 +40,10 @@ interface SendReviewReadyOptions extends AuthNotificationRecipient {
   reviewUrl: string;
 }
 
+interface BillingNotice extends AuthNotificationRecipient {
+  billingUrl: string;
+}
+
 export class NotificationsService extends Service {
   private readonly sendEmail = make(SendEmailJob);
 
@@ -66,6 +70,66 @@ export class NotificationsService extends Service {
       kind: EmailKind.ReviewReady,
       to: { userId, email, name },
       reviewUrl,
+    });
+  }
+
+  public sendProStarted({
+    userId,
+    email,
+    name,
+    billingUrl,
+    lifetime,
+  }: BillingNotice & { lifetime: boolean }): Promise<void> {
+    return this.sendEmail.dispatch({
+      kind: EmailKind.ProStarted,
+      to: { userId, email, name },
+      lifetime,
+      billingUrl,
+    });
+  }
+
+  public sendPaymentFailed({
+    userId,
+    email,
+    name,
+    billingUrl,
+  }: BillingNotice): Promise<void> {
+    return this.sendEmail.dispatch({
+      kind: EmailKind.PaymentFailed,
+      to: { userId, email, name },
+      billingUrl,
+    });
+  }
+
+  public sendSubscriptionEnded({
+    userId,
+    email,
+    name,
+    billingUrl,
+    endedAt,
+  }: BillingNotice & { endedAt: Date }): Promise<void> {
+    return this.sendEmail.dispatch({
+      kind: EmailKind.SubscriptionEnded,
+      to: { userId, email, name },
+      endedAt: endedAt.toISOString(),
+      billingUrl,
+    });
+  }
+
+  public sendPurchaseRefunded({
+    userId,
+    email,
+    name,
+    billingUrl,
+    amount,
+    currency,
+  }: BillingNotice & { amount: number; currency: string }): Promise<void> {
+    return this.sendEmail.dispatch({
+      kind: EmailKind.PurchaseRefunded,
+      to: { userId, email, name },
+      amount,
+      currency,
+      billingUrl,
     });
   }
 
