@@ -19,6 +19,11 @@ export {
 } from "./use-cases";
 export { UserEntity } from "./user.entity";
 export { StaffMemberModel, UserMessageModel, UserModel } from "./user.model";
+export {
+  ListenersUserLifecycle,
+  registerUserLifecycleListener,
+  type UserLifecycleListener,
+} from "./user-lifecycle.listeners";
 export { DELETE_ACCOUNT_RATE_LIMIT } from "./users.constants";
 export {
   AccountDeletionNotConfirmedError,

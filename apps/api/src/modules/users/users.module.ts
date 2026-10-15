@@ -1,7 +1,7 @@
 import { defineModule } from "@/core/module";
 import { bind, makeUseCase } from "@/core/registry";
 
-import { UsersRepository } from "./ports";
+import { UserLifecycle, UsersRepository } from "./ports";
 import { PostgresUsersRepository } from "./repositories";
 import {
   DeleteAccountUseCase,
@@ -10,6 +10,7 @@ import {
   SetUserRoleUseCase,
   UpdateProfileUseCase,
 } from "./use-cases";
+import { ListenersUserLifecycle } from "./user-lifecycle.listeners";
 import { usersPlugin } from "./users.plugin";
 import { usersRoutes } from "./users.routes";
 
@@ -18,6 +19,7 @@ export const usersModule = defineModule({
 
   register: () => {
     bind(UsersRepository, () => new PostgresUsersRepository());
+    bind(UserLifecycle, () => new ListenersUserLifecycle());
   },
 
   plugins: () => usersPlugin,

@@ -183,6 +183,12 @@ export interface ProviderTaxId {
   verificationStatus: string | null;
 }
 
+export interface CreateProviderCustomerData {
+  userId: string;
+  email: string;
+  name: string;
+}
+
 export abstract class BillingProvider extends Port {
   public abstract readonly name: BillingProviderName;
 
@@ -202,6 +208,12 @@ export abstract class BillingProvider extends Port {
   ): Promise<ProviderPrice[]>;
 
   public abstract findCustomer(id: string): Promise<ProviderCustomer | null>;
+
+  public abstract createCustomer(
+    data: CreateProviderCustomerData,
+  ): Promise<ProviderCustomer>;
+
+  public abstract deleteCustomer(id: string): Promise<void>;
 
   public abstract findSubscription(
     id: string,

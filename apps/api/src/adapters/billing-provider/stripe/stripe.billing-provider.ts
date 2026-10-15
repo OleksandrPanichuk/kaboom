@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-provider.errors";
 import {
   BillingProvider,
+  type CreateProviderCustomerData,
   type ProviderCustomer,
   type ProviderDispute,
   type ProviderEvent,
@@ -23,6 +24,7 @@ import {
   STRIPE_MAX_NETWORK_RETRIES,
   STRIPE_PAGE_SIZE,
   STRIPE_SIGNATURE_HEADER,
+  STRIPE_USER_ID_METADATA_KEY,
 } from "./stripe.constants";
 import {
   idOf,
@@ -126,6 +128,32 @@ export class StripeBillingProvider extends BillingProvider {
       if (missing(error)) return null;
 
       throw error;
+    }
+  }
+
+  public async createCustomer({
+    userId,
+    email,
+    name,
+  }: CreateProviderCustomerData): Promise<ProviderCustomer> {
+    return toProviderCustomer(
+      await this.stripe.customers.create(
+        {
+          email,
+          name,
+          metadata: { [STRIPE_USER_ID_METADATA_KEY]: userId },
+          expand: ["invoice_settings.default_payment_method"],
+        },
+        { idempotencyKey: `customer-${userId}` },
+      ),
+    );
+  }
+
+  public async deleteCustomer(id: string): Promise<void> {
+    try {
+      await this.stripe.customers.del(id);
+    } catch (error) {
+      if (!missing(error)) throw error;
     }
   }
 

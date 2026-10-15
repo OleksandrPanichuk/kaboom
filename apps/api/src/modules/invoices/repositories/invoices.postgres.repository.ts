@@ -1,10 +1,19 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 
+import type { Page, PageRequest } from "@/core/pagination";
 import { type BillingProviderName, invoicesSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
+import { Keyset } from "@/db/pagination";
 
 import type { InvoiceEntity } from "../invoice.entity";
 import { InvoicesRepository, type SyncInvoiceData } from "../ports";
+
+const NEWEST_FIRST = new Keyset<InvoiceEntity>({
+  sort: invoicesSchema.providerCreatedAt,
+  id: invoicesSchema.id,
+  direction: "desc",
+  key: (invoice) => [invoice.providerCreatedAt, invoice.id],
+});
 
 export class PostgresInvoicesRepository extends InvoicesRepository {
   constructor(private readonly resolve: () => DBExecutor = getExecutor) {
@@ -31,6 +40,28 @@ export class PostgresInvoicesRepository extends InvoicesRepository {
       .limit(1);
 
     return row ?? null;
+  }
+
+  public async listForUser(
+    provider: BillingProviderName,
+    userId: string,
+    page: PageRequest,
+  ): Promise<Page<InvoiceEntity>> {
+    const rows = await this.db
+      .select()
+      .from(invoicesSchema)
+      .where(
+        and(
+          eq(invoicesSchema.provider, provider),
+          eq(invoicesSchema.userId, userId),
+          ne(invoicesSchema.status, "draft"),
+          NEWEST_FIRST.after(page.cursor),
+        ),
+      )
+      .orderBy(...NEWEST_FIRST.orderBy())
+      .limit(NEWEST_FIRST.limit(page));
+
+    return NEWEST_FIRST.page(rows, page);
   }
 
   public async sync(data: SyncInvoiceData, at: Date): Promise<InvoiceEntity> {

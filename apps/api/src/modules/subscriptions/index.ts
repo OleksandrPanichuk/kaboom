@@ -4,5 +4,7 @@ export * from "./subscription.entity";
 export * from "./subscription-changes";
 export * from "./subscriptions.constants";
 export * from "./subscriptions.errors";
+export * from "./subscriptions.model";
 export * from "./subscriptions.module";
 export * from "./subscriptions.service";
+export * from "./use-cases";

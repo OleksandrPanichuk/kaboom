@@ -108,7 +108,7 @@ describe("syncing billing customers", () => {
   test("marks a customer the provider no longer has as deleted", async () => {
     memoryProvider().setCustomer(providerCustomer());
     await updated("evt_1");
-    memoryProvider().deleteCustomer("cus_1");
+    memoryProvider().forgetCustomer("cus_1");
 
     await deliverWebhook({
       id: "evt_2",

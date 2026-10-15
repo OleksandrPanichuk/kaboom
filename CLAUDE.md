@@ -838,8 +838,12 @@ platform always keeps one. The first admin comes from the command line:
 `display_name`, a `bio`, up to three `links`, an `avatar_key` and
 `visible`. Every user has one row, made in the transaction that creates
 the user: `users` declares the `UserLifecycle` port and calls `created`
-from `UsersService.create`, and `profiles` binds it, as `reviews` binds
-`ReviewScheduler`. The handle starts from the name and the user's id
+from `UsersService.create`. Users binds it to `ListenersUserLifecycle`,
+which calls every listener a module registers with
+`registerUserLifecycleListener`: `created` in module order and `deleting`
+in reverse, so billing cancels at the provider before the profile drops
+its avatar. Account deletion runs `deleting` before it revokes the
+sessions, so a listener that refuses leaves the account as it was. The handle starts from the name and the user's id
 (`ada-lovelac-1f0c2a9e`), and the display name starts as `users.name`
 but is its own field from then on, so the account name stays private once
 someone changes either. Profiles are public by default; a hidden one
@@ -929,6 +933,9 @@ concern gets a new module rather than a folder in an existing one:
   and `tax_id` topics.
 - `billing-reconciliation` runs `ReconcileBillingJob` nightly, for what the
   webhooks missed.
+- `billing-account` owns no table: `GET /billing/me` composes the plan
+  (`planOf`), the current subscription and lifetime purchase, and the
+  customer's address and card.
 
 `BillingProvider` is bound to
 `StripeBillingProvider` (`adapters/billing-provider/stripe/`) when
@@ -1058,6 +1065,21 @@ A pending event is queued under its own id, so a second delivery while it
 waits adds nothing; a failed one under its id and attempt count, because
 BullMQ keeps a failed job and would drop a new one under the same id.
 Claiming an event puts it back to `pending` for that reason.
+
+A user gets a provider customer on first need, never at sign-up:
+`BillingCustomersService.forUser` takes a per-user advisory lock, finds the
+user's customer or creates one with the user's id in its metadata (and an
+idempotency key per user), so two checkouts at once make one. Deleting an
+account deletes that customer at the provider, which cancels its
+subscriptions at once and removes its cards; invoices and charges stay
+there, and the rows here keep them with `user_id` null.
+`planOf` is the one place that says what a user is on: Pro through a
+lifetime purchase that is paid or partly refunded, or a subscription that
+is active, trialing or past due (the provider is still retrying), and
+lifetime wins when both hold. Nothing is gated on it yet.
+`GET /billing/invoices`, `/billing/payments` and
+`/billing/subscription/changes` page through the user's own history, each
+from the module that owns the table.
 
 ## DevOps track
 

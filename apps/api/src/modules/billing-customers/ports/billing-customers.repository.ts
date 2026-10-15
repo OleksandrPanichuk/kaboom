@@ -14,6 +14,13 @@ export abstract class BillingCustomersRepository extends Repository {
     providerCustomerId: string,
   ): Promise<void>;
 
+  public abstract lockUser(userId: string): Promise<void>;
+
+  public abstract findByUser(
+    provider: BillingProviderName,
+    userId: string,
+  ): Promise<BillingCustomerEntity | null>;
+
   public abstract findByProviderId(
     provider: BillingProviderName,
     providerCustomerId: string,

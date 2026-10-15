@@ -48,6 +48,14 @@ export class UnavailableBillingProvider extends BillingProvider {
     return Promise.reject(unavailable());
   }
 
+  public createCustomer(): Promise<ProviderCustomer> {
+    return Promise.reject(unavailable());
+  }
+
+  public deleteCustomer(): Promise<void> {
+    return Promise.reject(unavailable());
+  }
+
   public findInvoice(): Promise<ProviderInvoice | null> {
     return Promise.reject(unavailable());
   }

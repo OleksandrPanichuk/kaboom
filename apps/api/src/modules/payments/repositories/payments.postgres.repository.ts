@@ -1,10 +1,23 @@
-import { sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
-import { paymentAttemptsSchema, paymentsSchema } from "@/db";
+import type { Page, PageRequest } from "@/core/pagination";
+import {
+  type BillingProviderName,
+  paymentAttemptsSchema,
+  paymentsSchema,
+} from "@/db";
 import { type DBExecutor, getExecutor, transaction } from "@/db/executor";
+import { Keyset } from "@/db/pagination";
 
 import type { PaymentEntity } from "../payment.entity";
 import { PaymentsRepository, type SyncPaymentData } from "../ports";
+
+const NEWEST_FIRST = new Keyset<PaymentEntity>({
+  sort: paymentsSchema.providerCreatedAt,
+  id: paymentsSchema.id,
+  direction: "desc",
+  key: (payment) => [payment.providerCreatedAt, payment.id],
+});
 
 export class PostgresPaymentsRepository extends PaymentsRepository {
   constructor(private readonly resolve: () => DBExecutor = getExecutor) {
@@ -13,6 +26,27 @@ export class PostgresPaymentsRepository extends PaymentsRepository {
 
   private get db() {
     return this.resolve();
+  }
+
+  public async listForUser(
+    provider: BillingProviderName,
+    userId: string,
+    page: PageRequest,
+  ): Promise<Page<PaymentEntity>> {
+    const rows = await this.db
+      .select()
+      .from(paymentsSchema)
+      .where(
+        and(
+          eq(paymentsSchema.provider, provider),
+          eq(paymentsSchema.userId, userId),
+          NEWEST_FIRST.after(page.cursor),
+        ),
+      )
+      .orderBy(...NEWEST_FIRST.orderBy())
+      .limit(NEWEST_FIRST.limit(page));
+
+    return NEWEST_FIRST.page(rows, page);
   }
 
   public sync(data: SyncPaymentData, at: Date): Promise<PaymentEntity> {

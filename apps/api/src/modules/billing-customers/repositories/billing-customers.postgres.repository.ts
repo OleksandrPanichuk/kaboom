@@ -31,6 +31,31 @@ export class PostgresBillingCustomersRepository extends BillingCustomersReposito
     );
   }
 
+  public async lockUser(userId: string): Promise<void> {
+    await this.db.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${`billing-user:${userId}`}))`,
+    );
+  }
+
+  public async findByUser(
+    provider: BillingProviderName,
+    userId: string,
+  ): Promise<BillingCustomerEntity | null> {
+    const [row] = await this.db
+      .select()
+      .from(billingCustomersSchema)
+      .where(
+        and(
+          eq(billingCustomersSchema.provider, provider),
+          eq(billingCustomersSchema.userId, userId),
+          isNull(billingCustomersSchema.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    return row ?? null;
+  }
+
   public async findByProviderId(
     provider: BillingProviderName,
     providerCustomerId: string,

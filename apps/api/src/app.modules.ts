@@ -2,6 +2,7 @@ import type { AppModule } from "@/core/module";
 import { accountsModule } from "@/modules/accounts";
 import { authModule } from "@/modules/auth";
 import { authoringModule } from "@/modules/authoring";
+import { billingAccountModule } from "@/modules/billing-account";
 import { billingCustomersModule } from "@/modules/billing-customers";
 import { billingEventsModule } from "@/modules/billing-events";
 import { billingOffersModule } from "@/modules/billing-offers";
@@ -84,5 +85,6 @@ export const modules = [
   disputesModule,
   billingTaxIdsModule,
   billingReconciliationModule,
+  billingAccountModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

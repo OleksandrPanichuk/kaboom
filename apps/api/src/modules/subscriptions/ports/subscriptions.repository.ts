@@ -1,8 +1,12 @@
+import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
 import type { BillingProviderName, SubscriptionChangeActor } from "@/db";
 import type { ProviderSubscription } from "@/modules/billing-provider";
 
-import type { SubscriptionEntity } from "../subscription.entity";
+import type {
+  SubscriptionChangeEntity,
+  SubscriptionEntity,
+} from "../subscription.entity";
 import type { SubscriptionChangeDraft } from "../subscription-changes";
 
 export interface SyncSubscriptionData extends ProviderSubscription {
@@ -32,6 +36,17 @@ export abstract class SubscriptionsRepository extends Repository {
     data: SyncSubscriptionData,
     at: Date,
   ): Promise<SubscriptionEntity>;
+
+  public abstract findCurrentForUser(
+    provider: BillingProviderName,
+    userId: string,
+  ): Promise<SubscriptionEntity | null>;
+
+  public abstract listChangesForUser(
+    provider: BillingProviderName,
+    userId: string,
+    page: PageRequest,
+  ): Promise<Page<SubscriptionChangeEntity>>;
 
   public abstract recordChanges(
     data: RecordSubscriptionChangesData,

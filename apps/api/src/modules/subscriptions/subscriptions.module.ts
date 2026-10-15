@@ -1,10 +1,12 @@
 import { defineModule } from "@/core/module";
-import { bind } from "@/core/registry";
+import { bind, makeUseCase } from "@/core/registry";
 import { registerBillingEventHandler } from "@/modules/billing-events";
 
 import { SubscriptionEventHandler } from "./handlers";
 import { SubscriptionsRepository } from "./ports";
 import { PostgresSubscriptionsRepository } from "./repositories";
+import { subscriptionsRoutes } from "./subscriptions.routes";
+import { ListSubscriptionChangesUseCase } from "./use-cases";
 
 export const subscriptionsModule = defineModule({
   name: "subscriptions",
@@ -13,4 +15,9 @@ export const subscriptionsModule = defineModule({
     bind(SubscriptionsRepository, () => new PostgresSubscriptionsRepository());
     registerBillingEventHandler("subscription", SubscriptionEventHandler);
   },
+
+  routes: () =>
+    subscriptionsRoutes({
+      listSubscriptionChanges: makeUseCase(ListSubscriptionChangesUseCase),
+    }),
 });

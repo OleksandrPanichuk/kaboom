@@ -6,6 +6,7 @@ import { BILLING_EVENT_TOPICS } from "@/db";
 import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-provider.errors";
 import {
   BillingProvider,
+  type CreateProviderCustomerData,
   type ProviderCustomer,
   type ProviderDispute,
   type ProviderEvent,
@@ -195,11 +196,53 @@ export class MemoryBillingProvider extends BillingProvider {
     this.taxIds.delete(id);
   }
 
+  private created = 0;
+
+  public createCustomer({
+    userId,
+    email,
+    name,
+  }: CreateProviderCustomerData): Promise<ProviderCustomer> {
+    const customer: ProviderCustomer = {
+      id: `cus_memory_${++this.created}`,
+      userId,
+      email,
+      name,
+      address: null,
+      card: null,
+      taxExempt: "none",
+      balance: 0,
+    };
+
+    this.customers.set(customer.id, customer);
+
+    return Promise.resolve(customer);
+  }
+
+  public deleteCustomer(id: string): Promise<void> {
+    this.customers.delete(id);
+
+    for (const subscription of this.subscriptions.values()) {
+      if (
+        subscription.customerId === id &&
+        subscription.status !== "canceled"
+      ) {
+        this.subscriptions.set(subscription.id, {
+          ...subscription,
+          status: "canceled",
+          endedAt: new Date(),
+        });
+      }
+    }
+
+    return Promise.resolve();
+  }
+
   public setCustomer(customer: ProviderCustomer): void {
     this.customers.set(customer.id, customer);
   }
 
-  public deleteCustomer(id: string): void {
+  public forgetCustomer(id: string): void {
     this.customers.delete(id);
   }
 
