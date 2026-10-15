@@ -1,4 +1,5 @@
 export * from "./billingErrorMessage";
+export * from "./billingNotice";
 export * from "./describeOffer";
 export * from "./formatBillingDate";
 export * from "./formatMoney";

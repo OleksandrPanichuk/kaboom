@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/Sidebar";
 import { EmailVerificationBanner } from "@/features/auth";
+import { BillingBanner } from "@/features/billing";
 import { useSidebarStore } from "@/features/shell/store";
 import { AppSidebar, ShellHeader } from "@/features/shell/ui/components";
 
@@ -19,6 +20,7 @@ export function AppShell({ children }: AppShellProps) {
       <SidebarInset className="min-w-0">
         <ShellHeader />
         <EmailVerificationBanner />
+        <BillingBanner />
         <div className="flex flex-1 flex-col">{children}</div>
       </SidebarInset>
     </SidebarProvider>

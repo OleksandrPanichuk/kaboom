@@ -1,4 +1,5 @@
 export * from "./AddCardDialog";
+export * from "./BillingBanner";
 export * from "./BillingDetailsForm";
 export * from "./BillingDetailsSection";
 export * from "./CancelSubscriptionDialog";
