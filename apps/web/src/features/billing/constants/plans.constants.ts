@@ -13,3 +13,5 @@ export const PRO_FEATURES = [
 export const CHECKOUT_POLL_MS = 2_000;
 
 export const CHECKOUT_POLL_LIMIT_MS = 60_000;
+
+export const BILLING_BANNER_HIDDEN_ON = ["/pricing", "/settings/billing"];

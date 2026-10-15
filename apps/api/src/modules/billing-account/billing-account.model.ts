@@ -6,10 +6,9 @@ import { SubscriptionModel } from "@/modules/subscriptions";
 
 export const BillingAccountModel = t.Object({
   plan: t.Union([t.Literal("free"), t.Literal("pro")]),
-  source: t.Nullable(
-    t.Union([t.Literal("subscription"), t.Literal("lifetime")], {
-      description: "What gives Pro: lifetime wins when you have both",
-    }),
+  source: t.Union(
+    [t.Literal("subscription"), t.Literal("lifetime"), t.Null()],
+    { description: "What gives Pro: lifetime wins when you have both" },
   ),
   subscription: t.Nullable(SubscriptionModel),
   lifetime: t.Nullable(
