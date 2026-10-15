@@ -20,11 +20,11 @@ type Options = ReceiveWebhookUseCaseOptions;
 type Result = ReceivedWebhook;
 
 export class ReceiveWebhookUseCase extends UseCase<Options, Result> {
-  private get provider() {
-    return make(BillingProvider);
-  }
+  private readonly provider = make(BillingProvider);
 
   private readonly events = makeRepository(BillingEventsRepository);
+
+  private readonly processEvent = make(ProcessBillingEventJob);
 
   public async execute({
     provider,
@@ -45,7 +45,7 @@ export class ReceiveWebhookUseCase extends UseCase<Options, Result> {
     });
 
     if (event.status === "pending" || event.status === "failed") {
-      await make(ProcessBillingEventJob).dispatch(
+      await this.processEvent.dispatch(
         { eventId: event.id },
         { jobId: event.id },
       );

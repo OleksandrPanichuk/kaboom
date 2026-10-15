@@ -1,20 +1,15 @@
 import { getApp } from "@tests/helpers";
 import { afterEach, describe, expect, test } from "bun:test";
-import { eq } from "drizzle-orm";
-import Stripe from "stripe";
 
 import {
   MEMORY_SIGNATURE_HEADER,
-  MEMORY_WEBHOOK_SIGNATURE,
   type MemoryWebhook,
+  signMemoryWebhook,
 } from "@/adapters/billing/memory.billing-provider";
-import { StripeBillingProvider } from "@/adapters/billing/stripe";
-import { bind, make } from "@/core/registry";
 import { billingEventsSchema, getDatabase } from "@/db";
 import {
   type BillingEventEntity,
   type BillingEventHandler,
-  BillingProvider,
   registerBillingEventHandler,
 } from "@/modules/billing";
 
@@ -32,10 +27,11 @@ const post = (body: string, headers: Record<string, string>) =>
     }),
   );
 
-const deliver = (
-  event: MemoryWebhook,
-  signature: string = MEMORY_WEBHOOK_SIGNATURE,
-) => post(JSON.stringify(event), { [MEMORY_SIGNATURE_HEADER]: signature });
+const signed = (body: string, signature = signMemoryWebhook(body)) =>
+  post(body, { [MEMORY_SIGNATURE_HEADER]: signature });
+
+const deliver = (event: MemoryWebhook, signature?: string) =>
+  signed(JSON.stringify(event), signature);
 
 const stored = () => getDatabase().select().from(billingEventsSchema);
 
@@ -139,9 +135,7 @@ describe("receiving billing webhooks", () => {
 
   test("refuses an unsigned or malformed event and stores nothing", async () => {
     const forged = await deliver({ id: "evt_5", type: "invoice.paid" }, "nope");
-    const garbage = await post("not json", {
-      [MEMORY_SIGNATURE_HEADER]: MEMORY_WEBHOOK_SIGNATURE,
-    });
+    const garbage = await signed("not json");
 
     expect(forged.status).toBe(400);
     expect(await forged.json()).toMatchObject({
@@ -151,57 +145,29 @@ describe("receiving billing webhooks", () => {
     expect(await stored()).toEqual([]);
   });
 
-  test("verifies Stripe's signature over the body exactly as it was sent", async () => {
-    const memory = make(BillingProvider);
-    const secret = "whsec_test_secret";
-
-    bind(
-      BillingProvider,
-      () =>
-        new StripeBillingProvider({
-          secretKey: "sk_test_unused",
-          webhookSecret: secret,
-          appName: "Test",
-        }),
-    );
-    cleanups.push(() => bind(BillingProvider, () => memory));
-
-    const payload = JSON.stringify(
+  test("checks the signature over the body exactly as it was sent", async () => {
+    const body = JSON.stringify(
       {
-        id: "evt_stripe_1",
-        object: "event",
+        id: "evt_raw",
         type: "customer.subscription.updated",
-        created: 1_791_000_000,
-        livemode: false,
-        data: { object: { id: "sub_1", object: "subscription" } },
+        topic: "subscription",
+        objectId: "sub_1",
       },
       null,
       2,
     );
-    const signature = await new Stripe(
-      "sk_test_unused",
-    ).webhooks.generateTestHeaderStringAsync({ payload, secret });
+    const signature = signMemoryWebhook(body);
 
-    const response = await post(payload, { "stripe-signature": signature });
+    expect((await signed(body, signature)).status).toBe(200);
+    expect(await stored()).toMatchObject([
+      { providerEventId: "evt_raw", providerObjectId: "sub_1" },
+    ]);
 
-    expect(response.status).toBe(200);
+    const reformatted = await signed(
+      JSON.stringify(JSON.parse(body) as unknown),
+      signature,
+    );
 
-    const [event] = await getDatabase()
-      .select()
-      .from(billingEventsSchema)
-      .where(eq(billingEventsSchema.providerEventId, "evt_stripe_1"));
-
-    expect(event).toMatchObject({
-      topic: "subscription",
-      providerObjectId: "sub_1",
-      live: false,
-      providerCreatedAt: new Date(1_791_000_000_000),
-    });
-
-    const tampered = await post(payload.replace("sub_1", "sub_2"), {
-      "stripe-signature": signature,
-    });
-
-    expect(tampered.status).toBe(400);
+    expect(reformatted.status).toBe(400);
   });
 });

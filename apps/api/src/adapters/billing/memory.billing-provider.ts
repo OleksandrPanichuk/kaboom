@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import z from "zod";
 
 import { BILLING_EVENT_TOPICS } from "@/db";
@@ -10,7 +12,8 @@ import {
 
 export const MEMORY_SIGNATURE_HEADER = "x-memory-signature";
 
-export const MEMORY_WEBHOOK_SIGNATURE = "memory-signed";
+export const signMemoryWebhook = (payload: string): string =>
+  createHash("sha256").update(payload).digest("hex");
 
 export const MemoryWebhookSchema = z.object({
   id: z.string().min(1),
@@ -67,7 +70,7 @@ export class MemoryBillingProvider extends BillingProvider {
   }
 
   private read(payload: string, signature: string | null): ProviderEvent {
-    if (signature !== MEMORY_WEBHOOK_SIGNATURE) {
+    if (signature !== signMemoryWebhook(payload)) {
       throw new InvalidBillingWebhookError(
         "The webhook signature does not match",
       );

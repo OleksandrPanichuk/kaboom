@@ -37,15 +37,15 @@ export class ProcessBillingEventJob extends Job<ProcessBillingEventPayload> {
     backoff: { type: "exponential", delayMs: BILLING_EVENT_JOB_BACKOFF_MS },
   };
 
+  private readonly events = makeRepository(BillingEventsRepository);
+
+  private readonly billingEventsService = makeService(BillingEventsService);
+
   public async handle({ eventId }: ProcessBillingEventPayload): Promise<void> {
     try {
-      await makeService(BillingEventsService).process(eventId);
+      await this.billingEventsService.process(eventId);
     } catch (error) {
-      await makeRepository(BillingEventsRepository).recordError(
-        eventId,
-        describe(error),
-        false,
-      );
+      await this.events.recordError(eventId, describe(error), false);
 
       throw error;
     }
@@ -59,11 +59,7 @@ export class ProcessBillingEventJob extends Job<ProcessBillingEventPayload> {
     await super.failed(error, meta);
 
     if (payload) {
-      await makeRepository(BillingEventsRepository).recordError(
-        payload.eventId,
-        describe(error),
-        true,
-      );
+      await this.events.recordError(payload.eventId, describe(error), true);
     }
   }
 }
