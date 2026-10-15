@@ -35,14 +35,17 @@ A feature has only the folders it needs; there are no empty ones.
 ```
 routes/
   __root.tsx
+  _marketing/             public pages for everyone, in the dark marketing layout
+    route.tsx             renders MarketingLayout
+    index.tsx (/), pricing.tsx, terms.tsx, privacy.tsx, cookies.tsx
   _guest/                 signed-out pages
-    route.tsx             beforeLoad: a signed-in visitor goes on to ?redirect or /
+    route.tsx             beforeLoad: a signed-in visitor goes on to ?redirect or /home
     sign-in.tsx, sign-up.tsx, forgot-password.tsx
   _app/                   the signed-in app
     route.tsx             beforeLoad: a guest goes to /sign-in?redirect=…
     _shell/               pages inside the sidebar
       route.tsx           renders AppShell
-      index.tsx, designs/index.tsx, problems/index.tsx, settings/…
+      home.tsx (/home), designs/index.tsx, problems/index.tsx, settings/…
     (workspace)/          full-screen work surfaces, each view renders WorkspaceLayout
       designs/$designId.tsx, problems/$slug.tsx
   (email-links)/          pages opened from an email, signed in or not
@@ -57,6 +60,12 @@ routes/
   because a link from an email must open whether or not the reader is signed
   in.
 - A guard lives once, in the layout, never repeated in the routes under it.
+- `/` is the public landing page and the signed-in home is `/home`, where
+  signing in lands (`DEFAULT_REDIRECT`). `/pricing` is public too and reads
+  the caller's plan only when they are signed in, never waiting on it; its
+  checkout (`/pricing/checkout`) stays inside `_app`, so a guest is sent to
+  sign up and on to the checkout. The marketing layout is always dark: it
+  puts the `.dark` class on its own root, whatever the app theme is.
 - A page where the user works on something (a design, a problem, an
   interview) goes under `(workspace)/` and renders `WorkspaceLayout` from
   `@/features/shell`, passing its own tool panel, tabs and top-bar actions.

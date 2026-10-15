@@ -24,5 +24,6 @@ export default defineConfig({
     proxy: {
       "/api": { target: API_URL, changeOrigin: false },
     },
+    allowedHosts: ["9534-46-200-138-205.ngrok-free.app"],
   },
 });
