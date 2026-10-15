@@ -48,6 +48,10 @@ export class PurchasesService extends Service {
     });
   }
 
+  public currentFor(userId: string): Promise<PurchaseEntity | null> {
+    return this.purchases.findCurrentForUser(this.provider.name, userId);
+  }
+
   public async recordRefunds(
     providerInvoiceId: string,
     refunds: PurchaseRefunds,

@@ -33,6 +33,10 @@ export class SubscriptionsService extends Service {
     BillingCustomersService,
   );
 
+  public currentFor(userId: string): Promise<SubscriptionEntity | null> {
+    return this.subscriptions.findCurrentForUser(this.provider.name, userId);
+  }
+
   public sync(
     providerCustomerId: string,
     providerSubscriptionId: string,

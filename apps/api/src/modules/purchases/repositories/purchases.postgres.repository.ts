@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { type BillingProviderName, purchasesSchema } from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
@@ -49,6 +49,26 @@ export class PostgresPurchasesRepository extends PurchasesRepository {
           eq(purchasesSchema.providerInvoiceId, providerInvoiceId),
         ),
       )
+      .limit(1);
+
+    return row ?? null;
+  }
+
+  public async findCurrentForUser(
+    provider: BillingProviderName,
+    userId: string,
+  ): Promise<PurchaseEntity | null> {
+    const [row] = await this.db
+      .select()
+      .from(purchasesSchema)
+      .where(
+        and(
+          eq(purchasesSchema.provider, provider),
+          eq(purchasesSchema.userId, userId),
+          inArray(purchasesSchema.status, [...LIVE_PURCHASE_STATUSES]),
+        ),
+      )
+      .orderBy(desc(purchasesSchema.createdAt))
       .limit(1);
 
     return row ?? null;

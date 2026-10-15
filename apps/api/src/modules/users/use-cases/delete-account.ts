@@ -31,6 +31,8 @@ export class DeleteAccountUseCase extends UseCase<Options, Result> {
 
   private readonly sessionsService = makeService(SessionsService);
 
+  private readonly userLifecycle = make(UserLifecycle);
+
   public async execute({ userId, email, password }: Options): Promise<Result> {
     const user = await this.usersRepository.getById(userId);
 
@@ -44,8 +46,8 @@ export class DeleteAccountUseCase extends UseCase<Options, Result> {
 
     await this.verifyPassword(userId, password);
 
+    await this.userLifecycle.deleting(user);
     await this.sessionsService.revokeAllForUser(userId);
-    await make(UserLifecycle).deleting(user);
     await this.usersService.invalidate(userId);
     await this.usersRepository.deleteById(userId);
   }

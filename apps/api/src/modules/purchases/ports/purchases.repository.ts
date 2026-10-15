@@ -33,6 +33,11 @@ export abstract class PurchasesRepository extends Repository {
     at: Date,
   ): Promise<PurchaseEntity>;
 
+  public abstract findCurrentForUser(
+    provider: BillingProviderName,
+    userId: string,
+  ): Promise<PurchaseEntity | null>;
+
   public abstract recordRefunds(
     id: string,
     refunded: RefundedPurchase,

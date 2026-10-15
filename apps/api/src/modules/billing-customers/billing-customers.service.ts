@@ -10,6 +10,12 @@ import { BillingCustomersRepository } from "./ports";
 
 const UserId = z.uuid();
 
+export interface BillingUser {
+  id: string;
+  email: string;
+  name: string;
+}
+
 export class BillingCustomersService extends Service {
   private readonly provider = make(BillingProvider);
 
@@ -41,6 +47,51 @@ export class BillingCustomersService extends Service {
     return this.locked(providerCustomerId, () =>
       this.refresh(providerCustomerId),
     );
+  }
+
+  public findForUser(userId: string): Promise<BillingCustomerEntity | null> {
+    return this.customers.findByUser(this.provider.name, userId);
+  }
+
+  public forUser(user: BillingUser): Promise<BillingCustomerEntity> {
+    return transaction(async () => {
+      await this.customers.lockUser(user.id);
+
+      const existing = await this.customers.findByUser(
+        this.provider.name,
+        user.id,
+      );
+
+      if (existing) return existing;
+
+      const customer = await this.provider.createCustomer({
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+      });
+
+      return this.locked(customer.id, () =>
+        this.customers.sync(
+          { ...customer, provider: this.provider.name, userId: user.id },
+          new Date(),
+        ),
+      );
+    });
+  }
+
+  public async removeForUser(userId: string): Promise<void> {
+    const customer = await this.findForUser(userId);
+
+    if (!customer) return;
+
+    await this.locked(customer.providerCustomerId, async () => {
+      await this.provider.deleteCustomer(customer.providerCustomerId);
+      await this.customers.markDeleted(
+        this.provider.name,
+        customer.providerCustomerId,
+        new Date(),
+      );
+    });
   }
 
   public async ensure(

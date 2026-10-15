@@ -1,6 +1,6 @@
 import { defineModule } from "@/core/module";
 import { bind, makeUseCase } from "@/core/registry";
-import { UserLifecycle } from "@/modules/users";
+import { registerUserLifecycleListener } from "@/modules/users";
 
 import { ProfilesRepository } from "./ports";
 import { ProfileUserLifecycle } from "./profile-user-lifecycle";
@@ -20,7 +20,7 @@ export const profilesModule = defineModule({
 
   register: () => {
     bind(ProfilesRepository, () => new PostgresProfilesRepository());
-    bind(UserLifecycle, () => new ProfileUserLifecycle());
+    registerUserLifecycleListener(ProfileUserLifecycle);
 
     return {};
   },
