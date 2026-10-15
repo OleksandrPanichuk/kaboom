@@ -904,13 +904,28 @@ submissions (`submissions_created_at_idx`), a set that stays small, and
 
 ## Billing
 
-`billing` sells Pro, monthly or for life; Free has no price and nothing at
+Billing sells Pro, monthly or for life; Free has no price and nothing at
 the provider. The provider is the system of record for money, and Postgres
-holds a copy for reads and history. `BillingProvider` is the port, with
-`StripeBillingProvider` (`adapters/billing/stripe/`) when
+holds a copy for reads and history.
+
+There is no `billing` module. Each concern is a module of its own, named
+`billing-<concern>` (or after its object, such as `subscriptions`), and a new
+concern gets a new module rather than a folder in an existing one:
+
+- `billing-provider` binds the `BillingProvider` port and owns its errors.
+  It has no tables and no routes; every other billing module imports it.
+- `billing-offers` owns `billing_offers` and `billing_prices`, syncs the
+  prices at start and answers `GET /billing/offers`.
+- `billing-events` owns the webhook inbox, `POST /billing/webhooks/:provider`,
+  `ProcessBillingEventJob` and the handler registry. A module that reacts to
+  a topic registers its handler there and is never imported by it.
+
+`BillingProvider` is bound to
+`StripeBillingProvider` (`adapters/billing-provider/stripe/`) when
 `STRIPE_SECRET_KEY` is set, `UnavailableBillingProvider` without it, so
 the app still boots and billing answers `503 BILLING_UNAVAILABLE`, and
-`MemoryBillingProvider` under `NODE_ENV=test`. A Stripe key needs
+`MemoryBillingProvider` under `NODE_ENV=test`. Its `available` says which,
+so `billing-offers` skips the price sync without a key. A Stripe key needs
 `STRIPE_WEBHOOK_SECRET` beside it. The Stripe API version is pinned in
 `stripe.constants.ts` to the one the SDK major ships with, so an upgrade
 is a deliberate change of both.
@@ -926,7 +941,7 @@ migration.
 What is on sale lives in `billing_offers`, one row per offer (`pro_monthly`,
 `pro_lifetime`, seeded by the migration that made the table): its plan, its
 type and interval, the lookup key of the provider price it sells at, whether
-it is active, and its position. When the module starts, every active offer
+it is active, and its position. When `billing-offers` starts, every active offer
 is matched to the provider's active price under its lookup key and copied
 into `billing_prices` with the offer's id, the way the official problems are
 synced. A missing price, or one that bills differently from its offer (a
