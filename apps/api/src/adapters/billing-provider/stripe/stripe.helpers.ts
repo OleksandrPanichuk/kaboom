@@ -1,6 +1,9 @@
 import type Stripe from "stripe";
 
 import {
+  INVOICE_STATUSES,
+  PAYMENT_ATTEMPT_STATUSES,
+  PAYMENT_STATUSES,
   PRICE_INTERVALS,
   PRICE_TYPES,
   SUBSCRIPTION_STATUSES,
@@ -12,6 +15,9 @@ import type {
   ProviderCard,
   ProviderCustomer,
   ProviderEvent,
+  ProviderInvoice,
+  ProviderPayment,
+  ProviderPaymentAttempt,
   ProviderPrice,
   ProviderSubscription,
 } from "@/modules/billing-provider/ports/billing-provider";
@@ -66,7 +72,7 @@ const SECOND = 1_000;
 const toDate = (seconds: number | null | undefined): Date | null =>
   seconds === null || seconds === undefined ? null : new Date(seconds * SECOND);
 
-const idOf = (value: unknown): string | null => {
+export const idOf = (value: unknown): string | null => {
   if (typeof value === "string") return value;
 
   if (typeof value === "object" && value !== null && "id" in value) {
@@ -90,11 +96,30 @@ const customerOf = (event: Stripe.Event): string | null => {
   );
 };
 
+const topicObjectOf = (event: Stripe.Event): string | null => {
+  const object = event.data.object as {
+    object?: unknown;
+    payment_intent?: unknown;
+    invoice?: unknown;
+  };
+
+  if (object.object === "invoice_payment") return idOf(object.invoice);
+
+  if (
+    object.object === "charge" &&
+    STRIPE_EVENT_TOPICS[event.type] === "payment"
+  ) {
+    return idOf(object.payment_intent);
+  }
+
+  return idOf(object);
+};
+
 export const toProviderEvent = (event: Stripe.Event): ProviderEvent => ({
   id: event.id,
   type: event.type,
   topic: STRIPE_EVENT_TOPICS[event.type] ?? null,
-  objectId: idOf(event.data.object),
+  objectId: topicObjectOf(event),
   customerId: customerOf(event),
   live: event.livemode,
   createdAt: new Date(event.created * SECOND),
@@ -181,5 +206,122 @@ export const toProviderSubscription = (
     trialEnd: toDate(subscription.trial_end),
     latestInvoiceId: idOf(subscription.latest_invoice),
     createdAt: new Date(subscription.created * SECOND),
+  };
+};
+
+const priceOf = (line: Stripe.InvoiceLineItem): string | null =>
+  idOf(line.pricing?.price_details?.price);
+
+export const toProviderInvoice = (
+  invoice: Stripe.Invoice,
+  lines: readonly Stripe.InvoiceLineItem[],
+): ProviderInvoice => {
+  const customerId = idOf(invoice.customer);
+
+  if (customerId === null) {
+    throw new Error(`The Stripe invoice ${invoice.id} has no customer`);
+  }
+
+  return {
+    id: invoice.id,
+    customerId,
+    subscriptionId: idOf(invoice.parent?.subscription_details?.subscription),
+    number: invoice.number,
+    status: known(
+      INVOICE_STATUSES,
+      invoice.status ?? "draft",
+      "invoice status",
+    ),
+    billingReason: invoice.billing_reason,
+    currency: invoice.currency,
+    subtotal: invoice.subtotal,
+    tax: (invoice.total_taxes ?? []).reduce((sum, tax) => sum + tax.amount, 0),
+    total: invoice.total,
+    amountDue: invoice.amount_due,
+    amountPaid: invoice.amount_paid,
+    amountRemaining: invoice.amount_remaining,
+    periodStart: toDate(invoice.period_start),
+    periodEnd: toDate(invoice.period_end),
+    customerName: invoice.customer_name,
+    address: toProviderAddress(invoice.customer_address),
+    hostedUrl: invoice.hosted_invoice_url ?? null,
+    pdfUrl: invoice.invoice_pdf ?? null,
+    dueDate: toDate(invoice.due_date),
+    finalizedAt: toDate(invoice.status_transitions.finalized_at),
+    paidAt: toDate(invoice.status_transitions.paid_at),
+    voidedAt: toDate(invoice.status_transitions.voided_at),
+    priceIds: [
+      ...new Set(
+        lines.map(priceOf).filter((price): price is string => price !== null),
+      ),
+    ],
+    paymentIds: (invoice.payments?.data ?? [])
+      .filter((payment) => payment.status === "paid")
+      .map((payment) => idOf(payment.payment.payment_intent))
+      .filter((id): id is string => id !== null),
+    createdAt: new Date(invoice.created * SECOND),
+  };
+};
+
+const transactionOf = (
+  transaction: string | Stripe.BalanceTransaction | null,
+): Pick<ProviderPaymentAttempt, "transactionId" | "fee" | "net"> => {
+  if (transaction === null) {
+    return { transactionId: null, fee: null, net: null };
+  }
+
+  if (typeof transaction === "string") {
+    return { transactionId: transaction, fee: null, net: null };
+  }
+
+  return {
+    transactionId: transaction.id,
+    fee: transaction.fee,
+    net: transaction.net,
+  };
+};
+
+export const toProviderPaymentAttempt = (
+  charge: Stripe.Charge,
+): ProviderPaymentAttempt => ({
+  id: charge.id,
+  status: known(PAYMENT_ATTEMPT_STATUSES, charge.status, "charge status"),
+  amount: charge.amount,
+  amountRefunded: charge.amount_refunded,
+  currency: charge.currency,
+  outcomeType: charge.outcome?.type ?? null,
+  riskLevel: charge.outcome?.risk_level ?? null,
+  failureCode: charge.failure_code,
+  failureMessage: charge.failure_message,
+  ...transactionOf(charge.balance_transaction),
+  createdAt: new Date(charge.created * SECOND),
+});
+
+export const toProviderPayment = (
+  intent: Stripe.PaymentIntent,
+  charges: readonly Stripe.Charge[],
+  invoiceId: string | null,
+): ProviderPayment => {
+  const latest =
+    charges.find((charge) => charge.id === idOf(intent.latest_charge)) ?? null;
+  const succeeded = charges.find((charge) => charge.status === "succeeded");
+
+  return {
+    id: intent.id,
+    customerId: idOf(intent.customer),
+    invoiceId,
+    status: known(PAYMENT_STATUSES, intent.status, "payment status"),
+    amount: intent.amount,
+    amountReceived: intent.amount_received,
+    currency: intent.currency,
+    methodType: latest?.payment_method_details?.type ?? null,
+    cardBrand: latest?.payment_method_details?.card?.brand ?? null,
+    cardLast4: latest?.payment_method_details?.card?.last4 ?? null,
+    failureCode: intent.last_payment_error?.code ?? null,
+    declineCode: intent.last_payment_error?.decline_code ?? null,
+    failureMessage: intent.last_payment_error?.message ?? null,
+    succeededAt: succeeded ? new Date(succeeded.created * SECOND) : null,
+    attempts: charges.map(toProviderPaymentAttempt),
+    createdAt: new Date(intent.created * SECOND),
   };
 };

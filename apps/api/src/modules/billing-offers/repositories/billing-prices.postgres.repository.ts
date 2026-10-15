@@ -1,8 +1,9 @@
 import { and, eq, ne, or } from "drizzle-orm";
 
-import { billingPricesSchema } from "@/db";
+import { billingPricesSchema, type BillingProviderName } from "@/db";
 import { type DBExecutor, getExecutor, transaction } from "@/db/executor";
 
+import type { BillingPriceEntity } from "../billing-price.entity";
 import { BillingPricesRepository, type SyncPriceData } from "../ports";
 
 export class PostgresBillingPricesRepository extends BillingPricesRepository {
@@ -12,6 +13,24 @@ export class PostgresBillingPricesRepository extends BillingPricesRepository {
 
   private get db() {
     return this.resolve();
+  }
+
+  public async findByProviderId(
+    provider: BillingProviderName,
+    providerPriceId: string,
+  ): Promise<BillingPriceEntity | null> {
+    const [row] = await this.db
+      .select()
+      .from(billingPricesSchema)
+      .where(
+        and(
+          eq(billingPricesSchema.provider, provider),
+          eq(billingPricesSchema.providerPriceId, providerPriceId),
+        ),
+      )
+      .limit(1);
+
+    return row ?? null;
   }
 
   public sync(prices: readonly SyncPriceData[], at: Date): Promise<void> {

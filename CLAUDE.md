@@ -923,6 +923,8 @@ concern gets a new module rather than a folder in an existing one:
   and owns the per-customer lock every later handler takes.
 - `subscriptions` handles the `subscription` topic, keeps `subscriptions`
   and appends to `subscription_changes`.
+- `invoices` and `purchases` handle the `invoice` topic, and `payments` the
+  `payment` topic, keeping `payments` and `payment_attempts`.
 
 `BillingProvider` is bound to
 `StripeBillingProvider` (`adapters/billing-provider/stripe/`) when
@@ -978,8 +980,10 @@ once in `billing_events`, unique on the provider's event id, and
 `ProcessBillingEventJob` is queued with that id as its job id, so a
 redelivery acknowledges again and queues nothing new while the first
 is still pending. `BillingEventsService.process` claims the event, hands
-it to the handler registered for its topic (`registerBillingEventHandler`),
-and marks it `processed`, or `ignored` when no handler takes the topic.
+it to every handler registered for its topic (`registerBillingEventHandler`),
+in the order their modules register, and marks it `processed`, or `ignored`
+when no handler takes the topic. Every handler must be idempotent: when one
+fails, the retry runs them all again.
 A failed attempt keeps its error in `last_error`, and the last one marks
 the event `failed`; a later delivery of the same event processes it again.
 
@@ -1006,6 +1010,23 @@ first event processed after it. A customer has at most one live
 subscription: before writing a live one, the others still live are synced
 first, and if the provider still has two the event fails with
 `SUBSCRIPTION_CONFLICT` and is retried.
+
+Invoices, payments and purchases follow the same pattern. The adapter
+sets `provider_object_id` to the object the topic is about, which is not
+always the object in the event: a charge event names its payment
+(a PaymentIntent) and an `invoice_payment` event its invoice. `invoices`
+copies an invoice with its totals, tax, address snapshot, links and
+timestamps. `payments` copies a payment with every attempt, each with its
+fee and net from the balance transaction, and the invoice it paid, which
+the provider finds through its invoice payments. `purchases` is the
+second handler of the `invoice` topic. It fetches the invoice itself, and
+an invoice with no subscription, no longer a draft, carrying a price
+that `billing_prices` lists as `one_time`, is a lifetime purchase: open is
+`pending`, paid is `paid`, void is `canceled` and uncollectible is
+`failed`. A refunded purchase keeps its refund status. A customer has at
+most one live purchase (pending, paid or partially refunded), settled
+the same way as subscriptions, or the event fails with
+`PURCHASE_CONFLICT`.
 
 ## DevOps track
 

@@ -6,6 +6,10 @@ export const STRIPE_MAX_NETWORK_RETRIES = 2;
 
 export const STRIPE_LOOKUP_KEYS_PER_REQUEST = 10;
 
+export const STRIPE_PAGE_SIZE = 100;
+
+export const STRIPE_MAX_LIST = 1_000;
+
 export const STRIPE_SIGNATURE_HEADER = "stripe-signature";
 
 export const STRIPE_USER_ID_METADATA_KEY = "user_id";

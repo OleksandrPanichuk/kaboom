@@ -7,6 +7,7 @@ import {
 
 import type { BillingOfferEntity } from "./billing-offer.entity";
 import { BillingPriceMisconfiguredError } from "./billing-offers.errors";
+import type { BillingPriceEntity } from "./billing-price.entity";
 import { BillingOffersRepository, BillingPricesRepository } from "./ports";
 
 export class BillingOffersService extends Service {
@@ -31,6 +32,12 @@ export class BillingOffersService extends Service {
     }));
 
     await this.prices.sync(synced, new Date());
+  }
+
+  public findPrice(
+    providerPriceId: string,
+  ): Promise<BillingPriceEntity | null> {
+    return this.prices.findByProviderId(this.provider.name, providerPriceId);
   }
 
   private priceFor(

@@ -4,6 +4,8 @@ import type Stripe from "stripe";
 import {
   toProviderCustomer,
   toProviderEvent,
+  toProviderInvoice,
+  toProviderPayment,
   toProviderPrice,
   toProviderSubscription,
 } from "./stripe.helpers";
@@ -263,5 +265,178 @@ describe("reading a Stripe subscription", () => {
         } as unknown as Partial<Stripe.Subscription>),
       ),
     ).toThrow("only one is supported");
+  });
+});
+
+describe("the object an event's topic is about", () => {
+  test("a charge event is about its payment, an invoice payment about its invoice", () => {
+    expect(
+      toProviderEvent(
+        event("charge.failed", {
+          id: "ch_1",
+          object: "charge",
+          payment_intent: "pi_1",
+          customer: "cus_1",
+        }),
+      ),
+    ).toMatchObject({
+      topic: "payment",
+      objectId: "pi_1",
+      customerId: "cus_1",
+    });
+    expect(
+      toProviderEvent(
+        event("invoice_payment.paid", {
+          id: "inpay_1",
+          object: "invoice_payment",
+          invoice: "in_1",
+        }),
+      ),
+    ).toMatchObject({ topic: "invoice", objectId: "in_1" });
+  });
+});
+
+describe("reading a Stripe invoice", () => {
+  const invoice = (overrides: Partial<Stripe.Invoice>): Stripe.Invoice =>
+    ({
+      id: "in_1",
+      object: "invoice",
+      customer: "cus_1",
+      parent: {
+        type: "subscription_details",
+        subscription_details: { subscription: "sub_1" },
+      },
+      number: "KB-0001",
+      status: "paid",
+      billing_reason: "subscription_cycle",
+      currency: "usd",
+      subtotal: 2_000,
+      total: 2_400,
+      total_taxes: [
+        { amount: 300, tax_behavior: "exclusive" },
+        { amount: 100, tax_behavior: "exclusive" },
+      ],
+      amount_due: 2_400,
+      amount_paid: 2_400,
+      amount_remaining: 0,
+      period_start: 1_780_000_000,
+      period_end: 1_782_592_000,
+      customer_name: "Ada",
+      customer_address: null,
+      hosted_invoice_url: "https://invoice.stripe.test/in_1",
+      invoice_pdf: null,
+      due_date: null,
+      status_transitions: {
+        finalized_at: 1_780_000_000,
+        paid_at: 1_780_000_060,
+        voided_at: null,
+        marked_uncollectible_at: null,
+      },
+      payments: {
+        data: [
+          { status: "canceled", payment: { payment_intent: "pi_0" } },
+          { status: "paid", payment: { payment_intent: { id: "pi_1" } } },
+        ],
+      },
+      created: 1_780_000_000,
+      ...overrides,
+    }) as unknown as Stripe.Invoice;
+
+  const line = (price: string | null) =>
+    ({
+      pricing: price ? { price_details: { price, product: "prod_1" } } : null,
+    }) as unknown as Stripe.InvoiceLineItem;
+
+  test("adds up its taxes and keeps its subscription, prices and paid payments", () => {
+    expect(
+      toProviderInvoice(invoice({}), [
+        line("price_1"),
+        line("price_1"),
+        line(null),
+      ]),
+    ).toMatchObject({
+      id: "in_1",
+      customerId: "cus_1",
+      subscriptionId: "sub_1",
+      status: "paid",
+      tax: 400,
+      total: 2_400,
+      paidAt: new Date(1_780_000_060_000),
+      priceIds: ["price_1"],
+      paymentIds: ["pi_1"],
+    });
+  });
+
+  test("an invoice of its own has no subscription", () => {
+    expect(
+      toProviderInvoice(invoice({ parent: null, total_taxes: null }), [])
+        .subscriptionId,
+    ).toBeNull();
+  });
+});
+
+describe("reading a Stripe payment", () => {
+  const charge = (overrides: Record<string, unknown>) =>
+    ({
+      id: "ch_1",
+      object: "charge",
+      status: "succeeded",
+      amount: 2_400,
+      amount_refunded: 0,
+      currency: "usd",
+      outcome: { type: "authorized", risk_level: "normal" },
+      failure_code: null,
+      failure_message: null,
+      balance_transaction: { id: "txn_1", fee: 100, net: 2_300 },
+      payment_method_details: {
+        type: "card",
+        card: { brand: "visa", last4: "4242" },
+      },
+      created: 1_780_000_060,
+      ...overrides,
+    }) as unknown as Stripe.Charge;
+
+  test("takes the card from the latest attempt and the fee from each", () => {
+    const declined = charge({
+      id: "ch_0",
+      status: "failed",
+      failure_code: "card_declined",
+      balance_transaction: null,
+      payment_method_details: {
+        type: "card",
+        card: { brand: "mastercard", last4: "0002" },
+      },
+      created: 1_780_000_000,
+    });
+
+    expect(
+      toProviderPayment(
+        {
+          id: "pi_1",
+          object: "payment_intent",
+          customer: "cus_1",
+          status: "succeeded",
+          amount: 2_400,
+          amount_received: 2_400,
+          currency: "usd",
+          last_payment_error: null,
+          latest_charge: "ch_1",
+          created: 1_780_000_000,
+        } as unknown as Stripe.PaymentIntent,
+        [declined, charge({})],
+        "in_1",
+      ),
+    ).toMatchObject({
+      id: "pi_1",
+      customerId: "cus_1",
+      invoiceId: "in_1",
+      cardBrand: "visa",
+      cardLast4: "4242",
+      succeededAt: new Date(1_780_000_060_000),
+      attempts: [
+        { id: "ch_0", status: "failed", fee: null, transactionId: null },
+        { id: "ch_1", fee: 100, net: 2_300, transactionId: "txn_1" },
+      ],
+    });
   });
 });
