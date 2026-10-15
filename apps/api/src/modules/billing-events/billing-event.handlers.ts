@@ -7,25 +7,26 @@ export interface BillingEventHandler {
   handle(event: BillingEventEntity): Promise<void>;
 }
 
-const handlers = new Map<BillingEventTopic, Token<BillingEventHandler>>();
+const handlers = new Map<
+  BillingEventTopic,
+  Array<Token<BillingEventHandler>>
+>();
 
 export const registerBillingEventHandler = (
   topic: BillingEventTopic,
   handler: Token<BillingEventHandler>,
 ): (() => void) => {
-  const previous = handlers.get(topic);
-
-  handlers.set(topic, handler);
+  handlers.set(topic, [...(handlers.get(topic) ?? []), handler]);
 
   return () => {
-    if (handlers.get(topic) !== handler) return;
-
-    if (previous) handlers.set(topic, previous);
-    else handlers.delete(topic);
+    handlers.set(
+      topic,
+      (handlers.get(topic) ?? []).filter((candidate) => candidate !== handler),
+    );
   };
 };
 
-export const billingEventHandlerFor = (
+export const billingEventHandlersFor = (
   topic: BillingEventTopic | null,
-): Token<BillingEventHandler> | undefined =>
-  topic === null ? undefined : handlers.get(topic);
+): ReadonlyArray<Token<BillingEventHandler>> =>
+  topic === null ? [] : (handlers.get(topic) ?? []);

@@ -3,6 +3,8 @@ import {
   BillingProvider,
   type ProviderCustomer,
   type ProviderEvent,
+  type ProviderInvoice,
+  type ProviderPayment,
   type ProviderPrice,
   type ProviderSubscription,
 } from "@/modules/billing-provider/ports/billing-provider";
@@ -32,6 +34,14 @@ export class UnavailableBillingProvider extends BillingProvider {
   }
 
   public findSubscription(): Promise<ProviderSubscription | null> {
+    return Promise.reject(unavailable());
+  }
+
+  public findInvoice(): Promise<ProviderInvoice | null> {
+    return Promise.reject(unavailable());
+  }
+
+  public findPayment(): Promise<ProviderPayment | null> {
     return Promise.reject(unavailable());
   }
 }

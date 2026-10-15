@@ -8,12 +8,15 @@ import { billingOffersModule } from "@/modules/billing-offers";
 import { billingProviderModule } from "@/modules/billing-provider";
 import { designsModule } from "@/modules/designs";
 import { interviewsModule } from "@/modules/interviews";
+import { invoicesModule } from "@/modules/invoices";
 import { leaderboardModule } from "@/modules/leaderboard";
 import { notificationsModule } from "@/modules/notifications";
 import { oauthModule } from "@/modules/oauth";
+import { paymentsModule } from "@/modules/payments";
 import { problemsModule } from "@/modules/problems";
 import { profilesModule } from "@/modules/profiles";
 import { progressModule } from "@/modules/progress";
+import { purchasesModule } from "@/modules/purchases";
 import { reviewsModule } from "@/modules/reviews";
 import { sessionsModule } from "@/modules/sessions";
 import { simulationsModule } from "@/modules/simulations";
@@ -70,5 +73,8 @@ export const modules = [
   billingEventsModule,
   billingCustomersModule,
   subscriptionsModule,
+  invoicesModule,
+  paymentsModule,
+  purchasesModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

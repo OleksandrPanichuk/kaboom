@@ -57,12 +57,11 @@ afterEach(() => {
 });
 
 describe("receiving billing webhooks", () => {
-  test("stores a signed event once, and ignores a topic nothing handles", async () => {
+  test("stores a signed event once, and ignores one no topic takes", async () => {
     const response = await deliver({
       id: "evt_1",
-      type: "invoice.paid",
-      topic: "invoice",
-      objectId: "in_1",
+      type: "price.updated",
+      objectId: "price_1",
     });
 
     expect(response.status).toBe(200);
@@ -71,9 +70,9 @@ describe("receiving billing webhooks", () => {
       {
         provider: "stripe",
         providerEventId: "evt_1",
-        type: "invoice.paid",
-        topic: "invoice",
-        providerObjectId: "in_1",
+        type: "price.updated",
+        topic: null,
+        providerObjectId: "price_1",
         status: "ignored",
         attempts: 1,
       },

@@ -2,6 +2,9 @@ import { Port } from "@/core/port";
 import type {
   BillingEventTopic,
   BillingProviderName,
+  InvoiceStatus,
+  PaymentAttemptStatus,
+  PaymentStatus,
   PriceInterval,
   PriceType,
   SubscriptionStatus,
@@ -77,6 +80,70 @@ export interface ProviderSubscription {
   createdAt: Date;
 }
 
+export interface ProviderInvoice {
+  id: string;
+  customerId: string;
+  subscriptionId: string | null;
+  number: string | null;
+  status: InvoiceStatus;
+  billingReason: string | null;
+  currency: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  amountDue: number;
+  amountPaid: number;
+  amountRemaining: number;
+  periodStart: Date | null;
+  periodEnd: Date | null;
+  customerName: string | null;
+  address: ProviderAddress | null;
+  hostedUrl: string | null;
+  pdfUrl: string | null;
+  dueDate: Date | null;
+  finalizedAt: Date | null;
+  paidAt: Date | null;
+  voidedAt: Date | null;
+  priceIds: string[];
+  paymentIds: string[];
+  createdAt: Date;
+}
+
+export interface ProviderPaymentAttempt {
+  id: string;
+  status: PaymentAttemptStatus;
+  amount: number;
+  amountRefunded: number;
+  currency: string;
+  outcomeType: string | null;
+  riskLevel: string | null;
+  failureCode: string | null;
+  failureMessage: string | null;
+  transactionId: string | null;
+  fee: number | null;
+  net: number | null;
+  createdAt: Date;
+}
+
+export interface ProviderPayment {
+  id: string;
+  customerId: string | null;
+  invoiceId: string | null;
+  status: PaymentStatus;
+  amount: number;
+  amountReceived: number;
+  currency: string;
+  methodType: string | null;
+  cardBrand: string | null;
+  cardLast4: string | null;
+  failureCode: string | null;
+  declineCode: string | null;
+  failureMessage: string | null;
+  succeededAt: Date | null;
+  attempts: ProviderPaymentAttempt[];
+  createdAt: Date;
+}
+
 export abstract class BillingProvider extends Port {
   public abstract readonly name: BillingProviderName;
 
@@ -98,4 +165,8 @@ export abstract class BillingProvider extends Port {
   public abstract findSubscription(
     id: string,
   ): Promise<ProviderSubscription | null>;
+
+  public abstract findInvoice(id: string): Promise<ProviderInvoice | null>;
+
+  public abstract findPayment(id: string): Promise<ProviderPayment | null>;
 }

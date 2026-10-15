@@ -1,7 +1,7 @@
 import { make, makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
 
-import { billingEventHandlerFor } from "./billing-event.handlers";
+import { billingEventHandlersFor } from "./billing-event.handlers";
 import { BillingEventsRepository } from "./ports";
 
 export type ProcessedBillingEvent = "processed" | "ignored" | "skipped";
@@ -14,10 +14,10 @@ export class BillingEventsService extends Service {
 
     if (!event) return "skipped";
 
-    const handler = billingEventHandlerFor(event.topic);
-    const status = handler ? "processed" : "ignored";
+    const handlers = billingEventHandlersFor(event.topic);
+    const status = handlers.length > 0 ? "processed" : "ignored";
 
-    if (handler) await make(handler).handle(event);
+    for (const handler of handlers) await make(handler).handle(event);
 
     await this.events.settle(event.id, status, new Date());
 

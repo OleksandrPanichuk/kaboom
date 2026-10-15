@@ -8,6 +8,8 @@ import {
   BillingProvider,
   type ProviderCustomer,
   type ProviderEvent,
+  type ProviderInvoice,
+  type ProviderPayment,
   type ProviderPrice,
   type ProviderSubscription,
 } from "@/modules/billing-provider/ports/billing-provider";
@@ -119,6 +121,26 @@ export class MemoryBillingProvider extends BillingProvider {
     return Promise.resolve(this.subscriptions.get(id) ?? null);
   }
 
+  private readonly invoices = new Map<string, ProviderInvoice>();
+
+  private readonly payments = new Map<string, ProviderPayment>();
+
+  public findInvoice(id: string): Promise<ProviderInvoice | null> {
+    return Promise.resolve(this.invoices.get(id) ?? null);
+  }
+
+  public findPayment(id: string): Promise<ProviderPayment | null> {
+    return Promise.resolve(this.payments.get(id) ?? null);
+  }
+
+  public setInvoice(invoice: ProviderInvoice): void {
+    this.invoices.set(invoice.id, invoice);
+  }
+
+  public setPayment(payment: ProviderPayment): void {
+    this.payments.set(payment.id, payment);
+  }
+
   public setCustomer(customer: ProviderCustomer): void {
     this.customers.set(customer.id, customer);
   }
@@ -135,6 +157,8 @@ export class MemoryBillingProvider extends BillingProvider {
     this.prices = [...MEMORY_PRICES];
     this.customers.clear();
     this.subscriptions.clear();
+    this.invoices.clear();
+    this.payments.clear();
   }
 
   private json(payload: string): unknown {
