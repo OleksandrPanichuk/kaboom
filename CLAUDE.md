@@ -925,6 +925,8 @@ concern gets a new module rather than a folder in an existing one:
   and appends to `subscription_changes`.
 - `invoices` and `purchases` handle the `invoice` topic, and `payments` the
   `payment` topic, keeping `payments` and `payment_attempts`.
+- `refunds`, `disputes` and `billing-tax-ids` handle the `refund`, `dispute`
+  and `tax_id` topics.
 
 `BillingProvider` is bound to
 `StripeBillingProvider` (`adapters/billing-provider/stripe/`) when
@@ -1027,6 +1029,22 @@ that `billing_prices` lists as `one_time`, is a lifetime purchase: open is
 most one live purchase (pending, paid or partially refunded), settled
 the same way as subscriptions, or the event fails with
 `PURCHASE_CONFLICT`.
+
+Refunds are made only in the provider's dashboard and arrive as events.
+`refunds` copies each with its payment, attempt, invoice and the credit
+note that holds it, then syncs the payment so the attempt shows what was
+refunded, and hands `PurchasesService.recordRefunds` the total of the
+invoice's succeeded refunds. A dispute names no customer, so `disputes`
+finds it through the disputed charge (`BillingCustomersService.lockedFor`
+takes the customer lock when there is one), stamps `closed_at` once, and a
+lost dispute records a refund of the whole purchase. `purchaseAfterRefunds`
+decides what a paid purchase becomes: part refunded is
+`partially_refunded`, all of it or a lost dispute is `refunded`, which
+ends lifetime access, and a refunded purchase never changes again, so
+refunds and disputes never need each other. A tax id the provider no
+longer has is deleted. Credit notes and early fraud warnings are not
+subscribed to: a refund finds its credit note itself, and a warning is
+followed by a dispute when it matters.
 
 ## DevOps track
 

@@ -15,6 +15,7 @@ import type { ProviderInvoice } from "@/modules/billing-provider";
 import {
   deliverWebhook,
   memoryProvider,
+  PAID_LIFETIME,
   PERIOD_START,
   providerCustomer,
   providerInvoice,
@@ -41,13 +42,7 @@ const deliver = (invoice: ProviderInvoice) => {
   });
 };
 
-const PAID = {
-  status: "paid" as const,
-  amountPaid: 24_900,
-  amountRemaining: 0,
-  paidAt: PERIOD_START,
-  paymentIds: ["pi_1"],
-};
+const PAID = PAID_LIFETIME;
 
 beforeEach(async () => {
   await seedOffers();

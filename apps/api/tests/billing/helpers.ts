@@ -11,8 +11,10 @@ import { billingOffersSchema, getDatabase } from "@/db";
 import {
   BillingProvider,
   type ProviderCustomer,
+  type ProviderDispute,
   type ProviderInvoice,
   type ProviderPayment,
+  type ProviderRefund,
   type ProviderSubscription,
 } from "@/modules/billing-provider";
 
@@ -166,3 +168,47 @@ export const providerPayment = (
   createdAt: PERIOD_START,
   ...overrides,
 });
+
+export const providerRefund = (
+  overrides: Partial<ProviderRefund> = {},
+): ProviderRefund => ({
+  id: "re_1",
+  customerId: "cus_1",
+  paymentId: "pi_1",
+  attemptId: "ch_1",
+  invoiceId: "in_1",
+  creditNoteId: "cn_1",
+  status: "succeeded",
+  amount: 24_900,
+  currency: "usd",
+  reason: "requested_by_customer",
+  failureReason: null,
+  createdAt: PERIOD_START,
+  ...overrides,
+});
+
+export const providerDispute = (
+  overrides: Partial<ProviderDispute> = {},
+): ProviderDispute => ({
+  id: "dp_1",
+  customerId: "cus_1",
+  paymentId: "pi_1",
+  attemptId: "ch_1",
+  invoiceId: "in_1",
+  status: "needs_response",
+  outcome: null,
+  reason: "fraudulent",
+  amount: 24_900,
+  currency: "usd",
+  evidenceDueBy: PERIOD_START,
+  createdAt: PERIOD_START,
+  ...overrides,
+});
+
+export const PAID_LIFETIME = {
+  status: "paid" as const,
+  amountPaid: 24_900,
+  amountRemaining: 0,
+  paidAt: PERIOD_START,
+  paymentIds: ["pi_1"],
+};

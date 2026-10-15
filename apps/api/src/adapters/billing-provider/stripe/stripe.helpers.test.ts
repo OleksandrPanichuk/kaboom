@@ -3,11 +3,14 @@ import type Stripe from "stripe";
 
 import {
   toProviderCustomer,
+  toProviderDispute,
   toProviderEvent,
   toProviderInvoice,
   toProviderPayment,
   toProviderPrice,
+  toProviderRefund,
   toProviderSubscription,
+  toProviderTaxId,
 } from "./stripe.helpers";
 
 const price = (overrides: Partial<Stripe.Price>): Stripe.Price =>
@@ -437,6 +440,91 @@ describe("reading a Stripe payment", () => {
         { id: "ch_0", status: "failed", fee: null, transactionId: null },
         { id: "ch_1", fee: 100, net: 2_300, transactionId: "txn_1" },
       ],
+    });
+  });
+});
+
+describe("reading a Stripe refund, dispute and tax id", () => {
+  test("a refund keeps its payment, charge, customer and why it failed", () => {
+    expect(
+      toProviderRefund(
+        {
+          id: "re_1",
+          object: "refund",
+          customer: "cus_1",
+          payment_intent: "pi_1",
+          charge: { id: "ch_1" },
+          status: "failed",
+          amount: 500,
+          currency: "usd",
+          reason: "requested_by_customer",
+          failure_reason: "expired_or_canceled_card",
+          created: 1_780_000_000,
+        } as unknown as Stripe.Refund,
+        "in_1",
+        "cn_1",
+      ),
+    ).toEqual({
+      id: "re_1",
+      customerId: "cus_1",
+      paymentId: "pi_1",
+      attemptId: "ch_1",
+      invoiceId: "in_1",
+      creditNoteId: "cn_1",
+      status: "failed",
+      amount: 500,
+      currency: "usd",
+      reason: "requested_by_customer",
+      failureReason: "expired_or_canceled_card",
+      createdAt: new Date(1_780_000_000_000),
+    });
+  });
+
+  test("a dispute takes its customer from the charge and names its outcome", () => {
+    const dispute = (status: string) =>
+      ({
+        id: "dp_1",
+        object: "dispute",
+        charge: { id: "ch_1", customer: "cus_1" },
+        payment_intent: "pi_1",
+        status,
+        reason: "fraudulent",
+        amount: 2_400,
+        currency: "usd",
+        evidence_details: { due_by: 1_780_000_000 },
+        created: 1_779_000_000,
+      }) as unknown as Stripe.Dispute;
+
+    expect(toProviderDispute(dispute("lost"), "in_1")).toMatchObject({
+      customerId: "cus_1",
+      attemptId: "ch_1",
+      paymentId: "pi_1",
+      invoiceId: "in_1",
+      outcome: "lost",
+      evidenceDueBy: new Date(1_780_000_000_000),
+    });
+    expect(toProviderDispute(dispute("under_review"), null).outcome).toBeNull();
+  });
+
+  test("a tax id keeps its verification", () => {
+    expect(
+      toProviderTaxId(
+        {
+          id: "txi_1",
+          object: "tax_id",
+          customer: "cus_1",
+          type: "eu_vat",
+          value: "DE123456789",
+          verification: { status: "verified" },
+        } as unknown as Stripe.TaxId,
+        "cus_1",
+      ),
+    ).toEqual({
+      id: "txi_1",
+      customerId: "cus_1",
+      type: "eu_vat",
+      value: "DE123456789",
+      verificationStatus: "verified",
     });
   });
 });

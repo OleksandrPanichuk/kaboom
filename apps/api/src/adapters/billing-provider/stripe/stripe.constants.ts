@@ -47,12 +47,9 @@ export const STRIPE_EVENT_TOPICS: Readonly<Record<string, BillingEventTopic>> =
     "refund.created": "refund",
     "refund.updated": "refund",
     "refund.failed": "refund",
-    "credit_note.created": "refund",
-    "credit_note.voided": "refund",
     "charge.dispute.created": "dispute",
     "charge.dispute.updated": "dispute",
     "charge.dispute.closed": "dispute",
     "charge.dispute.funds_withdrawn": "dispute",
     "charge.dispute.funds_reinstated": "dispute",
-    "radar.early_fraud_warning.created": "dispute",
   };
