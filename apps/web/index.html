@@ -14,6 +14,13 @@
             matchMedia("(prefers-color-scheme: dark)").matches);
         document.documentElement.classList.toggle("dark", dark);
         document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        if (
+          ["/", "/pricing", "/terms", "/privacy", "/cookies"].includes(
+            location.pathname,
+          )
+        ) {
+          document.documentElement.style.backgroundColor = "#0e1116";
+        }
       } catch {}
     </script>
   </head>

@@ -66,6 +66,15 @@ routes/
   checkout (`/pricing/checkout`) stays inside `_app`, so a guest is sent to
   sign up and on to the checkout. The marketing layout is always dark: it
   puts the `.dark` class on its own root, whatever the app theme is.
+- The landing's motion is GSAP with ScrollTrigger, in one hook,
+  `useLandingMotion`, scoped to the page's root and reverted on unmount.
+  Sections opt in by data attributes (`data-reveal`, `data-word`,
+  `data-count`, `data-grow`, `data-tilt`, …) rather than by refs, and
+  everything runs inside `gsap.matchMedia` under
+  `prefers-reduced-motion: no-preference`, so a visitor who asks for less
+  motion sees the finished page. The html background is set to the
+  marketing colour before paint in `index.html` and by
+  `useMarketingCanvas`, so overscroll never shows the app's light theme.
 - A page where the user works on something (a design, a problem, an
   interview) goes under `(workspace)/` and renders `WorkspaceLayout` from
   `@/features/shell`, passing its own tool panel, tabs and top-bar actions.
@@ -489,6 +498,11 @@ The roles are the API's own: `.typedefs.ts`, `.constants.ts`, `.helpers.ts`.
   `create()` or zod schema might have side effects. A module that must run
   for its side effect alone, other than a stylesheet, has to be added to that
   list.
+- A file named `*.lazy.ts(x)` is left out of its folder's barrel, so nothing
+  imports it statically by accident; it is loaded with `import()` from the
+  one place that needs it. The landing's three.js scene
+  (`marketing/utils/networkScene.lazy.ts`) is one: three.js stays out of
+  every chunk but the one `HeroScene` fetches after the page has painted.
 
 ## Data
 

@@ -8,6 +8,14 @@ import { BrandMark } from "@/components/BrandMark";
 import { buttonVariants } from "@/components/ui/Button";
 import { currentUserQuery } from "@/features/auth";
 
+const SECTIONS = [
+  ["Features", "/#features"],
+  ["Interviews", "/#interview"],
+  ["Simulation", "/#simulation"],
+  ["Tracks", "/#tracks"],
+  ["FAQ", "/#faq"],
+] as const;
+
 export function MarketingHeader() {
   const user = useQuery(currentUserQuery);
   const [scrolled, setScrolled] = useState(false);
@@ -37,20 +45,17 @@ export function MarketingHeader() {
         </Link>
         <nav
           aria-label="Site"
-          className="hidden items-center gap-1 text-sm text-muted-foreground md:flex"
+          className="hidden items-center gap-0.5 text-sm text-muted-foreground lg:flex"
         >
-          <a
-            href="/#features"
-            className="rounded-lg px-3 py-2 hover:text-foreground"
-          >
-            Features
-          </a>
-          <a
-            href="/#tracks"
-            className="rounded-lg px-3 py-2 hover:text-foreground"
-          >
-            Tracks
-          </a>
+          {SECTIONS.map(([label, href]) => (
+            <a
+              key={href}
+              href={href}
+              className="rounded-lg px-3 py-2 hover:text-foreground"
+            >
+              {label}
+            </a>
+          ))}
           <Link
             to="/pricing"
             className="rounded-lg px-3 py-2 hover:text-foreground"

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { useMarketingCanvas } from "@/features/marketing/hooks";
 import {
   MarketingFooter,
   MarketingHeader,
@@ -10,6 +11,8 @@ interface MarketingLayoutProps {
 }
 
 export function MarketingLayout({ children }: MarketingLayoutProps) {
+  useMarketingCanvas();
+
   return (
     <div className="dark flex min-h-svh flex-col bg-background text-foreground [color-scheme:dark]">
       <MarketingHeader />
