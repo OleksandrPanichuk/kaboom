@@ -50,7 +50,7 @@ describe("tax ids", () => {
 
     expect((await taxIds())[0]?.verificationStatus).toBe("verified");
 
-    memoryProvider().deleteTaxId("txi_1");
+    memoryProvider().forgetTaxId("txi_1");
     await taxIdEvent("customer.tax_id.deleted");
 
     expect(await taxIds()).toEqual([]);

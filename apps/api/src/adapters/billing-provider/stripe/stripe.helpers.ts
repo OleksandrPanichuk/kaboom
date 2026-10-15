@@ -23,6 +23,7 @@ import type {
   ProviderPaymentAttempt,
   ProviderPrice,
   ProviderRefund,
+  ProviderStoredCard,
   ProviderSubscription,
   ProviderTaxId,
 } from "@/modules/billing-provider/ports/billing-provider";
@@ -415,4 +416,14 @@ export const toInvoiceCheckout = (
     invoice.status === "open"
       ? (invoice.confirmation_secret?.client_secret ?? null)
       : null,
+});
+
+export const toProviderStoredCard = (
+  method: Stripe.PaymentMethod,
+): ProviderStoredCard => ({
+  id: method.id,
+  brand: method.card?.brand ?? null,
+  last4: method.card?.last4 ?? null,
+  expMonth: method.card?.exp_month ?? null,
+  expYear: method.card?.exp_year ?? null,
 });

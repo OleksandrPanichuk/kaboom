@@ -9,6 +9,7 @@ import {
   type ProviderPayment,
   type ProviderPrice,
   type ProviderRefund,
+  type ProviderStoredCard,
   type ProviderSubscription,
   type ProviderTaxId,
 } from "@/modules/billing-provider/ports/billing-provider";
@@ -86,6 +87,34 @@ export class UnavailableBillingProvider extends BillingProvider {
   }
 
   public deleteCustomer(): Promise<void> {
+    return Promise.reject(unavailable());
+  }
+
+  public updateCustomer(): Promise<ProviderCustomer> {
+    return Promise.reject(unavailable());
+  }
+
+  public createCardSetup(): Promise<string> {
+    return Promise.reject(unavailable());
+  }
+
+  public listCards(): Promise<ProviderStoredCard[]> {
+    return Promise.reject(unavailable());
+  }
+
+  public setDefaultCard(): Promise<ProviderCustomer> {
+    return Promise.reject(unavailable());
+  }
+
+  public removeCard(): Promise<void> {
+    return Promise.reject(unavailable());
+  }
+
+  public createTaxId(): Promise<ProviderTaxId> {
+    return Promise.reject(unavailable());
+  }
+
+  public deleteTaxId(): Promise<void> {
     return Promise.reject(unavailable());
   }
 

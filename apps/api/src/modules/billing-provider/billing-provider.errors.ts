@@ -10,3 +10,8 @@ export class InvalidBillingWebhookError extends ModuleError {
   public readonly status = HttpStatus.BadRequest;
   public readonly code = "BILLING_WEBHOOK_INVALID";
 }
+
+export class BillingDetailsRejectedError extends ModuleError {
+  public readonly status = HttpStatus.UnprocessableEntity;
+  public readonly code = "BILLING_DETAILS_REJECTED";
+}

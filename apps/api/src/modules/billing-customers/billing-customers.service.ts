@@ -3,7 +3,11 @@ import z from "zod";
 import { make, makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
 import { transaction } from "@/db/executor";
-import { BillingProvider } from "@/modules/billing-provider";
+import {
+  BillingProvider,
+  type ProviderCustomer,
+  type UpdateProviderCustomerData,
+} from "@/modules/billing-provider";
 
 import type { BillingCustomerEntity } from "./billing-customer.entity";
 import { BillingCustomersRepository } from "./ports";
@@ -77,6 +81,26 @@ export class BillingCustomersService extends Service {
         ),
       );
     });
+  }
+
+  public async updateDetails(
+    user: BillingUser,
+    details: UpdateProviderCustomerData,
+  ): Promise<BillingCustomerEntity> {
+    const customer = await this.forUser(user);
+
+    return this.record(
+      await this.provider.updateCustomer(customer.providerCustomerId, details),
+    );
+  }
+
+  public record(customer: ProviderCustomer): Promise<BillingCustomerEntity> {
+    return this.locked(customer.id, () =>
+      this.customers.sync(
+        { ...customer, provider: this.provider.name, userId: null },
+        new Date(),
+      ),
+    );
   }
 
   public async removeForUser(userId: string): Promise<void> {

@@ -939,6 +939,9 @@ concern gets a new module rather than a folder in an existing one:
 - `checkout` owns no table either: it starts purchases
   (`POST /billing/checkout/subscription`), and depends on `subscriptions`
   and `purchases` so that neither depends on the other.
+- `payment-methods` owns no table: saved cards are read live from the
+  provider (`/billing/cards`), and only the default is copied, onto
+  `billing_customers`.
 
 `BillingProvider` is bound to
 `StripeBillingProvider` (`adapters/billing-provider/stripe/`) when
@@ -1109,6 +1112,18 @@ monthly plan may buy it, and once the purchase is paid
 without proration or a refund, recorded with `system` as the actor.
 Checkout and the webhooks write a purchase through the same path
 (`PurchasesService.record` and `sync`), so either may come first.
+
+A card is added with a SetupIntent (`POST /billing/cards/setup` answers
+its client secret) and confirmed in the provider's form; the web then makes
+it the default (`PUT /billing/cards/:cardId/default`), which sets it on the
+customer and on every live subscription, since a subscription's own default
+wins over the customer's. A card id is checked against the customer's cards
+before anything is done with it, and the default card cannot be removed
+while a subscription renews on it (`BILLING_CARD_IN_USE`).
+`PUT /billing/details` sets the name and address invoices carry, and
+`/billing/tax-ids` adds and removes tax ids. When the provider refuses
+what it is given (an address, a tax id), the adapter answers
+`422 BILLING_DETAILS_REJECTED` with the provider's message.
 
 ## DevOps track
 

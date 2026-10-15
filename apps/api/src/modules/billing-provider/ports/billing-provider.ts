@@ -51,6 +51,24 @@ export interface ProviderCard {
   last4: string | null;
 }
 
+export interface ProviderStoredCard {
+  id: string;
+  brand: string | null;
+  last4: string | null;
+  expMonth: number | null;
+  expYear: number | null;
+}
+
+export interface UpdateProviderCustomerData {
+  name: string;
+  address: ProviderAddress;
+}
+
+export interface CreateProviderTaxIdData {
+  type: string;
+  value: string;
+}
+
 export interface ProviderCustomer {
   id: string;
   userId: string | null;
@@ -231,6 +249,29 @@ export abstract class BillingProvider extends Port {
   ): Promise<ProviderCustomer>;
 
   public abstract deleteCustomer(id: string): Promise<void>;
+
+  public abstract updateCustomer(
+    id: string,
+    data: UpdateProviderCustomerData,
+  ): Promise<ProviderCustomer>;
+
+  public abstract createCardSetup(customerId: string): Promise<string>;
+
+  public abstract listCards(customerId: string): Promise<ProviderStoredCard[]>;
+
+  public abstract setDefaultCard(
+    customerId: string,
+    cardId: string,
+  ): Promise<ProviderCustomer>;
+
+  public abstract removeCard(cardId: string): Promise<void>;
+
+  public abstract createTaxId(
+    customerId: string,
+    data: CreateProviderTaxIdData,
+  ): Promise<ProviderTaxId>;
+
+  public abstract deleteTaxId(customerId: string, id: string): Promise<void>;
 
   public abstract findSubscription(
     id: string,

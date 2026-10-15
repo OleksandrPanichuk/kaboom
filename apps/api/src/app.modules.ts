@@ -17,6 +17,7 @@ import { invoicesModule } from "@/modules/invoices";
 import { leaderboardModule } from "@/modules/leaderboard";
 import { notificationsModule } from "@/modules/notifications";
 import { oauthModule } from "@/modules/oauth";
+import { paymentMethodsModule } from "@/modules/payment-methods";
 import { paymentsModule } from "@/modules/payments";
 import { problemsModule } from "@/modules/problems";
 import { profilesModule } from "@/modules/profiles";
@@ -88,5 +89,6 @@ export const modules = [
   billingReconciliationModule,
   billingAccountModule,
   checkoutModule,
+  paymentMethodsModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];
