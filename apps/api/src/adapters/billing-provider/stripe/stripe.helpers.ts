@@ -6,6 +6,7 @@ import {
   PAYMENT_STATUSES,
   PRICE_INTERVALS,
   PRICE_TYPES,
+  REFUND_STATUSES,
   SUBSCRIPTION_STATUSES,
   TAX_BEHAVIORS,
   TAX_EXEMPT_STATUSES,
@@ -14,12 +15,15 @@ import type {
   ProviderAddress,
   ProviderCard,
   ProviderCustomer,
+  ProviderDispute,
   ProviderEvent,
   ProviderInvoice,
   ProviderPayment,
   ProviderPaymentAttempt,
   ProviderPrice,
+  ProviderRefund,
   ProviderSubscription,
+  ProviderTaxId,
 } from "@/modules/billing-provider/ports/billing-provider";
 
 import {
@@ -325,3 +329,65 @@ export const toProviderPayment = (
     createdAt: new Date(intent.created * SECOND),
   };
 };
+
+export const toProviderRefund = (
+  refund: Stripe.Refund,
+  invoiceId: string | null,
+  creditNoteId: string | null,
+): ProviderRefund => ({
+  id: refund.id,
+  customerId: idOf(refund.customer),
+  paymentId: idOf(refund.payment_intent),
+  attemptId: idOf(refund.charge),
+  invoiceId,
+  creditNoteId,
+  status: known(REFUND_STATUSES, refund.status ?? "pending", "refund status"),
+  amount: refund.amount,
+  currency: refund.currency,
+  reason: refund.reason,
+  failureReason: refund.failure_reason ?? null,
+  createdAt: new Date(refund.created * SECOND),
+});
+
+const DISPUTE_OUTCOMES: Readonly<Record<string, ProviderDispute["outcome"]>> = {
+  won: "won",
+  lost: "lost",
+};
+
+export const toProviderDispute = (
+  dispute: Stripe.Dispute,
+  invoiceId: string | null,
+): ProviderDispute => {
+  const attemptId = idOf(dispute.charge);
+  const charge = typeof dispute.charge === "string" ? null : dispute.charge;
+
+  if (attemptId === null) {
+    throw new Error(`The Stripe dispute ${dispute.id} has no charge`);
+  }
+
+  return {
+    id: dispute.id,
+    customerId: idOf(charge?.customer),
+    paymentId: idOf(dispute.payment_intent),
+    attemptId,
+    invoiceId,
+    status: dispute.status,
+    outcome: DISPUTE_OUTCOMES[dispute.status] ?? null,
+    reason: dispute.reason,
+    amount: dispute.amount,
+    currency: dispute.currency,
+    evidenceDueBy: toDate(dispute.evidence_details.due_by),
+    createdAt: new Date(dispute.created * SECOND),
+  };
+};
+
+export const toProviderTaxId = (
+  taxId: Stripe.TaxId,
+  customerId: string,
+): ProviderTaxId => ({
+  id: taxId.id,
+  customerId: idOf(taxId.customer) ?? customerId,
+  type: taxId.type,
+  value: taxId.value,
+  verificationStatus: taxId.verification?.status ?? null,
+});

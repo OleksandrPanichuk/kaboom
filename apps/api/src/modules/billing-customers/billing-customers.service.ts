@@ -26,6 +26,15 @@ export class BillingCustomersService extends Service {
     });
   }
 
+  public lockedFor<T>(
+    providerCustomerId: string | null,
+    work: () => Promise<T>,
+  ): Promise<T> {
+    return providerCustomerId === null
+      ? transaction(work)
+      : this.locked(providerCustomerId, work);
+  }
+
   public sync(
     providerCustomerId: string,
   ): Promise<BillingCustomerEntity | null> {

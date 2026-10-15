@@ -5,6 +5,7 @@ import { type DBExecutor, getExecutor } from "@/db/executor";
 
 import { PurchasesRepository, type SyncPurchaseData } from "../ports";
 import type { PurchaseEntity } from "../purchase.entity";
+import type { RefundedPurchase } from "../purchase-refunds";
 import {
   LIVE_PURCHASE_STATUSES,
   REFUNDED_PURCHASE_STATUSES,
@@ -33,6 +34,35 @@ export class PostgresPurchasesRepository extends PurchasesRepository {
           inArray(purchasesSchema.status, [...LIVE_PURCHASE_STATUSES]),
         ),
       );
+  }
+
+  public async findByInvoice(
+    provider: BillingProviderName,
+    providerInvoiceId: string,
+  ): Promise<PurchaseEntity | null> {
+    const [row] = await this.db
+      .select()
+      .from(purchasesSchema)
+      .where(
+        and(
+          eq(purchasesSchema.provider, provider),
+          eq(purchasesSchema.providerInvoiceId, providerInvoiceId),
+        ),
+      )
+      .limit(1);
+
+    return row ?? null;
+  }
+
+  public async recordRefunds(
+    id: string,
+    refunded: RefundedPurchase,
+    at: Date,
+  ): Promise<void> {
+    await this.db
+      .update(purchasesSchema)
+      .set({ ...refunded, updatedAt: at })
+      .where(eq(purchasesSchema.id, id));
   }
 
   public async sync(data: SyncPurchaseData, at: Date): Promise<PurchaseEntity> {

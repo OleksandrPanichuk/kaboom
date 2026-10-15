@@ -6,7 +6,9 @@ import { billingCustomersModule } from "@/modules/billing-customers";
 import { billingEventsModule } from "@/modules/billing-events";
 import { billingOffersModule } from "@/modules/billing-offers";
 import { billingProviderModule } from "@/modules/billing-provider";
+import { billingTaxIdsModule } from "@/modules/billing-tax-ids";
 import { designsModule } from "@/modules/designs";
+import { disputesModule } from "@/modules/disputes";
 import { interviewsModule } from "@/modules/interviews";
 import { invoicesModule } from "@/modules/invoices";
 import { leaderboardModule } from "@/modules/leaderboard";
@@ -17,6 +19,7 @@ import { problemsModule } from "@/modules/problems";
 import { profilesModule } from "@/modules/profiles";
 import { progressModule } from "@/modules/progress";
 import { purchasesModule } from "@/modules/purchases";
+import { refundsModule } from "@/modules/refunds";
 import { reviewsModule } from "@/modules/reviews";
 import { sessionsModule } from "@/modules/sessions";
 import { simulationsModule } from "@/modules/simulations";
@@ -76,5 +79,8 @@ export const modules = [
   invoicesModule,
   paymentsModule,
   purchasesModule,
+  refundsModule,
+  disputesModule,
+  billingTaxIdsModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

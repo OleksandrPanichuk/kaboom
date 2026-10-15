@@ -9,6 +9,7 @@ import {
 
 import { PurchasesRepository, type SyncPurchaseData } from "./ports";
 import type { PurchaseEntity } from "./purchase.entity";
+import { purchaseAfterRefunds, type PurchaseRefunds } from "./purchase-refunds";
 import {
   LIVE_PURCHASE_STATUSES,
   PURCHASE_STATUS_BY_INVOICE,
@@ -45,6 +46,24 @@ export class PurchasesService extends Service {
 
       return this.purchases.sync(data, new Date());
     });
+  }
+
+  public async recordRefunds(
+    providerInvoiceId: string,
+    refunds: PurchaseRefunds,
+  ): Promise<void> {
+    const purchase = await this.purchases.findByInvoice(
+      this.provider.name,
+      providerInvoiceId,
+    );
+
+    if (!purchase) return;
+
+    const now = new Date();
+    const refunded = purchaseAfterRefunds(purchase, refunds, now);
+
+    if (refunded)
+      await this.purchases.recordRefunds(purchase.id, refunded, now);
   }
 
   private async settleOthers(incoming: SyncPurchaseData): Promise<void> {

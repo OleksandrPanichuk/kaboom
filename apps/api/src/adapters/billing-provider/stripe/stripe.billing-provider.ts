@@ -4,11 +4,14 @@ import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-p
 import {
   BillingProvider,
   type ProviderCustomer,
+  type ProviderDispute,
   type ProviderEvent,
   type ProviderInvoice,
   type ProviderPayment,
   type ProviderPrice,
+  type ProviderRefund,
   type ProviderSubscription,
+  type ProviderTaxId,
 } from "@/modules/billing-provider/ports/billing-provider";
 
 import {
@@ -22,11 +25,14 @@ import {
 import {
   idOf,
   toProviderCustomer,
+  toProviderDispute,
   toProviderEvent,
   toProviderInvoice,
   toProviderPayment,
   toProviderPrice,
+  toProviderRefund,
   toProviderSubscription,
+  toProviderTaxId,
 } from "./stripe.helpers";
 
 const missing = (error: unknown): boolean =>
@@ -137,7 +143,7 @@ export class StripeBillingProvider extends BillingProvider {
 
   public async findPayment(id: string): Promise<ProviderPayment | null> {
     try {
-      const [intent, charges, invoicePayments] = await Promise.all([
+      const [intent, charges, invoiceId] = await Promise.all([
         this.stripe.paymentIntents.retrieve(id),
         this.stripe.charges
           .list({
@@ -146,23 +152,90 @@ export class StripeBillingProvider extends BillingProvider {
             expand: ["data.balance_transaction"],
           })
           .autoPagingToArray({ limit: STRIPE_MAX_LIST }),
-        this.stripe.invoicePayments.list({
-          payment: { type: "payment_intent", payment_intent: id },
-          limit: 1,
-        }),
+        this.invoiceOfPayment(id),
       ]);
-      const invoice = invoicePayments.data[0]?.invoice;
 
-      return toProviderPayment(
-        intent,
-        charges,
-        invoice === undefined ? null : idOf(invoice),
+      return toProviderPayment(intent, charges, invoiceId);
+    } catch (error) {
+      if (missing(error)) return null;
+
+      throw error;
+    }
+  }
+
+  public async findRefund(id: string): Promise<ProviderRefund | null> {
+    try {
+      const refund = await this.stripe.refunds.retrieve(id);
+      const paymentId = idOf(refund.payment_intent);
+      const invoiceId =
+        paymentId === null ? null : await this.invoiceOfPayment(paymentId);
+      const creditNoteId =
+        invoiceId === null ? null : await this.creditNoteOf(invoiceId, id);
+
+      return toProviderRefund(refund, invoiceId, creditNoteId);
+    } catch (error) {
+      if (missing(error)) return null;
+
+      throw error;
+    }
+  }
+
+  public async findDispute(id: string): Promise<ProviderDispute | null> {
+    try {
+      const dispute = await this.stripe.disputes.retrieve(id, {
+        expand: ["charge"],
+      });
+      const paymentId = idOf(dispute.payment_intent);
+
+      return toProviderDispute(
+        dispute,
+        paymentId === null ? null : await this.invoiceOfPayment(paymentId),
       );
     } catch (error) {
       if (missing(error)) return null;
 
       throw error;
     }
+  }
+
+  public async findTaxId(
+    customerId: string,
+    id: string,
+  ): Promise<ProviderTaxId | null> {
+    try {
+      return toProviderTaxId(
+        await this.stripe.customers.retrieveTaxId(customerId, id),
+        customerId,
+      );
+    } catch (error) {
+      if (missing(error)) return null;
+
+      throw error;
+    }
+  }
+
+  private async invoiceOfPayment(paymentId: string): Promise<string | null> {
+    const page = await this.stripe.invoicePayments.list({
+      payment: { type: "payment_intent", payment_intent: paymentId },
+      limit: 1,
+    });
+    const invoice = page.data[0]?.invoice;
+
+    return invoice === undefined ? null : idOf(invoice);
+  }
+
+  private async creditNoteOf(
+    invoiceId: string,
+    refundId: string,
+  ): Promise<string | null> {
+    const notes = await this.stripe.creditNotes
+      .list({ invoice: invoiceId, limit: STRIPE_PAGE_SIZE })
+      .autoPagingToArray({ limit: STRIPE_MAX_LIST });
+    const note = notes.find((candidate) =>
+      candidate.refunds.some((refund) => idOf(refund.refund) === refundId),
+    );
+
+    return note?.id ?? null;
   }
 
   public async parseWebhook(

@@ -7,11 +7,14 @@ import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-p
 import {
   BillingProvider,
   type ProviderCustomer,
+  type ProviderDispute,
   type ProviderEvent,
   type ProviderInvoice,
   type ProviderPayment,
   type ProviderPrice,
+  type ProviderRefund,
   type ProviderSubscription,
+  type ProviderTaxId,
 } from "@/modules/billing-provider/ports/billing-provider";
 
 export const MEMORY_SIGNATURE_HEADER = "x-memory-signature";
@@ -141,6 +144,45 @@ export class MemoryBillingProvider extends BillingProvider {
     this.payments.set(payment.id, payment);
   }
 
+  private readonly refunds = new Map<string, ProviderRefund>();
+
+  private readonly disputes = new Map<string, ProviderDispute>();
+
+  private readonly taxIds = new Map<string, ProviderTaxId>();
+
+  public findRefund(id: string): Promise<ProviderRefund | null> {
+    return Promise.resolve(this.refunds.get(id) ?? null);
+  }
+
+  public findDispute(id: string): Promise<ProviderDispute | null> {
+    return Promise.resolve(this.disputes.get(id) ?? null);
+  }
+
+  public findTaxId(
+    customerId: string,
+    id: string,
+  ): Promise<ProviderTaxId | null> {
+    const taxId = this.taxIds.get(id);
+
+    return Promise.resolve(taxId?.customerId === customerId ? taxId : null);
+  }
+
+  public setRefund(refund: ProviderRefund): void {
+    this.refunds.set(refund.id, refund);
+  }
+
+  public setDispute(dispute: ProviderDispute): void {
+    this.disputes.set(dispute.id, dispute);
+  }
+
+  public setTaxId(taxId: ProviderTaxId): void {
+    this.taxIds.set(taxId.id, taxId);
+  }
+
+  public deleteTaxId(id: string): void {
+    this.taxIds.delete(id);
+  }
+
   public setCustomer(customer: ProviderCustomer): void {
     this.customers.set(customer.id, customer);
   }
@@ -159,6 +201,9 @@ export class MemoryBillingProvider extends BillingProvider {
     this.subscriptions.clear();
     this.invoices.clear();
     this.payments.clear();
+    this.refunds.clear();
+    this.disputes.clear();
+    this.taxIds.clear();
   }
 
   private json(payload: string): unknown {

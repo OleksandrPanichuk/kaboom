@@ -7,6 +7,7 @@ import type {
   PaymentStatus,
   PriceInterval,
   PriceType,
+  RefundStatus,
   SubscriptionStatus,
   TaxBehavior,
   TaxExemptStatus,
@@ -144,6 +145,44 @@ export interface ProviderPayment {
   createdAt: Date;
 }
 
+export interface ProviderRefund {
+  id: string;
+  customerId: string | null;
+  paymentId: string | null;
+  attemptId: string | null;
+  invoiceId: string | null;
+  creditNoteId: string | null;
+  status: RefundStatus;
+  amount: number;
+  currency: string;
+  reason: string | null;
+  failureReason: string | null;
+  createdAt: Date;
+}
+
+export interface ProviderDispute {
+  id: string;
+  customerId: string | null;
+  paymentId: string | null;
+  attemptId: string;
+  invoiceId: string | null;
+  status: string;
+  outcome: "won" | "lost" | null;
+  reason: string;
+  amount: number;
+  currency: string;
+  evidenceDueBy: Date | null;
+  createdAt: Date;
+}
+
+export interface ProviderTaxId {
+  id: string;
+  customerId: string;
+  type: string;
+  value: string;
+  verificationStatus: string | null;
+}
+
 export abstract class BillingProvider extends Port {
   public abstract readonly name: BillingProviderName;
 
@@ -169,4 +208,13 @@ export abstract class BillingProvider extends Port {
   public abstract findInvoice(id: string): Promise<ProviderInvoice | null>;
 
   public abstract findPayment(id: string): Promise<ProviderPayment | null>;
+
+  public abstract findRefund(id: string): Promise<ProviderRefund | null>;
+
+  public abstract findDispute(id: string): Promise<ProviderDispute | null>;
+
+  public abstract findTaxId(
+    customerId: string,
+    id: string,
+  ): Promise<ProviderTaxId | null>;
 }
