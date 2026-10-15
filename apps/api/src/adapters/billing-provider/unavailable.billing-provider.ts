@@ -32,6 +32,14 @@ export class UnavailableBillingProvider extends BillingProvider {
     return Promise.reject(unavailable());
   }
 
+  public listEvents(): AsyncIterable<ProviderEvent> {
+    return {
+      [Symbol.asyncIterator]: () => ({
+        next: () => Promise.reject(unavailable()),
+      }),
+    };
+  }
+
   public findCustomer(): Promise<ProviderCustomer | null> {
     return Promise.reject(unavailable());
   }

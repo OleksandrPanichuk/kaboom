@@ -927,6 +927,8 @@ concern gets a new module rather than a folder in an existing one:
   `payment` topic, keeping `payments` and `payment_attempts`.
 - `refunds`, `disputes` and `billing-tax-ids` handle the `refund`, `dispute`
   and `tax_id` topics.
+- `billing-reconciliation` runs `ReconcileBillingJob` nightly, for what the
+  webhooks missed.
 
 `BillingProvider` is bound to
 `StripeBillingProvider` (`adapters/billing-provider/stripe/`) when
@@ -1045,6 +1047,17 @@ refunds and disputes never need each other. A tax id the provider no
 longer has is deleted. Credit notes and early fraud warnings are not
 subscribed to: a refund finds its credit note itself, and a warning is
 followed by a dispute when it matters.
+
+Webhooks can be lost, and an event can fail every attempt.
+`ReconcileBillingJob` runs at 03:30 and lists the provider's events of the
+subscribed types from the last 48 hours (`listEvents`), passing each
+through `BillingEventInboxService.receive`, the same path a webhook takes:
+an event never received is stored and processed, one already processed is
+a duplicate and changes nothing, and one that failed is queued again.
+A pending event is queued under its own id, so a second delivery while it
+waits adds nothing; a failed one under its id and attempt count, because
+BullMQ keeps a failed job and would drop a new one under the same id.
+Claiming an event puts it back to `pending` for that reason.
 
 ## DevOps track
 

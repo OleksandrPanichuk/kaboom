@@ -1,5 +1,6 @@
 export * from "./billing-event.entity";
 export * from "./billing-event.handlers";
+export * from "./billing-event-inbox.service";
 export * from "./billing-events.constants";
 export * from "./billing-events.module";
 export * from "./billing-events.service";

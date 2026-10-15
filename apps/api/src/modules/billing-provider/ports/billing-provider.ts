@@ -195,6 +195,8 @@ export abstract class BillingProvider extends Port {
     signature: string | null,
   ): Promise<ProviderEvent>;
 
+  public abstract listEvents(since: Date): AsyncIterable<ProviderEvent>;
+
   public abstract findPrices(
     lookupKeys: readonly string[],
   ): Promise<ProviderPrice[]>;

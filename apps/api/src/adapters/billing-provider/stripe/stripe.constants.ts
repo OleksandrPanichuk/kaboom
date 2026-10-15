@@ -10,6 +10,8 @@ export const STRIPE_PAGE_SIZE = 100;
 
 export const STRIPE_MAX_LIST = 1_000;
 
+export const STRIPE_EVENT_TYPES_PER_REQUEST = 20;
+
 export const STRIPE_SIGNATURE_HEADER = "stripe-signature";
 
 export const STRIPE_USER_ID_METADATA_KEY = "user_id";

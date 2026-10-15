@@ -16,6 +16,8 @@ import {
 
 import {
   STRIPE_API_VERSION,
+  STRIPE_EVENT_TOPICS,
+  STRIPE_EVENT_TYPES_PER_REQUEST,
   STRIPE_LOOKUP_KEYS_PER_REQUEST,
   STRIPE_MAX_LIST,
   STRIPE_MAX_NETWORK_RETRIES,
@@ -68,6 +70,25 @@ export class StripeBillingProvider extends BillingProvider {
       maxNetworkRetries: STRIPE_MAX_NETWORK_RETRIES,
       appInfo: { name: appName },
     });
+  }
+
+  public async *listEvents(since: Date): AsyncIterable<ProviderEvent> {
+    const types = Object.keys(STRIPE_EVENT_TOPICS);
+    const gte = Math.floor(since.getTime() / 1_000);
+
+    for (
+      let start = 0;
+      start < types.length;
+      start += STRIPE_EVENT_TYPES_PER_REQUEST
+    ) {
+      for await (const event of this.stripe.events.list({
+        created: { gte },
+        types: types.slice(start, start + STRIPE_EVENT_TYPES_PER_REQUEST),
+        limit: STRIPE_PAGE_SIZE,
+      })) {
+        yield toProviderEvent(event);
+      }
+    }
   }
 
   public async findPrices(
