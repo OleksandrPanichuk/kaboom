@@ -99,6 +99,18 @@ export class MemoryBillingProvider extends BillingProvider {
 
   private prices: ProviderPrice[] = [...MEMORY_PRICES];
 
+  private events: ProviderEvent[] = [];
+
+  public async *listEvents(since: Date): AsyncIterable<ProviderEvent> {
+    yield* await Promise.resolve(
+      this.events.filter((event) => event.createdAt >= since),
+    );
+  }
+
+  public setEvents(events: readonly ProviderEvent[]): void {
+    this.events = [...events];
+  }
+
   public findPrices(lookupKeys: readonly string[]): Promise<ProviderPrice[]> {
     return Promise.resolve(
       this.prices.filter(
@@ -197,6 +209,7 @@ export class MemoryBillingProvider extends BillingProvider {
 
   public clear(): void {
     this.prices = [...MEMORY_PRICES];
+    this.events = [];
     this.customers.clear();
     this.subscriptions.clear();
     this.invoices.clear();

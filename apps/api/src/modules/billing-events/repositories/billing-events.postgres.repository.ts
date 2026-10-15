@@ -57,7 +57,10 @@ export class PostgresBillingEventsRepository extends BillingEventsRepository {
   public async claim(id: string): Promise<BillingEventEntity | null> {
     const [row] = await this.db
       .update(billingEventsSchema)
-      .set({ attempts: sql`${billingEventsSchema.attempts} + 1` })
+      .set({
+        attempts: sql`${billingEventsSchema.attempts} + 1`,
+        status: "pending",
+      })
       .where(
         and(
           eq(billingEventsSchema.id, id),
