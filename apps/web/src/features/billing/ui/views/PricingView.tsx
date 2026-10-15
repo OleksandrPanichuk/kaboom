@@ -43,7 +43,19 @@ const monthlyAction = (
   account: BillingAccount,
 ): ReactNode => {
   if (account.source === "lifetime") return current("Included in your plan");
-  if (account.source === "subscription") return current("Your plan");
+  if (account.source === "subscription") {
+    return (
+      <Link
+        to="/settings/billing"
+        className={cn(
+          buttonVariants({ variant: "outline", size: "lg" }),
+          "w-full",
+        )}
+      >
+        Manage subscription
+      </Link>
+    );
+  }
   if (account.subscription?.status === "incomplete") {
     return checkoutLink(offer, "Finish paying", true);
   }
