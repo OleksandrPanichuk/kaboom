@@ -44,7 +44,7 @@ export const NAVIGATION: NavGroup[] = [
   {
     label: "Practice",
     items: [
-      { label: "Home", icon: House, to: "/", exact: true },
+      { label: "Home", icon: House, to: "/home" },
       { label: "Designs", icon: Network, to: "/designs" },
       { label: "Problems", icon: Puzzle, to: "/problems" },
       { label: "Handbook", icon: BookOpen, to: "/handbook" },

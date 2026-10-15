@@ -1,6 +1,6 @@
 const PROBE_ORIGIN = "http://kaboom.invalid";
 
-export const DEFAULT_REDIRECT = "/";
+export const DEFAULT_REDIRECT = "/home";
 
 export const safeRedirect = (value: unknown): string => {
   if (typeof value !== "string" || !value.startsWith("/")) {

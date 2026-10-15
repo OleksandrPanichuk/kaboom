@@ -90,7 +90,7 @@ export function CheckoutCompleteView({ failed }: CheckoutCompleteViewProps) {
               Try again
             </Link>
           ) : (
-            <Link to="/" className={cn(buttonVariants())}>
+            <Link to="/home" className={cn(buttonVariants())}>
               Start practising
             </Link>
           )}
