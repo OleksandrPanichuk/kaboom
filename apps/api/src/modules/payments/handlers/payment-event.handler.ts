@@ -7,15 +7,14 @@ import type {
 import { PaymentsService } from "../payments.service";
 
 export class PaymentEventHandler implements BillingEventHandler {
+  private readonly paymentsService = makeService(PaymentsService);
+
   public async handle({
     providerCustomerId,
     providerObjectId,
   }: BillingEventEntity): Promise<void> {
     if (providerCustomerId === null || providerObjectId === null) return;
 
-    await makeService(PaymentsService).sync(
-      providerCustomerId,
-      providerObjectId,
-    );
+    await this.paymentsService.sync(providerCustomerId, providerObjectId);
   }
 }

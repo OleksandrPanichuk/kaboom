@@ -16,22 +16,23 @@ import {
 import { PurchaseConflictError } from "./purchases.errors";
 
 export class PurchasesService extends Service {
-  private get provider() {
-    return make(BillingProvider);
-  }
+  private readonly provider = make(BillingProvider);
 
   private readonly purchases = makeRepository(PurchasesRepository);
 
-  private readonly customers = makeService(BillingCustomersService);
+  private readonly billingCustomersService = makeService(
+    BillingCustomersService,
+  );
 
-  private readonly offers = makeService(BillingOffersService);
+  private readonly billingOffersService = makeService(BillingOffersService);
 
   public sync(
     providerCustomerId: string,
     providerInvoiceId: string,
   ): Promise<PurchaseEntity | null> {
-    return this.customers.locked(providerCustomerId, async () => {
-      const customer = await this.customers.ensure(providerCustomerId);
+    return this.billingCustomersService.locked(providerCustomerId, async () => {
+      const customer =
+        await this.billingCustomersService.ensure(providerCustomerId);
       const purchase = await this.purchaseOf(providerInvoiceId);
 
       if (!purchase) return null;
@@ -100,7 +101,7 @@ export class PurchasesService extends Service {
     invoice: ProviderInvoice,
   ): Promise<string | null> {
     for (const priceId of invoice.priceIds) {
-      const price = await this.offers.findPrice(priceId);
+      const price = await this.billingOffersService.findPrice(priceId);
 
       if (price?.type === "one_time") return priceId;
     }

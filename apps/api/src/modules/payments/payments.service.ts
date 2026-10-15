@@ -7,20 +7,21 @@ import type { PaymentEntity } from "./payment.entity";
 import { PaymentsRepository } from "./ports";
 
 export class PaymentsService extends Service {
-  private get provider() {
-    return make(BillingProvider);
-  }
+  private readonly provider = make(BillingProvider);
 
   private readonly payments = makeRepository(PaymentsRepository);
 
-  private readonly customers = makeService(BillingCustomersService);
+  private readonly billingCustomersService = makeService(
+    BillingCustomersService,
+  );
 
   public sync(
     providerCustomerId: string,
     providerPaymentId: string,
   ): Promise<PaymentEntity | null> {
-    return this.customers.locked(providerCustomerId, async () => {
-      const customer = await this.customers.ensure(providerCustomerId);
+    return this.billingCustomersService.locked(providerCustomerId, async () => {
+      const customer =
+        await this.billingCustomersService.ensure(providerCustomerId);
       const payment = await this.provider.findPayment(providerPaymentId);
 
       if (!payment) return null;

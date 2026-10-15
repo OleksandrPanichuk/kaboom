@@ -7,15 +7,14 @@ import type {
 import { PurchasesService } from "../purchases.service";
 
 export class PurchaseEventHandler implements BillingEventHandler {
+  private readonly purchasesService = makeService(PurchasesService);
+
   public async handle({
     providerCustomerId,
     providerObjectId,
   }: BillingEventEntity): Promise<void> {
     if (providerCustomerId === null || providerObjectId === null) return;
 
-    await makeService(PurchasesService).sync(
-      providerCustomerId,
-      providerObjectId,
-    );
+    await this.purchasesService.sync(providerCustomerId, providerObjectId);
   }
 }
