@@ -1099,6 +1099,17 @@ made through the API is recorded in `subscription_changes` with the user
 as its actor, from what the provider answered, so the webhook that
 follows finds nothing new.
 
+Lifetime is a one-off invoice: `POST /billing/checkout/lifetime` creates
+it without advancing on its own, adds the offer's price, finalizes it and
+answers its payment's client secret. Asking again while it is open answers
+the same invoice, and an open one for another price is voided first. It
+is refused only when the user already has Pro for life: someone on the
+monthly plan may buy it, and once the purchase is paid
+`PurchasesService` ends every live subscription of the customer at once,
+without proration or a refund, recorded with `system` as the actor.
+Checkout and the webhooks write a purchase through the same path
+(`PurchasesService.record` and `sync`), so either may come first.
+
 ## DevOps track
 
 A problem belongs to one track, `system-design` or `devops` (`TRACKS` in

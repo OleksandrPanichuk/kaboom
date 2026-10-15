@@ -194,6 +194,11 @@ export interface CreateProviderSubscriptionData {
   priceId: string;
 }
 
+export interface CreateProviderInvoiceData {
+  customerId: string;
+  priceId: string;
+}
+
 export interface ProviderCheckout<T> {
   object: T;
   clientSecret: string | null;
@@ -247,6 +252,16 @@ export abstract class BillingProvider extends Port {
   public abstract cancelSubscription(id: string): Promise<ProviderSubscription>;
 
   public abstract findInvoice(id: string): Promise<ProviderInvoice | null>;
+
+  public abstract createInvoice(
+    data: CreateProviderInvoiceData,
+  ): Promise<ProviderCheckout<ProviderInvoice>>;
+
+  public abstract invoiceCheckout(
+    id: string,
+  ): Promise<ProviderCheckout<ProviderInvoice>>;
+
+  public abstract voidInvoice(id: string): Promise<ProviderInvoice>;
 
   public abstract findPayment(id: string): Promise<ProviderPayment | null>;
 

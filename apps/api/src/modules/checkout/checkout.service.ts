@@ -13,6 +13,7 @@ import {
   type OfferedPrice,
 } from "@/modules/billing-offers";
 import { BillingProvider } from "@/modules/billing-provider";
+import { type PurchaseEntity, PurchasesService } from "@/modules/purchases";
 import {
   type SubscriptionEntity,
   SubscriptionsService,
@@ -25,6 +26,11 @@ import {
 
 export interface SubscriptionCheckout {
   subscription: SubscriptionEntity;
+  clientSecret: string | null;
+}
+
+export interface LifetimeCheckout {
+  purchase: PurchaseEntity;
   clientSecret: string | null;
 }
 
@@ -41,12 +47,14 @@ export class CheckoutService extends Service {
 
   private readonly subscriptionsService = makeService(SubscriptionsService);
 
+  private readonly purchasesService = makeService(PurchasesService);
+
   public async subscribe(
     user: BillingUser,
     offerKey: string,
   ): Promise<SubscriptionCheckout> {
     const { price } = await this.offered(offerKey, "recurring");
-    const customer = await this.prepare(user);
+    const customer = await this.prepare(user, "subscription");
 
     return this.billingCustomersService.locked(
       customer.providerCustomerId,
@@ -100,6 +108,54 @@ export class CheckoutService extends Service {
     );
   }
 
+  public async buyLifetime(
+    user: BillingUser,
+    offerKey: string,
+  ): Promise<LifetimeCheckout> {
+    const { price } = await this.offered(offerKey, "one_time");
+    const customer = await this.prepare(user, "lifetime");
+
+    return this.billingCustomersService.locked(
+      customer.providerCustomerId,
+      async () => {
+        const pending = await this.purchasesService.currentFor(user.id);
+
+        if (pending?.status === "pending") {
+          if (pending.providerPriceId === price.providerPriceId) {
+            const checkout = await this.provider.invoiceCheckout(
+              pending.providerInvoiceId,
+            );
+            const purchase = await this.purchasesService.record(
+              checkout.object,
+            );
+
+            if (purchase && checkout.clientSecret !== null) {
+              return { purchase, clientSecret: checkout.clientSecret };
+            }
+          } else {
+            await this.purchasesService.record(
+              await this.provider.voidInvoice(pending.providerInvoiceId),
+            );
+          }
+        }
+
+        const checkout = await this.provider.createInvoice({
+          customerId: customer.providerCustomerId,
+          priceId: price.providerPriceId,
+        });
+        const purchase = await this.purchasesService.record(checkout.object);
+
+        if (!purchase) {
+          throw new Error(
+            `The ${this.provider.name} invoice ${checkout.object.id} is not a lifetime purchase`,
+          );
+        }
+
+        return { purchase, clientSecret: checkout.clientSecret };
+      },
+    );
+  }
+
   private async offered(key: string, type: PriceType): Promise<OfferedPrice> {
     const offered = await this.billingOffersService.findOffered(key);
 
@@ -112,11 +168,21 @@ export class CheckoutService extends Service {
     return offered;
   }
 
-  private async prepare(user: BillingUser): Promise<BillingCustomerEntity> {
-    const { plan } = await this.billingAccountService.planOf(user.id);
+  private async prepare(
+    user: BillingUser,
+    buying: "subscription" | "lifetime",
+  ): Promise<BillingCustomerEntity> {
+    const { plan, source } = await this.billingAccountService.planOf(user.id);
 
-    if (plan !== "free") {
-      throw new AlreadyProError("You already have Pro");
+    if (
+      plan !== "free" &&
+      (buying === "subscription" || source === "lifetime")
+    ) {
+      throw new AlreadyProError(
+        source === "lifetime"
+          ? "You already have Pro for life"
+          : "You already have Pro",
+      );
     }
 
     const customer = await this.billingCustomersService.forUser(user);

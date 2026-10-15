@@ -6,6 +6,7 @@ import {
   BillingProvider,
   type ProviderInvoice,
 } from "@/modules/billing-provider";
+import { SubscriptionsService } from "@/modules/subscriptions";
 
 import { PurchasesRepository, type SyncPurchaseData } from "./ports";
 import type { PurchaseEntity } from "./purchase.entity";
@@ -15,6 +16,8 @@ import {
   PURCHASE_STATUS_BY_INVOICE,
 } from "./purchases.constants";
 import { PurchaseConflictError } from "./purchases.errors";
+
+type PurchaseData = Omit<SyncPurchaseData, "userId">;
 
 export class PurchasesService extends Service {
   private readonly provider = make(BillingProvider);
@@ -27,25 +30,23 @@ export class PurchasesService extends Service {
 
   private readonly billingOffersService = makeService(BillingOffersService);
 
+  private readonly subscriptionsService = makeService(SubscriptionsService);
+
   public sync(
     providerCustomerId: string,
     providerInvoiceId: string,
   ): Promise<PurchaseEntity | null> {
     return this.billingCustomersService.locked(providerCustomerId, async () => {
-      const customer =
-        await this.billingCustomersService.ensure(providerCustomerId);
-      const purchase = await this.purchaseOf(providerInvoiceId);
+      const invoice = await this.provider.findInvoice(providerInvoiceId);
 
-      if (!purchase) return null;
-
-      const data = { ...purchase, userId: customer?.userId ?? null };
-
-      if (LIVE_PURCHASE_STATUSES.includes(data.status)) {
-        await this.settleOthers(data);
-      }
-
-      return this.purchases.sync(data, new Date());
+      return invoice ? this.accept(invoice) : null;
     });
+  }
+
+  public record(invoice: ProviderInvoice): Promise<PurchaseEntity | null> {
+    return this.billingCustomersService.locked(invoice.customerId, () =>
+      this.accept(invoice),
+    );
   }
 
   public currentFor(userId: string): Promise<PurchaseEntity | null> {
@@ -66,8 +67,42 @@ export class PurchasesService extends Service {
     const now = new Date();
     const refunded = purchaseAfterRefunds(purchase, refunds, now);
 
-    if (refunded)
+    if (refunded) {
       await this.purchases.recordRefunds(purchase.id, refunded, now);
+    }
+  }
+
+  private async accept(
+    invoice: ProviderInvoice,
+  ): Promise<PurchaseEntity | null> {
+    const purchase = await this.purchaseFrom(invoice);
+
+    if (!purchase) return null;
+
+    const customer = await this.billingCustomersService.ensure(
+      invoice.customerId,
+    );
+    const data = { ...purchase, userId: customer?.userId ?? null };
+
+    if (LIVE_PURCHASE_STATUSES.includes(data.status)) {
+      await this.settleOthers(data);
+    }
+
+    const before = await this.purchases.findByInvoice(
+      this.provider.name,
+      invoice.id,
+    );
+    const stored = await this.purchases.sync(data, new Date());
+
+    if (stored.status === "paid" && before?.status !== "paid") {
+      await this.subscriptionsService.cancelNow(invoice.customerId, {
+        billingEventId: null,
+        at: stored.paidAt ?? new Date(),
+        actor: "system",
+      });
+    }
+
+    return stored;
   }
 
   private async settleOthers(incoming: SyncPurchaseData): Promise<void> {
@@ -79,7 +114,8 @@ export class PurchasesService extends Service {
     for (const other of others) {
       if (other.providerInvoiceId === incoming.providerInvoiceId) continue;
 
-      const purchase = await this.purchaseOf(other.providerInvoiceId);
+      const invoice = await this.provider.findInvoice(other.providerInvoiceId);
+      const purchase = invoice ? await this.purchaseFrom(invoice) : null;
       const settled = purchase
         ? await this.purchases.sync(
             { ...purchase, userId: incoming.userId },
@@ -95,13 +131,12 @@ export class PurchasesService extends Service {
     }
   }
 
-  private async purchaseOf(
-    providerInvoiceId: string,
-  ): Promise<Omit<SyncPurchaseData, "userId"> | null> {
-    const invoice = await this.provider.findInvoice(providerInvoiceId);
-
-    if (invoice?.subscriptionId !== null) return null;
-    if (invoice.status === "draft") return null;
+  private async purchaseFrom(
+    invoice: ProviderInvoice,
+  ): Promise<PurchaseData | null> {
+    if (invoice.subscriptionId !== null || invoice.status === "draft") {
+      return null;
+    }
 
     const priceId = await this.lifetimePriceOf(invoice);
 

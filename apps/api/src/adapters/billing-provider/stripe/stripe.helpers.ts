@@ -406,3 +406,13 @@ export const toSubscriptionCheckout = (
   object: toProviderSubscription(subscription),
   clientSecret: confirmationSecretOf(subscription.latest_invoice),
 });
+
+export const toInvoiceCheckout = (
+  invoice: Stripe.Invoice,
+): ProviderCheckout<ProviderInvoice> => ({
+  object: toProviderInvoice(invoice, invoice.lines.data),
+  clientSecret:
+    invoice.status === "open"
+      ? (invoice.confirmation_secret?.client_secret ?? null)
+      : null,
+});

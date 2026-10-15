@@ -7,6 +7,7 @@ import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-p
 import {
   BillingProvider,
   type CreateProviderCustomerData,
+  type CreateProviderInvoiceData,
   type CreateProviderSubscriptionData,
   type ProviderCheckout,
   type ProviderCustomer,
@@ -244,6 +245,78 @@ export class MemoryBillingProvider extends BillingProvider {
     return Promise.resolve();
   }
 
+  private createdInvoices = 0;
+
+  public createInvoice({
+    customerId,
+    priceId,
+  }: CreateProviderInvoiceData): Promise<ProviderCheckout<ProviderInvoice>> {
+    const now = new Date();
+    const price = this.prices.find((candidate) => candidate.id === priceId);
+    const amount = price?.unitAmount ?? 0;
+    const invoice: ProviderInvoice = {
+      id: `in_memory_${++this.createdInvoices}`,
+      customerId,
+      subscriptionId: null,
+      number: `MEM-${this.createdInvoices}`,
+      status: "open",
+      billingReason: "manual",
+      currency: price?.currency ?? "usd",
+      subtotal: amount,
+      tax: 0,
+      total: amount,
+      amountDue: amount,
+      amountPaid: 0,
+      amountRemaining: amount,
+      periodStart: now,
+      periodEnd: now,
+      customerName: null,
+      address: null,
+      hostedUrl: null,
+      pdfUrl: null,
+      dueDate: null,
+      finalizedAt: now,
+      paidAt: null,
+      voidedAt: null,
+      priceIds: [priceId],
+      paymentIds: [],
+      createdAt: now,
+    };
+
+    this.invoices.set(invoice.id, invoice);
+
+    return this.invoiceCheckout(invoice.id);
+  }
+
+  public invoiceCheckout(
+    id: string,
+  ): Promise<ProviderCheckout<ProviderInvoice>> {
+    const invoice = this.invoices.get(id);
+
+    if (!invoice) return Promise.reject(new Error(`No invoice ${id}`));
+
+    return Promise.resolve({
+      object: invoice,
+      clientSecret: invoice.status === "open" ? `${id}_secret_memory` : null,
+    });
+  }
+
+  public voidInvoice(id: string): Promise<ProviderInvoice> {
+    const invoice = this.invoices.get(id);
+
+    if (!invoice) return Promise.reject(new Error(`No invoice ${id}`));
+
+    const voided: ProviderInvoice = {
+      ...invoice,
+      status: "void",
+      voidedAt: new Date(),
+    };
+
+    this.invoices.set(id, voided);
+
+    return Promise.resolve(voided);
+  }
+
   private createdSubscriptions = 0;
 
   public createSubscription({
@@ -349,6 +422,7 @@ export class MemoryBillingProvider extends BillingProvider {
   public clear(): void {
     this.created = 0;
     this.createdSubscriptions = 0;
+    this.createdInvoices = 0;
     this.collectsTax = false;
     this.prices = [...MEMORY_PRICES];
     this.events = [];
