@@ -1,11 +1,15 @@
 import Stripe from "stripe";
 
-import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-provider.errors";
+import {
+  BillingDetailsRejectedError,
+  InvalidBillingWebhookError,
+} from "@/modules/billing-provider/billing-provider.errors";
 import {
   BillingProvider,
   type CreateProviderCustomerData,
   type CreateProviderInvoiceData,
   type CreateProviderSubscriptionData,
+  type CreateProviderTaxIdData,
   type ProviderCheckout,
   type ProviderCustomer,
   type ProviderDispute,
@@ -14,8 +18,10 @@ import {
   type ProviderPayment,
   type ProviderPrice,
   type ProviderRefund,
+  type ProviderStoredCard,
   type ProviderSubscription,
   type ProviderTaxId,
+  type UpdateProviderCustomerData,
 } from "@/modules/billing-provider/ports/billing-provider";
 
 import {
@@ -39,6 +45,7 @@ import {
   toProviderPayment,
   toProviderPrice,
   toProviderRefund,
+  toProviderStoredCard,
   toProviderSubscription,
   toProviderTaxId,
   toSubscriptionCheckout,
@@ -47,6 +54,23 @@ import {
 const missing = (error: unknown): boolean =>
   error instanceof Stripe.errors.StripeInvalidRequestError &&
   error.code === "resource_missing";
+
+const rejecting = async <T>(work: () => Promise<T>): Promise<T> => {
+  try {
+    return await work();
+  } catch (error) {
+    if (
+      error instanceof Stripe.errors.StripeInvalidRequestError &&
+      !missing(error)
+    ) {
+      throw new BillingDetailsRejectedError(error.message);
+    }
+
+    throw error;
+  }
+};
+
+const LIVE_SUBSCRIPTION_STATUSES = new Set(["active", "trialing", "past_due"]);
 
 export interface StripeBillingProviderOptions {
   secretKey: string;
@@ -166,6 +190,106 @@ export class StripeBillingProvider extends BillingProvider {
   public async deleteCustomer(id: string): Promise<void> {
     try {
       await this.stripe.customers.del(id);
+    } catch (error) {
+      if (!missing(error)) throw error;
+    }
+  }
+
+  public async updateCustomer(
+    id: string,
+    { name, address }: UpdateProviderCustomerData,
+  ): Promise<ProviderCustomer> {
+    return toProviderCustomer(
+      await rejecting(() =>
+        this.stripe.customers.update(id, {
+          name,
+          address: {
+            line1: address.line1 ?? "",
+            line2: address.line2 ?? "",
+            city: address.city ?? "",
+            state: address.state ?? "",
+            postal_code: address.postalCode ?? "",
+            country: address.country ?? "",
+          },
+          expand: ["invoice_settings.default_payment_method"],
+        }),
+      ),
+    );
+  }
+
+  public async createCardSetup(customerId: string): Promise<string> {
+    const intent = await this.stripe.setupIntents.create({
+      customer: customerId,
+      usage: "off_session",
+      allowed_payment_method_types: ["card"],
+    });
+
+    if (intent.client_secret === null) {
+      throw new Error(`The Stripe setup intent ${intent.id} has no secret`);
+    }
+
+    return intent.client_secret;
+  }
+
+  public async listCards(customerId: string): Promise<ProviderStoredCard[]> {
+    const methods = await this.stripe.customers
+      .listPaymentMethods(customerId, { type: "card", limit: STRIPE_PAGE_SIZE })
+      .autoPagingToArray({ limit: STRIPE_MAX_LIST });
+
+    return methods.map(toProviderStoredCard);
+  }
+
+  public async setDefaultCard(
+    customerId: string,
+    cardId: string,
+  ): Promise<ProviderCustomer> {
+    const customer = await rejecting(() =>
+      this.stripe.customers.update(customerId, {
+        invoice_settings: { default_payment_method: cardId },
+        expand: ["invoice_settings.default_payment_method"],
+      }),
+    );
+    const subscriptions = await this.stripe.subscriptions
+      .list({ customer: customerId, status: "all", limit: STRIPE_PAGE_SIZE })
+      .autoPagingToArray({ limit: STRIPE_MAX_LIST });
+
+    for (const subscription of subscriptions) {
+      if (LIVE_SUBSCRIPTION_STATUSES.has(subscription.status)) {
+        await this.stripe.subscriptions.update(subscription.id, {
+          default_payment_method: cardId,
+        });
+      }
+    }
+
+    return toProviderCustomer(customer);
+  }
+
+  public async removeCard(cardId: string): Promise<void> {
+    try {
+      await this.stripe.paymentMethods.detach(cardId);
+    } catch (error) {
+      if (!missing(error)) throw error;
+    }
+  }
+
+  public async createTaxId(
+    customerId: string,
+    { type, value }: CreateProviderTaxIdData,
+  ): Promise<ProviderTaxId> {
+    return toProviderTaxId(
+      await rejecting(() =>
+        this.stripe.customers.createTaxId(customerId, {
+          type: type,
+          value,
+        }),
+      ),
+      customerId,
+    );
+  }
+
+  public async deleteTaxId(customerId: string, id: string): Promise<void> {
+    try {
+      await this.stripe.customers.deleteTaxId(customerId, id);
     } catch (error) {
       if (!missing(error)) throw error;
     }

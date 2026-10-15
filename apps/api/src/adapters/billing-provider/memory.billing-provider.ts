@@ -3,12 +3,16 @@ import { createHash } from "node:crypto";
 import z from "zod";
 
 import { BILLING_EVENT_TOPICS } from "@/db";
-import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-provider.errors";
+import {
+  BillingDetailsRejectedError,
+  InvalidBillingWebhookError,
+} from "@/modules/billing-provider/billing-provider.errors";
 import {
   BillingProvider,
   type CreateProviderCustomerData,
   type CreateProviderInvoiceData,
   type CreateProviderSubscriptionData,
+  type CreateProviderTaxIdData,
   type ProviderCheckout,
   type ProviderCustomer,
   type ProviderDispute,
@@ -17,9 +21,13 @@ import {
   type ProviderPayment,
   type ProviderPrice,
   type ProviderRefund,
+  type ProviderStoredCard,
   type ProviderSubscription,
   type ProviderTaxId,
+  type UpdateProviderCustomerData,
 } from "@/modules/billing-provider/ports/billing-provider";
+
+export const MEMORY_INVALID_TAX_ID = "INVALID";
 
 export const MEMORY_PERIOD_MS = 30 * 24 * 60 * 60 * 1_000;
 
@@ -199,7 +207,7 @@ export class MemoryBillingProvider extends BillingProvider {
     this.taxIds.set(taxId.id, taxId);
   }
 
-  public deleteTaxId(id: string): void {
+  public forgetTaxId(id: string): void {
     this.taxIds.delete(id);
   }
 
@@ -243,6 +251,116 @@ export class MemoryBillingProvider extends BillingProvider {
     }
 
     return Promise.resolve();
+  }
+
+  private readonly cards = new Map<string, ProviderStoredCard[]>();
+
+  private createdSetups = 0;
+
+  private createdTaxIds = 0;
+
+  public updateCustomer(
+    id: string,
+    { name, address }: UpdateProviderCustomerData,
+  ): Promise<ProviderCustomer> {
+    return this.changeCustomer(id, (customer) => ({
+      ...customer,
+      name,
+      address,
+    }));
+  }
+
+  public createCardSetup(customerId: string): Promise<string> {
+    return Promise.resolve(
+      `seti_memory_${++this.createdSetups}_${customerId}_secret`,
+    );
+  }
+
+  public listCards(customerId: string): Promise<ProviderStoredCard[]> {
+    return Promise.resolve([...(this.cards.get(customerId) ?? [])]);
+  }
+
+  public addCard(customerId: string, card: ProviderStoredCard): void {
+    this.cards.set(customerId, [...(this.cards.get(customerId) ?? []), card]);
+  }
+
+  public setDefaultCard(
+    customerId: string,
+    cardId: string,
+  ): Promise<ProviderCustomer> {
+    const card = this.cards.get(customerId)?.find(({ id }) => id === cardId);
+
+    if (!card) {
+      return Promise.reject(
+        new BillingDetailsRejectedError(`No such payment method: ${cardId}`),
+      );
+    }
+
+    return this.changeCustomer(customerId, (customer) => ({
+      ...customer,
+      card: { paymentMethodId: card.id, brand: card.brand, last4: card.last4 },
+    }));
+  }
+
+  public removeCard(cardId: string): Promise<void> {
+    for (const [customerId, cards] of this.cards) {
+      this.cards.set(
+        customerId,
+        cards.filter(({ id }) => id !== cardId),
+      );
+
+      const customer = this.customers.get(customerId);
+
+      if (customer?.card?.paymentMethodId === cardId) {
+        this.customers.set(customerId, { ...customer, card: null });
+      }
+    }
+
+    return Promise.resolve();
+  }
+
+  public createTaxId(
+    customerId: string,
+    { type, value }: CreateProviderTaxIdData,
+  ): Promise<ProviderTaxId> {
+    if (value === MEMORY_INVALID_TAX_ID) {
+      return Promise.reject(
+        new BillingDetailsRejectedError(`Invalid value for ${type}.`),
+      );
+    }
+
+    const taxId: ProviderTaxId = {
+      id: `txi_memory_${++this.createdTaxIds}`,
+      customerId,
+      type,
+      value,
+      verificationStatus: "pending",
+    };
+
+    this.taxIds.set(taxId.id, taxId);
+
+    return Promise.resolve(taxId);
+  }
+
+  public deleteTaxId(customerId: string, id: string): Promise<void> {
+    if (this.taxIds.get(id)?.customerId === customerId) this.taxIds.delete(id);
+
+    return Promise.resolve();
+  }
+
+  private changeCustomer(
+    id: string,
+    change: (customer: ProviderCustomer) => ProviderCustomer,
+  ): Promise<ProviderCustomer> {
+    const customer = this.customers.get(id);
+
+    if (!customer) return Promise.reject(new Error(`No customer ${id}`));
+
+    const changed = change(customer);
+
+    this.customers.set(id, changed);
+
+    return Promise.resolve(changed);
   }
 
   private createdInvoices = 0;
@@ -423,6 +541,9 @@ export class MemoryBillingProvider extends BillingProvider {
     this.created = 0;
     this.createdSubscriptions = 0;
     this.createdInvoices = 0;
+    this.createdSetups = 0;
+    this.createdTaxIds = 0;
+    this.cards.clear();
     this.collectsTax = false;
     this.prices = [...MEMORY_PRICES];
     this.events = [];

@@ -15,6 +15,17 @@ export abstract class BillingTaxIdsRepository extends Repository {
     at: Date,
   ): Promise<BillingTaxIdEntity>;
 
+  public abstract listForUser(
+    provider: BillingProviderName,
+    userId: string,
+  ): Promise<BillingTaxIdEntity[]>;
+
+  public abstract findForUser(
+    provider: BillingProviderName,
+    userId: string,
+    id: string,
+  ): Promise<BillingTaxIdEntity | null>;
+
   public abstract remove(
     provider: BillingProviderName,
     providerTaxId: string,
