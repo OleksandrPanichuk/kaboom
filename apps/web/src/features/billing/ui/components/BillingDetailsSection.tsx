@@ -50,7 +50,7 @@ export function BillingDetailsSection({
       ) : (
         <div className="flex flex-col gap-4">
           {shown.length > 0 ? (
-            <address className="rounded-xl border bg-muted/60 p-3.5 text-sm leading-6 not-italic sm:px-4">
+            <address className="rounded-xl border border-border bg-card p-3.5 text-sm leading-6 not-italic sm:px-4">
               {customer?.name ? (
                 <span className="block font-medium">{customer.name}</span>
               ) : null}
@@ -61,12 +61,16 @@ export function BillingDetailsSection({
               ))}
             </address>
           ) : (
-            <p className="rounded-xl border border-dashed px-4 py-5 text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
               No billing address yet.
             </p>
           )}
           <div>
-            <Button variant="outline" onClick={() => setEditing(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditing(true)}
+            >
               {shown.length > 0 ? "Change details" : "Add an address"}
             </Button>
           </div>

@@ -7,7 +7,7 @@ import {
   BillingDetailsSection,
   CardsSection,
   InvoicesSection,
-  PlanSection,
+  PlanOverview,
   TaxIdsSection,
 } from "@/features/billing/ui/components";
 
@@ -22,7 +22,7 @@ export function BillingSettingsView() {
           title="Billing"
           description="Your plan, how you pay and the invoices you have been sent."
         />
-        <PlanSection account={account} />
+        <PlanOverview account={account} />
         <CardsSection />
         <BillingDetailsSection customer={account.customer} />
         <TaxIdsSection />
