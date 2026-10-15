@@ -4,6 +4,7 @@ import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-p
 import {
   BillingProvider,
   type CreateProviderCustomerData,
+  type CreateProviderInvoiceData,
   type CreateProviderSubscriptionData,
   type ProviderCheckout,
   type ProviderCustomer,
@@ -30,6 +31,7 @@ import {
 } from "./stripe.constants";
 import {
   idOf,
+  toInvoiceCheckout,
   toProviderCustomer,
   toProviderDispute,
   toProviderEvent,
@@ -229,6 +231,50 @@ export class StripeBillingProvider extends BillingProvider {
         prorate: false,
       }),
     );
+  }
+
+  public async createInvoice({
+    customerId,
+    priceId,
+  }: CreateProviderInvoiceData): Promise<ProviderCheckout<ProviderInvoice>> {
+    const draft = await this.stripe.invoices.create({
+      customer: customerId,
+      collection_method: "charge_automatically",
+      auto_advance: false,
+      pending_invoice_items_behavior: "exclude",
+      automatic_tax: { enabled: this.taxEnabled },
+    });
+
+    await this.stripe.invoiceItems.create({
+      customer: customerId,
+      invoice: draft.id,
+      pricing: { price: priceId },
+    });
+
+    return toInvoiceCheckout(
+      await this.stripe.invoices.finalizeInvoice(draft.id, {
+        auto_advance: false,
+        expand: ["confirmation_secret", "payments"],
+      }),
+    );
+  }
+
+  public async invoiceCheckout(
+    id: string,
+  ): Promise<ProviderCheckout<ProviderInvoice>> {
+    return toInvoiceCheckout(
+      await this.stripe.invoices.retrieve(id, {
+        expand: ["confirmation_secret", "payments"],
+      }),
+    );
+  }
+
+  public async voidInvoice(id: string): Promise<ProviderInvoice> {
+    const invoice = await this.stripe.invoices.voidInvoice(id, {
+      expand: ["payments"],
+    });
+
+    return toProviderInvoice(invoice, invoice.lines.data);
   }
 
   public async findInvoice(id: string): Promise<ProviderInvoice | null> {
