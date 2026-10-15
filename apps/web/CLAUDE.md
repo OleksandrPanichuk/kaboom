@@ -39,7 +39,7 @@ routes/
     route.tsx             renders MarketingLayout
     index.tsx (/), pricing.tsx, terms.tsx, privacy.tsx, cookies.tsx
   _guest/                 signed-out pages
-    route.tsx             beforeLoad: a signed-in visitor goes on to ?redirect or /
+    route.tsx             beforeLoad: a signed-in visitor goes on to ?redirect or /home
     sign-in.tsx, sign-up.tsx, forgot-password.tsx
   _app/                   the signed-in app
     route.tsx             beforeLoad: a guest goes to /sign-in?redirect=…
