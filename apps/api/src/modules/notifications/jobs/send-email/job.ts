@@ -16,7 +16,11 @@ import {
   renderNewSignInEmail,
   renderPasswordChangedEmail,
   renderPasswordResetEmail,
+  renderPaymentFailedEmail,
+  renderProStartedEmail,
+  renderPurchaseRefundedEmail,
   renderReviewReadyEmail,
+  renderSubscriptionEndedEmail,
 } from "../../templates";
 import { type SendEmailPayload, SendEmailPayloadSchema } from "./schema";
 
@@ -88,6 +92,34 @@ export class SendEmailJob extends Job<SendEmailPayload> {
         return renderReviewReadyEmail({
           name: payload.to.name,
           actionUrl: payload.reviewUrl,
+        });
+
+      case EmailKind.ProStarted:
+        return renderProStartedEmail({
+          name: payload.to.name,
+          billingUrl: payload.billingUrl,
+          lifetime: payload.lifetime,
+        });
+
+      case EmailKind.PaymentFailed:
+        return renderPaymentFailedEmail({
+          name: payload.to.name,
+          billingUrl: payload.billingUrl,
+        });
+
+      case EmailKind.SubscriptionEnded:
+        return renderSubscriptionEndedEmail({
+          name: payload.to.name,
+          billingUrl: payload.billingUrl,
+          endedAt: payload.endedAt,
+        });
+
+      case EmailKind.PurchaseRefunded:
+        return renderPurchaseRefundedEmail({
+          name: payload.to.name,
+          billingUrl: payload.billingUrl,
+          amount: payload.amount,
+          currency: payload.currency,
         });
     }
   }

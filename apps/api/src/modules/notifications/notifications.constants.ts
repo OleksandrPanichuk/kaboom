@@ -6,6 +6,10 @@ export const EmailKind = {
   EmailChange: "email_change",
   EmailChanged: "email_changed",
   ReviewReady: "review_ready",
+  ProStarted: "pro_started",
+  PaymentFailed: "payment_failed",
+  SubscriptionEnded: "subscription_ended",
+  PurchaseRefunded: "purchase_refunded",
 } as const;
 
 export type EmailKind = (typeof EmailKind)[keyof typeof EmailKind];

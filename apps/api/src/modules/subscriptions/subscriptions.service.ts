@@ -2,6 +2,7 @@ import { make, makeRepository, makeService } from "@/core/registry";
 import { Service } from "@/core/service";
 import type { SubscriptionChangeActor, SubscriptionStatus } from "@/db";
 import { BillingCustomersService } from "@/modules/billing-customers";
+import { BillingNotificationsService } from "@/modules/billing-notifications";
 import {
   BillingProvider,
   type ProviderSubscription,
@@ -34,6 +35,10 @@ export class SubscriptionsService extends Service {
 
   private readonly billingCustomersService = makeService(
     BillingCustomersService,
+  );
+
+  private readonly billingNotificationsService = makeService(
+    BillingNotificationsService,
   );
 
   public currentFor(userId: string): Promise<SubscriptionEntity | null> {
@@ -186,13 +191,18 @@ export class SubscriptionsService extends Service {
       new Date(),
     );
 
-    await this.subscriptions.recordChanges({
+    const recorded = await this.subscriptions.recordChanges({
       subscriptionId: row.id,
       changes: subscriptionChanges(before, after, cause.at),
       actor: cause.actor ?? "provider",
       actorUserId: cause.actorUserId ?? null,
       billingEventId: cause.billingEventId,
     });
+
+    await this.billingNotificationsService.subscriptionChanged(
+      row.userId,
+      recorded,
+    );
 
     return row;
   }

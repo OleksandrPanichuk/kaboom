@@ -1,6 +1,7 @@
 import { make, makeRepository, makeService } from "@/core/registry";
 import { Service } from "@/core/service";
 import { BillingCustomersService } from "@/modules/billing-customers";
+import { BillingNotificationsService } from "@/modules/billing-notifications";
 import { BillingOffersService } from "@/modules/billing-offers";
 import {
   BillingProvider,
@@ -31,6 +32,10 @@ export class PurchasesService extends Service {
   private readonly billingOffersService = makeService(BillingOffersService);
 
   private readonly subscriptionsService = makeService(SubscriptionsService);
+
+  private readonly billingNotificationsService = makeService(
+    BillingNotificationsService,
+  );
 
   public sync(
     providerCustomerId: string,
@@ -67,8 +72,20 @@ export class PurchasesService extends Service {
     const now = new Date();
     const refunded = purchaseAfterRefunds(purchase, refunds, now);
 
-    if (refunded) {
-      await this.purchases.recordRefunds(purchase.id, refunded, now);
+    if (!refunded) return;
+
+    await this.purchases.recordRefunds(purchase.id, refunded, now);
+
+    if (
+      refunded.status === "refunded" &&
+      purchase.status !== "refunded" &&
+      !refunds.disputeLost
+    ) {
+      await this.billingNotificationsService.lifetimeRefunded(
+        purchase.userId,
+        refunded.amountRefunded,
+        purchase.currency,
+      );
     }
   }
 
@@ -100,6 +117,8 @@ export class PurchasesService extends Service {
         at: stored.paidAt ?? new Date(),
         actor: "system",
       });
+
+      await this.billingNotificationsService.lifetimePaid(stored.userId);
     }
 
     return stored;

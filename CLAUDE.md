@@ -942,6 +942,8 @@ concern gets a new module rather than a folder in an existing one:
 - `payment-methods` owns no table: saved cards are read live from the
   provider (`/billing/cards`), and only the default is copied, onto
   `billing_customers`.
+- `billing-notifications` owns no table: it decides which billing emails a
+  change sends, and sends them after commit.
 
 `BillingProvider` is bound to
 `StripeBillingProvider` (`adapters/billing-provider/stripe/`) when
@@ -1124,6 +1126,18 @@ while a subscription renews on it (`BILLING_CARD_IN_USE`).
 `/billing/tax-ids` adds and removes tax ids. When the provider refuses
 what it is given (an address, a tax id), the adapter answers
 `422 BILLING_DETAILS_REJECTED` with the provider's message.
+
+Billing sends four emails, each from what a change actually wrote, so a
+redelivered event or a retry sends nothing twice: Pro started (a
+subscription becoming active from its first payment, or lifetime paid),
+a payment failed (a subscription going past due), a subscription ended
+(cancelled by anyone but the app itself, so buying lifetime does not
+say the monthly plan ended), and lifetime refunded in full (not for a
+lost dispute). `recordChanges` answers only the rows it inserted, and
+`BillingNotificationsService` queues the email with `afterCommit` from
+`@/db/executor`, which runs once the outermost transaction commits and
+never for one that rolls back. Outside a transaction it runs at once.
+Stripe's own receipts and invoice emails are left to the Dashboard.
 
 ## DevOps track
 
