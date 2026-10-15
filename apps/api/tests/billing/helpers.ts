@@ -2,9 +2,9 @@ import { getApp } from "@tests/helpers";
 
 import {
   MEMORY_SIGNATURE_HEADER,
-  MEMORY_WEBHOOK_SIGNATURE,
   type MemoryBillingProvider,
   type MemoryWebhook,
+  signMemoryWebhook,
 } from "@/adapters/billing-provider/memory.billing-provider";
 import { make } from "@/core/registry";
 import { billingOffersSchema, getDatabase } from "@/db";
@@ -41,17 +41,20 @@ export const seedOffers = () =>
 export const memoryProvider = () =>
   make(BillingProvider) as MemoryBillingProvider;
 
-export const deliverWebhook = (event: MemoryWebhook) =>
-  getApp().handle(
+export const deliverWebhook = (event: MemoryWebhook) => {
+  const body = JSON.stringify(event);
+
+  return getApp().handle(
     new Request("http://localhost:3000/api/billing/webhooks/stripe", {
       method: "POST",
       headers: {
         "content-type": "application/json; charset=utf-8",
-        [MEMORY_SIGNATURE_HEADER]: MEMORY_WEBHOOK_SIGNATURE,
+        [MEMORY_SIGNATURE_HEADER]: signMemoryWebhook(body),
       },
-      body: JSON.stringify(event),
+      body,
     }),
   );
+};
 
 export const providerCustomer = (
   overrides: Partial<ProviderCustomer> = {},

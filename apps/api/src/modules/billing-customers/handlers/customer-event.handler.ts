@@ -7,11 +7,15 @@ import type {
 import { BillingCustomersService } from "../billing-customers.service";
 
 export class CustomerEventHandler implements BillingEventHandler {
+  private readonly billingCustomersService = makeService(
+    BillingCustomersService,
+  );
+
   public async handle({
     providerCustomerId,
   }: BillingEventEntity): Promise<void> {
     if (providerCustomerId === null) return;
 
-    await makeService(BillingCustomersService).sync(providerCustomerId);
+    await this.billingCustomersService.sync(providerCustomerId);
   }
 }

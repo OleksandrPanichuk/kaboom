@@ -25,21 +25,22 @@ const live = (status: SubscriptionStatus) =>
   !ENDED_SUBSCRIPTION_STATUSES.includes(status);
 
 export class SubscriptionsService extends Service {
-  private get provider() {
-    return make(BillingProvider);
-  }
+  private readonly provider = make(BillingProvider);
 
   private readonly subscriptions = makeRepository(SubscriptionsRepository);
 
-  private readonly customers = makeService(BillingCustomersService);
+  private readonly billingCustomersService = makeService(
+    BillingCustomersService,
+  );
 
   public sync(
     providerCustomerId: string,
     providerSubscriptionId: string,
     cause: SubscriptionSyncCause,
   ): Promise<SubscriptionEntity> {
-    return this.customers.locked(providerCustomerId, async () => {
-      const customer = await this.customers.ensure(providerCustomerId);
+    return this.billingCustomersService.locked(providerCustomerId, async () => {
+      const customer =
+        await this.billingCustomersService.ensure(providerCustomerId);
       const userId = customer?.userId ?? null;
       const incoming = await this.fetch(providerSubscriptionId);
 

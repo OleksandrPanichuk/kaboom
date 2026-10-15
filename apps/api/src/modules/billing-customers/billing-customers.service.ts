@@ -11,9 +11,7 @@ import { BillingCustomersRepository } from "./ports";
 const UserId = z.uuid();
 
 export class BillingCustomersService extends Service {
-  private get provider() {
-    return make(BillingProvider);
-  }
+  private readonly provider = make(BillingProvider);
 
   private readonly customers = makeRepository(BillingCustomersRepository);
 
