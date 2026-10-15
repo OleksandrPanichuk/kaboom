@@ -41,6 +41,7 @@ export const billingEventsSchema = pgTable(
     type: text("type").notNull(),
     topic: text("topic", { enum: BILLING_EVENT_TOPICS }),
     providerObjectId: text("provider_object_id"),
+    providerCustomerId: text("provider_customer_id"),
     live: boolean("live").notNull(),
     payload: jsonb("payload").$type<unknown>().notNull(),
     status: text("status", { enum: BILLING_EVENT_STATUSES })
@@ -68,6 +69,10 @@ export const billingEventsSchema = pgTable(
     index("billing_events_provider_object_idx").on(
       table.provider,
       table.providerObjectId,
+    ),
+    index("billing_events_provider_customer_idx").on(
+      table.provider,
+      table.providerCustomerId,
     ),
   ],
 );

@@ -1,4 +1,18 @@
+import { getApp } from "@tests/helpers";
+
+import {
+  MEMORY_SIGNATURE_HEADER,
+  type MemoryBillingProvider,
+  type MemoryWebhook,
+  signMemoryWebhook,
+} from "@/adapters/billing-provider/memory.billing-provider";
+import { make } from "@/core/registry";
 import { billingOffersSchema, getDatabase } from "@/db";
+import {
+  BillingProvider,
+  type ProviderCustomer,
+  type ProviderSubscription,
+} from "@/modules/billing-provider";
 
 export const OFFERS = [
   {
@@ -23,3 +37,60 @@ export const OFFERS = [
 
 export const seedOffers = () =>
   getDatabase().insert(billingOffersSchema).values(OFFERS).returning();
+
+export const memoryProvider = () =>
+  make(BillingProvider) as MemoryBillingProvider;
+
+export const deliverWebhook = (event: MemoryWebhook) => {
+  const body = JSON.stringify(event);
+
+  return getApp().handle(
+    new Request("http://localhost:3000/api/billing/webhooks/stripe", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        [MEMORY_SIGNATURE_HEADER]: signMemoryWebhook(body),
+      },
+      body,
+    }),
+  );
+};
+
+export const providerCustomer = (
+  overrides: Partial<ProviderCustomer> = {},
+): ProviderCustomer => ({
+  id: "cus_1",
+  userId: null,
+  email: "ada@example.test",
+  name: "Ada",
+  address: null,
+  card: null,
+  taxExempt: "none",
+  balance: 0,
+  ...overrides,
+});
+
+export const PERIOD_START = new Date("2026-06-01T00:00:00Z");
+export const PERIOD_END = new Date("2026-07-01T00:00:00Z");
+
+export const providerSubscription = (
+  overrides: Partial<ProviderSubscription> = {},
+): ProviderSubscription => ({
+  id: "sub_1",
+  customerId: "cus_1",
+  priceId: "price_memory_pro_monthly",
+  status: "active",
+  quantity: 1,
+  currentPeriodStart: PERIOD_START,
+  currentPeriodEnd: PERIOD_END,
+  cancelAtPeriodEnd: false,
+  cancelAt: null,
+  canceledAt: null,
+  cancellationReason: null,
+  endedAt: null,
+  trialStart: null,
+  trialEnd: null,
+  latestInvoiceId: null,
+  createdAt: PERIOD_START,
+  ...overrides,
+});
