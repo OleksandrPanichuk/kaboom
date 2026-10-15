@@ -8,9 +8,11 @@ type Options = void;
 type Result = OfferedPrice[];
 
 export class ListOffersUseCase extends UseCase<Options, Result> {
+  private readonly provider = make(BillingProvider);
+
   private readonly offers = makeRepository(BillingOffersRepository);
 
   public execute(): Promise<Result> {
-    return this.offers.listOffered(make(BillingProvider).name);
+    return this.offers.listOffered(this.provider.name);
   }
 }
