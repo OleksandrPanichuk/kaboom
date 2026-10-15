@@ -1,6 +1,6 @@
 import { make, makeRepository, makeService } from "@/core/registry";
 import { Service } from "@/core/service";
-import type { SubscriptionStatus } from "@/db";
+import type { SubscriptionChangeActor, SubscriptionStatus } from "@/db";
 import { BillingCustomersService } from "@/modules/billing-customers";
 import {
   BillingProvider,
@@ -14,11 +14,14 @@ import { ENDED_SUBSCRIPTION_STATUSES } from "./subscriptions.constants";
 import {
   SubscriptionConflictError,
   SubscriptionNotFoundAtProviderError,
+  SubscriptionNotFoundError,
 } from "./subscriptions.errors";
 
 export interface SubscriptionSyncCause {
   billingEventId: string | null;
   at: Date;
+  actor?: SubscriptionChangeActor;
+  actorUserId?: string | null;
 }
 
 const live = (status: SubscriptionStatus) =>
@@ -42,18 +45,88 @@ export class SubscriptionsService extends Service {
     providerSubscriptionId: string,
     cause: SubscriptionSyncCause,
   ): Promise<SubscriptionEntity> {
-    return this.billingCustomersService.locked(providerCustomerId, async () => {
-      const customer =
-        await this.billingCustomersService.ensure(providerCustomerId);
-      const userId = customer?.userId ?? null;
-      const incoming = await this.fetch(providerSubscriptionId);
+    return this.billingCustomersService.locked(providerCustomerId, async () =>
+      this.accept(await this.fetch(providerSubscriptionId), cause),
+    );
+  }
 
-      if (live(incoming.status)) {
-        await this.settleOthers(incoming, userId, cause);
-      }
+  public record(
+    subscription: ProviderSubscription,
+    cause: SubscriptionSyncCause,
+  ): Promise<SubscriptionEntity> {
+    return this.billingCustomersService.locked(subscription.customerId, () =>
+      this.accept(subscription, cause),
+    );
+  }
 
-      return this.store(incoming, userId, cause);
-    });
+  public async scheduleCancellation(
+    userId: string,
+    cancelAtPeriodEnd: boolean,
+  ): Promise<SubscriptionEntity> {
+    const current = await this.currentFor(userId);
+
+    if (!current) {
+      throw new SubscriptionNotFoundError("You have no subscription");
+    }
+
+    const cause = {
+      billingEventId: null,
+      at: new Date(),
+      actor: "user" as const,
+      actorUserId: userId,
+    };
+
+    if (current.status === "incomplete" && cancelAtPeriodEnd) {
+      return this.record(
+        await this.provider.cancelSubscription(current.providerSubscriptionId),
+        cause,
+      );
+    }
+
+    if (current.cancelAtPeriodEnd === cancelAtPeriodEnd) return current;
+
+    return this.record(
+      await this.provider.scheduleCancellation(
+        current.providerSubscriptionId,
+        cancelAtPeriodEnd,
+      ),
+      cause,
+    );
+  }
+
+  public async cancelNow(
+    providerCustomerId: string,
+    cause: SubscriptionSyncCause,
+  ): Promise<void> {
+    const running = await this.subscriptions.listLive(
+      this.provider.name,
+      providerCustomerId,
+    );
+
+    for (const subscription of running) {
+      await this.accept(
+        await this.provider.cancelSubscription(
+          subscription.providerSubscriptionId,
+        ),
+        cause,
+      );
+    }
+  }
+
+  private async accept(
+    incoming: ProviderSubscription,
+    cause: SubscriptionSyncCause,
+  ): Promise<SubscriptionEntity> {
+    const customer = await this.billingCustomersService.ensure(
+      incoming.customerId,
+    );
+    const userId = customer?.userId ?? null;
+
+    if (live(incoming.status)) {
+      await this.settleOthers(incoming, userId, cause);
+    }
+
+    return this.store(incoming, userId, cause);
   }
 
   private async settleOthers(
@@ -72,7 +145,7 @@ export class SubscriptionsService extends Service {
       const settled = await this.store(
         await this.fetch(other.providerSubscriptionId),
         userId,
-        cause,
+        { ...cause, actor: "provider", actorUserId: null },
       );
 
       if (live(settled.status)) {
@@ -116,7 +189,8 @@ export class SubscriptionsService extends Service {
     await this.subscriptions.recordChanges({
       subscriptionId: row.id,
       changes: subscriptionChanges(before, after, cause.at),
-      actor: "provider",
+      actor: cause.actor ?? "provider",
+      actorUserId: cause.actorUserId ?? null,
       billingEventId: cause.billingEventId,
     });
 

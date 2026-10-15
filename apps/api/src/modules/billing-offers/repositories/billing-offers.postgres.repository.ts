@@ -27,6 +27,32 @@ export class PostgresBillingOffersRepository extends BillingOffersRepository {
       .orderBy(asc(billingOffersSchema.position), asc(billingOffersSchema.key));
   }
 
+  public async findOffered(
+    provider: BillingProviderName,
+    key: string,
+  ): Promise<OfferedPrice | null> {
+    const [row] = await this.db
+      .select({ offer: billingOffersSchema, price: billingPricesSchema })
+      .from(billingOffersSchema)
+      .innerJoin(
+        billingPricesSchema,
+        and(
+          eq(billingPricesSchema.offerId, billingOffersSchema.id),
+          eq(billingPricesSchema.provider, provider),
+          eq(billingPricesSchema.active, true),
+        ),
+      )
+      .where(
+        and(
+          eq(billingOffersSchema.key, key),
+          eq(billingOffersSchema.active, true),
+        ),
+      )
+      .limit(1);
+
+    return row ?? null;
+  }
+
   public listOffered(provider: BillingProviderName): Promise<OfferedPrice[]> {
     return this.db
       .select({ offer: billingOffersSchema, price: billingPricesSchema })

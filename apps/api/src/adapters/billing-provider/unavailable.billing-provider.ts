@@ -1,6 +1,7 @@
 import { BillingUnavailableError } from "@/modules/billing-provider/billing-provider.errors";
 import {
   BillingProvider,
+  type ProviderCheckout,
   type ProviderCustomer,
   type ProviderDispute,
   type ProviderEvent,
@@ -21,6 +22,8 @@ export class UnavailableBillingProvider extends BillingProvider {
   public readonly name = "stripe" as const;
 
   public readonly available = false;
+
+  public readonly collectsTax = false;
 
   public readonly signatureHeader = "stripe-signature";
 
@@ -49,6 +52,24 @@ export class UnavailableBillingProvider extends BillingProvider {
   }
 
   public createCustomer(): Promise<ProviderCustomer> {
+    return Promise.reject(unavailable());
+  }
+
+  public createSubscription(): Promise<ProviderCheckout<ProviderSubscription>> {
+    return Promise.reject(unavailable());
+  }
+
+  public subscriptionCheckout(): Promise<
+    ProviderCheckout<ProviderSubscription>
+  > {
+    return Promise.reject(unavailable());
+  }
+
+  public scheduleCancellation(): Promise<ProviderSubscription> {
+    return Promise.reject(unavailable());
+  }
+
+  public cancelSubscription(): Promise<ProviderSubscription> {
     return Promise.reject(unavailable());
   }
 

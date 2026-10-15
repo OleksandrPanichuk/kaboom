@@ -6,7 +6,11 @@ import { SubscriptionEventHandler } from "./handlers";
 import { SubscriptionsRepository } from "./ports";
 import { PostgresSubscriptionsRepository } from "./repositories";
 import { subscriptionsRoutes } from "./subscriptions.routes";
-import { ListSubscriptionChangesUseCase } from "./use-cases";
+import {
+  CancelSubscriptionUseCase,
+  ListSubscriptionChangesUseCase,
+  ResumeSubscriptionUseCase,
+} from "./use-cases";
 
 export const subscriptionsModule = defineModule({
   name: "subscriptions",
@@ -19,5 +23,7 @@ export const subscriptionsModule = defineModule({
   routes: () =>
     subscriptionsRoutes({
       listSubscriptionChanges: makeUseCase(ListSubscriptionChangesUseCase),
+      cancelSubscription: makeUseCase(CancelSubscriptionUseCase),
+      resumeSubscription: makeUseCase(ResumeSubscriptionUseCase),
     }),
 });

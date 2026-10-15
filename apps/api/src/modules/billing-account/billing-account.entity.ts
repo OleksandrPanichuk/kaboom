@@ -1,6 +1,6 @@
 import type { BillingCustomerEntity } from "@/modules/billing-customers";
 import type { PurchaseEntity } from "@/modules/purchases";
-import type { SubscriptionEntity } from "@/modules/subscriptions";
+import { SubscriptionEntity } from "@/modules/subscriptions";
 
 import type { BillingAccountModel } from "./billing-account.model";
 import { planOf } from "./billing-plan";
@@ -38,13 +38,7 @@ export class BillingAccountEntity {
   }: BillingAccountEntity): BillingAccountModel {
     return {
       ...planOf({ subscription, purchase }),
-      subscription: subscription && {
-        status: subscription.status,
-        currentPeriodEnd: subscription.currentPeriodEnd,
-        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-        cancelAt: subscription.cancelAt,
-        trialEnd: subscription.trialEnd,
-      },
+      subscription: subscription && SubscriptionEntity.normalize(subscription),
       lifetime: purchase && {
         status: purchase.status,
         amount: purchase.amount,

@@ -10,3 +10,8 @@ export class SubscriptionConflictError extends ModuleError {
   public readonly status = HttpStatus.Conflict;
   public readonly code = "SUBSCRIPTION_CONFLICT";
 }
+
+export class SubscriptionNotFoundError extends ModuleError {
+  public readonly status = HttpStatus.NotFound;
+  public readonly code = "SUBSCRIPTION_NOT_FOUND";
+}

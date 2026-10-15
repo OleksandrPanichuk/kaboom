@@ -9,4 +9,9 @@ export abstract class BillingOffersRepository extends Repository {
   public abstract listOffered(
     provider: BillingProviderName,
   ): Promise<OfferedPrice[]>;
+
+  public abstract findOffered(
+    provider: BillingProviderName,
+    key: string,
+  ): Promise<OfferedPrice | null>;
 }

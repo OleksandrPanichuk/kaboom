@@ -17,3 +17,14 @@ export const SubscriptionChangeModel = t.Object({
   effectiveAt: t.Date(),
 });
 export type SubscriptionChangeModel = typeof SubscriptionChangeModel.static;
+
+export const SubscriptionModel = t.Object({
+  status: t.UnionEnum(SUBSCRIPTION_STATUSES),
+  currentPeriodEnd: t.Nullable(t.Date()),
+  cancelAtPeriodEnd: t.Boolean({
+    description: "It ends at currentPeriodEnd unless resumed before then",
+  }),
+  cancelAt: t.Nullable(t.Date()),
+  trialEnd: t.Nullable(t.Date()),
+});
+export type SubscriptionModel = typeof SubscriptionModel.static;

@@ -25,6 +25,7 @@ export const billingProviderModule = defineModule({
             secretKey: env.STRIPE_SECRET_KEY,
             webhookSecret: env.STRIPE_WEBHOOK_SECRET,
             appName: env.APP_NAME,
+            taxEnabled: env.BILLING_TAX_ENABLED,
           })
         : new UnavailableBillingProvider();
 

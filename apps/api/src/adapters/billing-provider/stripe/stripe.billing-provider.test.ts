@@ -11,6 +11,7 @@ const provider = new StripeBillingProvider({
   secretKey: "sk_test_unused",
   webhookSecret: SECRET,
   appName: "Test",
+  taxEnabled: false,
 });
 
 const signed = async (event: Record<string, unknown>) => {

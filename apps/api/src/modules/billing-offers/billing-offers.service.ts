@@ -5,8 +5,11 @@ import {
   type ProviderPrice,
 } from "@/modules/billing-provider";
 
-import type { BillingOfferEntity } from "./billing-offer.entity";
-import { BillingPriceMisconfiguredError } from "./billing-offers.errors";
+import type { BillingOfferEntity, OfferedPrice } from "./billing-offer.entity";
+import {
+  BillingOfferNotFoundError,
+  BillingPriceMisconfiguredError,
+} from "./billing-offers.errors";
 import type { BillingPriceEntity } from "./billing-price.entity";
 import { BillingOffersRepository, BillingPricesRepository } from "./ports";
 
@@ -32,6 +35,16 @@ export class BillingOffersService extends Service {
     }));
 
     await this.prices.sync(synced, new Date());
+  }
+
+  public async findOffered(key: string): Promise<OfferedPrice> {
+    const offered = await this.offers.findOffered(this.provider.name, key);
+
+    if (!offered) {
+      throw new BillingOfferNotFoundError(`Nothing is on sale as "${key}"`);
+    }
+
+    return offered;
   }
 
   public findPrice(

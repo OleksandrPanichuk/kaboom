@@ -7,6 +7,8 @@ import { InvalidBillingWebhookError } from "@/modules/billing-provider/billing-p
 import {
   BillingProvider,
   type CreateProviderCustomerData,
+  type CreateProviderSubscriptionData,
+  type ProviderCheckout,
   type ProviderCustomer,
   type ProviderDispute,
   type ProviderEvent,
@@ -17,6 +19,8 @@ import {
   type ProviderSubscription,
   type ProviderTaxId,
 } from "@/modules/billing-provider/ports/billing-provider";
+
+export const MEMORY_PERIOD_MS = 30 * 24 * 60 * 60 * 1_000;
 
 export const MEMORY_SIGNATURE_HEADER = "x-memory-signature";
 
@@ -64,6 +68,8 @@ export class MemoryBillingProvider extends BillingProvider {
   public readonly name = "stripe" as const;
 
   public readonly available = true;
+
+  public collectsTax = false;
 
   public readonly signatureHeader = MEMORY_SIGNATURE_HEADER;
 
@@ -238,6 +244,96 @@ export class MemoryBillingProvider extends BillingProvider {
     return Promise.resolve();
   }
 
+  private createdSubscriptions = 0;
+
+  public createSubscription({
+    customerId,
+    priceId,
+  }: CreateProviderSubscriptionData): Promise<
+    ProviderCheckout<ProviderSubscription>
+  > {
+    const now = new Date();
+    const id = `sub_memory_${++this.createdSubscriptions}`;
+    const subscription: ProviderSubscription = {
+      id,
+      customerId,
+      priceId,
+      status: "incomplete",
+      quantity: 1,
+      currentPeriodStart: now,
+      currentPeriodEnd: new Date(now.getTime() + MEMORY_PERIOD_MS),
+      cancelAtPeriodEnd: false,
+      cancelAt: null,
+      canceledAt: null,
+      cancellationReason: null,
+      endedAt: null,
+      trialStart: null,
+      trialEnd: null,
+      latestInvoiceId: null,
+      createdAt: now,
+    };
+
+    this.subscriptions.set(id, subscription);
+
+    return this.subscriptionCheckout(id);
+  }
+
+  public subscriptionCheckout(
+    id: string,
+  ): Promise<ProviderCheckout<ProviderSubscription>> {
+    const subscription = this.subscriptions.get(id);
+
+    if (!subscription) {
+      return Promise.reject(new Error(`No subscription ${id}`));
+    }
+
+    return Promise.resolve({
+      object: subscription,
+      clientSecret:
+        subscription.status === "incomplete" ? `${id}_secret_memory` : null,
+    });
+  }
+
+  public scheduleCancellation(
+    id: string,
+    cancelAtPeriodEnd: boolean,
+  ): Promise<ProviderSubscription> {
+    return this.changeSubscription(id, (subscription) => ({
+      ...subscription,
+      cancelAtPeriodEnd,
+      canceledAt: cancelAtPeriodEnd ? new Date() : null,
+    }));
+  }
+
+  public cancelSubscription(id: string): Promise<ProviderSubscription> {
+    return this.changeSubscription(id, (subscription) => ({
+      ...subscription,
+      status:
+        subscription.status === "incomplete"
+          ? "incomplete_expired"
+          : "canceled",
+      canceledAt: new Date(),
+      endedAt: new Date(),
+    }));
+  }
+
+  private changeSubscription(
+    id: string,
+    change: (subscription: ProviderSubscription) => ProviderSubscription,
+  ): Promise<ProviderSubscription> {
+    const subscription = this.subscriptions.get(id);
+
+    if (!subscription) {
+      return Promise.reject(new Error(`No subscription ${id}`));
+    }
+
+    const changed = change(subscription);
+
+    this.subscriptions.set(id, changed);
+
+    return Promise.resolve(changed);
+  }
+
   public setCustomer(customer: ProviderCustomer): void {
     this.customers.set(customer.id, customer);
   }
@@ -251,6 +347,9 @@ export class MemoryBillingProvider extends BillingProvider {
   }
 
   public clear(): void {
+    this.created = 0;
+    this.createdSubscriptions = 0;
+    this.collectsTax = false;
     this.prices = [...MEMORY_PRICES];
     this.events = [];
     this.customers.clear();

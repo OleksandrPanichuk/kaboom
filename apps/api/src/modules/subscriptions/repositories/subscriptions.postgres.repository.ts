@@ -176,6 +176,7 @@ export class PostgresSubscriptionsRepository extends SubscriptionsRepository {
     subscriptionId,
     changes,
     actor,
+    actorUserId,
     billingEventId,
   }: RecordSubscriptionChangesData): Promise<void> {
     if (changes.length === 0) return;
@@ -187,6 +188,7 @@ export class PostgresSubscriptionsRepository extends SubscriptionsRepository {
           ...change,
           subscriptionId,
           actor,
+          actorUserId,
           billingEventId,
         })),
       )
