@@ -29,6 +29,7 @@ import { purchasesModule } from "@/modules/purchases";
 import { refundsModule } from "@/modules/refunds";
 import { reviewsModule } from "@/modules/reviews";
 import { sessionsModule } from "@/modules/sessions";
+import { sharesModule } from "@/modules/shares";
 import { simulationsModule } from "@/modules/simulations";
 import { skillsModule } from "@/modules/skills";
 import { submissionsModule } from "@/modules/submissions";
@@ -41,6 +42,7 @@ import { databaseModule } from "@/platform/database";
 import { designTestingModule } from "@/platform/design-testing";
 import { errorReportingModule } from "@/platform/error-reporting";
 import { healthModule } from "@/platform/health";
+import { imagesModule } from "@/platform/images";
 import { jobsModule } from "@/platform/jobs";
 import { llmModule } from "@/platform/llm";
 import { metricsModule } from "@/platform/metrics";
@@ -61,6 +63,7 @@ export const modules = [
   rateLimitModule,
   captchaModule,
   storageModule,
+  imagesModule,
   notificationsModule,
   usersModule,
   accountsModule,
@@ -96,5 +99,6 @@ export const modules = [
   paymentMethodsModule,
   problemCommentsModule,
   problemRatingsModule,
+  sharesModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

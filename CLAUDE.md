@@ -850,6 +850,31 @@ the count, how the stars spread and the caller's own. The moderation
 queue shows the live version's rating beside an update (`liveRating`), so
 a moderator sees how solvers took what it would replace.
 
+## Shared links
+
+`shares` hands out a public link to something an owner made: a design,
+or an interview once its review is ready. One live link per subject
+(`shares_live_subject_idx`), so sharing again answers the same link;
+turning it off (`DELETE /shares/:token`) is for good, and sharing after
+that makes a new token. A share keeps no copy: `GET /shared/:token`
+reads the design as it stands now, through the owner (`getOwned` with
+the share's `owner_id`), so a deleted design or interview takes its link
+with it, and a hidden profile is shown as no one. An interview's link
+shows the review's summary, strengths, improvements and scored items,
+never the transcript or the citations that quote it.
+
+Crawlers do not run the web app, so the link people hand out is
+`/api/s/:token`: a small HTML page with Open Graph and Twitter tags that
+sends a browser on to `/shared/:token` in the web. A link that is off
+sends it home. The preview image, `GET /shared/:token/image.png`, is
+1200×630, drawn as SVG by `share.card.ts` and rasterised through the
+`SvgRenderer` port (`platform/images`), which `ResvgSvgRenderer` binds
+with the Geist fonts beside it. They are imported `with { type: "file" }`
+and resolved against `import.meta.url`, so the build copies them next to
+`dist/main.js` and finds them whatever the working directory. The card
+draws the design from its saved layout, or in layers along its edges
+when it has none, scaled to fit.
+
 ## Roles
 
 Every account has a `role`: `user`, `moderator` or `admin`, ranked in
