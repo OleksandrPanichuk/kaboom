@@ -9,6 +9,7 @@ import {
 } from "../../notifications.constants";
 import { Mailer } from "../../ports";
 import {
+  renderCommentDigestEmail,
   type RenderedEmail,
   renderEmailChangedEmail,
   renderEmailChangeEmail,
@@ -120,6 +121,16 @@ export class SendEmailJob extends Job<SendEmailPayload> {
           billingUrl: payload.billingUrl,
           amount: payload.amount,
           currency: payload.currency,
+        });
+
+      case EmailKind.CommentDigest:
+        return renderCommentDigestEmail({
+          name: payload.to.name,
+          problemTitle: payload.problemTitle,
+          problemUrl: payload.problemUrl,
+          count: payload.count,
+          asAuthor: payload.asAuthor,
+          first: payload.first,
         });
     }
   }

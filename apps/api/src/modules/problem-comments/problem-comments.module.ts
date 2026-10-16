@@ -1,9 +1,14 @@
 import { defineModule } from "@/core/module";
 import { bind, makeUseCase } from "@/core/registry";
+import { registerJob } from "@/platform/jobs";
 
-import { ProblemCommentsRepository } from "./problem-comments.repository";
+import { SendCommentDigestJob } from "./jobs";
+import { CommentDigestsRepository, ProblemCommentsRepository } from "./ports";
 import { problemCommentsRoutes } from "./problem-comments.routes";
-import { PostgresProblemCommentsRepository } from "./repositories";
+import {
+  PostgresCommentDigestsRepository,
+  PostgresProblemCommentsRepository,
+} from "./repositories";
 import {
   EditProblemCommentUseCase,
   ListProblemCommentsUseCase,
@@ -19,6 +24,11 @@ export const problemCommentsModule = defineModule({
       ProblemCommentsRepository,
       () => new PostgresProblemCommentsRepository(),
     );
+    bind(
+      CommentDigestsRepository,
+      () => new PostgresCommentDigestsRepository(),
+    );
+    registerJob(SendCommentDigestJob);
   },
 
   routes: () =>

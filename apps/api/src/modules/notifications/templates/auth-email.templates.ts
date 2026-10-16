@@ -7,6 +7,7 @@ export interface RenderedEmail {
 }
 
 export interface ActionEmailOptions {
+  label?: string;
   name?: string;
   title: string;
   preheader: string;
@@ -39,6 +40,7 @@ const normalizeName = (name?: string): string => {
 };
 
 export const renderActionEmail = ({
+  label = "Account security",
   name,
   title,
   preheader,
@@ -80,7 +82,7 @@ export const renderActionEmail = ({
             <tr>
               <td style="background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;padding:48px 42px;box-shadow:0 12px 36px rgba(15,23,42,.08);">
                 <div style="display:inline-block;padding:7px 12px;border-radius:999px;background:#ecfccb;color:#3f6212;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">
-                  Account security
+                  ${escapeHtml(label)}
                 </div>
 
                 <h1 style="margin:24px 0 16px;font-size:32px;line-height:1.2;letter-spacing:-.8px;color:#111827;">

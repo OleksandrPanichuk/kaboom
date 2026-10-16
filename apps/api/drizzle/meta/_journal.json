@@ -246,6 +246,13 @@
       "when": 1792160735057,
       "tag": "0034_shares",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1792162229415,
+      "tag": "0035_comment_emails",
+      "breakpoints": true
     }
   ]
 }

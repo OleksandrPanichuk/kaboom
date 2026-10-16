@@ -842,6 +842,24 @@ context, and drops out once it has none. The author of a community
 problem is marked on their comments (`byProblemAuthor`), and a hidden
 profile is shown as no one, as everywhere else.
 
+A comment emails the people it concerns: the problem's author, and
+everyone who took part in the conversation it answers, never its own
+writer. They get one digest, not an email per comment:
+`CommentDigestsService.schedule` queues `SendCommentDigestJob` ten
+minutes out under the job id `comment-digest.<user>.<problem>`, so the
+comments of those ten minutes share one job, and the job sends whatever
+arrived since `comment_digests.sent_up_to` and moves the mark on. The
+mark makes a repeated job send nothing twice. Timestamps are compared at
+millisecond precision, as in pagination. A spoiler is named but not
+quoted. Only a verified email gets one, and only while
+`email_preferences.comments` is on.
+
+`email-preferences` holds the emails a user may turn off, one boolean
+column each, on by default when the user has no row: `GET` and `PATCH
+/email-preferences/me`. Security, sign-in, billing and review emails are
+not among them. `renderActionEmail` takes the email's `label`, the badge
+above its title.
+
 A rating is one to five stars, one per person and problem, replaced by
 rating again and taken back with `DELETE`. Only someone who has submitted
 a solution to the problem may rate it, and its author never may; `GET

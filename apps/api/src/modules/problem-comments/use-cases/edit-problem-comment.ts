@@ -2,12 +2,12 @@ import { makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { ProblemsService } from "@/modules/problems";
 
+import { ProblemCommentsRepository } from "../ports";
 import type { ListedComment } from "../problem-comment.entity";
 import {
   CommentNotYoursError,
   CommentRemovedError,
 } from "../problem-comments.errors";
-import { ProblemCommentsRepository } from "../problem-comments.repository";
 import { ProblemCommentsService } from "../problem-comments.service";
 
 export interface EditProblemCommentUseCaseOptions {
