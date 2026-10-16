@@ -7,7 +7,10 @@ test("a candidate starts an interview and the interviewer answers", async ({
 }) => {
   await signUp(page, "interview");
   await page.goto("/problems/url-shortener");
-  await page.getByRole("button", { name: /interview/i }).first().click();
+  await page
+    .getByRole("button", { name: /interview/i })
+    .first()
+    .click();
 
   await expect(page).toHaveURL(/\/interviews\//);
 
