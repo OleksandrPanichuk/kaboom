@@ -5,6 +5,7 @@ import {
   FileText,
   FlaskConical,
   History,
+  MessageSquare,
   Play,
   Send,
   Users,
@@ -14,6 +15,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { errorMessage } from "@/features/auth";
 import { DesignWorkspace } from "@/features/designs";
+import { DiscussionPanel } from "@/features/discussion";
 import {
   attemptQuery,
   problemQuery,
@@ -156,6 +158,12 @@ export function ProblemView({
               onReveal={() => solutions.mutate({ slug })}
             />
           ),
+        },
+        {
+          id: "discussion",
+          label: "Discussion",
+          icon: MessageSquare,
+          content: <DiscussionPanel slug={slug} />,
         },
       ]}
       actions={({ revision, saving, showTab }) => (

@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 import { FilePen, FilePlus, Inbox } from "lucide-react";
 
+import { RatingBadge } from "@/features/discussion";
 import { DifficultyBadge } from "@/features/problems";
 
 interface ReviewsTableProps {
@@ -73,6 +74,9 @@ export function ReviewsTable({ reviews }: ReviewsTableProps) {
               {review.author ? `@${review.author.handle}` : "Unknown author"} ·{" "}
               <span className="font-mono">/problems/{review.slug}</span>
             </p>
+            {review.liveRating ? (
+              <RatingBadge rating={review.liveRating} />
+            ) : null}
           </div>
           <div className="col-start-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm lg:contents">
             <span className="text-muted-foreground">

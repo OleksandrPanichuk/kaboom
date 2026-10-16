@@ -7,6 +7,7 @@ import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Circle, CircleCheck, CircleDashed } from "lucide-react";
 
+import { RatingBadge } from "@/features/discussion";
 import { SOLVED_SCORE } from "@/features/problems/constants";
 import { formatSubmittedAt, scoreTone } from "@/features/problems/utils";
 
@@ -68,6 +69,10 @@ export function ProblemRow({ problem, progress }: ProblemRowProps) {
           <div className="relative z-10">
             <ProblemCredit problem={problem} />
           </div>
+          <RatingBadge
+            rating={problem.rating}
+            commentCount={problem.commentCount}
+          />
         </div>
       </div>
       <div className="col-start-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm lg:contents">
