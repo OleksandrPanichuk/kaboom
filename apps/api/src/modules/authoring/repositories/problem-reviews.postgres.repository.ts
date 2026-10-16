@@ -45,6 +45,7 @@ const toListing = ({
   displayName,
 }: ListingRow): ReviewListing => ({
   review,
+  problemId,
   update: problemId !== null && review.status === "pending",
   author:
     handle !== null && displayName !== null ? { handle, displayName } : null,

@@ -41,8 +41,15 @@ export interface ReviewAuthor {
 
 export interface ReviewListing {
   review: ReviewEntity;
+  problemId: string | null;
   update: boolean;
   author: ReviewAuthor | null;
+  liveRating?: LiveRating;
+}
+
+export interface LiveRating {
+  average: number | null;
+  count: number;
 }
 
 export interface ReviewView extends ReviewListing {
@@ -118,6 +125,7 @@ export class ReviewEntity {
     review,
     update,
     author,
+    liveRating,
   }: ReviewListing): ProblemReviewSummaryModel {
     return {
       id: review.id,
@@ -129,6 +137,7 @@ export class ReviewEntity {
       difficulty: review.difficulty,
       update,
       author,
+      liveRating: liveRating ?? null,
       submittedAt: review.submittedAt.toISOString(),
       decidedAt: review.decidedAt?.toISOString() ?? null,
     };

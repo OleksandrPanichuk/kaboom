@@ -82,6 +82,11 @@ export abstract class SubmissionsRepository extends Repository {
     problemId: string,
   ): Promise<boolean>;
 
+  public abstract hasSubmitted(
+    userId: string,
+    problemId: string,
+  ): Promise<boolean>;
+
   public abstract findById(id: string): Promise<ReviewableSubmission | null>;
 
   public abstract completeReview(

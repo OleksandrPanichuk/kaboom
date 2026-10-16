@@ -8,6 +8,7 @@ import type { ProblemDifficulty } from "@/db";
 import type {
   ProblemCredit,
   ProblemEntity,
+  ProblemFeedback,
   ProblemVersionEntity,
   ProblemWithContent,
 } from "../problem.entity";
@@ -63,6 +64,10 @@ export abstract class ProblemsRepository extends Repository {
   public abstract credits(
     ids: readonly string[],
   ): Promise<Map<string, ProblemCredit>>;
+
+  public abstract feedback(
+    ids: readonly string[],
+  ): Promise<Map<string, ProblemFeedback>>;
 
   public abstract findById(id: string): Promise<ProblemWithContent | null>;
 

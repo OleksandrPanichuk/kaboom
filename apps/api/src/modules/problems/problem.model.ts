@@ -21,6 +21,15 @@ export const ProblemSummaryModel = t.Object({
     ),
   ),
   forkedFrom: t.Nullable(t.Object({ slug: t.String(), title: t.String() })),
+  rating: t.Object({
+    average: t.Nullable(
+      t.Number({ description: "Stars out of five, to one decimal" }),
+    ),
+    count: t.Integer(),
+  }),
+  commentCount: t.Integer({
+    description: "Comments still standing, replies included",
+  }),
 });
 export type ProblemSummaryModel = typeof ProblemSummaryModel.static;
 

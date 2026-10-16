@@ -821,6 +821,35 @@ and the web loads them as soon as the tab opens. Before that, `POST
 for seven days the user's submissions there are scored but not counted,
 while points earned before stay.
 
+## Comments and ratings
+
+Every published problem, official or community, takes comments and
+ratings, so authors hear from solvers rather than from moderators alone.
+`problem-comments` and `problem-ratings` are modules of their own; each
+imports `problems` and nothing imports them. `problems` reads both tables
+in its own query (`ProblemsRepository.feedback`), as the leaderboard reads
+`profiles`, so every problem summary carries `rating` and `commentCount`
+without depending on either module.
+
+A comment needs a verified email. It is a conversation or a reply in one:
+a reply to a reply joins the same conversation, which holds at most 50
+replies. A comment the writer says gives part of a solution away is marked
+`spoiler`, and the web blurs it until clicked. Its writer edits it, which
+marks it edited. Its writer or a moderator removes it, which only stamps
+`removed_at` and `removed_by`: a removed conversation stays, empty and
+named as removed, while it has replies, so the answers keep their
+context, and drops out once it has none. The author of a community
+problem is marked on their comments (`byProblemAuthor`), and a hidden
+profile is shown as no one, as everywhere else.
+
+A rating is one to five stars, one per person and problem, replaced by
+rating again and taken back with `DELETE`. Only someone who has submitted
+a solution to the problem may rate it, and its author never may; `GET
+/problems/:slug/rating` answers which (`eligibility`) beside the average,
+the count, how the stars spread and the caller's own. The moderation
+queue shows the live version's rating beside an update (`liveRating`), so
+a moderator sees how solvers took what it would replace.
+
 ## Roles
 
 Every account has a `role`: `user`, `moderator` or `admin`, ranked in

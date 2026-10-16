@@ -25,15 +25,18 @@ export class ListProblemsUseCase extends UseCase<Options, Result> {
       { track, difficulty },
       page,
     );
-    const credits = await this.problems.credits(
-      listed.items.map((problem) => problem.id),
-    );
+    const ids = listed.items.map((problem) => problem.id);
+    const [credits, feedback] = await Promise.all([
+      this.problems.credits(ids),
+      this.problems.feedback(ids),
+    ]);
 
     return {
       ...listed,
       items: listed.items.map((problem) => ({
         ...problem,
         credit: credits.get(problem.id),
+        feedback: feedback.get(problem.id),
       })),
     };
   }

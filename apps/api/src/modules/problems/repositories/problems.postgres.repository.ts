@@ -1,9 +1,11 @@
 import { type ProblemContent, ProblemContentSchema } from "@repo/scoring";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import {
+  problemCommentsSchema,
+  problemRatingsSchema,
   type ProblemRow,
   problemsSchema,
   type ProblemVersionRow,
@@ -24,6 +26,7 @@ import {
 import type {
   ProblemCredit,
   ProblemEntity,
+  ProblemFeedback,
   ProblemVersionEntity,
   ProblemWithContent,
 } from "../problem.entity";
@@ -202,6 +205,52 @@ export class PostgresProblemsRepository extends ProblemsRepository {
               : null,
         },
       ]),
+    );
+  }
+
+  public async feedback(
+    ids: readonly string[],
+  ): Promise<Map<string, ProblemFeedback>> {
+    if (ids.length === 0) return new Map();
+
+    const [ratings, comments] = await Promise.all([
+      this.db
+        .select({
+          id: problemRatingsSchema.problemId,
+          total: sql<number>`sum(${problemRatingsSchema.stars})::int`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(problemRatingsSchema)
+        .where(inArray(problemRatingsSchema.problemId, [...ids]))
+        .groupBy(problemRatingsSchema.problemId),
+      this.db
+        .select({
+          id: problemCommentsSchema.problemId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(problemCommentsSchema)
+        .where(
+          and(
+            inArray(problemCommentsSchema.problemId, [...ids]),
+            isNull(problemCommentsSchema.removedAt),
+          ),
+        )
+        .groupBy(problemCommentsSchema.problemId),
+    ]);
+
+    return new Map(
+      ids.map((id) => {
+        const rating = ratings.find((row) => row.id === id);
+
+        return [
+          id,
+          {
+            ratingTotal: rating?.total ?? 0,
+            ratingCount: rating?.count ?? 0,
+            commentCount: comments.find((row) => row.id === id)?.count ?? 0,
+          },
+        ];
+      }),
     );
   }
 
