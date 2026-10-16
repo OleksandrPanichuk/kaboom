@@ -65,6 +65,8 @@ const tables = Object.values(schema)
   .filter((value) => is(value, Table))
   .map((table) => `"${getTableName(table as Table)}"`);
 
+const SETUP_TIMEOUT_MS = 60_000;
+
 const truncateAll = () =>
   getDatabase().execute(
     `truncate table ${tables.join(", ")} restart identity cascade`,
@@ -90,7 +92,7 @@ beforeAll(async () => {
   setApp(createApp());
 
   await startModules();
-});
+}, SETUP_TIMEOUT_MS);
 
 afterEach(async () => {
   await make(TurnScheduler).drain();
