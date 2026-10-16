@@ -1,5 +1,6 @@
 import { DesignWorkspace } from "@/features/designs/ui/components";
 import { backFrom } from "@/features/designs/utils";
+import { ShareButton } from "@/features/sharing";
 
 interface DesignViewProps {
   designId: string;
@@ -21,6 +22,7 @@ export function DesignView({ designId, draftId, from }: DesignViewProps) {
             }
           : { to: "/designs", label: "Designs" })
       }
+      actions={() => <ShareButton subject="design" subjectId={designId} />}
     />
   );
 }
