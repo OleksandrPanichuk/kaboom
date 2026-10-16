@@ -50,6 +50,7 @@ import { metricsModule } from "@/platform/metrics";
 import { rateLimitModule } from "@/platform/rate-limit";
 import { realtimeModule } from "@/platform/realtime";
 import { storageModule } from "@/platform/storage";
+import { e2eControlModule } from "@/testing/e2e-control";
 
 export const modules = [
   errorReportingModule,
@@ -102,5 +103,6 @@ export const modules = [
   problemRatingsModule,
   sharesModule,
   emailPreferencesModule,
+  e2eControlModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

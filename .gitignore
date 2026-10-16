@@ -46,3 +46,6 @@ packages/api-client/src/generated
 # TanStack Router route tree (produced by `bun run generate`)
 apps/web/src/routeTree.gen.ts
 apps/web/.tanstack
+
+playwright-report
+test-results

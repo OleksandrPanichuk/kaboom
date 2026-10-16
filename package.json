@@ -9,7 +9,8 @@
     "generate": "turbo run generate",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "gen": "bun cli-tools/generator/src/main.ts"
+    "gen": "bun cli-tools/generator/src/main.ts",
+    "test:e2e": "turbo run test:e2e"
   },
   "devDependencies": {
     "prettier": "3.9.8",
