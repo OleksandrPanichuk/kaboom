@@ -9,6 +9,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { timeOrderedId } from "../time-ordered-id";
 import { problemsSchema } from "./problems.schema";
 import { usersSchema } from "./users.schema";
 
@@ -18,7 +19,7 @@ export type CommentRemover = (typeof COMMENT_REMOVERS)[number];
 export const problemCommentsSchema = pgTable(
   "problem_comments",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: timeOrderedId(),
     problemId: uuid("problem_id")
       .notNull()
       .references(() => problemsSchema.id, { onDelete: "cascade" }),

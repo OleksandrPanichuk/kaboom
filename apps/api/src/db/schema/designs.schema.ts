@@ -8,6 +8,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { timeOrderedId } from "../time-ordered-id";
 import { usersSchema } from "./users.schema";
 
 export const DESIGN_KINDS = ["system", "schema"] as const;
@@ -18,7 +19,7 @@ export type DesignLayoutRow = Record<string, { x: number; y: number }>;
 export const designsSchema = pgTable(
   "designs",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: timeOrderedId(),
     ownerId: uuid("owner_id")
       .notNull()
       .references(() => usersSchema.id, { onDelete: "cascade" }),

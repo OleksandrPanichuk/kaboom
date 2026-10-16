@@ -10,6 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { timeOrderedId } from "../time-ordered-id";
 import { problemDraftsSchema } from "./problem_drafts.schema";
 import { PROBLEM_DIFFICULTIES } from "./problems.schema";
 import { usersSchema } from "./users.schema";
@@ -25,7 +26,7 @@ export type ProblemReviewStatus = (typeof PROBLEM_REVIEW_STATUSES)[number];
 export const problemReviewsSchema = pgTable(
   "problem_reviews",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: timeOrderedId(),
     draftId: uuid("draft_id")
       .notNull()
       .references(() => problemDraftsSchema.id, { onDelete: "cascade" }),

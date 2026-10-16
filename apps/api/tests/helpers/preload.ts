@@ -65,6 +65,11 @@ const tables = Object.values(schema)
   .filter((value) => is(value, Table))
   .map((table) => `"${getTableName(table as Table)}"`);
 
+const truncateAll = () =>
+  getDatabase().execute(
+    `truncate table ${tables.join(", ")} restart identity cascade`,
+  );
+
 beforeAll(async () => {
   const env = loadEnv();
 
@@ -80,6 +85,8 @@ beforeAll(async () => {
     await migrator.close();
   }
 
+  await truncateAll();
+
   setApp(createApp());
 
   await startModules();
@@ -89,9 +96,7 @@ afterEach(async () => {
   await make(TurnScheduler).drain();
   make(TurnScheduler).reset();
 
-  await getDatabase().execute(
-    `truncate table ${tables.join(", ")} restart identity cascade`,
-  );
+  await truncateAll();
 
   (make(Mailer) as MemoryMailer).clear();
   (make(RateLimitStore) as MemoryRateLimitStore).clear();
