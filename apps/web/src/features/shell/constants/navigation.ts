@@ -1,5 +1,6 @@
 import type { LinkProps } from "@tanstack/react-router";
 import {
+  Bell,
   BookOpen,
   ChartNoAxesColumn,
   ClipboardCheck,
@@ -71,5 +72,6 @@ export const ACCOUNT_LINKS: NavLinkItem[] = [
   { label: "Plans", icon: Sparkles, to: "/pricing" },
   { label: "Profile", icon: UserRound, to: "/settings/profile" },
   { label: "Security", icon: ShieldCheck, to: "/settings/security" },
+  { label: "Notifications", icon: Bell, to: "/settings/notifications" },
   { label: "Billing", icon: CreditCard, to: "/settings/billing" },
 ];
