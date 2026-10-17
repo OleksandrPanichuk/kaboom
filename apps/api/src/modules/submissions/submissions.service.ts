@@ -34,6 +34,10 @@ export class SubmissionsService extends Service {
     return until > now ? until : null;
   }
 
+  public countByProblem(userId: string): Promise<Map<string, number>> {
+    return this.submissions.countByProblem(userId);
+  }
+
   public problemsSubmittedSince(
     userId: string,
     problemIds: readonly string[],

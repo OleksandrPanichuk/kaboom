@@ -99,8 +99,13 @@ export class SkillsService extends Service {
     userId: string,
     track: Track,
     count: number,
+    attempts: ReadonlyMap<string, number> = new Map(),
   ): Promise<PlanPick> {
     const { skills, practised, candidates } = await this.standing(userId);
+
+    for (const [problemId, times] of attempts) {
+      practised.set(problemId, (practised.get(problemId) ?? 0) + times);
+    }
 
     return planProblems(skills, candidates, practised, track, count);
   }

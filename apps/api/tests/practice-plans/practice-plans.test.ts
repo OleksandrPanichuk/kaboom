@@ -89,6 +89,17 @@ describe("practice plans", () => {
     expect(after.steps.find((step) => step.slug === first)?.done).toBe(true);
   });
 
+  test("leaves out problems already submitted to while others are fresh", async () => {
+    const ada = await createUser();
+
+    await submitTo(ada, "url-shortener");
+
+    const { body } = await plan(ada);
+
+    expect(body.steps.map((step) => step.slug)).not.toContain("url-shortener");
+    expect(body.done).toBe(0);
+  });
+
   test("aims at the weakest skill of the track", async () => {
     const ada = await createUser();
     const shortener =

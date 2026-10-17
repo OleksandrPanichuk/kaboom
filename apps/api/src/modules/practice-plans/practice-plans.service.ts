@@ -56,7 +56,12 @@ export class PracticePlansService extends Service {
     track: Track,
     now: Date,
   ): Promise<PracticePlanView> {
-    const pick = await this.skills.planFor(userId, track, PLAN_SIZE);
+    const pick = await this.skills.planFor(
+      userId,
+      track,
+      PLAN_SIZE,
+      await this.submissions.countByProblem(userId),
+    );
 
     if (pick.problemIds.length === 0) {
       throw new NothingToPracticeError("This track has no problems yet");
