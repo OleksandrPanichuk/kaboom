@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, PencilLine, Puzzle } from "lucide-react";
 
 import { useCurrentUser } from "@/features/auth";
+import { PracticePlanCard } from "@/features/practice";
 import { RankCard } from "@/features/problems";
 import { ActivityList } from "@/features/progress";
 import { NextUpCard, SkillsCard } from "@/features/skills";
@@ -40,6 +41,7 @@ export function HomeView({ onOpenInterview }: HomeViewProps) {
       </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
         <div className="flex min-w-0 flex-col gap-6">
+          <PracticePlanCard />
           <NextUpCard onOpenInterview={onOpenInterview} />
           <ActivityList />
         </div>

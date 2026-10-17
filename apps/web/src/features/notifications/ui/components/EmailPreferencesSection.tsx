@@ -20,24 +20,39 @@ export function EmailPreferencesSection() {
       description="Security, sign-in, billing and review emails always go out. These you can turn off."
     >
       <div className="flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-col gap-1">
-            <label htmlFor="email-comments" className="text-sm font-medium">
-              Comments
-            </label>
-            <p className="text-sm text-muted-foreground text-pretty">
-              New comments on problems you wrote, and replies in conversations
-              you took part in. They arrive as one email every few minutes at
-              most, not one per comment.
-            </p>
+        {(
+          [
+            {
+              key: "comments",
+              label: "Comments",
+              detail:
+                "New comments on problems you wrote, and replies in conversations you took part in. They arrive as one email every few minutes at most, not one per comment.",
+            },
+            {
+              key: "reminders",
+              label: "Practice reminders",
+              detail:
+                "One email on Thursday when your plan for the week still has problems left.",
+            },
+          ] as const
+        ).map(({ key, label, detail }) => (
+          <div key={key} className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 flex-col gap-1">
+              <label htmlFor={`email-${key}`} className="text-sm font-medium">
+                {label}
+              </label>
+              <p className="text-sm text-muted-foreground text-pretty">
+                {detail}
+              </p>
+            </div>
+            <Switch
+              id={`email-${key}`}
+              className="mt-0.5 shrink-0"
+              checked={preferences[key]}
+              onCheckedChange={(on) => update.mutate({ [key]: on })}
+            />
           </div>
-          <Switch
-            id="email-comments"
-            className="mt-0.5 shrink-0"
-            checked={preferences.comments}
-            onCheckedChange={(comments) => update.mutate({ comments })}
-          />
-        </div>
+        ))}
         {update.error ? (
           <p role="alert" className="text-sm text-destructive">
             {errorMessage(update.error)}
