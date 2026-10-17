@@ -28,6 +28,7 @@
     "@repo/design": "*",
     "@repo/problem-library": "*",
     "@repo/scoring": "*",
+    "@resvg/resvg-js": "2.6.2",
     "@sentry/bun": "^11.0.0",
     "bullmq": "^6.3.4",
     "drizzle-orm": "^0.45.2",

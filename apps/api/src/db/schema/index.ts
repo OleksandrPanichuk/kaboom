@@ -30,6 +30,7 @@ export * from "./profiles.schema";
 export * from "./purchases.schema";
 export * from "./refunds.schema";
 export * from "./reviews.schema";
+export * from "./shares.schema";
 export * from "./simulation_runs.schema";
 export * from "./skill_scores.schema";
 export * from "./solution_reveals.schema";
