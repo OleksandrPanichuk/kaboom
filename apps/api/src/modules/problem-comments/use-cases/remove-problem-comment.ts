@@ -3,8 +3,8 @@ import { UseCase } from "@/core/use-case";
 import { ProblemsService } from "@/modules/problems";
 import { hasRole, UsersService } from "@/modules/users";
 
+import { ProblemCommentsRepository } from "../ports";
 import { CommentNotYoursError } from "../problem-comments.errors";
-import { ProblemCommentsRepository } from "../problem-comments.repository";
 import { ProblemCommentsService } from "../problem-comments.service";
 
 export interface RemoveProblemCommentUseCaseOptions {

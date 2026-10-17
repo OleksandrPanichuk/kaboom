@@ -40,6 +40,7 @@ export const renderProStartedEmail = (
   return {
     subject: title,
     ...renderActionEmail({
+      label: "Billing",
       name: options.name,
       actionUrl: options.billingUrl,
       title,
@@ -59,6 +60,7 @@ export const renderPaymentFailedEmail = (
 ): RenderedEmail => ({
   subject: "We could not take your payment",
   ...renderActionEmail({
+    label: "Billing",
     name: options.name,
     actionUrl: options.billingUrl,
     title: "We could not take your payment",
@@ -76,6 +78,7 @@ export const renderSubscriptionEndedEmail = (
 ): RenderedEmail => ({
   subject: "Your Pro subscription has ended",
   ...renderActionEmail({
+    label: "Billing",
     name: options.name,
     actionUrl: options.billingUrl,
     title: "Your Pro subscription has ended",
@@ -92,6 +95,7 @@ export const renderPurchaseRefundedEmail = (
 ): RenderedEmail => ({
   subject: "Your purchase was refunded",
   ...renderActionEmail({
+    label: "Billing",
     name: options.name,
     actionUrl: options.billingUrl,
     title: "Your purchase was refunded",

@@ -1,4 +1,15 @@
-import { and, asc, eq, exists, inArray, isNull, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  exists,
+  gt,
+  inArray,
+  isNull,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import type { Page, PageRequest } from "@/core/pagination";
@@ -11,12 +22,13 @@ import {
 import { type DBExecutor, getExecutor } from "@/db/executor";
 import { Keyset } from "@/db/pagination";
 
-import type { ListedComment } from "../problem-comment.entity";
 import {
+  type DigestQuery,
   type EditProblemCommentData,
   type PostProblemCommentData,
   ProblemCommentsRepository,
-} from "../problem-comments.repository";
+} from "../ports";
+import type { ListedComment } from "../problem-comment.entity";
 
 const BY_NEWEST = new Keyset<ListedComment>({
   sort: problemCommentsSchema.createdAt,
@@ -148,6 +160,63 @@ export class PostgresProblemCommentsRepository extends ProblemCommentsRepository
       );
 
     return rows.map(toListed);
+  }
+
+  public async listForDigest({
+    problemId,
+    userId,
+    everything,
+    after,
+  }: DigestQuery): Promise<ListedComment[]> {
+    const mine = alias(problemCommentsSchema, "mine");
+    const rows = await this.selectListed()
+      .where(
+        and(
+          eq(problemCommentsSchema.problemId, problemId),
+          ne(problemCommentsSchema.authorId, userId),
+          isNull(problemCommentsSchema.removedAt),
+          gt(
+            sql`date_trunc('milliseconds', ${problemCommentsSchema.createdAt})`,
+            after,
+          ),
+          everything
+            ? undefined
+            : exists(
+                this.db
+                  .select({ one: sql`1` })
+                  .from(mine)
+                  .where(
+                    and(
+                      eq(mine.authorId, userId),
+                      or(
+                        eq(mine.id, problemCommentsSchema.parentId),
+                        eq(mine.parentId, problemCommentsSchema.parentId),
+                      ),
+                    ),
+                  ),
+              ),
+        ),
+      )
+      .orderBy(
+        asc(problemCommentsSchema.createdAt),
+        asc(problemCommentsSchema.id),
+      );
+
+    return rows.map(toListed);
+  }
+
+  public async participants(threadId: string): Promise<string[]> {
+    const rows = await this.db
+      .selectDistinct({ authorId: problemCommentsSchema.authorId })
+      .from(problemCommentsSchema)
+      .where(
+        or(
+          eq(problemCommentsSchema.id, threadId),
+          eq(problemCommentsSchema.parentId, threadId),
+        ),
+      );
+
+    return rows.map((row) => row.authorId);
   }
 
   public async countReplies(parentId: string): Promise<number> {

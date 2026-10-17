@@ -81,6 +81,19 @@ export const SendEmailPayloadSchema = z.discriminatedUnion("kind", [
     currency: z.string().length(3),
     billingUrl: z.url(),
   }),
+  z.object({
+    kind: z.literal(EmailKind.CommentDigest),
+    to: RecipientSchema,
+    problemTitle: z.string().min(1),
+    problemUrl: z.url(),
+    count: z.number().int().positive(),
+    asAuthor: z.boolean(),
+    first: z.object({
+      author: z.string().min(1),
+      excerpt: z.string(),
+      spoiler: z.boolean(),
+    }),
+  }),
 ]);
 
 export type EmailClient = z.infer<typeof ClientSchema>;

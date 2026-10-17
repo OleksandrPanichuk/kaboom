@@ -13,6 +13,7 @@ import { billingTaxIdsModule } from "@/modules/billing-tax-ids";
 import { checkoutModule } from "@/modules/checkout";
 import { designsModule } from "@/modules/designs";
 import { disputesModule } from "@/modules/disputes";
+import { emailPreferencesModule } from "@/modules/email-preferences";
 import { interviewsModule } from "@/modules/interviews";
 import { invoicesModule } from "@/modules/invoices";
 import { leaderboardModule } from "@/modules/leaderboard";
@@ -100,5 +101,6 @@ export const modules = [
   problemCommentsModule,
   problemRatingsModule,
   sharesModule,
+  emailPreferencesModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

@@ -40,6 +40,14 @@ interface SendReviewReadyOptions extends AuthNotificationRecipient {
   reviewUrl: string;
 }
 
+interface SendCommentDigestOptions extends AuthNotificationRecipient {
+  problemTitle: string;
+  problemUrl: string;
+  count: number;
+  asAuthor: boolean;
+  first: { author: string; excerpt: string; spoiler: boolean };
+}
+
 interface BillingNotice extends AuthNotificationRecipient {
   billingUrl: string;
 }
@@ -70,6 +78,19 @@ export class NotificationsService extends Service {
       kind: EmailKind.ReviewReady,
       to: { userId, email, name },
       reviewUrl,
+    });
+  }
+
+  public sendCommentDigest({
+    userId,
+    email,
+    name,
+    ...digest
+  }: SendCommentDigestOptions): Promise<void> {
+    return this.sendEmail.dispatch({
+      kind: EmailKind.CommentDigest,
+      to: { userId, email, name },
+      ...digest,
     });
   }
 

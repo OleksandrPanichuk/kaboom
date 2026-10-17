@@ -5,7 +5,7 @@ import type { CommentRemover } from "@/db";
 import type {
   ListedComment,
   ProblemCommentEntity,
-} from "./problem-comment.entity";
+} from "../problem-comment.entity";
 
 export interface PostProblemCommentData {
   problemId: string;
@@ -20,7 +20,16 @@ export interface EditProblemCommentData {
   spoiler?: boolean;
 }
 
+export interface DigestQuery {
+  problemId: string;
+  userId: string;
+  everything: boolean;
+  after: Date;
+}
+
 export abstract class ProblemCommentsRepository extends Repository {
+  public abstract listForDigest(query: DigestQuery): Promise<ListedComment[]>;
+
   public abstract insert(
     data: PostProblemCommentData,
   ): Promise<ProblemCommentEntity>;
@@ -37,6 +46,8 @@ export abstract class ProblemCommentsRepository extends Repository {
   public abstract listReplies(
     parentIds: readonly string[],
   ): Promise<ListedComment[]>;
+
+  public abstract participants(threadId: string): Promise<string[]>;
 
   public abstract countReplies(parentId: string): Promise<number>;
 

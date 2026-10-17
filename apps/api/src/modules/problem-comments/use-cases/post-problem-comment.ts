@@ -2,13 +2,17 @@ import { makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { ProblemsService } from "@/modules/problems";
 
-import type { ListedComment } from "../problem-comment.entity";
+import { CommentDigestsService } from "../comment-digests.service";
+import { ProblemCommentsRepository } from "../ports";
+import type {
+  ListedComment,
+  ProblemCommentEntity,
+} from "../problem-comment.entity";
 import { MAX_REPLIES } from "../problem-comments.constants";
 import {
   CommentRemovedError,
   CommentThreadFullError,
 } from "../problem-comments.errors";
-import { ProblemCommentsRepository } from "../problem-comments.repository";
 import { ProblemCommentsService } from "../problem-comments.service";
 
 export interface PostProblemCommentUseCaseOptions {
@@ -33,6 +37,8 @@ export class PostProblemCommentUseCase extends UseCase<Options, Result> {
 
   private readonly comments = makeRepository(ProblemCommentsRepository);
 
+  private readonly digests = makeService(CommentDigestsService);
+
   public async execute({
     authorId,
     slug,
@@ -41,14 +47,16 @@ export class PostProblemCommentUseCase extends UseCase<Options, Result> {
     parentId,
   }: Options): Promise<Result> {
     const { problem } = await this.problems.getPublished(slug);
-    const threadId = await this.threadOf(parentId, problem.id);
+    const thread = await this.threadOf(parentId, problem.id);
     const posted = await this.comments.insert({
       problemId: problem.id,
       authorId,
-      parentId: threadId,
+      parentId: thread?.id ?? null,
       body: body.trim(),
       spoiler,
     });
+
+    await this.digests.schedule(problem, posted, thread?.id ?? null);
 
     return {
       problemAuthorId: problem.authorId,
@@ -59,7 +67,7 @@ export class PostProblemCommentUseCase extends UseCase<Options, Result> {
   private async threadOf(
     parentId: string | null,
     problemId: string,
-  ): Promise<string | null> {
+  ): Promise<ProblemCommentEntity | null> {
     if (parentId === null) return null;
 
     const parent = await this.service.getOnProblem(parentId, problemId);
@@ -79,6 +87,6 @@ export class PostProblemCommentUseCase extends UseCase<Options, Result> {
       );
     }
 
-    return threadId;
+    return thread;
   }
 }

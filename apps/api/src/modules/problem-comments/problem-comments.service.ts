@@ -1,12 +1,12 @@
 import { makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
 
+import { ProblemCommentsRepository } from "./ports";
 import type {
   ListedComment,
   ProblemCommentEntity,
 } from "./problem-comment.entity";
 import { ProblemCommentNotFoundError } from "./problem-comments.errors";
-import { ProblemCommentsRepository } from "./problem-comments.repository";
 
 export class ProblemCommentsService extends Service {
   private readonly comments = makeRepository(ProblemCommentsRepository);

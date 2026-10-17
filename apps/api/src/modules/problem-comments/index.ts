@@ -1,4 +1,10 @@
+export {
+  CommentDigestsService,
+  type SendCommentDigestOptions,
+} from "./comment-digests.service";
 export * from "./dto";
+export * from "./jobs";
+export * from "./ports";
 export {
   type CommentAuthor,
   type CommentThread,
@@ -20,15 +26,10 @@ export {
 } from "./problem-comments.errors";
 export { problemCommentsModule } from "./problem-comments.module";
 export {
-  type EditProblemCommentData,
-  type PostProblemCommentData,
-  ProblemCommentsRepository,
-} from "./problem-comments.repository";
-export {
   type ProblemCommentsActions,
   problemCommentsRoutes,
 } from "./problem-comments.routes";
 export { ProblemCommentsService } from "./problem-comments.service";
-export { PostgresProblemCommentsRepository } from "./repositories";
+export * from "./repositories";
 export * from "./routes";
 export * from "./use-cases";

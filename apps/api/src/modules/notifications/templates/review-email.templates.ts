@@ -10,6 +10,7 @@ export const renderReviewReadyEmail = (options: {
 }): RenderedEmail => ({
   subject: "Your interview review is ready",
   ...renderActionEmail({
+    label: "Interview review",
     name: options.name,
     actionUrl: options.actionUrl,
     title: "Your interview review is ready",

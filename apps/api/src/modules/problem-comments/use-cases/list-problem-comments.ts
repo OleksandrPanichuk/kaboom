@@ -3,8 +3,8 @@ import { makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { ProblemsService } from "@/modules/problems";
 
+import { ProblemCommentsRepository } from "../ports";
 import type { CommentThread } from "../problem-comment.entity";
-import { ProblemCommentsRepository } from "../problem-comments.repository";
 
 export interface ListProblemCommentsUseCaseOptions {
   slug: string;
