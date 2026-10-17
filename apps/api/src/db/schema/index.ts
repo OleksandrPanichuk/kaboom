@@ -21,6 +21,8 @@ export * from "./leaderboard_totals.schema";
 export * from "./llm_usage.schema";
 export * from "./payment_attempts.schema";
 export * from "./payments.schema";
+export * from "./practice_plan_items.schema";
+export * from "./practice_plans.schema";
 export * from "./problem_attempts.schema";
 export * from "./problem_comments.schema";
 export * from "./problem_drafts.schema";

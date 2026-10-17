@@ -94,6 +94,27 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
     return row !== undefined;
   }
 
+  public async problemsSubmittedSince(
+    userId: string,
+    problemIds: readonly string[],
+    since: Date,
+  ): Promise<Set<string>> {
+    if (problemIds.length === 0) return new Set();
+
+    const rows = await this.db
+      .selectDistinct({ problemId: submissionsSchema.problemId })
+      .from(submissionsSchema)
+      .where(
+        and(
+          eq(submissionsSchema.userId, userId),
+          inArray(submissionsSchema.problemId, [...problemIds]),
+          gte(submissionsSchema.createdAt, since),
+        ),
+      );
+
+    return new Set(rows.map((row) => row.problemId));
+  }
+
   public async hasSubmitted(
     userId: string,
     problemId: string,

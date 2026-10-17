@@ -752,6 +752,26 @@ draw how each skill moved. `progress` is a read model that owns no table:
 challenge submissions, newest first, with the number of reviews and their
 average score.
 
+## Practice plans
+
+A practice plan is three problems for one week, aimed at the caller's
+weakest skill in a track. Weeks start on Monday in UTC, and a user has at
+most one plan a week (`practice_plans`, unique on user and `week_start`);
+starting again that week replaces it, and `DELETE /practice-plans/current`
+drops it. `SkillsService.planFor` picks the problems with the same ranking
+as the next interview, over every problem of the track rather than the
+interviewable ones: the least practised first, then those whose rubric
+leans hardest on the weakest skill, then those nearest its level. The
+track's skills are its review dimensions and its interviews' rubric
+dimensions.
+
+A step is done once the user has submitted to that problem, or had an
+interview on it reviewed, since the week began. That is read from
+submissions and interviews when the plan is shown, so nothing has to mark
+it. `RemindPracticePlansJob` runs on Thursday at 10:00 UTC and emails each
+plan of the week that still has steps left, once (`reminded_at`), to a
+verified email whose `email_preferences.reminders` is on.
+
 ## Problem versions
 
 A problem's content is versioned, and an attempt is pinned to the version it

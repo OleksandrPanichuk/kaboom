@@ -7,6 +7,7 @@ export const emailPreferencesSchema = pgTable("email_preferences", {
     .primaryKey()
     .references(() => usersSchema.id, { onDelete: "cascade" }),
   comments: boolean("comments").notNull().default(true),
+  reminders: boolean("reminders").notNull().default(true),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

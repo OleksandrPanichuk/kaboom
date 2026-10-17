@@ -82,6 +82,12 @@ export abstract class SubmissionsRepository extends Repository {
     problemId: string,
   ): Promise<boolean>;
 
+  public abstract problemsSubmittedSince(
+    userId: string,
+    problemIds: readonly string[],
+    since: Date,
+  ): Promise<Set<string>>;
+
   public abstract hasSubmitted(
     userId: string,
     problemId: string,
