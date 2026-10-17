@@ -31,6 +31,11 @@ export interface NextProblem {
   reason: string;
 }
 
+export interface PlanPick {
+  skill: InterviewDimension | null;
+  problemIds: string[];
+}
+
 export interface SkillsView {
   skills: SkillSummary[];
   next: NextProblem[];

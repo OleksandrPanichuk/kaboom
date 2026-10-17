@@ -18,6 +18,7 @@ export const updateMyEmailPreferencesRoute = ({
       updateMyEmailPreferences.execute({
         userId: user.id,
         comments: body.comments,
+        reminders: body.reminders,
       }),
     postAction: ({ output }) => EmailPreferencesEntity.normalize(output),
   });

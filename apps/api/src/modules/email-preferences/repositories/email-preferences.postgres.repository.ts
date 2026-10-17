@@ -20,7 +20,10 @@ export class PostgresEmailPreferencesRepository extends EmailPreferencesReposito
 
   public async find(userId: string): Promise<EmailPreferencesEntity | null> {
     const [row] = await this.db
-      .select({ comments: emailPreferencesSchema.comments })
+      .select({
+        comments: emailPreferencesSchema.comments,
+        reminders: emailPreferencesSchema.reminders,
+      })
       .from(emailPreferencesSchema)
       .where(eq(emailPreferencesSchema.userId, userId))
       .limit(1);
@@ -40,7 +43,10 @@ export class PostgresEmailPreferencesRepository extends EmailPreferencesReposito
         target: emailPreferencesSchema.userId,
         set: { ...patch, updatedAt },
       })
-      .returning({ comments: emailPreferencesSchema.comments });
+      .returning({
+        comments: emailPreferencesSchema.comments,
+        reminders: emailPreferencesSchema.reminders,
+      });
 
     return row!;
   }

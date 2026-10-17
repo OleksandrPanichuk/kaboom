@@ -94,6 +94,14 @@ export const SendEmailPayloadSchema = z.discriminatedUnion("kind", [
       spoiler: z.boolean(),
     }),
   }),
+  z.object({
+    kind: z.literal(EmailKind.PracticeReminder),
+    to: RecipientSchema,
+    done: z.number().int().nonnegative(),
+    total: z.number().int().positive(),
+    left: z.array(z.string().min(1)).min(1),
+    planUrl: z.url(),
+  }),
 ]);
 
 export type EmailClient = z.infer<typeof ClientSchema>;

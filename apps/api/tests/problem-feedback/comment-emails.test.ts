@@ -92,16 +92,19 @@ describe("comment emails", () => {
     const solver = await createVerifiedUser();
 
     expect(
-      (await author.get<{ comments: boolean }>("/api/email-preferences/me"))
-        .body,
-    ).toEqual({ comments: true });
+      (
+        await author.get<{ comments: boolean; reminders: boolean }>(
+          "/api/email-preferences/me",
+        )
+      ).body,
+    ).toEqual({ comments: true, reminders: true });
 
-    const off = await author.patch<{ comments: boolean }>(
+    const off = await author.patch<{ comments: boolean; reminders: boolean }>(
       "/api/email-preferences/me",
       { comments: false },
     );
 
-    expect(off.body).toEqual({ comments: false });
+    expect(off.body).toEqual({ comments: false, reminders: true });
 
     await commentOn(slug, solver, "Hello?");
 

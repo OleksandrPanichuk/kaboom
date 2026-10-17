@@ -38,6 +38,14 @@ export class InterviewsService extends Service {
 
   private readonly problems = makeService(ProblemsService);
 
+  public problemsReviewedSince(
+    ownerId: string,
+    problemIds: readonly string[],
+    since: Date,
+  ): Promise<Set<string>> {
+    return this.interviews.problemsReviewedSince(ownerId, problemIds, since);
+  }
+
   public async getOwned(id: string, ownerId: string): Promise<InterviewEntity> {
     const interview = await this.interviews.findOwned(id, ownerId);
 

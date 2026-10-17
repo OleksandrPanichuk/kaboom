@@ -21,6 +21,7 @@ import { notificationsModule } from "@/modules/notifications";
 import { oauthModule } from "@/modules/oauth";
 import { paymentMethodsModule } from "@/modules/payment-methods";
 import { paymentsModule } from "@/modules/payments";
+import { practicePlansModule } from "@/modules/practice-plans";
 import { problemCommentsModule } from "@/modules/problem-comments";
 import { problemRatingsModule } from "@/modules/problem-ratings";
 import { problemsModule } from "@/modules/problems";
@@ -104,5 +105,6 @@ export const modules = [
   sharesModule,
   emailPreferencesModule,
   e2eControlModule,
+  practicePlansModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

@@ -25,6 +25,12 @@ export abstract class InterviewsRepository extends Repository {
 
   public abstract findActive(ownerId: string): Promise<InterviewEntity | null>;
 
+  public abstract problemsReviewedSince(
+    ownerId: string,
+    problemIds: readonly string[],
+    since: Date,
+  ): Promise<Set<string>>;
+
   public abstract listOwned(
     ownerId: string,
     page: PageRequest,

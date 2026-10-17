@@ -94,6 +94,40 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
     return row !== undefined;
   }
 
+  public async countByProblem(userId: string): Promise<Map<string, number>> {
+    const rows = await this.db
+      .select({
+        problemId: submissionsSchema.problemId,
+        submissions: count(submissionsSchema.id),
+      })
+      .from(submissionsSchema)
+      .where(eq(submissionsSchema.userId, userId))
+      .groupBy(submissionsSchema.problemId);
+
+    return new Map(rows.map((row) => [row.problemId, row.submissions]));
+  }
+
+  public async problemsSubmittedSince(
+    userId: string,
+    problemIds: readonly string[],
+    since: Date,
+  ): Promise<Set<string>> {
+    if (problemIds.length === 0) return new Set();
+
+    const rows = await this.db
+      .selectDistinct({ problemId: submissionsSchema.problemId })
+      .from(submissionsSchema)
+      .where(
+        and(
+          eq(submissionsSchema.userId, userId),
+          inArray(submissionsSchema.problemId, [...problemIds]),
+          gte(submissionsSchema.createdAt, since),
+        ),
+      );
+
+    return new Set(rows.map((row) => row.problemId));
+  }
+
   public async hasSubmitted(
     userId: string,
     problemId: string,

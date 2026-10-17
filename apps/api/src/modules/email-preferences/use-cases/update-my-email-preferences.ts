@@ -7,6 +7,7 @@ import { EmailPreferencesRepository } from "../email-preferences.repository";
 export interface UpdateMyEmailPreferencesUseCaseOptions {
   userId: string;
   comments?: boolean;
+  reminders?: boolean;
 }
 
 type Options = UpdateMyEmailPreferencesUseCaseOptions;

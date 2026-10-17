@@ -5,5 +5,9 @@ export const EmailPreferencesModel = t.Object({
     description:
       "Emails about new comments on problems you wrote and replies to your comments",
   }),
+  reminders: t.Boolean({
+    description:
+      "A reminder in the middle of the week about your practice plan",
+  }),
 });
 export type EmailPreferencesModel = typeof EmailPreferencesModel.static;

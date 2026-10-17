@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import {
@@ -57,6 +57,28 @@ export class PostgresInterviewsRepository extends InterviewsRepository {
       .limit(1);
 
     return row ?? null;
+  }
+
+  public async problemsReviewedSince(
+    ownerId: string,
+    problemIds: readonly string[],
+    since: Date,
+  ): Promise<Set<string>> {
+    if (problemIds.length === 0) return new Set();
+
+    const rows = await this.db
+      .selectDistinct({ problemId: interviewsSchema.problemId })
+      .from(interviewsSchema)
+      .where(
+        and(
+          eq(interviewsSchema.ownerId, ownerId),
+          eq(interviewsSchema.status, "reviewed"),
+          inArray(interviewsSchema.problemId, [...problemIds]),
+          gte(interviewsSchema.startedAt, since),
+        ),
+      );
+
+    return new Set(rows.map((row) => row.problemId));
   }
 
   public async findActive(ownerId: string): Promise<InterviewEntity | null> {

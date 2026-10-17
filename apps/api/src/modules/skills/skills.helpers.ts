@@ -1,12 +1,14 @@
-import { TRACKS } from "@repo/design";
+import { type Track, TRACKS } from "@repo/design";
 import {
   INTERVIEW_DIMENSIONS,
   type InterviewDimension,
   type ProblemContent,
+  TRACK_DEFINITIONS,
 } from "@repo/scoring";
 
 import type {
   NextProblem,
+  PlanPick,
   SkillScoreEntity,
   SkillSummary,
 } from "./skill.entity";
@@ -171,3 +173,52 @@ export const nextProblems = (
 
     return next ? [next] : [];
   });
+
+export const trackSkills = (
+  track: Track,
+  candidates: readonly Candidate[],
+): Set<InterviewDimension> =>
+  new Set([
+    ...TRACK_DEFINITIONS[track].reviewDimensions,
+    ...candidates
+      .filter(({ content }) => content.track === track)
+      .flatMap(({ content }) =>
+        (content.interview?.rubric ?? []).map((item) => item.dimension),
+      ),
+  ]);
+
+export const planProblems = (
+  skills: readonly SkillSummary[],
+  candidates: readonly Candidate[],
+  practised: ReadonlyMap<string, number>,
+  track: Track,
+  count: number,
+): PlanPick => {
+  const own = candidates.filter(({ content }) => content.track === track);
+  const relevant = trackSkills(track, candidates);
+  const weakest =
+    skills
+      .filter(
+        (summary) => relevant.has(summary.skill) && summary.score !== null,
+      )
+      .sort((a, b) => a.score! - b.score!)[0] ?? null;
+  const target = DIFFICULTY_ORDER[targetDifficulty(weakest?.score ?? null)];
+  const leaning = (content: ProblemContent) =>
+    weakest ? Math.round(emphasis(content, weakest.skill) * 20) : 0;
+  const distance = (content: ProblemContent) =>
+    Math.abs(DIFFICULTY_ORDER[content.difficulty] - target);
+  const ranked = [...own].sort(
+    (a, b) =>
+      (practised.get(a.problemId) ?? 0) - (practised.get(b.problemId) ?? 0) ||
+      leaning(b.content) - leaning(a.content) ||
+      distance(a.content) - distance(b.content) ||
+      DIFFICULTY_ORDER[a.content.difficulty] -
+        DIFFICULTY_ORDER[b.content.difficulty] ||
+      a.content.title.localeCompare(b.content.title),
+  );
+
+  return {
+    skill: weakest?.skill ?? null,
+    problemIds: ranked.slice(0, count).map(({ problemId }) => problemId),
+  };
+};

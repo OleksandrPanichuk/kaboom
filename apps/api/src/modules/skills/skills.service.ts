@@ -1,3 +1,4 @@
+import type { Track } from "@repo/design";
 import type { InterviewDimension } from "@repo/scoring";
 
 import { makeRepository, makeService } from "@/core/registry";
@@ -5,13 +6,15 @@ import { Service } from "@/core/service";
 import { ProblemsService } from "@/modules/problems";
 
 import { SkillScoresRepository } from "./ports";
-import type { SkillSummary, SkillsView } from "./skill.entity";
+import type { PlanPick, SkillSummary, SkillsView } from "./skill.entity";
 import {
   SKILL_SCORING_VERSION,
   SUBMISSION_SKILL_WEIGHT,
 } from "./skills.constants";
 import {
+  type Candidate,
   nextProblems,
+  planProblems,
   type ScoredItem,
   skillPointsOf,
   summarise,
@@ -87,8 +90,32 @@ export class SkillsService extends Service {
   }
 
   public async viewFor(userId: string): Promise<SkillsView> {
+    const { skills, practised, candidates } = await this.standing(userId);
+
+    return { skills, next: nextProblems(skills, candidates, practised) };
+  }
+
+  public async planFor(
+    userId: string,
+    track: Track,
+    count: number,
+    attempts: ReadonlyMap<string, number> = new Map(),
+  ): Promise<PlanPick> {
+    const { skills, practised, candidates } = await this.standing(userId);
+
+    for (const [problemId, times] of attempts) {
+      practised.set(problemId, (practised.get(problemId) ?? 0) + times);
+    }
+
+    return planProblems(skills, candidates, practised, track, count);
+  }
+
+  private async standing(userId: string): Promise<{
+    skills: SkillSummary[];
+    practised: Map<string, number>;
+    candidates: Candidate[];
+  }> {
     const rows = await this.scores.listFor(userId);
-    const skills = summarise(rows, new Date());
     const practised = new Map<string, number>();
 
     for (const key of new Set(
@@ -106,6 +133,6 @@ export class SkillsService extends Service {
       }),
     );
 
-    return { skills, next: nextProblems(skills, candidates, practised) };
+    return { skills: summarise(rows, new Date()), practised, candidates };
   }
 }

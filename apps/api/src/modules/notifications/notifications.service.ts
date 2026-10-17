@@ -48,6 +48,13 @@ interface SendCommentDigestOptions extends AuthNotificationRecipient {
   first: { author: string; excerpt: string; spoiler: boolean };
 }
 
+interface SendPracticeReminderOptions extends AuthNotificationRecipient {
+  done: number;
+  total: number;
+  left: string[];
+  planUrl: string;
+}
+
 interface BillingNotice extends AuthNotificationRecipient {
   billingUrl: string;
 }
@@ -91,6 +98,19 @@ export class NotificationsService extends Service {
       kind: EmailKind.CommentDigest,
       to: { userId, email, name },
       ...digest,
+    });
+  }
+
+  public sendPracticeReminder({
+    userId,
+    email,
+    name,
+    ...plan
+  }: SendPracticeReminderOptions): Promise<void> {
+    return this.sendEmail.dispatch({
+      kind: EmailKind.PracticeReminder,
+      to: { userId, email, name },
+      ...plan,
     });
   }
 

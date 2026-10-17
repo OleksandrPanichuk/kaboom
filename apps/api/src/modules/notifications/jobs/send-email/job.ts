@@ -18,6 +18,7 @@ import {
   renderPasswordChangedEmail,
   renderPasswordResetEmail,
   renderPaymentFailedEmail,
+  renderPracticeReminderEmail,
   renderProStartedEmail,
   renderPurchaseRefundedEmail,
   renderReviewReadyEmail,
@@ -131,6 +132,15 @@ export class SendEmailJob extends Job<SendEmailPayload> {
           count: payload.count,
           asAuthor: payload.asAuthor,
           first: payload.first,
+        });
+
+      case EmailKind.PracticeReminder:
+        return renderPracticeReminderEmail({
+          name: payload.to.name,
+          done: payload.done,
+          total: payload.total,
+          left: payload.left,
+          planUrl: payload.planUrl,
         });
     }
   }
