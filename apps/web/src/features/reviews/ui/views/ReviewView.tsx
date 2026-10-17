@@ -12,6 +12,7 @@ import {
   ReviewNotice,
   ReviewReport,
 } from "@/features/reviews/ui/components";
+import { ShareButton } from "@/features/sharing";
 
 interface ReviewViewProps {
   interviewId: string;
@@ -46,17 +47,22 @@ export function ReviewView({ interviewId, onOpenInterview }: ReviewViewProps) {
           <ArrowLeft aria-hidden="true" />
           Interviews
         </Link>
-        <div className="flex max-w-3xl flex-col gap-1">
-          <h1 className="text-3xl font-semibold tracking-[-0.03em] text-balance sm:text-4xl">
-            {interview.problem.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Interview review ·{" "}
-            {new Date(endedAt).toLocaleDateString("en", {
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex max-w-3xl min-w-0 flex-col gap-1">
+            <h1 className="text-3xl font-semibold tracking-[-0.03em] text-balance sm:text-4xl">
+              {interview.problem.title}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Interview review ·{" "}
+              {new Date(endedAt).toLocaleDateString("en", {
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+          {interview.status === "reviewed" ? (
+            <ShareButton subject="interview" subjectId={interviewId} />
+          ) : null}
         </div>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start">
           <div className="flex min-w-0 flex-col gap-6">

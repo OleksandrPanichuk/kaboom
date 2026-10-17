@@ -37,7 +37,8 @@ routes/
   __root.tsx
   _marketing/             public pages for everyone, in the dark marketing layout
     route.tsx             renders MarketingLayout
-    index.tsx (/), pricing.tsx, terms.tsx, privacy.tsx, cookies.tsx
+    index.tsx (/), pricing.tsx, terms.tsx, privacy.tsx, cookies.tsx,
+    shared.$token.tsx     a design or review someone shared, open to anyone
   _guest/                 signed-out pages
     route.tsx             beforeLoad: a signed-in visitor goes on to ?redirect or /home
     sign-in.tsx, sign-up.tsx, forgot-password.tsx
