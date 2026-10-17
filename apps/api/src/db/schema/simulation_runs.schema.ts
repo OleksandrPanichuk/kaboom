@@ -8,12 +8,13 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { timeOrderedId } from "../time-ordered-id";
 import { designsSchema } from "./designs.schema";
 
 export const simulationRunsSchema = pgTable(
   "simulation_runs",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: timeOrderedId(),
     designId: uuid("design_id")
       .notNull()
       .references(() => designsSchema.id, { onDelete: "cascade" }),

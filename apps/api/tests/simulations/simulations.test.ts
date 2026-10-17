@@ -1,6 +1,9 @@
 import { createEdge, createNode, type DesignOp } from "@repo/design";
 import { createUser, type TestClient } from "@tests/helpers";
 import { describe, expect, test } from "bun:test";
+import { eq } from "drizzle-orm";
+
+import { getDatabase, simulationRunsSchema } from "@/db";
 
 import {
   applyOps,
@@ -183,6 +186,31 @@ describe("simulation runs", () => {
       first.body.id,
     ]);
     expect(one.body).toEqual(first.body);
+  });
+
+  test("keeps runs made in the same millisecond in the order they were made", async () => {
+    const user = await createUser();
+    const { design } = await seeded(user);
+    const first = await run(user, design.id, {
+      scenario: { kind: "load", durationSeconds: 10 },
+    });
+    const second = await run(user, design.id, {
+      scenario: { kind: "load", durationSeconds: 10 },
+    });
+
+    await getDatabase()
+      .update(simulationRunsSchema)
+      .set({ createdAt: new Date("2026-01-01T00:00:00.000Z") })
+      .where(eq(simulationRunsSchema.designId, design.id));
+
+    const list = await user.get<PageBody<RunBody>>(
+      `${PATH}/${design.id}/simulations`,
+    );
+
+    expect(list.body.items.map((item) => item.id)).toEqual([
+      second.body.id,
+      first.body.id,
+    ]);
   });
 
   test("evaluates a past revision when asked", async () => {

@@ -10,6 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { timeOrderedId } from "../time-ordered-id";
 import { designsSchema } from "./designs.schema";
 import { problemAttemptsSchema } from "./problem_attempts.schema";
 import { problemsSchema } from "./problems.schema";
@@ -28,7 +29,7 @@ export type SubmissionReviewStatus =
 export const submissionsSchema = pgTable(
   "submissions",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: timeOrderedId(),
     attemptId: uuid("attempt_id")
       .notNull()
       .references(() => problemAttemptsSchema.id, { onDelete: "cascade" }),

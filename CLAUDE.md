@@ -302,8 +302,8 @@ lint, types and its tests to check a template change end to end.
 
 `bun test` sets `NODE_ENV=test`, so every port resolves to its memory adapter
 and only Postgres is real. `tests/helpers/preload.ts` runs once per invocation:
-it creates and migrates the test database, boots the app, truncates every table
-after each test, and clears the mailer, the rate-limit counters and the
+it creates and migrates the test database, truncates every table, boots the
+app, truncates them again after each test, and clears the mailer, the rate-limit counters and the
 realtime listeners with it. A test therefore starts from empty tables and an
 empty inbox without arranging anything.
 
@@ -393,6 +393,10 @@ return BY_CREATION.page(rows, request);
   millisecond.
 - The cursor is opaque base64url. A malformed one answers
   `400 INVALID_CURSOR`, never a 500.
+- Rows two requests make inside one millisecond tie on that column, so the
+  tie-breaker must follow insertion order too: a table listed by time takes
+  its id from `timeOrderedId()` (`uuidv7()`, Postgres 18), never a random
+  uuid, or such rows come back in any order.
 
 ## Live updates
 

@@ -1,10 +1,12 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+
+import { timeOrderedId } from "../time-ordered-id";
 
 export const USER_ROLES = ["user", "moderator", "admin"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export const usersSchema = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: timeOrderedId(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   role: text("role", { enum: USER_ROLES }).notNull().default("user"),

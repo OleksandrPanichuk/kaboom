@@ -10,6 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { timeOrderedId } from "../time-ordered-id";
 import { usersSchema } from "./users.schema";
 
 export const PROBLEM_SOURCES = ["official", "community"] as const;
@@ -24,7 +25,7 @@ export type ProblemDifficulty = (typeof PROBLEM_DIFFICULTIES)[number];
 export const problemsSchema = pgTable(
   "problems",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: timeOrderedId(),
     slug: text("slug").notNull().unique(),
     source: text("source", { enum: PROBLEM_SOURCES }).notNull(),
     authorId: uuid("author_id").references(() => usersSchema.id, {
