@@ -20,6 +20,8 @@ import { notificationsModule } from "@/modules/notifications";
 import { oauthModule } from "@/modules/oauth";
 import { paymentMethodsModule } from "@/modules/payment-methods";
 import { paymentsModule } from "@/modules/payments";
+import { problemCommentsModule } from "@/modules/problem-comments";
+import { problemRatingsModule } from "@/modules/problem-ratings";
 import { problemsModule } from "@/modules/problems";
 import { profilesModule } from "@/modules/profiles";
 import { progressModule } from "@/modules/progress";
@@ -92,5 +94,7 @@ export const modules = [
   billingAccountModule,
   checkoutModule,
   paymentMethodsModule,
+  problemCommentsModule,
+  problemRatingsModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

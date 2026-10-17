@@ -23,10 +23,19 @@ export class GetProblemUseCase extends UseCase<Options, Result> {
       version === undefined
         ? await this.service.getPublished(slug)
         : await this.service.getPublishedAt(slug, version);
-    const credit = (await this.problems.credits([found.problem.id])).get(
-      found.problem.id,
-    );
+    const ids = [found.problem.id];
+    const [credits, feedback] = await Promise.all([
+      this.problems.credits(ids),
+      this.problems.feedback(ids),
+    ]);
 
-    return { ...found, problem: { ...found.problem, credit } };
+    return {
+      ...found,
+      problem: {
+        ...found.problem,
+        credit: credits.get(found.problem.id),
+        feedback: feedback.get(found.problem.id),
+      },
+    };
   }
 }

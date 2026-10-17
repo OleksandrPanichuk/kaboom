@@ -90,6 +90,15 @@ export const ProblemReviewSummaryModel = t.Object({
     description: "Whether it changes a problem already published",
   }),
   author: t.Nullable(t.Object({ handle: t.String(), displayName: t.String() })),
+  liveRating: t.Nullable(
+    t.Object(
+      { average: t.Nullable(t.Number()), count: t.Integer() },
+      {
+        description:
+          "For an update in the queue, how solvers rate the version that is live",
+      },
+    ),
+  ),
   submittedAt: t.String({ format: "date-time" }),
   decidedAt: t.Nullable(t.String({ format: "date-time" })),
 });

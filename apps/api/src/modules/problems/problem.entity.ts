@@ -26,6 +26,13 @@ export interface ProblemEntity {
   createdAt: Date;
   updatedAt: Date;
   credit?: ProblemCredit;
+  feedback?: ProblemFeedback;
+}
+
+export interface ProblemFeedback {
+  ratingTotal: number;
+  ratingCount: number;
+  commentCount: number;
 }
 
 export interface ProblemCredit {
@@ -47,6 +54,21 @@ export interface ProblemWithContent {
 }
 
 export class ProblemEntity {
+  public static ratingOf(feedback: ProblemFeedback | undefined): {
+    average: number | null;
+    count: number;
+  } {
+    const count = feedback?.ratingCount ?? 0;
+
+    return {
+      average:
+        feedback && count > 0
+          ? Math.round((feedback.ratingTotal / count) * 10) / 10
+          : null,
+      count,
+    };
+  }
+
   public static normalizeSummary(entity: ProblemEntity): ProblemSummaryModel {
     return {
       id: entity.id,
@@ -61,6 +83,8 @@ export class ProblemEntity {
       publishedAt: entity.publishedAt?.toISOString() ?? null,
       author: entity.credit?.author ?? null,
       forkedFrom: entity.credit?.forkedFrom ?? null,
+      rating: ProblemEntity.ratingOf(entity.feedback),
+      commentCount: entity.feedback?.commentCount ?? 0,
     };
   }
 

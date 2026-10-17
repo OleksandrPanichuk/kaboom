@@ -34,6 +34,10 @@ export class SubmissionsService extends Service {
     return until > now ? until : null;
   }
 
+  public hasSubmitted(userId: string, problemId: string): Promise<boolean> {
+    return this.submissions.hasSubmitted(userId, problemId);
+  }
+
   public async lockOf(userId: string, problemId: string): Promise<Date | null> {
     const reveal = await this.reveals.find(userId, problemId);
 
