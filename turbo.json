@@ -71,6 +71,19 @@
         "TEST_S3_ACCESS_KEY_ID",
         "TEST_S3_SECRET_ACCESS_KEY"
       ]
+    },
+    "test:e2e": {
+      "cache": false,
+      "dependsOn": [
+        "generate"
+      ],
+      "env": [
+        "CI",
+        "E2E_DATABASE_URL"
+      ],
+      "passThroughEnv": [
+        "PLAYWRIGHT_*"
+      ]
     }
   }
 }

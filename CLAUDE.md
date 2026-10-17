@@ -321,6 +321,25 @@ directly rather than through HTTP — key layout, TTLs, BullMQ's scheduler and
 the behaviour when a server disappears are invisible to a memory double. Those
 suites skip when the services are absent, so the default run stays fast.
 
+`bun run test:e2e` drives the web in Chromium with Playwright
+(`apps/web/e2e`): sign-up and email verification, a problem started and
+submitted, an interview turn, a Pro checkout, and the public pages. It
+starts its own servers: the API through `bun run e2e:server`, which drops
+and migrates the `kaboom_e2e` database on the test Postgres and boots with
+`NODE_ENV=test`, so every port is its memory adapter, and the web as a
+production build under `vite preview`, whose proxy is the dev server's.
+A dev server would optimise dependencies on first visit and reload the
+page under a test.
+
+What a browser cannot do against memory adapters, a test asks the API
+for through `src/testing/e2e-control`, mounted only when `NODE_ENV=test`
+and `E2E_CONTROL=true` (the env refuses the flag otherwise): the last
+email sent to an address, what the language model says next, settling a
+pending subscription as the provider would, and forgetting rate-limit
+counters. Playwright answers the captcha with the memory verifier's
+passing token and serves a stub in place of Stripe.js. CI runs it as the
+`End-to-end` job and keeps the report when it fails.
+
 Reach for a real request over a direct call to a use case: the route, its
 guards, the rate limiter and the session cookie are part of what is being
 tested, and a test that skips them passes while the endpoint is broken.

@@ -67,6 +67,7 @@ export const EnvSchema = z.object({
     .min(60)
     .max(60 * 60 * 24 * 7)
     .default(60 * 60 * 24 * 7),
+  E2E_CONTROL: z.stringbool().default(false),
   APP_URL: z
     .url({ protocol: /^https?$/ })
     .default("http://localhost:3000")
@@ -231,6 +232,15 @@ export const CheckedEnvSchema = EnvSchema.superRefine(
   ),
 )
   .superRefine(requireWebhookSecretWithKey)
+  .superRefine((env, ctx) => {
+    if (env.E2E_CONTROL && env.NODE_ENV !== NodeEnv.Test) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["E2E_CONTROL"],
+        message: 'Allowed only when NODE_ENV is "test"',
+      });
+    }
+  })
   .transform(withDerivedDefaults);
 
 export type Env = z.output<typeof CheckedEnvSchema>;
