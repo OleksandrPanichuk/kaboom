@@ -7,6 +7,7 @@ import { ArrowLeft, Play } from "lucide-react";
 import { Markdown } from "@/components/Markdown";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { ForkProblemButton } from "@/features/authoring";
+import { DiscussionPanel, RatingBadge } from "@/features/discussion";
 import { StartInterviewButton } from "@/features/interview";
 
 import { DifficultyBadge } from "./DifficultyBadge";
@@ -71,12 +72,26 @@ export function ProblemStart({
           <p className="text-[15px] leading-6 text-muted-foreground text-pretty">
             {problem.summary}
           </p>
-          <ProblemCredit problem={problem} />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <ProblemCredit problem={problem} />
+            <RatingBadge
+              rating={problem.rating}
+              commentCount={problem.commentCount}
+            />
+          </div>
         </div>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start">
-          <article className="min-w-0 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-8">
-            <Markdown>{problem.statement}</Markdown>
-          </article>
+          <div className="flex min-w-0 flex-col gap-6">
+            <article className="min-w-0 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-8">
+              <Markdown>{problem.statement}</Markdown>
+            </article>
+            <section
+              aria-label="Rating and discussion"
+              className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+            >
+              <DiscussionPanel slug={problem.slug} />
+            </section>
+          </div>
           <aside className="order-first flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-5 lg:sticky lg:top-6 lg:order-none">
             <div className="flex flex-col gap-2">
               <Button size="lg" disabled={pending} onClick={onStart}>
