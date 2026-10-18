@@ -288,6 +288,15 @@ The `ErrorReporter` port lives in `core`, not in `platform/error-reporting`,
 because `Injectable` is in `core` and `core` never imports `platform`. The
 platform folder still owns the lifecycle and picks the adapter.
 
+## Dashboards and alerts
+
+`infra/observability/grafana` is Terraform for a Grafana Cloud stack: the
+*Kaboom* dashboard (`dashboard.tf`, panels declared as a table of sections),
+the alert rules (`alerts.tf`, one entry each, severity `page` or `warn`) and
+the Slack contact point they post to. Every alert links to its runbook in
+`infra/observability/runbooks/<name>.md`. A metric that should page gets a rule and a
+runbook in the same pull request as the code that records it.
+
 ## Generating code
 
 `cli-tools/generator` (`bun run gen`) scaffolds modules, resources, services,
