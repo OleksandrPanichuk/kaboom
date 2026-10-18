@@ -11,6 +11,11 @@ export class InterviewNotActiveError extends ModuleError {
   public readonly code = "INTERVIEW_NOT_ACTIVE";
 }
 
+export class InterviewStillRunningError extends ModuleError {
+  public readonly status = HttpStatus.Conflict;
+  public readonly code = "INTERVIEW_STILL_RUNNING";
+}
+
 export class InterviewAlreadyActiveError extends ModuleError {
   public readonly status = HttpStatus.Conflict;
   public readonly code = "INTERVIEW_ALREADY_ACTIVE";

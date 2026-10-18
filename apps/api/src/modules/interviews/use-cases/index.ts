@@ -7,6 +7,10 @@ export {
   type GetInterviewUseCaseOptions,
 } from "./get-interview";
 export {
+  GetInterviewReplayUseCase,
+  type GetInterviewReplayUseCaseOptions,
+} from "./get-interview-replay";
+export {
   InterruptInterviewerUseCase,
   type InterruptInterviewerUseCaseOptions,
 } from "./interrupt-interviewer";

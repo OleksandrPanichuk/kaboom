@@ -5,11 +5,13 @@ import type {
   InterviewMessageAuthor,
   InterviewStatus,
 } from "@/db";
+import type { DesignRevisionEntity } from "@/modules/designs";
 
 import type { InterviewEvent } from "./interview.events";
 import type {
   InterviewMessageModel,
   InterviewModel,
+  InterviewReplayModel,
   InterviewSummaryModel,
 } from "./interview.model";
 
@@ -73,7 +75,38 @@ export class InterviewMessageEntity {
   }
 }
 
+export interface InterviewReplayView extends InterviewView {
+  events: InterviewEventRow[];
+  revisions: DesignRevisionEntity[];
+  layout: Record<string, { x: number; y: number }>;
+}
+
 export class InterviewEntity {
+  public static normalizeReplay({
+    events,
+    revisions,
+    layout,
+    ...view
+  }: InterviewReplayView): InterviewReplayModel {
+    return {
+      ...InterviewEntity.normalize(view),
+      events: events.map((event) => ({
+        seq: event.seq,
+        type: event.type,
+        at: event.createdAt.toISOString(),
+        payload: event.payload,
+      })),
+      revisions: revisions.map((revision) => ({
+        number: revision.number,
+        author: revision.author,
+        at: revision.createdAt.toISOString(),
+        ops: revision.ops,
+        snapshot: revision.snapshot,
+      })),
+      layout,
+    };
+  }
+
   public static normalize({
     interview,
     problem,

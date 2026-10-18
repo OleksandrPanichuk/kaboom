@@ -4,6 +4,7 @@ import type { Executable } from "@/core/use-case";
 
 import {
   applyInterviewOpsRoute,
+  getInterviewReplayRoute,
   getInterviewRoute,
   interruptInterviewerRoute,
   interviewEventsRoute,
@@ -17,6 +18,7 @@ import {
 } from "./routes";
 import type {
   ApplyInterviewOpsUseCase,
+  GetInterviewReplayUseCase,
   GetInterviewUseCase,
   InterruptInterviewerUseCase,
   ListInterviewsUseCase,
@@ -32,6 +34,7 @@ export interface InterviewsActions {
   startInterview: Executable<StartInterviewUseCase>;
   listInterviews: Executable<ListInterviewsUseCase>;
   getInterview: Executable<GetInterviewUseCase>;
+  getInterviewReplay: Executable<GetInterviewReplayUseCase>;
   postInterviewMessage: Executable<PostInterviewMessageUseCase>;
   applyInterviewOps: Executable<ApplyInterviewOpsUseCase>;
   saveInterviewLayout: Executable<SaveInterviewLayoutUseCase>;
@@ -46,6 +49,7 @@ export const interviewsRoutes = (actions: InterviewsActions) =>
     .post("/", ...startInterviewRoute(actions))
     .get("/", ...listInterviewsRoute(actions))
     .get("/:id", ...getInterviewRoute(actions))
+    .get("/:id/replay", ...getInterviewReplayRoute(actions))
     .get("/:id/events", ...interviewEventsRoute())
     .post("/:id/messages", ...postInterviewMessageRoute(actions))
     .post("/:id/ops", ...applyInterviewOpsRoute(actions))
