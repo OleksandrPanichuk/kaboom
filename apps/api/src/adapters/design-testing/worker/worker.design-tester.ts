@@ -1,5 +1,6 @@
 import type { PublishCheck } from "@repo/scoring";
 
+import { make } from "@/core/registry";
 import {
   DesignTestsBusyError,
   DesignTestsTimedOutError,
@@ -11,6 +12,7 @@ import {
   type DesignTestRequest,
   type DesignTestResult,
 } from "@/platform/design-testing/ports";
+import { Metrics } from "@/platform/metrics/ports/metrics";
 
 import type {
   PendingTest,
@@ -38,6 +40,10 @@ export class WorkerDesignTester extends DesignTester {
     );
 
     this.idle.push(...workers);
+  }
+
+  public waiting(): number {
+    return this.queue.length;
   }
 
   public healthy(): boolean {
@@ -163,6 +169,7 @@ export class WorkerDesignTester extends DesignTester {
   }
 
   private lose(worker: Worker, message: string): void {
+    make(Metrics).count("designTestWorkerRestarts", 1, { reason: "died" });
     worker.terminate();
 
     const index = this.idle.indexOf(worker);
@@ -191,6 +198,9 @@ export class WorkerDesignTester extends DesignTester {
     pending.timer = null;
 
     if (worker && this.running.get(worker) === pending) {
+      make(Metrics).count("designTestWorkerRestarts", 1, {
+        reason: "timed_out",
+      });
       this.running.delete(worker);
       worker.terminate();
       this.replace();

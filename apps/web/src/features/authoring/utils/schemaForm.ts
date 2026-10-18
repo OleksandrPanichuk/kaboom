@@ -294,3 +294,23 @@ export const startsWith = (
 ): boolean =>
   prefix.length <= path.length &&
   prefix.every((part, index) => part === path[index]);
+
+interface IssueVisibility {
+  strict: boolean;
+  touched: ReadonlySet<string>;
+  reveal: { path: ReadonlyArray<string | number> } | null;
+}
+
+export const visibleIssues = <
+  Issue extends { path: ReadonlyArray<string | number> },
+>(
+  issues: readonly Issue[],
+  { strict, touched, reveal }: IssueVisibility,
+): readonly Issue[] =>
+  strict
+    ? issues
+    : issues.filter(
+        (issue) =>
+          touched.has(issue.path.join(".")) ||
+          (reveal !== null && samePath(issue.path, reveal.path)),
+      );

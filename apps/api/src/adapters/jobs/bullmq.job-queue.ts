@@ -16,7 +16,9 @@ import {
   UnprocessableJobError,
 } from "@/platform/jobs/jobs.errors";
 import { JobQueue } from "@/platform/jobs/ports/job-queue";
-import { type JobOutcome, Metrics } from "@/platform/metrics/ports/metrics";
+import { Metrics } from "@/platform/metrics/ports/metrics";
+
+type JobOutcome = "done" | "retried" | "failed";
 
 const DEFAULT_ATTEMPTS = 5;
 const DEFAULT_BACKOFF_MS = 2_000;
@@ -166,12 +168,15 @@ export class BullMqJobQueue extends JobQueue {
     outcome: JobOutcome,
     startedAt: number,
   ): void {
-    make(Metrics).recordJob({
-      job: job.name,
-      queue: job.queue,
-      outcome,
-      durationMs: Number((performance.now() - startedAt).toFixed(2)),
-    });
+    const labels = { job_name: job.name, queue: job.queue, outcome };
+    const metrics = make(Metrics);
+
+    metrics.count("jobRuns", 1, labels);
+    metrics.observe(
+      "jobDuration",
+      Number((performance.now() - startedAt).toFixed(2)),
+      labels,
+    );
   }
 
   private queue(name: string): Queue {

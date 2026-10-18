@@ -9,6 +9,7 @@ import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { DesignsService } from "@/modules/designs";
 import { DesignTester } from "@/platform/design-testing";
+import { Metrics } from "@/platform/metrics";
 
 import {
   ScoreBoard,
@@ -31,6 +32,8 @@ type Options = SubmitSolutionUseCaseOptions;
 type Result = SubmissionEntity;
 
 export class SubmitSolutionUseCase extends UseCase<Options, Result> {
+  private readonly metrics = make(Metrics);
+
   private readonly service = makeService(SubmissionsService);
 
   private readonly tester = make(DesignTester);
@@ -88,6 +91,7 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
     await make(ScoreBoard).scored(userId, attempt.problemId);
     await make(SubmissionReviewScheduler).schedule(inserted.id);
 
+    this.metrics.count("productEvents", 1, { event: "submission" });
     return (
       (await this.submissions.findById(inserted.id))?.submission ?? inserted
     );

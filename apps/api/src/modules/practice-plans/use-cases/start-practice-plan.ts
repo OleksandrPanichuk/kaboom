@@ -1,7 +1,8 @@
 import type { Track } from "@repo/design";
 
-import { makeService } from "@/core/registry";
+import { make, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
+import { Metrics } from "@/platform/metrics";
 
 import type { PracticePlanView } from "../practice-plan.entity";
 import { PracticePlansService } from "../practice-plans.service";
@@ -17,7 +18,13 @@ type Result = PracticePlanView;
 export class StartPracticePlanUseCase extends UseCase<Options, Result> {
   private readonly service = makeService(PracticePlansService);
 
-  public execute({ userId, track }: Options): Promise<Result> {
-    return this.service.start(userId, track, new Date());
+  private readonly metrics = make(Metrics);
+
+  public async execute({ userId, track }: Options): Promise<Result> {
+    const plan = await this.service.start(userId, track, new Date());
+
+    this.metrics.count("productEvents", 1, { event: "practice_plan" });
+
+    return plan;
   }
 }

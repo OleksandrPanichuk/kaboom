@@ -1,25 +1,27 @@
 import { Port } from "@/core/port";
 
-export interface RequestMeasurement {
-  method: string;
-  route: string;
-  status: number;
-  durationMs: number;
-}
-
-export type JobOutcome = "done" | "retried" | "failed";
-
-export interface JobMeasurement {
-  job: string;
-  queue: string;
-  outcome: JobOutcome;
-  durationMs: number;
-}
+import type {
+  CounterName,
+  GaugeName,
+  GaugeReader,
+  HistogramName,
+  LabelsOf,
+} from "../metrics.catalogue";
 
 export abstract class Metrics extends Port {
-  public abstract recordRequest(measurement: RequestMeasurement): void;
+  public abstract count<Name extends CounterName>(
+    name: Name,
+    value: number,
+    labels: LabelsOf<Name>,
+  ): void;
 
-  public abstract recordJob(measurement: JobMeasurement): void;
+  public abstract observe<Name extends HistogramName>(
+    name: Name,
+    value: number,
+    labels: LabelsOf<Name>,
+  ): void;
+
+  public abstract gauge(name: GaugeName, read: GaugeReader): void;
 
   public start(): Promise<void> {
     return Promise.resolve();

@@ -2,8 +2,10 @@ import { InlineDesignTester } from "@/adapters/design-testing/inline.design-test
 import { WorkerDesignTester } from "@/adapters/design-testing/worker";
 import { NodeEnv } from "@/configs";
 import { defineModule } from "@/core/module";
-import { bind } from "@/core/registry";
+import { bind, make } from "@/core/registry";
+import { Metrics } from "@/platform/metrics";
 
+import { MeasuredDesignTester } from "./measured.design-tester";
 import { DesignTester } from "./ports";
 
 const WORKER_SCRIPT = "./adapters/design-testing/worker/tester.worker";
@@ -13,7 +15,7 @@ export const designTestingModule = defineModule({
 
   register: ({ env }) => {
     if (env.NODE_ENV === NodeEnv.Test) {
-      const tester = new InlineDesignTester();
+      const tester = new MeasuredDesignTester(new InlineDesignTester());
 
       bind(DesignTester, () => tester);
 
@@ -26,12 +28,21 @@ export const designTestingModule = defineModule({
       script: new URL(WORKER_SCRIPT, Bun.pathToFileURL(Bun.main)),
     });
 
-    bind(DesignTester, () => pool);
+    const tester = new MeasuredDesignTester(pool);
 
-    return { tester: pool, pool };
+    bind(DesignTester, () => tester);
+
+    return { tester, pool };
   },
 
-  start: ({ state }) => state.pool?.start(),
+  start: async ({ state }) => {
+    if (!state.pool) return;
+
+    const { pool } = state;
+
+    make(Metrics).gauge("designTestQueue", () => pool.waiting());
+    await pool.start();
+  },
   ready: ({ state }) => state.pool?.healthy() ?? true,
   shutdown: ({ state }) => state.tester.close(),
 });

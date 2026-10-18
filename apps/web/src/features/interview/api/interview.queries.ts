@@ -13,3 +13,10 @@ export const interviewsQuery = queryOptions({
   queryFn: async () =>
     unwrap(await api.api.interviews.get({ query: { limit: 50 } })),
 });
+
+export const interviewReplayQuery = (id: string) =>
+  queryOptions({
+    queryKey: ["interviews", "replay", id],
+    queryFn: async () => unwrap(await api.api.interviews(id).replay.get()),
+    staleTime: Infinity,
+  });

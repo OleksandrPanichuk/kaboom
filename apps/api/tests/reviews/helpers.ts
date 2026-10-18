@@ -7,7 +7,7 @@ import type {
   ScriptStep,
 } from "@/adapters/llm/scripted.language-model";
 import { make } from "@/core/registry";
-import { LanguageModel } from "@/platform/llm";
+import { LanguageModel, type MeasuredLanguageModel } from "@/platform/llm";
 
 export const shortener = OFFICIAL_PROBLEMS.find(
   (problem) => problem.slug === "url-shortener",
@@ -22,7 +22,8 @@ export interface DraftItem {
   citations: string[];
 }
 
-export const model = () => make(LanguageModel) as ScriptedLanguageModel;
+export const model = () =>
+  (make(LanguageModel) as MeasuredLanguageModel).inner as ScriptedLanguageModel;
 
 export const reviewRequests = () =>
   model().requests.filter((request) => request.role === "review");

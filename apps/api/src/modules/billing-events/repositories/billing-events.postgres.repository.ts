@@ -19,6 +19,24 @@ export class PostgresBillingEventsRepository extends BillingEventsRepository {
     return this.resolve();
   }
 
+  public async countFailed(): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(billingEventsSchema)
+      .where(eq(billingEventsSchema.status, "failed"));
+
+    return row?.count ?? 0;
+  }
+
+  public async oldestPendingSince(): Promise<Date | null> {
+    const [row] = await this.db
+      .select({ at: sql<Date | null>`min(${billingEventsSchema.receivedAt})` })
+      .from(billingEventsSchema)
+      .where(eq(billingEventsSchema.status, "pending"));
+
+    return row?.at ? new Date(row.at) : null;
+  }
+
   public async receive(
     data: ReceiveBillingEventData,
   ): Promise<ReceivedBillingEvent> {

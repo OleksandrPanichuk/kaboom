@@ -3,7 +3,7 @@ import { Elysia } from "elysia";
 import { HttpStatus } from "@/core/http";
 import { make } from "@/core/registry";
 import { getLogger } from "@/infrastructure";
-import { Metrics, UNMATCHED_ROUTE } from "@/platform/metrics";
+import { Metrics, statusClass, UNMATCHED_ROUTE } from "@/platform/metrics";
 import { enterRequestContext } from "@/shared";
 
 export const REQUEST_ID_HEADER = "x-request-id";
@@ -61,11 +61,14 @@ export const loggerPlugin = new Elysia({ name: "logger" })
 
     if (durationMs === undefined) return;
 
-    make(Metrics).recordRequest({
+    const labels = {
       method: request.method,
       route: route || UNMATCHED_ROUTE,
-      status: code ?? HttpStatus.OK,
-      durationMs,
-    });
+      status_class: statusClass(code ?? HttpStatus.OK),
+    };
+    const metrics = make(Metrics);
+
+    metrics.count("httpRequests", 1, labels);
+    metrics.observe("httpDuration", durationMs, labels);
   })
   .as("global");

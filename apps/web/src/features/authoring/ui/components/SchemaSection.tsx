@@ -24,6 +24,7 @@ interface SchemaSectionProps {
   refs: Readonly<Record<string, readonly string[]>>;
   issues: readonly Issue[];
   issueCount: number;
+  strict: boolean;
   reveal: SchemaFormReveal | null;
   optional?: boolean;
   extra?: ReactNode;
@@ -40,6 +41,7 @@ export function SchemaSection({
   refs,
   issues,
   issueCount,
+  strict,
   reveal,
   optional = false,
   extra,
@@ -115,6 +117,7 @@ export function SchemaSection({
           path={[section]}
           refs={refs}
           issues={issues}
+          strict={strict}
           reveal={reveal}
           onChange={onChange}
         />

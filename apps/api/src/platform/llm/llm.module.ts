@@ -10,6 +10,7 @@ import { NodeEnv } from "@/configs";
 import { defineModule } from "@/core/module";
 import { bind } from "@/core/registry";
 
+import { MeasuredLanguageModel } from "./measured.language-model";
 import { LanguageModel, UsageLedger } from "./ports";
 
 export const llmModule = defineModule({
@@ -17,7 +18,7 @@ export const llmModule = defineModule({
 
   register: ({ env }) => {
     if (env.NODE_ENV === NodeEnv.Test) {
-      const model = new ScriptedLanguageModel();
+      const model = new MeasuredLanguageModel(new ScriptedLanguageModel());
       const ledger = new MemoryUsageLedger(env.LLM_DAILY_TOKEN_BUDGET);
 
       bind(LanguageModel, () => model);
@@ -26,15 +27,17 @@ export const llmModule = defineModule({
       return { model };
     }
 
-    const model: LanguageModel = env.ANTHROPIC_API_KEY
-      ? new AnthropicLanguageModel({
-          client: anthropicClient(env.ANTHROPIC_API_KEY),
-          models: {
-            interviewer: env.LLM_INTERVIEWER_MODEL,
-            review: env.LLM_REVIEW_MODEL,
-          },
-        })
-      : new UnavailableLanguageModel();
+    const model = new MeasuredLanguageModel(
+      env.ANTHROPIC_API_KEY
+        ? new AnthropicLanguageModel({
+            client: anthropicClient(env.ANTHROPIC_API_KEY),
+            models: {
+              interviewer: env.LLM_INTERVIEWER_MODEL,
+              review: env.LLM_REVIEW_MODEL,
+            },
+          })
+        : new UnavailableLanguageModel(),
+    );
 
     bind(LanguageModel, () => model);
     bind(

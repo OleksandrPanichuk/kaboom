@@ -7,21 +7,21 @@ import {
 
 import { getLogger } from "@/infrastructure";
 import {
-  type JobMeasurement,
-  Metrics,
-  type RequestMeasurement,
-} from "@/platform/metrics/ports/metrics";
+  type CounterName,
+  type GaugeName,
+  type GaugeReader,
+  type HistogramName,
+  type LabelsOf,
+  type MetricName,
+  METRICS,
+} from "@/platform/metrics/metrics.catalogue";
+import { Metrics } from "@/platform/metrics/ports/metrics";
 
 import {
   CLOUDWATCH_MAX_METRICS_PER_REQUEST,
   CLOUDWATCH_REQUEST_TIMEOUT_MS,
 } from "./cloudwatch.constants";
-import {
-  aggregateKey,
-  chunk,
-  statusClass,
-  toDatum,
-} from "./cloudwatch.helpers";
+import { aggregateKey, chunk, toDatum, unitOf } from "./cloudwatch.helpers";
 import type {
   Aggregate,
   CloudWatchMetricsOptions,
@@ -38,6 +38,8 @@ export class CloudWatchMetrics extends Metrics {
 
   private timer: ReturnType<typeof setInterval> | undefined;
 
+  private readonly gauges = new Map<GaugeName, GaugeReader>();
+
   constructor(private readonly options: CloudWatchMetricsOptions) {
     super();
 
@@ -49,33 +51,24 @@ export class CloudWatchMetrics extends Metrics {
     this.now = options.now ?? (() => new Date());
   }
 
-  public recordRequest({
-    method,
-    route,
-    status,
-    durationMs,
-  }: RequestMeasurement): void {
-    const dimensions = {
-      Environment: this.options.environment,
-      Method: method,
-      Route: route,
-      StatusClass: statusClass(status),
-    };
-
-    this.add("RequestCount", "Count", dimensions, 1);
-    this.add("RequestDuration", "Milliseconds", dimensions, durationMs);
+  public count<Name extends CounterName>(
+    name: Name,
+    value: number,
+    labels: LabelsOf<Name>,
+  ): void {
+    this.record(name, value, labels);
   }
 
-  public recordJob({ job, queue, outcome, durationMs }: JobMeasurement): void {
-    const dimensions = {
-      Environment: this.options.environment,
-      Job: job,
-      Queue: queue,
-      Outcome: outcome,
-    };
+  public observe<Name extends HistogramName>(
+    name: Name,
+    value: number,
+    labels: LabelsOf<Name>,
+  ): void {
+    this.record(name, value, labels);
+  }
 
-    this.add("JobCount", "Count", dimensions, 1);
-    this.add("JobDuration", "Milliseconds", dimensions, durationMs);
+  public gauge(name: GaugeName, read: GaugeReader): void {
+    this.gauges.set(name, read);
   }
 
   public start(): Promise<void> {
@@ -88,6 +81,8 @@ export class CloudWatchMetrics extends Metrics {
   }
 
   public async flush(): Promise<void> {
+    await this.readGauges();
+
     if (this.buffer.size === 0) return;
 
     const aggregates = [...this.buffer.values()];
@@ -110,6 +105,39 @@ export class CloudWatchMetrics extends Metrics {
     }
 
     await this.flush();
+  }
+
+  private record(
+    name: MetricName,
+    value: number,
+    labels: Readonly<Record<string, string>>,
+  ): void {
+    const definition = METRICS[name];
+
+    this.add(
+      definition.name,
+      unitOf(definition.unit),
+      {
+        Environment: this.options.environment,
+        ...labels,
+      },
+      value,
+    );
+  }
+
+  private async readGauges(): Promise<void> {
+    await Promise.all(
+      [...this.gauges].map(async ([name, read]) => {
+        try {
+          this.record(name, await read(), {});
+        } catch (cause) {
+          getLogger().warn(
+            { component: "CloudWatchMetrics", gauge: name, err: cause },
+            "a gauge could not be read",
+          );
+        }
+      }),
+    );
   }
 
   private add(

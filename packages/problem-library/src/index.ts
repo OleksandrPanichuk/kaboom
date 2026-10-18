@@ -10,9 +10,11 @@ import { flashSaleCheckout } from "./flash-sale-checkout";
 import { gameLeaderboard } from "./game-leaderboard";
 import { jobQueue } from "./job-queue";
 import { latencyRegression } from "./latency-regression";
+import { lunchRushAutoscaling } from "./lunch-rush-autoscaling";
 import { monorepoPipeline } from "./monorepo-pipeline";
 import { newsFeed } from "./news-feed";
 import { notifications } from "./notifications";
+import { onCallAlerts } from "./on-call-alerts";
 import { ordersOneTable } from "./orders-one-table";
 import { photoUploads } from "./photo-uploads";
 import { productCatalogue } from "./product-catalogue";
@@ -46,6 +48,8 @@ export const OFFICIAL_PROBLEMS: ProblemContent[] = [
   threeTierVpc,
   secretRotation,
   schemaMigration,
+  onCallAlerts,
+  lunchRushAutoscaling,
   blogTags,
   shopOrders,
   roomBooking,

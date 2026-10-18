@@ -1,6 +1,7 @@
-import { makeRepository, makeService } from "@/core/registry";
+import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { ProblemsService } from "@/modules/problems";
+import { Metrics } from "@/platform/metrics";
 
 import { CommentDigestsService } from "../comment-digests.service";
 import { ProblemCommentsRepository } from "../ports";
@@ -31,6 +32,8 @@ interface Result {
 }
 
 export class PostProblemCommentUseCase extends UseCase<Options, Result> {
+  private readonly metrics = make(Metrics);
+
   private readonly problems = makeService(ProblemsService);
 
   private readonly service = makeService(ProblemCommentsService);
@@ -58,6 +61,7 @@ export class PostProblemCommentUseCase extends UseCase<Options, Result> {
 
     await this.digests.schedule(problem, posted, thread?.id ?? null);
 
+    this.metrics.count("productEvents", 1, { event: "comment" });
     return {
       problemAuthorId: problem.authorId,
       comment: await this.service.getListed(posted.id),

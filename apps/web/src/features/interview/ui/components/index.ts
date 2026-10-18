@@ -5,5 +5,7 @@ export * from "./InterviewChat";
 export * from "./InterviewRow";
 export * from "./MessageBubble";
 export * from "./PhaseClock";
+export * from "./ReplayScrubber";
+export * from "./ReplayTranscript";
 export * from "./StartInterviewButton";
 export * from "./TimelineCard";

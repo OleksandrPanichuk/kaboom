@@ -1,9 +1,9 @@
-import type { MetricDatum } from "@aws-sdk/client-cloudwatch";
+import type { MetricDatum, StandardUnit } from "@aws-sdk/client-cloudwatch";
 
 import type { Aggregate, Dimensions } from "./cloudwatch.typedefs";
 
-export const statusClass = (status: number): string =>
-  `${Math.floor(status / 100)}xx`;
+export const unitOf = (unit: string): StandardUnit =>
+  unit === "ms" ? "Milliseconds" : unit === "s" ? "Seconds" : "Count";
 
 export const aggregateKey = (name: string, dimensions: Dimensions): string =>
   `${name}|${JSON.stringify(Object.entries(dimensions))}`;
