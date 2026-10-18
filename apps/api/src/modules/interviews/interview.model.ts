@@ -1,7 +1,12 @@
 import { TRACKS } from "@repo/design";
 import { t } from "elysia";
 
-import { INTERVIEW_MESSAGE_AUTHORS, INTERVIEW_STATUSES } from "@/db";
+import {
+  DESIGN_REVISION_AUTHORS,
+  INTERVIEW_EVENT_TYPES,
+  INTERVIEW_MESSAGE_AUTHORS,
+  INTERVIEW_STATUSES,
+} from "@/db";
 
 export const InterviewMessageModel = t.Object({
   id: t.String({ format: "uuid" }),
@@ -62,3 +67,34 @@ export const InterviewStatusModel = t.Object({
   status: t.UnionEnum(INTERVIEW_STATUSES),
 });
 export type InterviewStatusModel = typeof InterviewStatusModel.static;
+
+export const InterviewReplayEventModel = t.Object({
+  seq: t.Integer(),
+  type: t.UnionEnum(INTERVIEW_EVENT_TYPES),
+  at: t.String({ format: "date-time" }),
+  payload: t.Unknown(),
+});
+export type InterviewReplayEventModel = typeof InterviewReplayEventModel.static;
+
+export const InterviewReplayRevisionModel = t.Object({
+  number: t.Integer(),
+  author: t.UnionEnum(DESIGN_REVISION_AUTHORS),
+  at: t.String({ format: "date-time" }),
+  ops: t.Array(t.Unknown()),
+  snapshot: t.Unknown({
+    description:
+      "The whole graph, set on the first revision and on some later ones",
+  }),
+});
+export type InterviewReplayRevisionModel =
+  typeof InterviewReplayRevisionModel.static;
+
+export const InterviewReplayModel = t.Object({
+  ...InterviewModel.properties,
+  events: t.Array(InterviewReplayEventModel),
+  revisions: t.Array(InterviewReplayRevisionModel, {
+    description: "Oldest first, each with the ops that made it",
+  }),
+  layout: t.Record(t.String(), t.Object({ x: t.Number(), y: t.Number() })),
+});
+export type InterviewReplayModel = typeof InterviewReplayModel.static;

@@ -1,5 +1,6 @@
 export { applyInterviewOpsRoute } from "./apply-interview-ops.route";
 export { getInterviewRoute } from "./get-interview.route";
+export { getInterviewReplayRoute } from "./get-interview-replay.route";
 export { interruptInterviewerRoute } from "./interrupt-interviewer.route";
 export { interviewEventsRoute } from "./interview-events.route";
 export * from "./interview-params";

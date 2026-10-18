@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
-import { ArrowLeft, RotateCw } from "lucide-react";
+import { ArrowLeft, Clapperboard, RotateCw } from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { errorMessage } from "@/features/auth";
@@ -60,9 +60,22 @@ export function ReviewView({ interviewId, onOpenInterview }: ReviewViewProps) {
               })}
             </p>
           </div>
-          {interview.status === "reviewed" ? (
-            <ShareButton subject="interview" subjectId={interviewId} />
-          ) : null}
+          <div className="flex shrink-0 flex-wrap gap-2">
+            {interview.status !== "active" ? (
+              <Link
+                to="/interviews/$interviewId/replay"
+                params={{ interviewId }}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                <Clapperboard aria-hidden="true" />
+                <span className="hidden sm:inline">Watch the replay</span>
+                <span className="sm:hidden">Replay</span>
+              </Link>
+            ) : null}
+            {interview.status === "reviewed" ? (
+              <ShareButton subject="interview" subjectId={interviewId} />
+            ) : null}
+          </div>
         </div>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start">
           <div className="flex min-w-0 flex-col gap-6">

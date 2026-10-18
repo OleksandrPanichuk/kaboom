@@ -529,6 +529,15 @@ the phases it is offered in, and a handler that goes through the module's
 own use cases. An invalid input or an `AppError` comes back to the model as
 a tool error rather than failing the turn.
 
+An ended interview can be played back. `GET /interviews/:id/replay`
+answers its messages, every event in order and the design's revisions with
+the ops that made each, from the first one's snapshot, and refuses while the
+interview is active (`409 INTERVIEW_STILL_RUNNING`). The web rebuilds the
+canvas at any moment by applying the ops in turn (`buildTimeline` in the
+interview feature's `utils/replay.ts`), shows what was said and done up to
+that moment, and steps from one moment to the next when it plays, rather
+than in real time. A highlight shows on the canvas for twenty seconds.
+
 `ExpireStaleInterviewsJob` runs hourly and expires an active interview a
 day after its last event, or after its start when it has none: the
 interview moves to `expired`, its design is locked, and nothing is
