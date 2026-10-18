@@ -33,14 +33,14 @@ export const METRICS = {
     name: "job_runs",
     unit: "1",
     description: "Background job attempts, by how they ended",
-    labels: ["job", "queue", "outcome"],
+    labels: ["job_name", "queue", "outcome"],
   },
   jobDuration: {
     kind: "histogram",
     name: "job_duration",
     unit: "ms",
     description: "Time a background job attempt took",
-    labels: ["job", "queue", "outcome"],
+    labels: ["job_name", "queue", "outcome"],
     buckets: SLOW_MS,
   },
   llmTurns: {

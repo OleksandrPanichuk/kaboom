@@ -168,7 +168,7 @@ export class BullMqJobQueue extends JobQueue {
     outcome: JobOutcome,
     startedAt: number,
   ): void {
-    const labels = { job: job.name, queue: job.queue, outcome };
+    const labels = { job_name: job.name, queue: job.queue, outcome };
     const metrics = make(Metrics);
 
     metrics.count("jobRuns", 1, labels);

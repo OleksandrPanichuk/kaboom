@@ -114,11 +114,13 @@ describe.skipIf(!queue)("BullMqJobQueue against a real Redis", () => {
         .of("jobRuns")
         .map(({ labels }) => labels);
 
-    await settle(() => jobs().some(({ job }) => job === "test.probe"));
-
-    expect(jobs().find(({ job }) => job === "test.probe")?.outcome).toBe(
-      "done",
+    await settle(() =>
+      jobs().some((labels) => labels.job_name === "test.probe"),
     );
+
+    expect(
+      jobs().find((labels) => labels.job_name === "test.probe")?.outcome,
+    ).toBe("done");
   });
 
   test("refuses a second handler for the same job", () => {
@@ -165,7 +167,7 @@ describe.skipIf(!queue)("BullMqJobQueue against a real Redis", () => {
     const outcomes = (make(Metrics) as MemoryMetrics)
       .of("jobRuns")
       .map(({ labels }) => labels)
-      .filter(({ job }) => job === "test.failing")
+      .filter((labels) => labels.job_name === "test.failing")
       .map(({ outcome }) => outcome);
 
     expect(outcomes).toEqual(["retried", "failed"]);

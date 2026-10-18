@@ -82,7 +82,7 @@ describe("CloudWatchMetrics", () => {
     request(metrics, 10, "2xx");
     request(metrics, 10, "5xx");
     metrics.observe("jobDuration", 5, {
-      job: "notifications.send-email",
+      job_name: "notifications.send-email",
       queue: "notifications",
       outcome: "failed",
     });
