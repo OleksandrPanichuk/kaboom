@@ -112,14 +112,14 @@ export const METRICS = {
   designTestQueue: {
     kind: "gauge",
     name: "design_test_queue",
-    unit: "1",
+    unit: "{test}",
     description: "Design tests waiting for a worker",
     labels: [],
   },
   billingEventsFailed: {
     kind: "gauge",
     name: "billing_events_failed",
-    unit: "1",
+    unit: "{event}",
     description: "Billing events whose last attempt failed",
     labels: [],
   },
