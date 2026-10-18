@@ -6,6 +6,7 @@ import {
   optionIndex,
   shapeOf,
   switchOption,
+  visibleIssues,
 } from "./schemaForm";
 
 const load = {
@@ -86,5 +87,48 @@ describe("a schema form", () => {
     expect(humanize("slo-breach")).toBe("SLO breach");
     expect(humanize("durationSeconds")).toBe("Duration seconds");
     expect(humanize("key-value")).toBe("Key value");
+  });
+});
+
+describe("visibleIssues", () => {
+  const issues = [
+    { path: ["drills", 0, "title"], message: "Required" },
+    { path: ["drills", 0, "durationSeconds"], message: "Too short" },
+  ];
+
+  test("hides an issue on a field nobody has left yet", () => {
+    expect(
+      visibleIssues(issues, {
+        strict: false,
+        touched: new Set(),
+        reveal: null,
+      }),
+    ).toEqual([]);
+  });
+
+  test("shows the issue of a field once it loses focus", () => {
+    expect(
+      visibleIssues(issues, {
+        strict: false,
+        touched: new Set(["drills.0.title"]),
+        reveal: null,
+      }),
+    ).toEqual([issues[0]!]);
+  });
+
+  test("shows the issue the author followed from the strip", () => {
+    expect(
+      visibleIssues(issues, {
+        strict: false,
+        touched: new Set(),
+        reveal: { path: ["drills", 0, "durationSeconds"] },
+      }),
+    ).toEqual([issues[1]!]);
+  });
+
+  test("shows every issue once the draft has been checked", () => {
+    expect(
+      visibleIssues(issues, { strict: true, touched: new Set(), reveal: null }),
+    ).toEqual(issues);
   });
 });
