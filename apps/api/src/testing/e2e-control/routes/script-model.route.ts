@@ -6,7 +6,7 @@ import type {
 } from "@/adapters/llm/scripted.language-model";
 import { make } from "@/core/registry";
 import { defineRoute } from "@/core/route";
-import { LanguageModel } from "@/platform/llm";
+import { LanguageModel, type MeasuredLanguageModel } from "@/platform/llm";
 
 export const scriptModelRoute = () =>
   defineRoute({
@@ -15,7 +15,8 @@ export const scriptModelRoute = () =>
     summary: "Queue what the language model says on its next turn",
 
     action: ({ body }) => {
-      const model = make(LanguageModel) as ScriptedLanguageModel;
+      const model = (make(LanguageModel) as MeasuredLanguageModel)
+        .inner as ScriptedLanguageModel;
 
       model.enqueue(body.steps as ScriptStep[]);
 

@@ -25,7 +25,11 @@ import { TurnScheduler } from "@/modules/interviews";
 import { Mailer } from "@/modules/notifications/ports";
 import { CaptchaVerifier } from "@/platform/captcha";
 import { ErrorReporter } from "@/platform/error-reporting";
-import { LanguageModel, UsageLedger } from "@/platform/llm";
+import {
+  LanguageModel,
+  MeasuredLanguageModel,
+  UsageLedger,
+} from "@/platform/llm";
 import { Metrics } from "@/platform/metrics";
 import { RateLimitStore } from "@/platform/rate-limit";
 import { Realtime } from "@/platform/realtime";
@@ -108,7 +112,9 @@ afterEach(async () => {
   (make(Realtime) as MemoryRealtime).clear();
   const model = make(LanguageModel);
 
-  if (model instanceof ScriptedLanguageModel) model.reset();
+  const scripted = model instanceof MeasuredLanguageModel ? model.inner : model;
+
+  if (scripted instanceof ScriptedLanguageModel) scripted.reset();
 
   (make(UsageLedger) as MemoryUsageLedger).clear();
   (make(BillingProvider) as MemoryBillingProvider).clear();

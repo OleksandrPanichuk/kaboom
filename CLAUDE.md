@@ -119,7 +119,7 @@ needs, such as a vendor's request limits, live there and not in the platform
 folder:
 
 ```
-adapters/metrics/    cloudwatch/    memory.metrics.ts    noop.metrics.ts
+adapters/metrics/    otlp/    cloudwatch/    memory.metrics.ts    noop.metrics.ts
 ```
 
 Siblings in one folder are the alternatives you pick between in `register()`,
@@ -287,6 +287,33 @@ reported. A job overrides `failed` to handle its own failure differently.
 The `ErrorReporter` port lives in `core`, not in `platform/error-reporting`,
 because `Injectable` is in `core` and `core` never imports `platform`. The
 platform folder still owns the lifecycle and picks the adapter.
+
+## Metrics
+
+Every metric is declared once, in `METRICS` (`platform/metrics/metrics.catalogue.ts`):
+its kind (counter, histogram or gauge), the name it is exported under, its
+unit and the labels it takes. The `Metrics` port records them by that key,
+`metrics.count("llmTokens", 80, { role, type })`, and the types refuse a
+name the catalogue lacks or a label it does not list, so the code and the
+dashboards built on the exported names cannot drift apart. A gauge is a
+reader the exporter calls when it collects, `metrics.gauge("billingEventsFailed",
+() => events.countFailed())`, so state that changes without an event needs no
+timer of its own.
+
+`OtlpMetrics` exports over OTLP/HTTP when `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT`
+is set, so any backend that speaks OpenTelemetry works without a change here;
+`CloudWatchMetrics` sends to CloudWatch when its namespace is set instead;
+`NoopMetrics` drops everything otherwise, and `MemoryMetrics` keeps them for
+tests (`of(name)`, `read(gauge)`).
+
+Two ports are measured by wrapping them rather than by every adapter:
+`MeasuredLanguageModel` records each request's duration, time to the first
+token, stop reason, tokens by type and failures, and `MeasuredDesignTester`
+each test's duration and outcome (`done`, `busy`, `timed_out`, `failed`).
+Both are bound around whatever adapter `register` picked, the scripted and
+inline ones included, so a test reaches the scripted model through
+`.inner`. The worker pool reports its queue length and the workers it
+replaced itself, since only it knows them.
 
 ## Generating code
 

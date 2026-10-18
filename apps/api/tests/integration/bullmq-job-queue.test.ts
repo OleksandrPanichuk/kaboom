@@ -109,7 +109,10 @@ describe.skipIf(!queue)("BullMqJobQueue against a real Redis", () => {
 
     expect(handled).toContain("hello");
 
-    const jobs = () => (make(Metrics) as MemoryMetrics).jobs();
+    const jobs = () =>
+      (make(Metrics) as MemoryMetrics)
+        .of("jobRuns")
+        .map(({ labels }) => labels);
 
     await settle(() => jobs().some(({ job }) => job === "test.probe"));
 
@@ -160,7 +163,8 @@ describe.skipIf(!queue)("BullMqJobQueue against a real Redis", () => {
     expect(failedAttempts).toHaveLength(2);
     expect(reporter.reports()).toHaveLength(1);
     const outcomes = (make(Metrics) as MemoryMetrics)
-      .jobs()
+      .of("jobRuns")
+      .map(({ labels }) => labels)
       .filter(({ job }) => job === "test.failing")
       .map(({ outcome }) => outcome);
 

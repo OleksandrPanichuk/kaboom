@@ -20,6 +20,10 @@ export abstract class BillingEventsRepository extends Repository {
 
   public abstract claim(id: string): Promise<BillingEventEntity | null>;
 
+  public abstract countFailed(): Promise<number>;
+
+  public abstract oldestPendingSince(): Promise<Date | null>;
+
   public abstract settle(
     id: string,
     status: "processed" | "ignored",

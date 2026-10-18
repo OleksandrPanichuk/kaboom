@@ -165,6 +165,19 @@ export const EnvSchema = z.object({
     .max(300_000)
     .default(30_000),
 
+  OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: z.preprocess(
+    emptyAsUnset,
+    z.url({ protocol: /^https?$/ }).optional(),
+  ),
+  OTEL_EXPORTER_OTLP_HEADERS: z.preprocess(
+    emptyAsUnset,
+    z.string().trim().min(1).optional(),
+  ),
+  METRICS_EXPORT_SECONDS: z.preprocess(
+    emptyAsUnset,
+    z.coerce.number().int().min(10).max(300).default(60),
+  ),
+
   CLOUDWATCH_METRICS_NAMESPACE: z.preprocess(
     emptyAsUnset,
     z.string().trim().min(1).max(255).optional(),

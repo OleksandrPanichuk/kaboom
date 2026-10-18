@@ -2,6 +2,7 @@ import { captureException } from "@/core/error-reporting";
 import { make, makeRepository, makeService } from "@/core/registry";
 import { Service } from "@/core/service";
 import { UsageLedger } from "@/platform/llm";
+import { Metrics } from "@/platform/metrics";
 
 import type { InterviewEntity } from "../interview.entity";
 import { InterviewsService } from "../interviews.service";
@@ -183,6 +184,7 @@ export class TurnScheduler extends Service {
     if (
       !(await make(UsageLedger).reserve(interview.ownerId, TURN_TOKEN_ESTIMATE))
     ) {
+      make(Metrics).count("llmBudgetRefusals", 1, {});
       await this.notifyBudget(interview, box);
 
       return;

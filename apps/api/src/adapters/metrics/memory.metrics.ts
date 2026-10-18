@@ -1,32 +1,63 @@
-import {
-  type JobMeasurement,
-  Metrics,
-  type RequestMeasurement,
-} from "@/platform/metrics/ports/metrics";
+import type {
+  CounterName,
+  GaugeName,
+  GaugeReader,
+  HistogramName,
+  LabelsOf,
+  MetricName,
+} from "@/platform/metrics/metrics.catalogue";
+import { Metrics } from "@/platform/metrics/ports/metrics";
+
+export interface RecordedMetric<Name extends MetricName = MetricName> {
+  name: Name;
+  value: number;
+  labels: LabelsOf<Name>;
+}
+
+interface Recorded {
+  name: MetricName;
+  value: number;
+  labels: Readonly<Record<string, string>>;
+}
 
 export class MemoryMetrics extends Metrics {
-  private readonly recordedRequests: RequestMeasurement[] = [];
+  private readonly recorded: Recorded[] = [];
 
-  private readonly recordedJobs: JobMeasurement[] = [];
+  private readonly gauges = new Map<GaugeName, GaugeReader>();
 
-  public recordRequest(measurement: RequestMeasurement): void {
-    this.recordedRequests.push(measurement);
+  public count<Name extends CounterName>(
+    name: Name,
+    value: number,
+    labels: LabelsOf<Name>,
+  ): void {
+    this.recorded.push({ name, value, labels });
   }
 
-  public recordJob(measurement: JobMeasurement): void {
-    this.recordedJobs.push(measurement);
+  public observe<Name extends HistogramName>(
+    name: Name,
+    value: number,
+    labels: LabelsOf<Name>,
+  ): void {
+    this.recorded.push({ name, value, labels });
   }
 
-  public requests(): readonly RequestMeasurement[] {
-    return this.recordedRequests;
+  public gauge(name: GaugeName, read: GaugeReader): void {
+    this.gauges.set(name, read);
   }
 
-  public jobs(): readonly JobMeasurement[] {
-    return this.recordedJobs;
+  public of<Name extends MetricName>(name: Name): Array<RecordedMetric<Name>> {
+    return this.recorded.filter(
+      (entry) => entry.name === name,
+    ) as unknown as Array<RecordedMetric<Name>>;
+  }
+
+  public async read(name: GaugeName): Promise<number | null> {
+    const reader = this.gauges.get(name);
+
+    return reader ? reader() : null;
   }
 
   public clear(): void {
-    this.recordedRequests.length = 0;
-    this.recordedJobs.length = 0;
+    this.recorded.length = 0;
   }
 }

@@ -3,6 +3,7 @@ import { UseCase } from "@/core/use-case";
 import { transaction } from "@/db/executor";
 import { CreateDesignUseCase } from "@/modules/designs";
 import { ProblemsService } from "@/modules/problems";
+import { Metrics } from "@/platform/metrics";
 
 import type { InterviewView } from "../interview.entity";
 import {
@@ -22,6 +23,8 @@ type Options = StartInterviewUseCaseOptions;
 type Result = InterviewView;
 
 export class StartInterviewUseCase extends UseCase<Options, Result> {
+  private readonly metrics = make(Metrics);
+
   private readonly problems = makeService(ProblemsService);
 
   private readonly service = makeService(InterviewsService);
@@ -75,6 +78,7 @@ export class StartInterviewUseCase extends UseCase<Options, Result> {
       await emit("message", { messageId: opening.id });
     });
 
+    this.metrics.count("productEvents", 1, { event: "interview_started" });
     return make(GetInterviewUseCase).execute({ ownerId, id: interview.id });
   }
 }

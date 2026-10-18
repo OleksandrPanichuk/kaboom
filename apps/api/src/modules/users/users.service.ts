@@ -2,6 +2,7 @@ import { make, makeRepository } from "@/core/registry";
 import { Service } from "@/core/service";
 import type { UserRole } from "@/db";
 import { Cache } from "@/platform/cache";
+import { Metrics } from "@/platform/metrics";
 
 import { type UpdateUserData, UserLifecycle, UsersRepository } from "./ports";
 import {
@@ -18,6 +19,8 @@ export interface CreateUserInput {
 }
 
 export class UsersService extends Service {
+  private readonly metrics = make(Metrics);
+
   private readonly repo = makeRepository(UsersRepository);
   private readonly cache = make(Cache);
 
@@ -29,6 +32,7 @@ export class UsersService extends Service {
 
     await make(UserLifecycle).created(user);
 
+    this.metrics.count("productEvents", 1, { event: "sign_up" });
     return user;
   }
 

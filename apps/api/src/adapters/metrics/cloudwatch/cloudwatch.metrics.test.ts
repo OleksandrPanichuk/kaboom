@@ -29,20 +29,25 @@ const recorder = (fail = false) => {
   return { sent, metrics };
 };
 
-const request = (durationMs: number, status = 200) => ({
-  method: "GET",
-  route: "/api/users/me",
-  status,
-  durationMs,
-});
+const request = (
+  metrics: CloudWatchMetrics,
+  durationMs: number,
+  status = "2xx",
+  route = "/api/users/me",
+) => {
+  const labels = { method: "GET", route, status_class: status };
+
+  metrics.count("httpRequests", 1, labels);
+  metrics.observe("httpDuration", durationMs, labels);
+};
 
 describe("CloudWatchMetrics", () => {
   test("aggregates requests with the same dimensions into one statistic set", async () => {
     const { sent, metrics } = recorder();
 
-    metrics.recordRequest(request(10));
-    metrics.recordRequest(request(30));
-    metrics.recordRequest(request(20));
+    request(metrics, 10);
+    request(metrics, 30);
+    request(metrics, 20);
     await metrics.flush();
 
     expect(sent).toHaveLength(1);
@@ -51,19 +56,19 @@ describe("CloudWatchMetrics", () => {
     const datum = (name: string) =>
       sent[0]?.MetricData?.find((metric) => metric.MetricName === name);
 
-    expect(datum("RequestDuration")).toEqual({
-      MetricName: "RequestDuration",
+    expect(datum("http_request_duration")).toEqual({
+      MetricName: "http_request_duration",
       Unit: "Milliseconds",
       Timestamp: NOW,
       Dimensions: [
         { Name: "Environment", Value: "production" },
-        { Name: "Method", Value: "GET" },
-        { Name: "Route", Value: "/api/users/me" },
-        { Name: "StatusClass", Value: "2xx" },
+        { Name: "method", Value: "GET" },
+        { Name: "route", Value: "/api/users/me" },
+        { Name: "status_class", Value: "2xx" },
       ],
       StatisticValues: { SampleCount: 3, Sum: 60, Minimum: 10, Maximum: 30 },
     });
-    expect(datum("RequestCount")?.StatisticValues).toEqual({
+    expect(datum("http_requests")?.StatisticValues).toEqual({
       SampleCount: 3,
       Sum: 3,
       Minimum: 1,
@@ -74,13 +79,12 @@ describe("CloudWatchMetrics", () => {
   test("keeps different dimensions apart", async () => {
     const { sent, metrics } = recorder();
 
-    metrics.recordRequest(request(10, 200));
-    metrics.recordRequest(request(10, 503));
-    metrics.recordJob({
+    request(metrics, 10, "2xx");
+    request(metrics, 10, "5xx");
+    metrics.observe("jobDuration", 5, {
       job: "notifications.send-email",
       queue: "notifications",
       outcome: "failed",
-      durationMs: 5,
     });
     await metrics.flush();
 
@@ -89,10 +93,10 @@ describe("CloudWatchMetrics", () => {
         `${datum.MetricName}:${datum.Dimensions?.map((d) => d.Value).join(",")}`,
     );
 
-    expect(names).toHaveLength(6);
-    expect(names).toContain("RequestCount:production,GET,/api/users/me,5xx");
+    expect(names).toHaveLength(5);
+    expect(names).toContain("http_requests:production,GET,/api/users/me,5xx");
     expect(names).toContain(
-      "JobDuration:production,notifications.send-email,notifications,failed",
+      "job_duration:production,notifications.send-email,notifications,failed",
     );
   });
 
@@ -100,7 +104,7 @@ describe("CloudWatchMetrics", () => {
     const { sent, metrics } = recorder();
 
     for (let i = 0; i < CLOUDWATCH_MAX_METRICS_PER_REQUEST; i += 1) {
-      metrics.recordRequest({ ...request(1), route: `/api/r${i}` });
+      request(metrics, 1, "2xx", `/api/r${i}`);
     }
     await metrics.flush();
 
@@ -122,7 +126,7 @@ describe("CloudWatchMetrics", () => {
   test("starts a fresh window after each flush", async () => {
     const { sent, metrics } = recorder();
 
-    metrics.recordRequest(request(10));
+    request(metrics, 10);
     await metrics.flush();
     await metrics.flush();
 
@@ -132,17 +136,35 @@ describe("CloudWatchMetrics", () => {
   test("never throws when CloudWatch refuses the request", async () => {
     const { sent, metrics } = recorder(true);
 
-    metrics.recordRequest(request(10));
+    request(metrics, 10);
 
     expect(await metrics.flush().then(() => "settled")).toBe("settled");
     expect(sent).toHaveLength(1);
+  });
+
+  test("reads each gauge when it flushes, and skips one that throws", async () => {
+    const { sent, metrics } = recorder();
+
+    metrics.gauge("billingEventsFailed", () => 3);
+    metrics.gauge("billingOldestPending", () => {
+      throw new Error("database down");
+    });
+    await metrics.flush();
+
+    expect(sent[0]?.MetricData).toEqual([
+      expect.objectContaining({
+        MetricName: "billing_events_failed",
+        Unit: "Count",
+        StatisticValues: { SampleCount: 1, Sum: 3, Minimum: 3, Maximum: 3 },
+      }),
+    ]);
   });
 
   test("flushes what is left on close", async () => {
     const { sent, metrics } = recorder();
 
     await metrics.start();
-    metrics.recordRequest(request(10));
+    request(metrics, 10);
     await metrics.close();
 
     expect(sent).toHaveLength(1);

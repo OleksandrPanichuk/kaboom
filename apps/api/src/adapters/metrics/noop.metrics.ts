@@ -1,11 +1,15 @@
 import { Metrics } from "@/platform/metrics/ports/metrics";
 
 export class NoopMetrics extends Metrics {
-  public recordRequest(): void {
+  public count(): void {
     return;
   }
 
-  public recordJob(): void {
+  public observe(): void {
+    return;
+  }
+
+  public gauge(): void {
     return;
   }
 }
