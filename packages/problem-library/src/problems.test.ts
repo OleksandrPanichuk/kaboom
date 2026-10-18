@@ -907,6 +907,102 @@ describe("scoring the latency regression", () => {
   });
 });
 
+describe("scoring the on-call alerts", () => {
+  const reference = OFFICIAL_PROBLEMS.find(
+    (item) => item.slug === "on-call-alerts",
+  )!.reference.graph;
+
+  test("an alert that pages at once wakes someone for a lunchtime spike", () => {
+    const { passed } = passedItems(
+      "on-call-alerts",
+      withProps(reference, "alert", { forSeconds: 0 }),
+    );
+
+    expect(passed["sleeps-through-a-spike"]).toBe(false);
+    expect(passed["pages-on-an-outage"]).toBe(true);
+  });
+
+  test("waiting five minutes pages too late for an outage", () => {
+    const { passed } = passedItems(
+      "on-call-alerts",
+      withProps(reference, "alert", { forSeconds: 300 }),
+    );
+
+    expect(passed["pages-on-an-outage"]).toBe(false);
+    expect(passed["quiet-on-a-normal-day"]).toBe(true);
+  });
+
+  test("an alert on errors alone misses requests that turn slow", () => {
+    const { passed } = passedItems(
+      "on-call-alerts",
+      withProps(reference, "alert", { signal: "error-rate" }),
+    );
+
+    expect(passed["pages-on-slow-pods"]).toBe(false);
+    expect(passed["pages-on-failing-orders"]).toBe(true);
+  });
+
+  test("alerts on targets nothing scrapes never fire", () => {
+    const { passed } = passedItems("on-call-alerts", {
+      ...reference,
+      edges: reference.edges.filter((item) => item.kind !== "scrapes"),
+    });
+
+    expect(passed["pages-on-an-outage"]).toBe(false);
+    expect(passed["watches-the-database"]).toBe(false);
+  });
+});
+
+describe("scoring the lunch rush", () => {
+  const problem = OFFICIAL_PROBLEMS.find(
+    (item) => item.slug === "lunch-rush-autoscaling",
+  )!;
+  const reference = problem.reference.graph;
+  const fixedPods = (replicas: number): DesignGraph =>
+    withProps(
+      {
+        ...reference,
+        nodes: reference.nodes.filter((item) => item.kind !== "hpa"),
+        edges: reference.edges.filter((item) => item.kind !== "scales"),
+      },
+      "k8s-deployment",
+      { replicas },
+    );
+
+  test("twelve pods all day still fall over at lunch", () => {
+    const { passed } = passedItems("lunch-rush-autoscaling", fixedPods(12));
+
+    expect(passed["keeps-up-with-the-rush"]).toBe(false);
+    expect(passed["stays-within-budget"]).toBe(false);
+  });
+
+  test("sixteen pods all day carry the rush and break the budget", () => {
+    const { passed } = passedItems("lunch-rush-autoscaling", fixedPods(16));
+
+    expect(passed["keeps-up-with-the-rush"]).toBe(true);
+    expect(passed["stays-within-budget"]).toBe(false);
+  });
+
+  test("an autoscaler at the default target adds pods once they are full", () => {
+    const { passed } = passedItems(
+      "lunch-rush-autoscaling",
+      withProps(reference, "hpa", { targetUtilisation: 0.7 }),
+    );
+
+    expect(passed["keeps-up-with-the-rush"]).toBe(false);
+    expect(passed["stays-within-budget"]).toBe(true);
+  });
+
+  test("a ceiling past the quota does not count", () => {
+    const { passed } = passedItems(
+      "lunch-rush-autoscaling",
+      withProps(reference, "hpa", { max: 24 }),
+    );
+
+    expect(passed["keeps-up-with-the-rush"]).toBe(false);
+  });
+});
+
 describe("scoring the monorepo pipeline", () => {
   const reference = OFFICIAL_PROBLEMS.find(
     (item) => item.slug === "monorepo-pipeline",
