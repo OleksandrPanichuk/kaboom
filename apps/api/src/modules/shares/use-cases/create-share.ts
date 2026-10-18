@@ -1,8 +1,9 @@
 import { randomBytes } from "node:crypto";
 
-import { makeRepository, makeService } from "@/core/registry";
+import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import type { ShareSubject } from "@/db";
+import { Metrics } from "@/platform/metrics";
 
 import type { ShareEntity } from "../share.entity";
 import { SHARE_TOKEN_BYTES } from "../shares.constants";
@@ -23,6 +24,8 @@ export class CreateShareUseCase extends UseCase<Options, Result> {
 
   private readonly shares = makeRepository(SharesRepository);
 
+  private readonly metrics = make(Metrics);
+
   public async execute({
     ownerId,
     subject,
@@ -30,11 +33,15 @@ export class CreateShareUseCase extends UseCase<Options, Result> {
   }: Options): Promise<Result> {
     await this.service.assertShareable(subject, subjectId, ownerId);
 
-    return this.shares.insertLive({
+    const share = await this.shares.insertLive({
       token: randomBytes(SHARE_TOKEN_BYTES).toString("base64url"),
       ownerId,
       subject,
       subjectId,
     });
+
+    this.metrics.count("productEvents", 1, { event: "share" });
+
+    return share;
   }
 }

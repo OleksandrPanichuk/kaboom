@@ -15,7 +15,11 @@ import {
   TurnScheduler,
 } from "@/modules/interviews";
 import { ProblemsService } from "@/modules/problems";
-import { LanguageModel, UsageLedger } from "@/platform/llm";
+import {
+  LanguageModel,
+  type MeasuredLanguageModel,
+  UsageLedger,
+} from "@/platform/llm";
 
 import { reviewAnswer } from "../reviews/helpers";
 import {
@@ -29,7 +33,8 @@ const shortener = OFFICIAL_PROBLEMS.find(
   (problem) => problem.slug === "url-shortener",
 )!;
 
-const model = () => make(LanguageModel) as ScriptedLanguageModel;
+const model = () =>
+  (make(LanguageModel) as MeasuredLanguageModel).inner as ScriptedLanguageModel;
 const scheduler = () => make(TurnScheduler);
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
