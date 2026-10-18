@@ -49,3 +49,10 @@ apps/web/.tanstack
 
 playwright-report
 test-results
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
