@@ -133,3 +133,27 @@ jobs:
             apps/web/playwright-report
             apps/web/test-results
           retention-days: 7
+
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    defaults:
+      run:
+        working-directory: infra/observability/grafana
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.4
+
+      - name: Format
+        run: terraform fmt -check -recursive
+
+      - name: Validate
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
