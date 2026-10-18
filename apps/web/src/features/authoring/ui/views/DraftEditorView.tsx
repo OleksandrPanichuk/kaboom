@@ -110,6 +110,10 @@ export function DraftEditorView({
   const reference = asContent(content.reference);
   const refs = useMemo(() => draftRefs(content), [content]);
   const [reveal, setReveal] = useState<SchemaFormReveal | null>(null);
+  const [strict, setStrict] = useState(false);
+
+  if (editor.checked !== null && !strict) setStrict(true);
+
   const latest = draft.reviews[0];
   const issuesIn = (section: DraftSectionId) =>
     editor.issues.filter((issue) => sectionOf(issue.path) === section).length;
@@ -139,6 +143,7 @@ export function DraftEditorView({
     refs,
     issues: editor.issues,
     issueCount: issuesIn(id),
+    strict,
     reveal,
   });
 

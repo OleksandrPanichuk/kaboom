@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 
-import type { JsonSchema } from "@/features/authoring/utils";
+import { type JsonSchema, visibleIssues } from "@/features/authoring/utils";
 
 import { SchemaField } from "./SchemaField";
 import {
@@ -16,6 +16,7 @@ interface SchemaFormProps {
   path: ReadonlyArray<string | number>;
   refs: Readonly<Record<string, readonly string[]>>;
   issues: readonly SchemaFormIssue[];
+  strict?: boolean;
   reveal?: SchemaFormReveal | null;
   onChange: (value: unknown) => void;
 }
@@ -27,12 +28,26 @@ export function SchemaForm({
   path,
   refs,
   issues,
+  strict = false,
   reveal = null,
   onChange,
 }: SchemaFormProps) {
+  const [touched, setTouched] = useState<ReadonlySet<string>>(new Set());
+  const touch = useCallback((at: ReadonlyArray<string | number>) => {
+    const key = at.join(".");
+
+    setTouched((current) =>
+      current.has(key) ? current : new Set(current).add(key),
+    );
+  }, []);
   const context = useMemo(
-    () => ({ refs, issues, reveal }),
-    [refs, issues, reveal],
+    () => ({
+      refs,
+      issues: visibleIssues(issues, { strict, touched, reveal }),
+      reveal,
+      touch,
+    }),
+    [refs, issues, strict, touched, reveal, touch],
   );
 
   return (

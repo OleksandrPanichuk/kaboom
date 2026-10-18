@@ -21,13 +21,14 @@ export function FieldFrame({
   path,
   children,
 }: FieldFrameProps) {
-  const { issues } = useSchemaForm();
+  const { issues, touch } = useSchemaForm();
   const issue = issues.find((item) => samePath(item.path, path));
   const [help, setHelp] = useState(false);
   const helpId = `${id}-help`;
 
   return (
     <Field
+      onBlur={() => touch(path)}
       data-invalid={issue ? true : undefined}
       data-path={path.join(".")}
       className="gap-1.5"
