@@ -1,13 +1,14 @@
 export const FREE_FEATURES = [
-  "Every problem and track",
-  "Mock interviews within the daily limit",
-  "Reviews of your interviews and submissions",
+  "Every problem and track, with scores and a leaderboard place",
+  "One AI interview a week, scored on every rubric item",
+  "Reviews of your challenge submissions",
 ];
 
 export const PRO_FEATURES = [
   "Everything in Free",
-  "More interview time every day",
-  "Support the platform as it grows",
+  "Up to three AI interviews a day",
+  "Every review explained, with the moments it rests on",
+  "Replay of every interview, conversation and canvas in step",
 ];
 
 export interface PlanComparisonRow {
@@ -18,11 +19,17 @@ export interface PlanComparisonRow {
 
 export const PLAN_COMPARISON: readonly PlanComparisonRow[] = [
   { feature: "Problems and tracks", free: "All", pro: "All" },
-  { feature: "Challenge reviews", free: true, pro: true },
-  { feature: "Mock interviews", free: "Daily limit", pro: "More every day" },
-  { feature: "Interview reviews", free: true, pro: true },
+  { feature: "Challenge scores and reviews", free: true, pro: true },
   { feature: "Leaderboard and profile", free: true, pro: true },
-  { feature: "Supports the platform", free: false, pro: true },
+  { feature: "Writing and sharing problems", free: true, pro: true },
+  { feature: "AI interviews", free: "1 a week", pro: "3 a day" },
+  { feature: "Interview score on every rubric item", free: true, pro: true },
+  {
+    feature: "Why each item scored as it did, with evidence",
+    free: false,
+    pro: true,
+  },
+  { feature: "Interview replay", free: false, pro: true },
 ];
 
 export const PLAN_QUESTIONS = [

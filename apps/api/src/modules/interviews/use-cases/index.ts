@@ -7,6 +7,10 @@ export {
   type GetInterviewUseCaseOptions,
 } from "./get-interview";
 export {
+  GetInterviewQuotaUseCase,
+  type GetInterviewQuotaUseCaseOptions,
+} from "./get-interview-quota";
+export {
   GetInterviewReplayUseCase,
   type GetInterviewReplayUseCaseOptions,
 } from "./get-interview-replay";

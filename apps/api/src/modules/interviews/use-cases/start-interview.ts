@@ -6,6 +6,7 @@ import { ProblemsService } from "@/modules/problems";
 import { Metrics } from "@/platform/metrics";
 
 import type { InterviewView } from "../interview.entity";
+import { InterviewQuotaService } from "../interview-quota.service";
 import {
   InterviewAlreadyActiveError,
   ProblemNotInterviewableError,
@@ -29,6 +30,8 @@ export class StartInterviewUseCase extends UseCase<Options, Result> {
 
   private readonly service = makeService(InterviewsService);
 
+  private readonly quota = makeService(InterviewQuotaService);
+
   private readonly interviews = makeRepository(InterviewsRepository);
 
   private readonly messages = makeRepository(InterviewMessagesRepository);
@@ -51,6 +54,8 @@ export class StartInterviewUseCase extends UseCase<Options, Result> {
         { interviewId: active.id },
       );
     }
+
+    await this.quota.require(ownerId);
 
     const interview = await transaction(async () => {
       const design = await make(CreateDesignUseCase).execute({

@@ -1,6 +1,7 @@
 import { makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { DesignRevisionsRepository, DesignsService } from "@/modules/designs";
+import { EntitlementsService } from "@/modules/entitlements";
 
 import type { InterviewReplayView } from "../interview.entity";
 import { InterviewStillRunningError } from "../interviews.errors";
@@ -23,6 +24,8 @@ export class GetInterviewReplayUseCase extends UseCase<Options, Result> {
 
   private readonly designs = makeService(DesignsService);
 
+  private readonly entitlements = makeService(EntitlementsService);
+
   private readonly messages = makeRepository(InterviewMessagesRepository);
 
   private readonly events = makeRepository(InterviewEventsRepository);
@@ -37,6 +40,8 @@ export class GetInterviewReplayUseCase extends UseCase<Options, Result> {
         "An interview can be replayed once it has ended",
       );
     }
+
+    await this.entitlements.require(ownerId, "replay");
 
     const design = await this.designs.getOwned(interview.designId, ownerId);
     const [pinned, messages, events, revisions] = await Promise.all([

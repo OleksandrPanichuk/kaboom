@@ -59,6 +59,23 @@ export class PostgresInterviewsRepository extends InterviewsRepository {
     return row ?? null;
   }
 
+  public async countStartedSince(
+    ownerId: string,
+    since: Date,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(interviewsSchema)
+      .where(
+        and(
+          eq(interviewsSchema.ownerId, ownerId),
+          gte(interviewsSchema.startedAt, since),
+        ),
+      );
+
+    return row?.total ?? 0;
+  }
+
   public async problemsReviewedSince(
     ownerId: string,
     problemIds: readonly string[],

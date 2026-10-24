@@ -1,4 +1,4 @@
-import { createGuest, createUser } from "@tests/helpers";
+import { createGuest, createProUser, createUser } from "@tests/helpers";
 import { beforeEach, describe, expect, test } from "bun:test";
 
 import { make, makeRepository } from "@/core/registry";
@@ -29,7 +29,7 @@ const reviewedInterview = async (
   scores: Record<string, number>,
   user?: Awaited<ReturnType<typeof createUser>>,
 ) => {
-  const owner = user ?? (await createUser());
+  const owner = user ?? (await createProUser());
   const interview = await startInterview(owner);
 
   await owner.post(`${PATH}/${interview.id}/messages`, { body: "Hi." });

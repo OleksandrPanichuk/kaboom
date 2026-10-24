@@ -14,3 +14,4 @@ export * from "./PlanComparison";
 export * from "./PlanOverview";
 export * from "./PlanQuestions";
 export * from "./TaxIdsSection";
+export * from "./UpgradeNotice";

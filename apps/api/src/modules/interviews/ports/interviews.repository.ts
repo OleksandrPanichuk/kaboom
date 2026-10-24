@@ -25,6 +25,11 @@ export abstract class InterviewsRepository extends Repository {
 
   public abstract findActive(ownerId: string): Promise<InterviewEntity | null>;
 
+  public abstract countStartedSince(
+    ownerId: string,
+    since: Date,
+  ): Promise<number>;
+
   public abstract problemsReviewedSince(
     ownerId: string,
     problemIds: readonly string[],

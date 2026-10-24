@@ -1,6 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { interviewReplayQuery, ReplayView } from "@/features/interview";
+import {
+  interviewReplayQuery,
+  ReplayLockedView,
+  ReplayView,
+} from "@/features/interview";
 import { ApiRequestError } from "@/lib/api";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -15,9 +19,15 @@ export const Route = createFileRoute(
       await context.queryClient.ensureQueryData(
         interviewReplayQuery(params.interviewId),
       );
+
+      return { locked: false };
     } catch (error) {
       if (error instanceof ApiRequestError && error.status === 404) {
         throw notFound();
+      }
+
+      if (error instanceof ApiRequestError && error.code === "PLAN_LIMIT") {
+        return { locked: true };
       }
 
       throw error;
@@ -28,6 +38,11 @@ export const Route = createFileRoute(
 
 function ReplayRoute() {
   const { interviewId } = Route.useParams();
+  const { locked } = Route.useLoaderData();
 
-  return <ReplayView interviewId={interviewId} />;
+  return locked ? (
+    <ReplayLockedView interviewId={interviewId} />
+  ) : (
+    <ReplayView interviewId={interviewId} />
+  );
 }

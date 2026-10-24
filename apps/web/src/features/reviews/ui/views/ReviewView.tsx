@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
-import { ArrowLeft, Clapperboard, RotateCw } from "lucide-react";
+import { ArrowLeft, Clapperboard, Lock, RotateCw } from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { errorMessage } from "@/features/auth";
+import { entitlementsQuery } from "@/features/billing";
 import { interviewQuery } from "@/features/interview";
 import { retryReviewMutation, reviewQuery } from "@/features/reviews/api";
 import {
@@ -31,6 +32,7 @@ export function ReviewView({ interviewId, onOpenInterview }: ReviewViewProps) {
     ...reviewQuery(interviewId),
     enabled: interview.status === "reviewed",
   });
+  const { data: plan } = useQuery(entitlementsQuery);
   const retry = useMutation(retryReviewMutation);
   const endedAt = interview.endedAt ?? interview.startedAt;
 
@@ -62,15 +64,28 @@ export function ReviewView({ interviewId, onOpenInterview }: ReviewViewProps) {
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             {interview.status !== "active" ? (
-              <Link
-                to="/interviews/$interviewId/replay"
-                params={{ interviewId }}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-              >
-                <Clapperboard aria-hidden="true" />
-                <span className="hidden sm:inline">Watch the replay</span>
-                <span className="sm:hidden">Replay</span>
-              </Link>
+              plan && !plan.replay ? (
+                <Link
+                  to="/pricing"
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  <Lock aria-hidden="true" />
+                  <span className="hidden sm:inline">
+                    Replay is part of Pro
+                  </span>
+                  <span className="sm:hidden">Replay · Pro</span>
+                </Link>
+              ) : (
+                <Link
+                  to="/interviews/$interviewId/replay"
+                  params={{ interviewId }}
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  <Clapperboard aria-hidden="true" />
+                  <span className="hidden sm:inline">Watch the replay</span>
+                  <span className="sm:hidden">Replay</span>
+                </Link>
+              )
             ) : null}
             {interview.status === "reviewed" ? (
               <ShareButton subject="interview" subjectId={interviewId} />

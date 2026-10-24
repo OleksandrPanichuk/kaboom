@@ -34,5 +34,9 @@ export const ReviewModel = t.Object({
   checks: t.Array(ItemResultModel),
   drills: t.Array(DrillResultModel),
   createdAt: t.String({ format: "date-time" }),
+  detail: t.UnionEnum(["full", "summary"], {
+    description:
+      "summary: the plan shows each item's score but not its rationale or citations",
+  }),
 });
 export type ReviewModel = typeof ReviewModel.static;

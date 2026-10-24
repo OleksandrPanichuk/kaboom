@@ -23,6 +23,7 @@ import {
 } from "./repositories";
 import {
   ApplyInterviewOpsUseCase,
+  GetInterviewQuotaUseCase,
   GetInterviewReplayUseCase,
   GetInterviewUseCase,
   InterruptInterviewerUseCase,
@@ -70,6 +71,7 @@ export const interviewsModule = defineModule({
       startInterview: makeUseCase(StartInterviewUseCase),
       listInterviews: makeUseCase(ListInterviewsUseCase),
       getInterview: makeUseCase(GetInterviewUseCase),
+      getInterviewQuota: makeUseCase(GetInterviewQuotaUseCase),
       getInterviewReplay: makeUseCase(GetInterviewReplayUseCase),
       postInterviewMessage: makeUseCase(PostInterviewMessageUseCase),
       applyInterviewOps: makeUseCase(ApplyInterviewOpsUseCase),

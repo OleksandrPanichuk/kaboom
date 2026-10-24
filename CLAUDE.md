@@ -980,6 +980,37 @@ and resolved against `import.meta.url`, so the build copies them next to
 draws the design from its saved layout, or in layers along its edges
 when it has none, scaled to fit.
 
+## Plans and limits
+
+`entitlements` says what a plan includes, in one table (`ENTITLEMENTS`,
+`entitlements.constants.ts`): how many interviews a plan starts and per what
+period, whether a review carries each item's reasoning and evidence, and
+whether an ended interview can be replayed. `EntitlementsService.of(userId)`
+reads the plan through `planOf`, so it follows a subscription, a lifetime
+purchase and a refund with no code of its own, and `GET /entitlements/me`
+answers it. Free has one interview a week, Pro three a day; the periods are
+UTC, a week starting on Monday, and an interview counts from the moment it
+starts, whatever became of it.
+
+A limit is checked where the thing is done, by the module that owns it, and
+refused with `402 PLAN_LIMIT` whose `details` name the `feature` and, for the
+allowance, the `limit`, the period and when it `resetsAt`. `interviews` checks
+its allowance in `InterviewQuotaService`, before anything is created, after
+the check that an interview is not already running; `GET /interviews/quota`
+answers the allowance and what is used. Replay asks `EntitlementsService.require`
+after the interview is known to have ended.
+
+A review is stored whole and cut on the way out: a Free reader gets every
+score, the design's checks and drills, and at most three strengths and three
+things to practise, but each item's rationale and citations are empty, and
+the review says `detail: "summary"`. Upgrading shows the stored review in
+full, so nothing is regenerated. The score is the same on every plan, since a
+blend of it decides a problem's score and the leaderboard.
+
+The web mirrors the table twice, by hand: the pricing page's comparison
+(`PLAN_COMPARISON`) and the copy of its upgrade notices. Change them with the
+table.
+
 ## Roles
 
 Every account has a `role`: `user`, `moderator` or `admin`, ranked in

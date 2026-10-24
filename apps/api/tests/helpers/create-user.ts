@@ -1,5 +1,6 @@
 import type { MemoryOAuthProvider } from "@/adapters/oauth/memory.oauth-provider";
 import { makeService } from "@/core/registry";
+import { getDatabase, purchasesSchema } from "@/db";
 import type { OAuthProviderName } from "@/modules/oauth";
 import { getOAuthProvider } from "@/modules/oauth";
 import { UsersService } from "@/modules/users";
@@ -66,6 +67,32 @@ export const createVerifiedUser = async (
   });
 
   await makeService(UsersService).invalidate(user.id);
+
+  return user;
+};
+
+export const grantPro = async (user: TestUser): Promise<void> => {
+  await getDatabase()
+    .insert(purchasesSchema)
+    .values({
+      userId: user.id,
+      provider: "stripe",
+      providerCustomerId: `cus_${user.id}`,
+      providerPriceId: "price_lifetime",
+      providerInvoiceId: `in_${user.id}`,
+      status: "paid",
+      amount: 14_900,
+      currency: "usd",
+      paidAt: new Date(),
+    });
+};
+
+export const createProUser = async (
+  input: UserInput = {},
+): Promise<TestUser> => {
+  const user = await createVerifiedUser(input);
+
+  await grantPro(user);
 
   return user;
 };

@@ -1,4 +1,9 @@
-import { createUser, inbox, type TestClient } from "@tests/helpers";
+import {
+  createProUser,
+  createUser,
+  inbox,
+  type TestClient,
+} from "@tests/helpers";
 import { beforeEach, describe, expect, test } from "bun:test";
 
 import { make, makeRepository } from "@/core/registry";
@@ -45,7 +50,7 @@ const review = (user: TestClient, id: string) =>
   user.get<ReviewBody>(`${PATH}/${id}/review`);
 
 const interviewWithAQuestion = async () => {
-  const user = await createUser();
+  const user = await createProUser();
   const interview = await startInterview(user);
 
   await user.post(`${PATH}/${interview.id}/messages`, {

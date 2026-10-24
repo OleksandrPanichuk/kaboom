@@ -4,6 +4,7 @@ import type { Executable } from "@/core/use-case";
 
 import {
   applyInterviewOpsRoute,
+  getInterviewQuotaRoute,
   getInterviewReplayRoute,
   getInterviewRoute,
   interruptInterviewerRoute,
@@ -18,6 +19,7 @@ import {
 } from "./routes";
 import type {
   ApplyInterviewOpsUseCase,
+  GetInterviewQuotaUseCase,
   GetInterviewReplayUseCase,
   GetInterviewUseCase,
   InterruptInterviewerUseCase,
@@ -34,6 +36,7 @@ export interface InterviewsActions {
   startInterview: Executable<StartInterviewUseCase>;
   listInterviews: Executable<ListInterviewsUseCase>;
   getInterview: Executable<GetInterviewUseCase>;
+  getInterviewQuota: Executable<GetInterviewQuotaUseCase>;
   getInterviewReplay: Executable<GetInterviewReplayUseCase>;
   postInterviewMessage: Executable<PostInterviewMessageUseCase>;
   applyInterviewOps: Executable<ApplyInterviewOpsUseCase>;
@@ -48,6 +51,7 @@ export const interviewsRoutes = (actions: InterviewsActions) =>
   new Elysia({ name: "interviews", prefix: "/interviews" })
     .post("/", ...startInterviewRoute(actions))
     .get("/", ...listInterviewsRoute(actions))
+    .get("/quota", ...getInterviewQuotaRoute(actions))
     .get("/:id", ...getInterviewRoute(actions))
     .get("/:id/replay", ...getInterviewReplayRoute(actions))
     .get("/:id/events", ...interviewEventsRoute())

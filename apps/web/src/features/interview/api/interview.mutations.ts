@@ -4,7 +4,11 @@ import { mutationOptions } from "@tanstack/react-query";
 import type { DesignTransport } from "@/features/designs";
 import { api, unwrap } from "@/lib/api";
 
-import { interviewQuery, interviewsQuery } from "./interview.queries";
+import {
+  interviewQuery,
+  interviewQuotaQuery,
+  interviewsQuery,
+} from "./interview.queries";
 
 export const startInterviewMutation = mutationOptions({
   mutationKey: ["interviews", "start"],
@@ -13,7 +17,10 @@ export const startInterviewMutation = mutationOptions({
   onSuccess: (interview, _variables, _mutateResult, { client }) => {
     client.setQueryData(interviewQuery(interview.id).queryKey, interview);
 
-    return client.invalidateQueries({ queryKey: interviewsQuery.queryKey });
+    return Promise.all([
+      client.invalidateQueries({ queryKey: interviewsQuery.queryKey }),
+      client.invalidateQueries({ queryKey: interviewQuotaQuery.queryKey }),
+    ]);
   },
 });
 

@@ -1,6 +1,6 @@
 import { createGroup, type DesignOp } from "@repo/design";
 import { OFFICIAL_PROBLEMS } from "@repo/problem-library";
-import { createUser } from "@tests/helpers";
+import { createProUser, createUser } from "@tests/helpers";
 import { beforeEach, describe, expect, test } from "bun:test";
 
 import { make } from "@/core/registry";
@@ -246,7 +246,7 @@ describe("submitting", () => {
   });
 
   test("lets a new interview start once the last one is submitted", async () => {
-    const user = await createUser();
+    const user = await createProUser();
     const first = await startInterview(user);
 
     model().enqueue(reviewAnswer());

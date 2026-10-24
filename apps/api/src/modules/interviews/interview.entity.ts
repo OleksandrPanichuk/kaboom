@@ -11,9 +11,11 @@ import type { InterviewEvent } from "./interview.events";
 import type {
   InterviewMessageModel,
   InterviewModel,
+  InterviewQuotaModel,
   InterviewReplayModel,
   InterviewSummaryModel,
 } from "./interview.model";
+import type { InterviewQuota } from "./interview-quota.service";
 
 export interface InterviewEntity {
   id: string;
@@ -125,6 +127,15 @@ export class InterviewEntity {
       lastSeq: interview.eventSeq,
       problem,
       messages: messages.map(InterviewMessageEntity.normalize),
+    };
+  }
+
+  public static normalizeQuota(quota: InterviewQuota): InterviewQuotaModel {
+    return {
+      limit: quota.limit,
+      per: quota.per,
+      used: quota.used,
+      resetsAt: quota.resetsAt.toISOString(),
     };
   }
 
