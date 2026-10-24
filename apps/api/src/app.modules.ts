@@ -40,6 +40,7 @@ import { submissionsModule } from "@/modules/submissions";
 import { subscriptionsModule } from "@/modules/subscriptions";
 import { usersModule } from "@/modules/users";
 import { verificationTokensModule } from "@/modules/verification-tokens";
+import { weeklyChallengesModule } from "@/modules/weekly-challenges";
 import { cacheModule } from "@/platform/cache";
 import { captchaModule } from "@/platform/captcha";
 import { databaseModule } from "@/platform/database";
@@ -110,5 +111,6 @@ export const modules = [
   emailPreferencesModule,
   e2eControlModule,
   practicePlansModule,
+  weeklyChallengesModule,
   jobsModule,
 ] as const satisfies readonly AppModule[];

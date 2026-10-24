@@ -2,6 +2,7 @@ import type { LinkProps } from "@tanstack/react-router";
 import {
   Bell,
   BookOpen,
+  CalendarDays,
   ChartNoAxesColumn,
   ClipboardCheck,
   CreditCard,
@@ -51,6 +52,7 @@ export const NAVIGATION: NavGroup[] = [
       { label: "Handbook", icon: BookOpen, to: "/handbook" },
       { label: "Interviews", icon: MessagesSquare, to: "/interviews" },
       { label: "Progress", icon: ChartNoAxesColumn, to: "/progress" },
+      { label: "Weekly challenge", icon: CalendarDays, to: "/weekly" },
       { label: "Leaderboard", icon: Trophy, to: "/leaderboard" },
     ],
   },

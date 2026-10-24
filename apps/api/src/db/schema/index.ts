@@ -43,3 +43,4 @@ export * from "./subscription_changes.schema";
 export * from "./subscriptions.schema";
 export * from "./users.schema";
 export * from "./verification_tokens.schema";
+export * from "./weekly_challenges.schema";
