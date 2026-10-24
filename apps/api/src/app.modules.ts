@@ -14,6 +14,7 @@ import { checkoutModule } from "@/modules/checkout";
 import { designsModule } from "@/modules/designs";
 import { disputesModule } from "@/modules/disputes";
 import { emailPreferencesModule } from "@/modules/email-preferences";
+import { entitlementsModule } from "@/modules/entitlements";
 import { interviewsModule } from "@/modules/interviews";
 import { invoicesModule } from "@/modules/invoices";
 import { leaderboardModule } from "@/modules/leaderboard";
@@ -98,6 +99,7 @@ export const modules = [
   billingTaxIdsModule,
   billingReconciliationModule,
   billingAccountModule,
+  entitlementsModule,
   checkoutModule,
   paymentMethodsModule,
   problemCommentsModule,

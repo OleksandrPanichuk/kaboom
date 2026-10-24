@@ -63,6 +63,14 @@ export const InterviewSummaryModel = t.Object({
 });
 export type InterviewSummaryModel = typeof InterviewSummaryModel.static;
 
+export const InterviewQuotaModel = t.Object({
+  limit: t.Integer(),
+  per: t.UnionEnum(["day", "week"]),
+  used: t.Integer(),
+  resetsAt: t.String({ format: "date-time" }),
+});
+export type InterviewQuotaModel = typeof InterviewQuotaModel.static;
+
 export const InterviewStatusModel = t.Object({
   status: t.UnionEnum(INTERVIEW_STATUSES),
 });

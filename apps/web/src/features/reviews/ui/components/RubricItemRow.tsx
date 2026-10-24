@@ -20,9 +20,11 @@ export function RubricItemRow({ item }: RubricItemRowProps) {
         </div>
         <ScoreDots score={item.score} />
       </div>
-      <p className="text-sm leading-6 text-subtle-foreground text-pretty">
-        {item.rationale}
-      </p>
+      {item.rationale ? (
+        <p className="text-sm leading-6 text-subtle-foreground text-pretty">
+          {item.rationale}
+        </p>
+      ) : null}
       {item.citations.length > 0 ? (
         <details className="group">
           <summary className="flex w-fit cursor-pointer list-none items-center gap-1 rounded text-sm font-medium text-interactive-foreground outline-none select-none focus-visible:ring-2 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">

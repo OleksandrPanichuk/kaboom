@@ -1,5 +1,5 @@
 import { applyOps, type DesignGraph, type DesignOp } from "@repo/design";
-import { createUser } from "@tests/helpers";
+import { createProUser, createUser } from "@tests/helpers";
 import { beforeEach, describe, expect, test } from "bun:test";
 
 import { make } from "@/core/registry";
@@ -43,7 +43,7 @@ describe("interview replay", () => {
   });
 
   test("holds every event in order and revisions that rebuild the final design", async () => {
-    const user = await createUser();
+    const user = await createProUser();
     const interview = await startInterview(user);
 
     await user.post(`${PATH}/${interview.id}/messages`, {

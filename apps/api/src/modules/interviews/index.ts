@@ -2,6 +2,7 @@ export * from "./dto";
 export * from "./interview.entity";
 export * from "./interview.events";
 export * from "./interview.model";
+export * from "./interview-quota.service";
 export * from "./interviewer/define-tool";
 export * from "./interviewer/describe-design";
 export * from "./interviewer/live";

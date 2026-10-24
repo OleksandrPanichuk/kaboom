@@ -2,6 +2,7 @@ import type { ReviewModel } from "@repo/api-client";
 import { cn } from "cn";
 import { CircleCheck, CircleX, Sparkles, Target } from "lucide-react";
 
+import { UpgradeNotice } from "@/features/billing";
 import { DrillResults, scoreTone } from "@/features/problems";
 
 import { RubricItemRow } from "./RubricItemRow";
@@ -60,6 +61,13 @@ export function ReviewReport({ review }: ReviewReportProps) {
         <h2 id="rubric" className="text-lg font-semibold tracking-[-0.02em]">
           Rubric
         </h2>
+        {review.detail === "summary" ? (
+          <UpgradeNotice title="The reasoning behind each score is part of Pro">
+            You see every score. Pro adds why each one was given, with the
+            moments of the interview it rests on, and everything stays on this
+            review for when you upgrade.
+          </UpgradeNotice>
+        ) : null}
         <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card">
           {review.items.map((item) => (
             <RubricItemRow key={item.key} item={item} />

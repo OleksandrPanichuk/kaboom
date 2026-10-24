@@ -41,8 +41,30 @@ export interface ReviewEntity {
   createdAt: Date;
 }
 
+export type ReviewDetail = "full" | "summary";
+
+export interface ReviewView extends ReviewEntity {
+  detail: ReviewDetail;
+}
+
+export const SUMMARY_HIGHLIGHTS = 3;
+
 export class ReviewEntity {
-  public static normalize(entity: ReviewEntity): ReviewModel {
+  public static asSummary(entity: ReviewEntity): ReviewView {
+    return {
+      ...entity,
+      strengths: entity.strengths.slice(0, SUMMARY_HIGHLIGHTS),
+      improvements: entity.improvements.slice(0, SUMMARY_HIGHLIGHTS),
+      items: entity.items.map((item) => ({
+        ...item,
+        rationale: "",
+        citations: [],
+      })),
+      detail: "summary",
+    };
+  }
+
+  public static normalize(entity: ReviewView): ReviewModel {
     return {
       id: entity.id,
       interviewId: entity.interviewId,
@@ -56,6 +78,7 @@ export class ReviewEntity {
       checks: entity.checks,
       drills: entity.drills,
       createdAt: entity.createdAt.toISOString(),
+      detail: entity.detail,
     };
   }
 }
