@@ -30,6 +30,7 @@ export const reviewsSchema = pgTable("reviews", {
   summary: text("summary").notNull(),
   strengths: jsonb("strengths").$type<string[]>().notNull(),
   improvements: jsonb("improvements").$type<string[]>().notNull(),
+  changes: jsonb("changes").$type<string[]>().notNull().default([]),
   items: jsonb("items").$type<unknown[]>().notNull(),
   checks: jsonb("checks").$type<unknown[]>().notNull(),
   drills: jsonb("drills").$type<unknown[]>().notNull(),

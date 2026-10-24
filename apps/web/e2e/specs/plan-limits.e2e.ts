@@ -70,6 +70,9 @@ test("on Free, one interview a week, a review without its reasoning, and no repl
   await expect(
     page.getByText("The reasoning behind each score is part of Pro"),
   ).toBeVisible();
+  await expect(
+    page.getByText("Edits to your design are part of Pro"),
+  ).toBeVisible();
   await expect(page.getByText("clarifies-requirements was solid.")).toHaveCount(
     0,
   );
@@ -80,6 +83,12 @@ test("on Free, one interview a week, a review without its reasoning, and no repl
     path: "test-results/plan-review.png",
     fullPage: true,
   });
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.screenshot({
+    path: "test-results/plan-review-mobile.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1280, height: 720 });
 
   await page.goto(page.url().replace(/\/review$/, "/replay"));
   await expect(

@@ -52,6 +52,7 @@ export const reviewAnswer = (
       summary: "A solid interview with a clear read path.",
       strengths: ["Asked about traffic before drawing."],
       improvements: ["Estimate the storage before choosing a database."],
+      changes: ["Put a cache between the API and the database."],
       items,
     },
   },

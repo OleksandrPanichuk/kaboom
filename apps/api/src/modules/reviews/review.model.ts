@@ -30,13 +30,17 @@ export const ReviewModel = t.Object({
   summary: t.String(),
   strengths: t.Array(t.String()),
   improvements: t.Array(t.String()),
+  changes: t.Array(t.String(), {
+    description:
+      "Concrete edits to the design the interview ended with, most valuable first; empty on a plan that shows the summary",
+  }),
   items: t.Array(ReviewItemModel),
   checks: t.Array(ItemResultModel),
   drills: t.Array(DrillResultModel),
   createdAt: t.String({ format: "date-time" }),
   detail: t.UnionEnum(["full", "summary"], {
     description:
-      "summary: the plan shows each item's score but not its rationale or citations",
+      "summary: the plan shows each item's score but not its rationale, citations or the changes to make",
   }),
 });
 export type ReviewModel = typeof ReviewModel.static;

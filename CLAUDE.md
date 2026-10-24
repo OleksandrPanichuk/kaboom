@@ -1030,8 +1030,11 @@ schema, since a started problem's nodes name schemas of origin `problem`.
 
 A review is stored whole and cut on the way out: a Free reader gets every
 score, the design's checks and drills, and at most three strengths and three
-things to practise, but each item's rationale and citations are empty, and
-the review says `detail: "summary"`. Upgrading shows the stored review in
+things to practise, but each item's rationale and citations and its `changes`
+are empty, and the review says `detail: "summary"`. `changes` are up to four
+edits to the design the interview ended with, which the reviewer writes
+without ever seeing a reference solution, so none can be given away; the
+persona forbids describing a design of its own or a hidden test. Upgrading shows the stored review in
 full, so nothing is regenerated. The score is the same on every plan, since a
 blend of it decides a problem's score and the leaderboard.
 
