@@ -4,7 +4,7 @@ import { ArrowRight, PencilLine, Puzzle } from "lucide-react";
 import { useCurrentUser } from "@/features/auth";
 import { PracticePlanCard } from "@/features/practice";
 import { RankCard } from "@/features/problems";
-import { ActivityList } from "@/features/progress";
+import { ActivityList, StreakCard } from "@/features/progress";
 import { NextUpCard, SkillsCard } from "@/features/skills";
 
 interface HomeViewProps {
@@ -39,6 +39,7 @@ export function HomeView({ onOpenInterview }: HomeViewProps) {
           Practise interviews, solve challenges and watch your skills grow.
         </p>
       </div>
+      <StreakCard />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
         <div className="flex min-w-0 flex-col gap-6">
           <PracticePlanCard />

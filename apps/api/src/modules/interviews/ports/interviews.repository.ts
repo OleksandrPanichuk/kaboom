@@ -25,6 +25,8 @@ export abstract class InterviewsRepository extends Repository {
 
   public abstract findActive(ownerId: string): Promise<InterviewEntity | null>;
 
+  public abstract startedAtsFor(ownerId: string): Promise<Date[]>;
+
   public abstract countStartedSince(
     ownerId: string,
     since: Date,

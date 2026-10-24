@@ -1,5 +1,6 @@
 import {
   ActivityList,
+  BadgesSection,
   ProblemsTable,
   ProgressSummary,
   SkillTrends,
@@ -19,6 +20,7 @@ export function ProgressView() {
           </p>
         </div>
         <ProgressSummary />
+        <BadgesSection />
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
           <div className="flex min-w-0 flex-col gap-6">
             <SkillTrends />

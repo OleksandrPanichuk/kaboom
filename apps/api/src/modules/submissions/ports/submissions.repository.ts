@@ -69,7 +69,18 @@ export interface RecentSubmission {
   at: Date;
 }
 
+export interface SubmissionFact {
+  problemId: string;
+  track: string;
+  score: number;
+  counted: boolean;
+  allPassed: boolean;
+  at: Date;
+}
+
 export abstract class SubmissionsRepository extends Repository {
+  public abstract listFactsForUser(userId: string): Promise<SubmissionFact[]>;
+
   public abstract listRecentForUser(
     userId: string,
     limit: number,

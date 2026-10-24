@@ -25,6 +25,7 @@ import {
   type RecentSubmission,
   type ReviewableSubmission,
   type SharedSolution,
+  type SubmissionFact,
   SubmissionsRepository,
 } from "../ports/submissions.repository";
 import type { DesignReview, SubmissionEntity } from "../submission.entity";
@@ -264,6 +265,31 @@ export class PostgresSubmissionsRepository extends SubmissionsRepository {
       .limit(NEWEST_FIRST.limit(page));
 
     return NEWEST_FIRST.page(rows.map(toEntity), page);
+  }
+
+  public async listFactsForUser(userId: string): Promise<SubmissionFact[]> {
+    return this.db
+      .select({
+        problemId: submissionsSchema.problemId,
+        track: problemsSchema.track,
+        score: submissionsSchema.score,
+        counted: submissionsSchema.counted,
+        allPassed: submissionsSchema.allPassed,
+        at: submissionsSchema.createdAt,
+      })
+      .from(submissionsSchema)
+      .innerJoin(
+        problemsSchema,
+        eq(problemsSchema.id, submissionsSchema.problemId),
+      )
+      .where(
+        and(
+          eq(submissionsSchema.userId, userId),
+          eq(problemsSchema.status, "published"),
+          sql`${problemsSchema.authorId} is distinct from ${userId}`,
+        ),
+      )
+      .orderBy(submissionsSchema.createdAt);
   }
 
   public async bestCountedScores(userId: string): Promise<BestScore[]> {

@@ -1011,6 +1011,20 @@ The web mirrors the table twice, by hand: the pricing page's comparison
 (`PLAN_COMPARISON`) and the copy of its upgrade notices. Change them with the
 table.
 
+## Streaks and badges
+
+`achievements` is a read model with no table, like `progress`: `GET
+/achievements/me` works the caller's streak and badges out of what they did,
+each time. A day is a UTC day with a submission, or an interview started, and
+a streak survives until the end of the day after its last one, so someone who
+has not practised yet today still has theirs. A problem the caller wrote
+counts for nothing, as on the leaderboard, which is why `listFactsForUser`
+leaves it out. Badges are a table in `achievements.constants.ts`, and
+`computeAchievements` is a pure function of the facts and the clock: each
+badge says when it was earned, the moment of the event that earned it and not
+the moment it was looked up, and how far along it is. A badge earned stays
+earned, since every fact is kept; only the streak can fall back to zero.
+
 ## Roles
 
 Every account has a `role`: `user`, `moderator` or `admin`, ranked in
