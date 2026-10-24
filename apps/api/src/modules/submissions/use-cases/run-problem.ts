@@ -3,6 +3,7 @@ import type { TestReport } from "@repo/scoring";
 import { make, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { DesignsService } from "@/modules/designs";
+import { EntitlementsService } from "@/modules/entitlements";
 import { DesignTester } from "@/platform/design-testing";
 
 import { RUN_SEEDS } from "../submissions.constants";
@@ -25,18 +26,24 @@ export class RunProblemUseCase extends UseCase<Options, Result> {
 
   private readonly tester = make(DesignTester);
 
+  private readonly entitlements = makeService(EntitlementsService);
+
   private readonly designs = makeService(DesignsService);
 
   public async execute({ userId, slug }: Options): Promise<Result> {
     const { version, design } = await this.service.attempt(userId, slug);
     const { bundle } = await this.designs.bundleOf(design);
 
-    const { report } = await this.tester.test({
-      problem: version.content,
-      bundle,
-      include: "public",
-      seeds: RUN_SEEDS,
-    });
+    const { entitlements } = await this.entitlements.of(userId);
+    const { report } = await this.tester.test(
+      {
+        problem: version.content,
+        bundle,
+        include: "public",
+        seeds: RUN_SEEDS,
+      },
+      { priority: entitlements.priorityTests },
+    );
 
     return { revision: design.revision, report };
   }

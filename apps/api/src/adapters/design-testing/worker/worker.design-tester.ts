@@ -9,6 +9,7 @@ import {
 import {
   DesignTester,
   type DesignTesterTask,
+  type DesignTestOptions,
   type DesignTestRequest,
   type DesignTestResult,
 } from "@/platform/design-testing/ports";
@@ -22,6 +23,7 @@ import type {
 
 const BOOT_TIMEOUT_MS = 10_000;
 const QUEUED_PER_WORKER = 4;
+const PRIORITY_RESERVE_PER_WORKER = 1;
 
 export class WorkerDesignTester extends DesignTester {
   private readonly idle: Worker[] = [];
@@ -50,15 +52,21 @@ export class WorkerDesignTester extends DesignTester {
     return this.idle.length + this.running.size > 0;
   }
 
-  public test(request: DesignTestRequest): Promise<DesignTestResult> {
-    return this.run({ task: "test", request }) as Promise<DesignTestResult>;
+  public test(
+    request: DesignTestRequest,
+    options: DesignTestOptions = {},
+  ): Promise<DesignTestResult> {
+    return this.run(
+      { task: "test", request },
+      options.priority === true,
+    ) as Promise<DesignTestResult>;
   }
 
   public check(content: unknown): Promise<PublishCheck> {
     return this.run({ task: "check", content }) as Promise<PublishCheck>;
   }
 
-  private run(task: DesignTesterTask): Promise<unknown> {
+  private run(task: DesignTesterTask, priority = false): Promise<unknown> {
     if (this.closed) {
       return Promise.reject(
         new DesignTestsUnavailableError("The design tests have shut down"),
@@ -66,7 +74,8 @@ export class WorkerDesignTester extends DesignTester {
     }
 
     const limit =
-      this.options.maxQueued ?? this.options.size * QUEUED_PER_WORKER;
+      (this.options.maxQueued ?? this.options.size * QUEUED_PER_WORKER) +
+      (priority ? this.options.size * PRIORITY_RESERVE_PER_WORKER : 0);
 
     if (this.queue.length >= limit) {
       return Promise.reject(
@@ -79,6 +88,7 @@ export class WorkerDesignTester extends DesignTester {
         task,
         resolve,
         reject,
+        priority,
         timer: null,
         worker: null,
       };
@@ -87,9 +97,22 @@ export class WorkerDesignTester extends DesignTester {
         () => this.expire(pending),
         this.options.timeoutMs,
       );
-      this.queue.push(pending);
+      this.enqueue(pending);
       this.pump();
     });
+  }
+
+  private enqueue(pending: PendingTest): void {
+    if (!pending.priority) {
+      this.queue.push(pending);
+
+      return;
+    }
+
+    const behind = this.queue.findIndex((waiting) => !waiting.priority);
+
+    if (behind < 0) this.queue.push(pending);
+    else this.queue.splice(behind, 0, pending);
   }
 
   public close(): Promise<void> {

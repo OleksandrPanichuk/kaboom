@@ -169,6 +169,40 @@ describe("WorkerDesignTester", () => {
     await Promise.all([running, waiting]);
   }, 30_000);
 
+  test("lets a priority test go ahead of the ones waiting", async () => {
+    const tester = await pool(1);
+    const order: string[] = [];
+    const note = (name: string) => () => {
+      order.push(name);
+    };
+    const running = tester.test(request()).then(note("running"));
+    const standard = tester.test(request()).then(note("standard"));
+    const priority = tester
+      .test(request(), { priority: true })
+      .then(note("priority"));
+
+    await Promise.all([running, standard, priority]);
+
+    expect(order).toEqual(["running", "priority", "standard"]);
+  }, 60_000);
+
+  test("keeps room for priority tests when standard ones are refused", async () => {
+    const tester = await pool(1, 30_000, 1);
+    const running = tester.test(request());
+    const waiting = tester.test(request());
+
+    expect(await rejection(tester.test(request()))).toBeInstanceOf(
+      DesignTestsBusyError,
+    );
+
+    const priority = tester.test(request(), { priority: true });
+
+    expect(
+      await rejection(tester.test(request(), { priority: true })),
+    ).toBeInstanceOf(DesignTestsBusyError);
+    await Promise.all([running, waiting, priority]);
+  }, 60_000);
+
   test("answers the tests in flight when it closes", async () => {
     const tester = await pool(1);
     const running = tester.test(request(30));

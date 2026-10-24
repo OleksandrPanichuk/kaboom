@@ -15,6 +15,10 @@ export interface DesignTestRequest {
   seeds: number;
 }
 
+export interface DesignTestOptions {
+  priority?: boolean;
+}
+
 export interface DesignTestResult {
   score: Score;
   report: TestReport;
@@ -25,7 +29,10 @@ export type DesignTesterTask =
   | { task: "check"; content: unknown };
 
 export abstract class DesignTester extends Port {
-  public abstract test(request: DesignTestRequest): Promise<DesignTestResult>;
+  public abstract test(
+    request: DesignTestRequest,
+    options?: DesignTestOptions,
+  ): Promise<DesignTestResult>;
 
   public abstract check(content: unknown): Promise<PublishCheck>;
 

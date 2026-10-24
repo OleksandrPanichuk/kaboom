@@ -760,6 +760,12 @@ the entry point (`Bun.main`), which is why `build` names it as a second
 entry: `dist/adapters/design-testing/worker/tester.worker.js` sits where
 `src/…/tester.worker.ts` does.
 
+`test` takes `{ priority }`, which a caller reads from the user's plan
+(`priorityTests`): a priority test is queued ahead of every standard one
+waiting, and may fill one extra place per worker, so when the queue is full
+a Free test is refused while a Pro one is still taken. Run, submit and the
+interview review all pass it; `check` has no owner to favour.
+
 The load model's invariants are property-based tests over random designs
 (`invariants.test.ts`): bounds, determinism, conservation, and that more
 replicas, less traffic or no fault never serve less. The generator draws
@@ -1044,6 +1050,10 @@ browser listens and speaks, and the API only ever sees the text a candidate
 sends. It costs nothing to serve, so `voice` in the table only decides what
 the web offers; a Free reader who typed the same words would be served the
 same.
+
+`priorityTests` is not a limit on what a Free reader may do, only on who
+waits when the design testers are busy: it changes the order of the queue
+and who is refused first, never a score.
 
 ## Roles
 

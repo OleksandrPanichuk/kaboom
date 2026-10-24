@@ -9,6 +9,7 @@ export interface PendingTest {
   task: DesignTesterTask;
   resolve: (result: unknown) => void;
   reject: (error: Error) => void;
+  priority: boolean;
   timer: ReturnType<typeof setTimeout> | null;
   worker: Worker | null;
 }
