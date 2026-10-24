@@ -59,6 +59,15 @@ export class PostgresInterviewsRepository extends InterviewsRepository {
     return row ?? null;
   }
 
+  public async startedAtsFor(ownerId: string): Promise<Date[]> {
+    const rows = await this.db
+      .select({ startedAt: interviewsSchema.startedAt })
+      .from(interviewsSchema)
+      .where(eq(interviewsSchema.ownerId, ownerId));
+
+    return rows.map((row) => row.startedAt);
+  }
+
   public async countStartedSince(
     ownerId: string,
     since: Date,

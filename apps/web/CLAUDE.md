@@ -366,6 +366,12 @@ the same points, recent activity and the challenge table. A sparkline's
 axis fits its points with a span of at least 20, since its value is
 printed beside it, and it answers hover and the arrow keys.
 
+`features/progress` also draws the practice streak (`StreakCard`, on Home,
+above the grid) and the badges (`BadgesSection`, on `/progress`), both from
+`GET /achievements/me`. A card that has nothing yet to show renders nothing
+rather than hold a place, and the streak's wording lives in
+`streakMessage.ts`, which a test pins.
+
 `features/leaderboard` renders `/leaderboard`: the caller's standing
 with a link to edit their profile, the period and track filters (kept in
 the URL as `?period=week&track=…`, the default left out), and the table,
