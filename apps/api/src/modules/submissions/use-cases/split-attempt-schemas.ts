@@ -85,6 +85,7 @@ export class SplitAttemptSchemasUseCase extends UseCase<Options, Result> {
           ownerId: attempt.userId,
           name: planned[index]!.name,
           kind: "schema",
+          origin: "problem",
           baseline: schema.graph,
         });
         const nodes = new Set(schema.graph.nodes.map((node) => node.id));

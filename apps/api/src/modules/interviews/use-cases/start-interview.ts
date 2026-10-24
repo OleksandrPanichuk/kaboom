@@ -61,6 +61,7 @@ export class StartInterviewUseCase extends UseCase<Options, Result> {
       const design = await make(CreateDesignUseCase).execute({
         ownerId,
         name: `${problem.title} interview`,
+        origin: "interview",
         baseline: version.content.baseline,
       });
 

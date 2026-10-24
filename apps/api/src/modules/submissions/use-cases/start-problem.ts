@@ -41,6 +41,7 @@ export class StartProblemUseCase extends UseCase<Options, Result> {
         ownerId,
         name: `${name}: ${holder.label}`,
         kind: "schema",
+        origin: "problem",
         baseline: schema.graph,
       });
 
@@ -50,6 +51,7 @@ export class StartProblemUseCase extends UseCase<Options, Result> {
     return create.execute({
       ownerId,
       name,
+      origin: "problem",
       baseline: {
         ...system,
         nodes: system.nodes.map((node) =>

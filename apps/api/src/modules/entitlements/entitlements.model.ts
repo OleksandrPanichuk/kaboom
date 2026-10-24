@@ -7,6 +7,10 @@ export const EntitlementsModel = t.Object({
     limit: t.Integer(),
     per: t.UnionEnum(["day", "week"]),
   }),
+  sandboxDesigns: t.Nullable(t.Integer(), {
+    description:
+      "How many designs of their own the plan keeps; null is no limit",
+  }),
   fullReview: t.Boolean({
     description: "Whether reviews carry each item's rationale and citations",
   }),

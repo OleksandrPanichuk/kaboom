@@ -14,6 +14,14 @@ import { usersSchema } from "./users.schema";
 export const DESIGN_KINDS = ["system", "schema"] as const;
 export type DesignKind = (typeof DESIGN_KINDS)[number];
 
+export const DESIGN_ORIGINS = [
+  "sandbox",
+  "problem",
+  "interview",
+  "draft",
+] as const;
+export type DesignOrigin = (typeof DESIGN_ORIGINS)[number];
+
 export type DesignLayoutRow = Record<string, { x: number; y: number }>;
 
 export const designsSchema = pgTable(
@@ -25,6 +33,7 @@ export const designsSchema = pgTable(
       .references(() => usersSchema.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     kind: text("kind", { enum: DESIGN_KINDS }).notNull().default("system"),
+    origin: text("origin", { enum: DESIGN_ORIGINS }).notNull(),
     graph: jsonb("graph").$type<unknown>().notNull(),
     layout: jsonb("layout").$type<DesignLayoutRow>().notNull().default({}),
     revision: integer("revision").notNull().default(0),
@@ -43,6 +52,7 @@ export const designsSchema = pgTable(
       table.createdAt,
       table.id,
     ),
+    index("designs_owner_id_origin_idx").on(table.ownerId, table.origin),
   ],
 );
 

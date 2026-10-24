@@ -35,6 +35,7 @@ const startCombined = async (user: TestUser, graph: DesignGraph) => {
   const design = await make(CreateDesignUseCase).execute({
     ownerId: user.id,
     name: problem.title,
+    origin: "problem",
     baseline: graph,
   });
 

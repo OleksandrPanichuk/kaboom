@@ -12,6 +12,7 @@ export const designsQuery = (kind: DesignKind | null) =>
       unwrap(
         await api.api.designs.get({
           query: {
+            origin: "sandbox" as const,
             ...(kind ? { kind } : {}),
             ...(pageParam === null ? {} : { cursor: pageParam }),
           },
@@ -20,6 +21,13 @@ export const designsQuery = (kind: DesignKind | null) =>
     initialPageParam: null as string | null,
     getNextPageParam: (page) => page.nextCursor,
   });
+
+export const designQuotaKey = ["designs", "quota"] as const;
+
+export const designQuotaQuery = queryOptions({
+  queryKey: designQuotaKey,
+  queryFn: async () => unwrap(await api.api.designs.quota.get()),
+});
 
 export const schemaDesignsQuery = queryOptions({
   queryKey: [...designsListKey, "schema"],

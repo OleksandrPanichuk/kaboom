@@ -15,6 +15,7 @@ export class EntitlementsEntity {
       plan: entity.plan,
       source: entity.source,
       interviews: entity.entitlements.interviews,
+      sandboxDesigns: entity.entitlements.sandboxDesigns,
       fullReview: entity.entitlements.fullReview,
       replay: entity.entitlements.replay,
     };

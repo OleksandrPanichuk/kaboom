@@ -1,8 +1,13 @@
 import { migrateGraph } from "@repo/design";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull } from "drizzle-orm";
 
 import type { Page, PageRequest } from "@/core/pagination";
-import { type DesignKind, type DesignRow, designsSchema } from "@/db";
+import {
+  type DesignKind,
+  type DesignOrigin,
+  type DesignRow,
+  designsSchema,
+} from "@/db";
 import { type DBExecutor, getExecutor } from "@/db/executor";
 import { Keyset } from "@/db/pagination";
 
@@ -49,7 +54,7 @@ export class PostgresDesignsRepository extends DesignsRepository {
   public async listOwned(
     ownerId: string,
     page: PageRequest,
-    kind?: DesignKind,
+    { kind, origin }: { kind?: DesignKind; origin?: DesignOrigin } = {},
   ): Promise<Page<DesignSummaryEntity>> {
     const rows = await this.db
       .select({
@@ -65,6 +70,7 @@ export class PostgresDesignsRepository extends DesignsRepository {
         and(
           eq(designsSchema.ownerId, ownerId),
           kind ? eq(designsSchema.kind, kind) : undefined,
+          origin ? eq(designsSchema.origin, origin) : undefined,
           NEWEST_FIRST.after(page.cursor),
         ),
       )
@@ -72,6 +78,23 @@ export class PostgresDesignsRepository extends DesignsRepository {
       .limit(NEWEST_FIRST.limit(page));
 
     return NEWEST_FIRST.page(rows, page);
+  }
+
+  public async countOwned(
+    ownerId: string,
+    origin: DesignOrigin,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({ total: count() })
+      .from(designsSchema)
+      .where(
+        and(
+          eq(designsSchema.ownerId, ownerId),
+          eq(designsSchema.origin, origin),
+        ),
+      );
+
+    return row?.total ?? 0;
   }
 
   public async findOwned(

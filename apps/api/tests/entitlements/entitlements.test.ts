@@ -18,6 +18,7 @@ interface Entitlements {
   plan: string;
   source: string | null;
   interviews: { limit: number; per: string };
+  sandboxDesigns: number | null;
   fullReview: boolean;
   replay: boolean;
 }
@@ -71,7 +72,7 @@ beforeEach(async () => {
 });
 
 describe("what a plan includes", () => {
-  test("a new account is on Free, with one interview a week and no replay", async () => {
+  test("a new account is on Free, with one interview a week, five designs and no replay", async () => {
     const user = await createUser();
     const { status, body } = await user.get<Entitlements>(
       "/api/entitlements/me",
@@ -82,12 +83,13 @@ describe("what a plan includes", () => {
       plan: "free",
       source: null,
       interviews: { limit: 1, per: "week" },
+      sandboxDesigns: 5,
       fullReview: false,
       replay: false,
     });
   });
 
-  test("Pro has three interviews a day, full reviews and replay", async () => {
+  test("Pro has three interviews a day, any number of designs, full reviews and replay", async () => {
     const user = await createProUser();
     const { body } = await user.get<Entitlements>("/api/entitlements/me");
 
@@ -95,6 +97,7 @@ describe("what a plan includes", () => {
       plan: "pro",
       source: "lifetime",
       interviews: { limit: 3, per: "day" },
+      sandboxDesigns: null,
       fullReview: true,
       replay: true,
     });
@@ -178,6 +181,97 @@ describe("the interview allowance", () => {
     await startInterview(busy);
 
     expect((await quota(idle)).body.used).toBe(0);
+  });
+});
+
+interface DesignQuota {
+  limit: number | null;
+  used: number;
+}
+
+const createDesign = (user: TestClient, name = "Design") =>
+  user.post<PlanLimit>("/api/designs", { name });
+
+const designQuota = (user: TestClient) =>
+  user.get<DesignQuota>("/api/designs/quota");
+
+describe("the design allowance", () => {
+  test("Free keeps five designs of its own, and the sixth is refused", async () => {
+    const user = await createUser();
+
+    for (let i = 0; i < 5; i += 1) {
+      expect((await createDesign(user, `Design ${i}`)).status).toBe(200);
+    }
+
+    const sixth = await createDesign(user);
+
+    expect(sixth.status).toBe(402);
+    expect(sixth.body.code).toBe("PLAN_LIMIT");
+    expect(sixth.body.details).toMatchObject({ feature: "designs", limit: 5 });
+    expect((await designQuota(user)).body).toEqual({ limit: 5, used: 5 });
+  });
+
+  test("deleting one makes room for another", async () => {
+    const user = await createUser();
+    const made = await Promise.all(
+      Array.from({ length: 5 }, (_, i) => createDesign(user, `Design ${i}`)),
+    );
+    const first = made[0]!.body as unknown as { id: string };
+
+    await user.delete(`/api/designs/${first.id}`);
+
+    expect((await createDesign(user)).status).toBe(200);
+  });
+
+  test("Pro has no limit", async () => {
+    const user = await createProUser();
+
+    for (let i = 0; i < 7; i += 1) {
+      expect((await createDesign(user, `Design ${i}`)).status).toBe(200);
+    }
+
+    expect((await designQuota(user)).body).toEqual({ limit: null, used: 7 });
+  });
+
+  test("a design a problem or an interview opens is not one of the five", async () => {
+    const user = await createUser();
+
+    for (let i = 0; i < 5; i += 1) await createDesign(user, `Design ${i}`);
+
+    const interview = await startInterview(user);
+    const attempt = await user.post("/api/problems/url-shortener/start", {});
+
+    expect(interview.status).toBe("active");
+    expect(attempt.status).toBe(200);
+    expect((await designQuota(user)).body.used).toBe(5);
+  });
+
+  test("the list can leave out what a problem opened, and by default shows it", async () => {
+    const user = await createUser();
+
+    await createDesign(user, "Mine");
+    expect(
+      (await user.post("/api/problems/url-shortener/start", {})).status,
+    ).toBe(200);
+
+    const names = async (query: string) =>
+      (
+        await user.get<{ items: Array<{ name: string }> }>(
+          `/api/designs${query}`,
+        )
+      ).body.items.map((item) => item.name);
+
+    expect(await names("?origin=sandbox")).toEqual(["Mine"]);
+    expect((await names("")).length).toBeGreaterThan(1);
+  });
+
+  test("one person's designs do not use up another's", async () => {
+    const busy = await createUser();
+    const idle = await createUser();
+
+    for (let i = 0; i < 5; i += 1) await createDesign(busy, `Design ${i}`);
+
+    expect((await createDesign(idle)).status).toBe(200);
   });
 });
 

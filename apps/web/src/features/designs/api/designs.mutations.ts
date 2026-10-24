@@ -3,7 +3,7 @@ import { mutationOptions } from "@tanstack/react-query";
 
 import { api, unwrap } from "@/lib/api";
 
-import { designQuery, designsListKey } from "./designs.queries";
+import { designQuery, designQuotaKey, designsListKey } from "./designs.queries";
 
 export interface CreateDesignVariables {
   name: string;
@@ -26,7 +26,10 @@ export const createDesignMutation = mutationOptions({
   onSuccess: (design, _variables, _mutateResult, { client }) => {
     client.setQueryData(designQuery(design.id).queryKey, design);
 
-    return client.invalidateQueries({ queryKey: designsListKey });
+    return Promise.all([
+      client.invalidateQueries({ queryKey: designsListKey }),
+      client.invalidateQueries({ queryKey: designQuotaKey }),
+    ]);
   },
 });
 
@@ -48,7 +51,10 @@ export const deleteDesignMutation = mutationOptions({
   onSuccess: (_result, { id }, _mutateResult, { client }) => {
     client.removeQueries({ queryKey: designQuery(id).queryKey });
 
-    return client.invalidateQueries({ queryKey: designsListKey });
+    return Promise.all([
+      client.invalidateQueries({ queryKey: designsListKey }),
+      client.invalidateQueries({ queryKey: designQuotaKey }),
+    ]);
   },
 });
 

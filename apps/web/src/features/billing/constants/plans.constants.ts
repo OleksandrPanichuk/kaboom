@@ -1,12 +1,14 @@
 export const FREE_FEATURES = [
   "Every problem and track, with scores and a leaderboard place",
   "One AI interview a week, scored on every rubric item",
+  "Five designs of your own",
   "Reviews of your challenge submissions",
 ];
 
 export const PRO_FEATURES = [
   "Everything in Free",
   "Up to three AI interviews a day",
+  "As many designs of your own as you like",
   "Every review explained, with the moments it rests on",
   "Replay of every interview, conversation and canvas in step",
 ];
@@ -23,6 +25,7 @@ export const PLAN_COMPARISON: readonly PlanComparisonRow[] = [
   { feature: "Leaderboard and profile", free: true, pro: true },
   { feature: "Writing and sharing problems", free: true, pro: true },
   { feature: "AI interviews", free: "1 a week", pro: "3 a day" },
+  { feature: "Designs of your own", free: "5", pro: "Unlimited" },
   { feature: "Interview score on every rubric item", free: true, pro: true },
   {
     feature: "Why each item scored as it did, with evidence",

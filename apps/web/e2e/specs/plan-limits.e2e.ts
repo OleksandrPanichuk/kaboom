@@ -93,3 +93,32 @@ test("on Free, one interview a week, a review without its reasoning, and no repl
   ).toBeVisible();
   await page.screenshot({ path: "test-results/plan-used.png" });
 });
+
+test("on Free, five designs of your own, and the Designs page says when they are used up", async ({
+  page,
+}) => {
+  await signUp(page, "design-limit");
+
+  for (const name of ["Cache", "Queue", "Feed", "Search", "Billing"]) {
+    const created = await page.request.post("/api/designs", {
+      data: { name },
+      headers: { "sec-fetch-site": "same-origin" },
+    });
+
+    expect(created.ok(), await created.text()).toBe(true);
+  }
+
+  await page.goto("/designs");
+  await expect(page.getByText("5 of 5 designs")).toBeVisible();
+  await expect(
+    page.getByText("You have as many designs as Free keeps"),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "New design" })).toBeDisabled();
+  await page.screenshot({ path: "test-results/designs-full.png" });
+
+  await page.getByRole("button", { name: "Actions for Billing" }).click();
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await page.getByRole("button", { name: "Delete design" }).click();
+  await expect(page.getByText("4 of 5 designs")).toBeVisible();
+  await expect(page.getByRole("button", { name: "New design" })).toBeEnabled();
+});

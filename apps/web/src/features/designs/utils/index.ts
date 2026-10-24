@@ -1,5 +1,6 @@
 export * from "./backFrom";
 export * from "./describeConnectionRefusal";
+export * from "./designAllowance";
 export * from "./designWriter";
 export * from "./formatEditedAt";
 export * from "./inspectorFacts";
