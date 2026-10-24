@@ -1,6 +1,6 @@
 import type { ReviewModel } from "@repo/api-client";
 import { cn } from "cn";
-import { CircleCheck, CircleX, Sparkles, Target } from "lucide-react";
+import { CircleCheck, CircleX, Pencil, Sparkles, Target } from "lucide-react";
 
 import { UpgradeNotice } from "@/features/billing";
 import { DrillResults, scoreTone } from "@/features/problems";
@@ -56,6 +56,37 @@ export function ReviewReport({ review }: ReviewReportProps) {
           empty="Nothing to add."
         />
       </div>
+
+      <section
+        aria-labelledby="changes"
+        className={cn(CARD, "flex flex-col gap-3")}
+      >
+        <h2 id="changes" className="flex items-center gap-2 font-semibold">
+          <span className="grid size-7 place-items-center rounded-lg border border-warning-border/60 bg-warning-surface text-warning-foreground">
+            <Pencil aria-hidden="true" className="size-3.5" />
+          </span>
+          What to change
+        </h2>
+        {review.detail === "summary" ? (
+          <UpgradeNotice title="Edits to your design are part of Pro">
+            Pro lists the changes to this design that would earn the most, each
+            naming the parts it touches. They stay on this review for when you
+            upgrade.
+          </UpgradeNotice>
+        ) : review.changes.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nothing in this design needs changing.
+          </p>
+        ) : (
+          <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm leading-6 text-subtle-foreground marker:text-muted-foreground">
+            {review.changes.map((change) => (
+              <li key={change} className="text-pretty">
+                {change}
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
 
       <section aria-labelledby="rubric" className="flex flex-col gap-3">
         <h2 id="rubric" className="text-lg font-semibold tracking-[-0.02em]">

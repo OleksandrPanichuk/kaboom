@@ -32,6 +32,7 @@ export interface ReviewEntity {
   summary: string;
   strengths: string[];
   improvements: string[];
+  changes: string[];
   items: ReviewItem[];
   checks: ItemScore[];
   drills: DrillScore[];
@@ -55,6 +56,7 @@ export class ReviewEntity {
       ...entity,
       strengths: entity.strengths.slice(0, SUMMARY_HIGHLIGHTS),
       improvements: entity.improvements.slice(0, SUMMARY_HIGHLIGHTS),
+      changes: [],
       items: entity.items.map((item) => ({
         ...item,
         rationale: "",
@@ -74,6 +76,7 @@ export class ReviewEntity {
       summary: entity.summary,
       strengths: entity.strengths,
       improvements: entity.improvements,
+      changes: entity.changes,
       items: entity.items,
       checks: entity.checks,
       drills: entity.drills,

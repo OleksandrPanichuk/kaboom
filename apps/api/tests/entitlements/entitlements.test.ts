@@ -40,6 +40,7 @@ interface ReviewBody {
   detail: string;
   strengths: string[];
   improvements: string[];
+  changes: string[];
   items: Array<{
     score: number | null;
     rationale: string;
@@ -292,6 +293,7 @@ describe("a review on Free", () => {
     expect(body.items.every((item) => item.rationale === "")).toBe(true);
     expect(body.items.every((item) => item.citations.length === 0)).toBe(true);
     expect(body.strengths.length).toBeLessThanOrEqual(3);
+    expect(body.changes).toEqual([]);
     expect(body.drills.length).toBeGreaterThan(0);
   });
 
@@ -305,6 +307,9 @@ describe("a review on Free", () => {
     expect(body.detail).toBe("full");
     expect(body.items.every((item) => item.rationale !== "")).toBe(true);
     expect(body.items[0]!.citations.length).toBeGreaterThan(0);
+    expect(body.changes).toEqual([
+      "Put a cache between the API and the database.",
+    ]);
   });
 
   test("is stored whole, so upgrading shows what was held back", async () => {
@@ -319,6 +324,8 @@ describe("a review on Free", () => {
     expect(before.body.detail).toBe("summary");
     expect(after.body.detail).toBe("full");
     expect(after.body.items[0]!.rationale).not.toBe("");
+    expect(before.body.changes).toEqual([]);
+    expect(after.body.changes).toHaveLength(1);
   });
 });
 

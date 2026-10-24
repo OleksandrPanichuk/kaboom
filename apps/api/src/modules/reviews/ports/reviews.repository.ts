@@ -15,6 +15,7 @@ export interface CreateReviewData {
   summary: string;
   strengths: string[];
   improvements: string[];
+  changes: string[];
   items: ReviewItem[];
   checks: ItemScore[];
   drills: DrillScore[];
