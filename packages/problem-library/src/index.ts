@@ -17,6 +17,7 @@ import { notifications } from "./notifications";
 import { onCallAlerts } from "./on-call-alerts";
 import { ordersOneTable } from "./orders-one-table";
 import { photoUploads } from "./photo-uploads";
+import { priceHistory } from "./price-history";
 import { productCatalogue } from "./product-catalogue";
 import { productSearch } from "./product-search";
 import { rateLimitedApi } from "./rate-limited-api";
@@ -26,6 +27,7 @@ import { secretRotation } from "./secret-rotation";
 import { serverlessTickets } from "./serverless-tickets";
 import { shopOrders } from "./shop-orders";
 import { signupAudit } from "./signup-audit";
+import { socialFollows } from "./social-follows";
 import { threeTierVpc } from "./three-tier-vpc";
 import { urlShortener } from "./url-shortener";
 import { zeroDowntimeRollout } from "./zero-downtime-rollout";
@@ -60,4 +62,6 @@ export const OFFICIAL_PROBLEMS: ProblemContent[] = [
   chatMessages,
   ordersOneTable,
   gameLeaderboard,
+  socialFollows,
+  priceHistory,
 ].map((problem) => ProblemContentSchema.parse(problem));

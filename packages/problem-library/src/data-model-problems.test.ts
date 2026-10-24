@@ -27,6 +27,109 @@ const failing = (slug: string, graph: DesignGraph) =>
     .items.filter((item) => !item.passed)
     .map((item) => item.key);
 
+describe("who follows whom", () => {
+  const reference = problem("social-follows").reference.graph;
+
+  test("catches follows that can be stored twice", () => {
+    const loose = edit(reference, "follows", (follows) => {
+      follows.props.columns = follows.props.columns.map((item) => ({
+        ...item,
+        primaryKey: false,
+      }));
+    });
+
+    expect(failing("social-follows", loose)).toContain("follow-graph");
+  });
+
+  test("catches a followers list no index answers", () => {
+    const forward = edit(reference, "follows", (follows) => {
+      follows.props.indexes = follows.props.indexes.filter(
+        (item) => item.columns[0] !== "followee_id",
+      );
+    });
+
+    expect(failing("social-follows", forward)).toEqual(["followers-list"]);
+  });
+
+  test("catches lists that come back in the order of the key, not of the date", () => {
+    const keyOnly = edit(reference, "follows", (follows) => {
+      follows.props.indexes = [];
+    });
+
+    expect(failing("social-follows", keyOnly)).toEqual([
+      "following-list",
+      "followers-list",
+    ]);
+  });
+
+  test("catches a handle with no bound", () => {
+    const unbounded = edit(reference, "users", (users) => {
+      users.props.columns = users.props.columns.map((item) =>
+        item.name === "handle" ? column("handle", "text", "unique") : item,
+      );
+    });
+
+    expect(failing("social-follows", unbounded)).toEqual(["follow-graph"]);
+  });
+});
+
+describe("a catalogue that remembers its prices", () => {
+  const reference = problem("price-history").reference.graph;
+
+  test("catches a current price that must be found among the history", () => {
+    const plain = edit(reference, "prices", (prices) => {
+      prices.props.indexes = prices.props.indexes.filter(
+        (item) => item.where === undefined,
+      );
+    });
+
+    expect(failing("price-history", plain)).toEqual(["current-price"]);
+  });
+
+  test("catches a history with no index to read it in date order", () => {
+    const unordered = edit(reference, "prices", (prices) => {
+      prices.props.indexes = prices.props.indexes.filter(
+        (item) => item.where !== undefined,
+      );
+    });
+
+    expect(failing("price-history", unordered)).toEqual([
+      "price-on-a-date",
+      "product-page",
+    ]);
+  });
+
+  test("catches money that rounds", () => {
+    const rounding = edit(reference, "prices", (prices) => {
+      prices.props.columns = prices.props.columns.map((item) =>
+        item.name === "amount" ? column("amount", "double") : item,
+      );
+    });
+
+    expect(failing("price-history", rounding)).toEqual(["price-rows"]);
+  });
+
+  test("catches a currency that is any text", () => {
+    const anything = edit(reference, "prices", (prices) => {
+      prices.props.columns = prices.props.columns.map((item) =>
+        item.name === "currency" ? column("currency", "text") : item,
+      );
+    });
+
+    expect(failing("price-history", anything)).toEqual(["price-rows"]);
+  });
+
+  test("catches a price that never says when it began", () => {
+    const undated = edit(reference, "prices", (prices) => {
+      prices.props.columns = prices.props.columns.map((item) =>
+        item.name === "valid_from" ? { ...item, default: undefined } : item,
+      );
+    });
+
+    expect(failing("price-history", undated)).toEqual(["price-rows"]);
+  });
+});
+
 describe("blog with tags", () => {
   const reference = problem("blog-tags").reference.graph;
 

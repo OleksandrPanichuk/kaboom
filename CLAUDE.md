@@ -1534,6 +1534,15 @@ details: identities and defaults of now, a bounded email found in any case
 through `lower()`, statuses limited to their values, a partial index that
 skips finished jobs, GIN on `jsonb`, `FULLTEXT`, exact money and what
 MySQL lacks. Their baselines put the tables in a database of their engine.
+*Who follows whom* and *A catalogue that remembers its prices* practise two
+shapes that come up everywhere: a table related to itself, where the
+junction is drawn in the baseline so its lists can be asked for in each
+direction and newest first (the primary key serves only one of them), and a
+history, where today's price comes from a partial index, a price on a date
+from a range, and the exact money and bounded currency come with them. What
+a drill cannot see stays out of it: a partial unique index that forbids a
+second current price is in the reference and the hints, but no requirement
+names it, so nothing scores it.
 Challenges on this track are reviewed on design, integrity and query
 performance.
 
