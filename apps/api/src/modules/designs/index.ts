@@ -10,11 +10,13 @@ export {
   DesignLayoutModel,
   DesignMessageModel,
   DesignModel,
+  DesignQuotaModel,
   DesignRevisionModel,
   DesignRevisionSummaryModel,
   DesignSummaryModel,
 } from "./design.model";
 export { DesignReplayError, replayRevisions } from "./design.replay";
+export * from "./design-quota.service";
 export {
   DesignRevisionEntity,
   type DesignRevisionGraph,

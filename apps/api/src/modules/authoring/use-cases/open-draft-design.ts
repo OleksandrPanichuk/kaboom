@@ -44,6 +44,7 @@ export class OpenDraftDesignUseCase extends UseCase<Options, Result> {
     }
 
     const design = await make(CreateDesignUseCase).execute({
+      origin: "draft",
       ownerId: authorId,
       name: `${titleOf(draft.content)} · ${part}`,
       baseline: this.authoring.graphOf(draft.content, part),

@@ -2,7 +2,7 @@ import type { DesignGraph } from "@repo/design";
 
 import type { Page, PageRequest } from "@/core/pagination";
 import { Repository } from "@/core/repository";
-import type { DesignKind } from "@/db";
+import type { DesignKind, DesignOrigin } from "@/db";
 
 import type {
   DesignEntity,
@@ -14,6 +14,7 @@ export interface CreateDesignData {
   ownerId: string;
   name: string;
   kind?: DesignKind;
+  origin: DesignOrigin;
   graph: DesignGraph;
   graphHash: string;
 }
@@ -34,8 +35,13 @@ export abstract class DesignsRepository extends Repository {
   public abstract listOwned(
     ownerId: string,
     page: PageRequest,
-    kind?: DesignKind,
+    filter?: { kind?: DesignKind; origin?: DesignOrigin },
   ): Promise<Page<DesignSummaryEntity>>;
+
+  public abstract countOwned(
+    ownerId: string,
+    origin: DesignOrigin,
+  ): Promise<number>;
 
   public abstract findOwned(
     id: string,

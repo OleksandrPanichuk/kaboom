@@ -1000,6 +1000,20 @@ the check that an interview is not already running; `GET /interviews/quota`
 answers the allowance and what is used. Replay asks `EntitlementsService.require`
 after the interview is known to have ended.
 
+Free keeps five designs of its own, Pro any number. "Of its own" is a
+design's `origin`: `sandbox` for one made from the Designs page, and
+`problem`, `interview` or `draft` for one the app opened for a started
+problem (and the schemas split from it), an interview or a problem draft.
+Only sandbox designs are counted, so starting a problem never runs a Free
+reader out of room, and `CreateDesignUseCase` takes the origin as a required
+option, since a default would quietly count whatever forgot it.
+`DesignQuotaService` refuses the sixth with `402 PLAN_LIMIT` before anything
+is created; deleting one makes room, and someone who had more before the
+limit keeps them. `GET /designs/quota` answers the limit (null on Pro) and
+what is used, and `GET /designs?origin=sandbox` is the Designs page's list,
+so the page shows the designs that are counted. The schema picker lists every
+schema, since a started problem's nodes name schemas of origin `problem`.
+
 A review is stored whole and cut on the way out: a Free reader gets every
 score, the design's checks and drills, and at most three strengths and three
 things to practise, but each item's rationale and citations are empty, and

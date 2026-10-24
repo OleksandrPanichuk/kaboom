@@ -29,6 +29,12 @@ export const DesignModel = t.Object({
 });
 export type DesignModel = typeof DesignModel.static;
 
+export const DesignQuotaModel = t.Object({
+  limit: t.Nullable(t.Integer()),
+  used: t.Integer(),
+});
+export type DesignQuotaModel = typeof DesignQuotaModel.static;
+
 export const DesignSummaryModel = t.Object({
   id: t.String({ format: "uuid" }),
   name: t.String(),

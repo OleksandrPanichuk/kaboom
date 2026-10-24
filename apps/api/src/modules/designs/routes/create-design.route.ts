@@ -17,6 +17,7 @@ export const createDesignRoute = ({ createDesign }: DesignsActions) =>
         ownerId: user.id,
         name: body.name,
         kind: body.kind,
+        origin: "sandbox",
       }),
     postAction: ({ output }) => DesignEntity.normalize(output),
   });

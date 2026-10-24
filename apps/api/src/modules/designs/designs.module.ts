@@ -11,6 +11,7 @@ import {
   ApplyDesignOpsUseCase,
   CreateDesignUseCase,
   DeleteDesignUseCase,
+  GetDesignQuotaUseCase,
   GetDesignRevisionUseCase,
   GetDesignUseCase,
   ListDesignRevisionsUseCase,
@@ -34,6 +35,7 @@ export const designsModule = defineModule({
     designsRoutes({
       createDesign: makeUseCase(CreateDesignUseCase),
       listDesigns: makeUseCase(ListDesignsUseCase),
+      getDesignQuota: makeUseCase(GetDesignQuotaUseCase),
       getDesign: makeUseCase(GetDesignUseCase),
       updateDesign: makeUseCase(UpdateDesignUseCase),
       deleteDesign: makeUseCase(DeleteDesignUseCase),

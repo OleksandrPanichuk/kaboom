@@ -1,11 +1,12 @@
 import type { DesignModel } from "@repo/api-client";
-import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { Database, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { Button } from "@/components/ui/Button";
-import { designsQuery } from "@/features/designs/api";
+import { UpgradeNotice } from "@/features/billing";
+import { designQuotaQuery, designsQuery } from "@/features/designs/api";
 import type { DesignKind } from "@/features/designs/typedefs";
 import {
   CreateDesignDialog,
@@ -13,6 +14,7 @@ import {
   DesignsEmpty,
   DesignsPage,
 } from "@/features/designs/ui/components";
+import { describeDesignAllowance, designsFull } from "@/features/designs/utils";
 
 interface DesignsViewProps {
   kind: DesignKind | null;
@@ -35,20 +37,32 @@ export function DesignsView({
 }: DesignsViewProps) {
   const { data, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useSuspenseInfiniteQuery(designsQuery(kind));
+  const { data: quota } = useQuery(designQuotaQuery);
   const [creating, setCreating] = useState<DesignKind | null>(null);
   const designs = data.pages.flatMap((page) => page.items);
   const filtered = kind !== null;
+  const full = quota !== undefined && designsFull(quota);
+  const allowance = quota ? describeDesignAllowance(quota) : null;
 
   return (
     <DesignsPage
       action={
         designs.length > 0 || filtered ? (
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setCreating("schema")}>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {allowance ? (
+              <span className="basis-full text-sm text-muted-foreground tabular-nums sm:basis-auto">
+                {allowance}
+              </span>
+            ) : null}
+            <Button
+              variant="outline"
+              disabled={full}
+              onClick={() => setCreating("schema")}
+            >
               <Database aria-hidden="true" />
               New schema
             </Button>
-            <Button onClick={() => setCreating("system")}>
+            <Button disabled={full} onClick={() => setCreating("system")}>
               <Plus aria-hidden="true" />
               New design
             </Button>
@@ -66,6 +80,13 @@ export function DesignsView({
             onKindChange(next === "system" || next === "schema" ? next : null)
           }
         />
+      ) : null}
+      {full ? (
+        <UpgradeNotice title="You have as many designs as Free keeps">
+          Free keeps five designs of your own, schemas included. Designs a
+          problem or an interview opens for you are not counted. Delete one to
+          make room, or see what Pro adds.
+        </UpgradeNotice>
       ) : null}
       {designs.length === 0 ? (
         <DesignsEmpty
