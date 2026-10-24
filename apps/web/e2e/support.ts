@@ -93,3 +93,98 @@ export const payPendingSubscription = async (page: Page, email: string) => {
 
   expect(response.ok(), await response.text()).toBe(true);
 };
+
+export const becomePro = async (page: Page, email: string) => {
+  await stubStripe(page);
+  await page.goto("/pricing");
+  await page.getByRole("link", { name: "Get Pro monthly" }).click();
+  await expect(page).toHaveURL(/\/pricing\/checkout\?offer=pro_monthly/);
+
+  const subscribe = page.getByRole("button", { name: /^Subscribe for/ });
+
+  await expect(subscribe).toBeEnabled({ timeout: 20_000 });
+  await subscribe.click();
+  await expect(page).toHaveURL(/\/pricing\/checkout\/complete/);
+  await payPendingSubscription(page, email);
+
+  await expect
+    .poll(async () => {
+      const response = await page.request.get("/api/billing/me");
+
+      return ((await response.json()) as { plan: string }).plan;
+    })
+    .toBe("pro");
+};
+
+const FAKE_SPEECH = `
+  (() => {
+    const state = { active: null, spoken: [] };
+    window.__voice = state;
+
+    class Recognition {
+      lang = "";
+      continuous = false;
+      interimResults = false;
+      start() {
+        state.active = this;
+        setTimeout(() => this.onstart?.(), 0);
+      }
+      stop() { this.finish(); }
+      abort() { this.finish(); }
+      finish() {
+        if (state.active === this) state.active = null;
+        setTimeout(() => this.onend?.(), 0);
+      }
+    }
+
+    class Utterance {
+      constructor(text) { this.text = text; }
+    }
+
+    window.SpeechRecognition = Recognition;
+    window.SpeechSynthesisUtterance = Utterance;
+    Object.defineProperty(window, "speechSynthesis", {
+      configurable: true,
+      value: {
+        speaking: false,
+        getVoices: () => [],
+        cancel: () => {},
+        speak: (utterance) => {
+          state.spoken.push(utterance.text);
+          setTimeout(() => utterance.onend?.(), 1200);
+        },
+      },
+    });
+  })();
+`;
+
+export const fakeSpeech = (page: Page) => page.addInitScript(FAKE_SPEECH);
+
+export const sayAloud = async (page: Page, text: string) => {
+  await page.waitForFunction(
+    () =>
+      (window as unknown as { __voice: { active: unknown } }).__voice.active !==
+      null,
+  );
+  await page.evaluate((words) => {
+    const { active } = (
+      window as unknown as {
+        __voice: {
+          active: {
+            onresult: (event: unknown) => void;
+          };
+        };
+      }
+    ).__voice;
+
+    active.onresult({
+      results: [{ isFinal: true, 0: { transcript: words } }],
+    });
+  }, text);
+};
+
+export const spoken = (page: Page) =>
+  page.evaluate(
+    () =>
+      (window as unknown as { __voice: { spoken: string[] } }).__voice.spoken,
+  );

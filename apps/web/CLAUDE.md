@@ -339,6 +339,19 @@ after the interviewer's own edits. The design writer treats only
 `DESIGN_REVISION_CONFLICT` as a conflict to replay; any other refusal,
 such as a locked design, is an error.
 
+Voice mode lives in the interview chat and needs no server: `useVoiceMode`
+listens with the browser's speech recognition and, once it hears a whole
+sentence, sends it as the candidate's message, then speaks each new reply of
+the interviewer with speech synthesis (`Speaker`, which keeps a queue and
+ignores the end of an utterance it has cancelled). It listens only when
+nothing else is going on: not while the interviewer is thinking, not while a
+reply is read, so it never hears itself. Replies that were already there when
+voice was switched on are not read. It stops with a note when the microphone
+is refused or nobody has spoken for four tries, and the toggle appears only
+in a browser that can both listen and speak, as a link to Pro for a reader
+whose plan lacks `voice`. Playwright fakes both APIs (`fakeSpeech`,
+`sayAloud` in `e2e/support.ts`), since a test cannot talk.
+
 `features/reviews` renders `/interviews/:id/review`, under `_shell` because
 it is reading, not working. It polls the interview every three seconds
 while its status is `reviewing`, fetches the review once it is

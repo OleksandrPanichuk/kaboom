@@ -20,6 +20,7 @@ interface Entitlements {
   interviews: { limit: number; per: string };
   fullReview: boolean;
   replay: boolean;
+  voice: boolean;
 }
 
 interface Quota {
@@ -84,6 +85,7 @@ describe("what a plan includes", () => {
       interviews: { limit: 1, per: "week" },
       fullReview: false,
       replay: false,
+      voice: false,
     });
   });
 
@@ -97,6 +99,7 @@ describe("what a plan includes", () => {
       interviews: { limit: 3, per: "day" },
       fullReview: true,
       replay: true,
+      voice: true,
     });
   });
 

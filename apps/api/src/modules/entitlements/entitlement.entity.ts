@@ -17,6 +17,7 @@ export class EntitlementsEntity {
       interviews: entity.entitlements.interviews,
       fullReview: entity.entitlements.fullReview,
       replay: entity.entitlements.replay,
+      voice: entity.entitlements.voice,
     };
   }
 }

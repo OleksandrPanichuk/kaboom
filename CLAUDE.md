@@ -1000,6 +1000,12 @@ the check that an interview is not already running; `GET /interviews/quota`
 answers the allowance and what is used. Replay asks `EntitlementsService.require`
 after the interview is known to have ended.
 
+Voice is Pro's too, and the one limit nothing on the server can enforce: the
+browser listens and speaks, and the API only ever sees the text a candidate
+sends. It costs nothing to serve, so `voice` in the table only decides what
+the web offers; a Free reader who typed the same words would be served the
+same.
+
 A review is stored whole and cut on the way out: a Free reader gets every
 score, the design's checks and drills, and at most three strengths and three
 things to practise, but each item's rationale and citations are empty, and
