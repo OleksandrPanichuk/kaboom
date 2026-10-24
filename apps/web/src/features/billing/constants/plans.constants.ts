@@ -11,6 +11,7 @@ export const PRO_FEATURES = [
   "As many designs of your own as you like",
   "Every review explained, with the moments it rests on",
   "Replay of every interview, conversation and canvas in step",
+  "Talk to the interviewer and hear the answers, hands free",
 ];
 
 export interface PlanComparisonRow {
@@ -33,6 +34,7 @@ export const PLAN_COMPARISON: readonly PlanComparisonRow[] = [
     pro: true,
   },
   { feature: "Interview replay", free: false, pro: true },
+  { feature: "Voice interviews", free: false, pro: true },
 ];
 
 export const PLAN_QUESTIONS = [

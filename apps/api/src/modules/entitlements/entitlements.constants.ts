@@ -7,6 +7,7 @@ export interface PlanEntitlements {
   sandboxDesigns: number | null;
   fullReview: boolean;
   replay: boolean;
+  voice: boolean;
 }
 
 export const ENTITLEMENTS: Readonly<Record<AccountPlan, PlanEntitlements>> = {
@@ -15,11 +16,13 @@ export const ENTITLEMENTS: Readonly<Record<AccountPlan, PlanEntitlements>> = {
     sandboxDesigns: 5,
     fullReview: false,
     replay: false,
+    voice: false,
   },
   pro: {
     interviews: { limit: 3, per: "day" },
     sandboxDesigns: null,
     fullReview: true,
     replay: true,
+    voice: true,
   },
 };

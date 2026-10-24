@@ -29,6 +29,7 @@ We use a small number of providers who process data on our behalf:
 
 - **An AI model provider (Anthropic)**, which receives the conversation and the design of a mock interview to run the interviewer and write the review.
 - **Stripe**, which processes payments and holds your card details and billing address.
+- **Your browser's speech service**, only if you turn on Voice in a mock interview. Your browser, not ${product}, sends what you say to its maker (for example Google for Chrome, or Apple for Safari) to turn it into text, and the interviewer's replies may be read aloud by a voice that the browser's maker provides. We receive only the text you send, never the audio, and we do not store any audio.
 - **Google reCAPTCHA**, which checks sign-up and sign-in forms for automated abuse.
 - **Google and GitHub**, only if you choose to sign in with them.
 - Hosting, storage and email delivery providers, which store and send data as we instruct them.

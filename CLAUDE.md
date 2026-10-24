@@ -1025,6 +1025,12 @@ The web mirrors the table twice, by hand: the pricing page's comparison
 (`PLAN_COMPARISON`) and the copy of its upgrade notices. Change them with the
 table.
 
+Voice is Pro's too, and the one limit nothing on the server can enforce: the
+browser listens and speaks, and the API only ever sees the text a candidate
+sends. It costs nothing to serve, so `voice` in the table only decides what
+the web offers; a Free reader who typed the same words would be served the
+same.
+
 ## Roles
 
 Every account has a `role`: `user`, `moderator` or `admin`, ranked in

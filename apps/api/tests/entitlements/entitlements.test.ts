@@ -21,6 +21,7 @@ interface Entitlements {
   sandboxDesigns: number | null;
   fullReview: boolean;
   replay: boolean;
+  voice: boolean;
 }
 
 interface Quota {
@@ -86,6 +87,7 @@ describe("what a plan includes", () => {
       sandboxDesigns: 5,
       fullReview: false,
       replay: false,
+      voice: false,
     });
   });
 
@@ -100,6 +102,7 @@ describe("what a plan includes", () => {
       sandboxDesigns: null,
       fullReview: true,
       replay: true,
+      voice: true,
     });
   });
 

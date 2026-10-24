@@ -1,11 +1,17 @@
 import type { InterviewModel } from "@repo/api-client";
-import { useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { entitlementsQuery } from "@/features/billing";
+import { useVoiceMode } from "@/features/interview/hooks";
 import type { DurableEvent, LiveTurn } from "@/features/interview/typedefs";
+import { voiceSupport } from "@/features/interview/utils";
 
 import { Composer } from "./Composer";
 import { MessageBubble } from "./MessageBubble";
 import { TimelineCard } from "./TimelineCard";
+import { VoiceStatus } from "./VoiceStatus";
+import { VoiceToggle } from "./VoiceToggle";
 
 interface InterviewChatProps {
   interview: InterviewModel;
@@ -35,6 +41,29 @@ export function InterviewChat({
   onStop,
 }: InterviewChatProps) {
   const end = useRef<HTMLDivElement>(null);
+  const { data: plan } = useQuery(entitlementsQuery);
+  const [support] = useState(() => voiceSupport(window as never));
+  const [voiceOn, setVoiceOn] = useState(false);
+  const [voiceNote, setVoiceNote] = useState<string | null>(null);
+  const running = interview.status === "active";
+  const replies = useMemo(
+    () =>
+      interview.messages
+        .filter((message) => message.author === "interviewer")
+        .map((message) => ({ id: message.id, text: message.body })),
+    [interview.messages],
+  );
+  const voice = useVoiceMode({
+    active: voiceOn && running,
+    canListen: running && !thinking && !sending,
+    replies,
+    onUtterance: onSend,
+    onProblem: (note) => {
+      setVoiceOn(false);
+      setVoiceNote(note);
+    },
+  });
+  const voiceAvailable = support.listen && support.speak && plan !== undefined;
   const items: Item[] = [
     ...interview.messages.map((message) => ({
       kind: "message" as const,
@@ -94,6 +123,28 @@ export function InterviewChat({
         disabled={interview.status !== "active"}
         thinking={thinking}
         sending={sending}
+        voiceToggle={
+          voiceAvailable && running ? (
+            <VoiceToggle
+              allowed={plan.voice}
+              active={voiceOn}
+              onToggle={() => {
+                setVoiceNote(null);
+                setVoiceOn((current) => !current);
+              }}
+            />
+          ) : null
+        }
+        voiceStatus={
+          <VoiceStatus
+            active={voiceOn && running}
+            listening={voice.listening}
+            speaking={voice.speaking}
+            caption={voice.caption}
+            note={voiceNote}
+            onSkip={voice.skip}
+          />
+        }
         onSend={onSend}
         onStop={onStop}
       />

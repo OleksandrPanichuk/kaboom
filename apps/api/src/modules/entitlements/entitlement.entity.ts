@@ -18,6 +18,7 @@ export class EntitlementsEntity {
       sandboxDesigns: entity.entitlements.sandboxDesigns,
       fullReview: entity.entitlements.fullReview,
       replay: entity.entitlements.replay,
+      voice: entity.entitlements.voice,
     };
   }
 }

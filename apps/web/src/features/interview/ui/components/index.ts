@@ -9,3 +9,5 @@ export * from "./ReplayScrubber";
 export * from "./ReplayTranscript";
 export * from "./StartInterviewButton";
 export * from "./TimelineCard";
+export * from "./VoiceStatus";
+export * from "./VoiceToggle";

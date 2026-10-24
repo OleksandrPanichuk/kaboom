@@ -17,5 +17,8 @@ export const EntitlementsModel = t.Object({
   replay: t.Boolean({
     description: "Whether an ended interview can be played back",
   }),
+  voice: t.Boolean({
+    description: "Whether an interview can be spoken instead of typed",
+  }),
 });
 export type EntitlementsModel = typeof EntitlementsModel.static;
