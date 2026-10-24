@@ -22,6 +22,7 @@ interface Entitlements {
   fullReview: boolean;
   replay: boolean;
   voice: boolean;
+  priorityTests: boolean;
 }
 
 interface Quota {
@@ -88,6 +89,7 @@ describe("what a plan includes", () => {
       fullReview: false,
       replay: false,
       voice: false,
+      priorityTests: false,
     });
   });
 
@@ -103,6 +105,7 @@ describe("what a plan includes", () => {
       fullReview: true,
       replay: true,
       voice: true,
+      priorityTests: true,
     });
   });
 

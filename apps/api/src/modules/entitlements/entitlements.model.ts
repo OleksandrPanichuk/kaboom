@@ -20,5 +20,9 @@ export const EntitlementsModel = t.Object({
   voice: t.Boolean({
     description: "Whether an interview can be spoken instead of typed",
   }),
+  priorityTests: t.Boolean({
+    description:
+      "Whether the plan's design tests go ahead of the queue when the testers are busy",
+  }),
 });
 export type EntitlementsModel = typeof EntitlementsModel.static;

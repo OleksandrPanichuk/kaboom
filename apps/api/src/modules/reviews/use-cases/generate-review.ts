@@ -4,6 +4,7 @@ import { getEnv } from "@/configs";
 import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { DesignsService } from "@/modules/designs";
+import { EntitlementsService } from "@/modules/entitlements";
 import {
   describeDesign,
   EvidenceNotesRepository,
@@ -42,6 +43,8 @@ export class GenerateReviewUseCase extends UseCase<Options, Result> {
 
   private readonly tester = make(DesignTester);
 
+  private readonly entitlements = makeService(EntitlementsService);
+
   private readonly designs = makeService(DesignsService);
 
   private readonly reviewer = makeService(Reviewer);
@@ -61,12 +64,16 @@ export class GenerateReviewUseCase extends UseCase<Options, Result> {
       interview.ownerId,
     );
     const { bundle } = await this.designs.bundleOf(design);
-    const { score } = await this.tester.test({
-      problem: pinned.content,
-      bundle,
-      include: "all",
-      seeds: 0,
-    });
+    const { entitlements } = await this.entitlements.of(interview.ownerId);
+    const { score } = await this.tester.test(
+      {
+        problem: pinned.content,
+        bundle,
+        include: "all",
+        seeds: 0,
+      },
+      { priority: entitlements.priorityTests },
+    );
     const shown = publicScore(pinned.content, score);
     const evidence = collectEvidence({
       messages: await this.messages.listFor(interviewId),

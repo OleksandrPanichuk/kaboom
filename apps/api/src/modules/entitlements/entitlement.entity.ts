@@ -19,6 +19,7 @@ export class EntitlementsEntity {
       fullReview: entity.entitlements.fullReview,
       replay: entity.entitlements.replay,
       voice: entity.entitlements.voice,
+      priorityTests: entity.entitlements.priorityTests,
     };
   }
 }
