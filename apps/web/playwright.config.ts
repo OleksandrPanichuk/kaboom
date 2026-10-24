@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const API_PORT = 8090;
-const WEB_PORT = 4180;
+const API_PORT = Number(process.env.E2E_API_PORT ?? 8090);
+const WEB_PORT = Number(process.env.E2E_WEB_PORT ?? 4180);
 const DATABASE_URL =
   process.env.E2E_DATABASE_URL ??
   "postgres://postgres:postgres@localhost:5433/kaboom_e2e";

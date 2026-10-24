@@ -830,6 +830,27 @@ it. `RemindPracticePlansJob` runs on Thursday at 10:00 UTC and emails each
 plan of the week that still has steps left, once (`reminded_at`), to a
 verified email whose `email_preferences.reminders` is on.
 
+## The weekly challenge
+
+`weekly-challenges` features one official problem for everyone each week, which
+starts on Monday in UTC (the practice plans' `weekStartOf`). The first
+`GET /challenges/weekly` of a week picks the problem and stores it in
+`weekly_challenges` (`week_start` is the key, `INSERT … ON CONFLICT DO
+NOTHING`, so two first requests agree), because a pick derived from the
+catalogue would change retroactively when a problem is added. `pickWeekly`
+takes the official problem featured longest ago, never-featured first, and
+among equals one from another track than last week's, then by slug, so it is
+a pure function of what has been featured. A problem that is deleted takes its
+week's row with it, and the week picks again.
+
+The standings are the best `counted` score of each person on that problem
+between Monday and the next Monday, read from `submissions` in the module's own
+query, as the leaderboard reads `profiles`: a score from an earlier week, or
+one a reveal forfeited, counts for nothing. Entries are visible profiles only,
+ranked with ties sharing a place, and `participants` counts hidden ones too;
+`me.position` is null for a hidden profile. The route answers `{ challenge:
+null }` when the catalogue has nothing official, never an empty body.
+
 ## Problem versions
 
 A problem's content is versioned, and an attempt is pinned to the version it

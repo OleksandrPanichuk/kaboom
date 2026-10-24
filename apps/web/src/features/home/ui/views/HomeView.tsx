@@ -6,6 +6,7 @@ import { PracticePlanCard } from "@/features/practice";
 import { RankCard } from "@/features/problems";
 import { ActivityList, StreakCard } from "@/features/progress";
 import { NextUpCard, SkillsCard } from "@/features/skills";
+import { WeeklyChallengeCard } from "@/features/weekly-challenge";
 
 interface HomeViewProps {
   onOpenInterview: (interviewId: string) => void;
@@ -42,6 +43,7 @@ export function HomeView({ onOpenInterview }: HomeViewProps) {
       <StreakCard />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
         <div className="flex min-w-0 flex-col gap-6">
+          <WeeklyChallengeCard />
           <PracticePlanCard />
           <NextUpCard onOpenInterview={onOpenInterview} />
           <ActivityList />

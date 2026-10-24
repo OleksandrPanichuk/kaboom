@@ -372,6 +372,12 @@ above the grid) and the badges (`BadgesSection`, on `/progress`), both from
 rather than hold a place, and the streak's wording lives in
 `streakMessage.ts`, which a test pins.
 
+`features/weekly-challenge` draws this week's official problem
+(`WeeklyChallengeCard` on Home, above the practice plan) and renders
+`/weekly`: the problem, the time left (`timeLeft`), the caller's best score
+and place, and the best scores of the week. The API marks the caller's own
+entry (`mine`), so the web never compares handles.
+
 `features/leaderboard` renders `/leaderboard`: the caller's standing
 with a link to edit their profile, the period and track filters (kept in
 the URL as `?period=week&track=…`, the default left out), and the table,
