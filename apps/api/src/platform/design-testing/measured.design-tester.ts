@@ -9,6 +9,7 @@ import {
 } from "./design-testing.errors";
 import {
   DesignTester,
+  type DesignTestOptions,
   type DesignTestRequest,
   type DesignTestResult,
 } from "./ports";
@@ -25,8 +26,11 @@ export class MeasuredDesignTester extends DesignTester {
     super();
   }
 
-  public test(request: DesignTestRequest): Promise<DesignTestResult> {
-    return this.measure("test", () => this.inner.test(request));
+  public test(
+    request: DesignTestRequest,
+    options?: DesignTestOptions,
+  ): Promise<DesignTestResult> {
+    return this.measure("test", () => this.inner.test(request, options));
   }
 
   public check(content: unknown): Promise<PublishCheck> {

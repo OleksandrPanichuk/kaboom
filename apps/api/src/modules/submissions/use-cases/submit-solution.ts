@@ -8,6 +8,7 @@ import {
 import { make, makeRepository, makeService } from "@/core/registry";
 import { UseCase } from "@/core/use-case";
 import { DesignsService } from "@/modules/designs";
+import { EntitlementsService } from "@/modules/entitlements";
 import { DesignTester } from "@/platform/design-testing";
 import { Metrics } from "@/platform/metrics";
 
@@ -38,6 +39,8 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
 
   private readonly tester = make(DesignTester);
 
+  private readonly entitlements = makeService(EntitlementsService);
+
   private readonly submissions = makeRepository(SubmissionsRepository);
 
   private readonly designs = makeService(DesignsService);
@@ -56,12 +59,16 @@ export class SubmitSolutionUseCase extends UseCase<Options, Result> {
     }
 
     const { bundle, schemas } = await this.designs.bundleOf(design);
-    const { score, report } = await this.tester.test({
-      problem: version.content,
-      bundle,
-      include: "all",
-      seeds: SUBMIT_SEEDS,
-    });
+    const { entitlements } = await this.entitlements.of(userId);
+    const { score, report } = await this.tester.test(
+      {
+        problem: version.content,
+        bundle,
+        include: "all",
+        seeds: SUBMIT_SEEDS,
+      },
+      { priority: entitlements.priorityTests },
+    );
     const shown = publicScore(version.content, score);
     const tests = publicReport(report);
     const penalty = hintPenalty(version.content, attempt.hintsRevealed);

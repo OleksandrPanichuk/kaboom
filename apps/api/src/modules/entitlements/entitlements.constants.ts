@@ -8,6 +8,7 @@ export interface PlanEntitlements {
   fullReview: boolean;
   replay: boolean;
   voice: boolean;
+  priorityTests: boolean;
 }
 
 export const ENTITLEMENTS: Readonly<Record<AccountPlan, PlanEntitlements>> = {
@@ -17,6 +18,7 @@ export const ENTITLEMENTS: Readonly<Record<AccountPlan, PlanEntitlements>> = {
     fullReview: false,
     replay: false,
     voice: false,
+    priorityTests: false,
   },
   pro: {
     interviews: { limit: 3, per: "day" },
@@ -24,5 +26,6 @@ export const ENTITLEMENTS: Readonly<Record<AccountPlan, PlanEntitlements>> = {
     fullReview: true,
     replay: true,
     voice: true,
+    priorityTests: true,
   },
 };
