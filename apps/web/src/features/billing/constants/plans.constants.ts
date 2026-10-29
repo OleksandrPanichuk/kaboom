@@ -10,6 +10,7 @@ export const PRO_FEATURES = [
   "Up to three AI interviews a day",
   "As many designs of your own as you like",
   "Every review explained, with the moments it rests on",
+  "The edits to your design that would earn the most",
   "Replay of every interview, conversation and canvas in step",
   "Talk to the interviewer and hear the answers, hands free",
 ];
@@ -30,6 +31,11 @@ export const PLAN_COMPARISON: readonly PlanComparisonRow[] = [
   { feature: "Interview score on every rubric item", free: true, pro: true },
   {
     feature: "Why each item scored as it did, with evidence",
+    free: false,
+    pro: true,
+  },
+  {
+    feature: "The edits to make to your design, from each review",
     free: false,
     pro: true,
   },

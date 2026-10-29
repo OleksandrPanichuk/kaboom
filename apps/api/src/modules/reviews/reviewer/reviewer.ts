@@ -33,6 +33,7 @@ export interface WrittenReview {
   summary: string;
   strengths: string[];
   improvements: string[];
+  changes: string[];
   items: ReviewItem[];
   model: string;
   promptVersion: number;
@@ -101,6 +102,7 @@ export class Reviewer extends Service {
       summary: draft.summary,
       strengths: draft.strengths,
       improvements: draft.improvements,
+      changes: draft.changes,
       items: rubric.map((item) =>
         toReviewItem(item, byKey.get(item.key), evidence),
       ),

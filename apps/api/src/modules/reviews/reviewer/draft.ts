@@ -36,6 +36,13 @@ export const ReviewDraftSchema = z.object({
     .array(z.string().min(1).max(300))
     .max(5)
     .describe("What to practise next, most important first"),
+  changes: z
+    .array(z.string().min(1).max(300))
+    .max(4)
+    .default([])
+    .describe(
+      "Edits to the final design that would earn the most, each naming the nodes it touches and what it fixes, most valuable first. An edit to this design, never a description of an ideal one",
+    ),
   items: z.array(DraftItemSchema).max(20),
 });
 

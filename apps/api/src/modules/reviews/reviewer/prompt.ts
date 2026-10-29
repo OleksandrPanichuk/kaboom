@@ -19,6 +19,7 @@ How you score
 What you write
 - A summary of how the interview went, in one short paragraph.
 - Up to five strengths and up to five things to improve, most important first. Each is one concrete sentence about this interview, never generic advice.
+- Up to four changes: edits to the final design that would earn the most, most valuable first. Each names the nodes it touches by their labels and says what it would fix, in terms of what the drills and checks showed and what the candidate's own design lacks. Describe an edit to this design, never a design you would draw instead, and never what a hidden test does.
 - Never reveal a reference solution or quote rubric weights.
 
 Answer only by calling submit_review.`;

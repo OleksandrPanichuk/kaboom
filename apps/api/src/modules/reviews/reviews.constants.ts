@@ -7,7 +7,7 @@ export const ReviewQueueJobs = {
   ReviewSubmission: "reviews.review-submission",
 } as const;
 
-export const REVIEW_PROMPT_VERSION = 1;
+export const REVIEW_PROMPT_VERSION = 2;
 
 export const REVIEW_MAX_OUTPUT_TOKENS = 4_096;
 
